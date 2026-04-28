@@ -68,36 +68,34 @@
 
 ## Traceability
 
-Wird während der Roadmap-Erstellung ausgefüllt.
-
 | Anforderung | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| TEAM-01 | — | Pending |
-| TEAM-02 | — | Pending |
-| TEAM-03 | — | Pending |
-| TEAM-04 | — | Pending |
-| LIST-01 | — | Pending |
-| LIST-02 | — | Pending |
-| LIST-03 | — | Pending |
-| LIST-04 | — | Pending |
-| LIST-05 | — | Pending |
-| CELL-01 | — | Pending |
-| CELL-02 | — | Pending |
-| CELL-03 | — | Pending |
-| CELL-04 | — | Pending |
-| STAT-01 | — | Pending |
-| STAT-02 | — | Pending |
-| STAT-03 | — | Pending |
+| AUTH-01 | 1 | Pending |
+| AUTH-02 | 1 | Pending |
+| AUTH-03 | 1 | Pending |
+| AUTH-04 | 1 | Pending |
+| TEAM-01 | 1 | Pending |
+| TEAM-02 | 1 | Pending |
+| TEAM-03 | 1 | Pending |
+| TEAM-04 | 2 | Pending |
+| LIST-01 | 3 | Pending |
+| LIST-02 | 3 | Pending |
+| LIST-03 | 3 | Pending |
+| LIST-04 | 3 | Pending |
+| LIST-05 | 3 | Pending |
+| CELL-01 | 3 | Pending |
+| CELL-02 | 3 | Pending |
+| CELL-03 | 3 | Pending |
+| CELL-04 | 3 | Pending |
+| STAT-01 | 4 | Pending |
+| STAT-02 | 4 | Pending |
+| STAT-03 | 4 | Pending |
 
 **Coverage:**
 - v1 Anforderungen: 20 gesamt
-- Auf Phasen gemappt: 0
-- Nicht gemappt: 20 ⚠️
+- Auf Phasen gemappt: 20
+- Nicht gemappt: 0 ✓
 
 ---
 *Anforderungen definiert: 2026-04-28*
-*Zuletzt aktualisiert: 2026-04-28 nach initialer Definition*
+*Zuletzt aktualisiert: 2026-04-28 nach Roadmap-Erstellung*
