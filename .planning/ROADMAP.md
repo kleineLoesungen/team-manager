@@ -161,6 +161,7 @@ Plans:
 **Scope:**
 - Admin-Einstellungsseite: Textfeld für App-Name (wird in Navbar und Seitentiteln angezeigt)
 - Admin wählt Akzentfarbe aus vordefinierten Optionen (z.B. Bootstrap-Farbpalette)
+- Teamname wird im App-Titel / Navbar angezeigt (z.B. "Team Manager · FC Beispiel")
 - Einstellungen werden global auf alle Views angewendet
 
 **Requirements:** TBD
