@@ -134,3 +134,20 @@ Plans:
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
+
+---
+
+### Phase 999.2: List — Optional Metadata & Row Visibility Control (BACKLOG)
+
+**Goal:** Enrich lists with optional header metadata and give coaches per-list control over which rows players can see.
+
+**Scope:**
+- List has optional fields: Datum, Startzeit, Endzeit, Notizen/Beschreibung (all editable by coach only, not by players)
+- Coach can set row-visibility mode per list: "Alle Zeilen sichtbar" (player sees all rows) vs. "Nur eigene Zeile" (player sees only their own row)
+- This complements the existing list visibility state (public/protected/private) — row visibility controls WHAT a player sees within an already-visible list
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
