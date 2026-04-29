@@ -12,16 +12,18 @@ Trainer können den Spielereinsatz und beliebige Kennzahlen über alle Listen hi
 
 ### Validated
 
-(Noch keine — erst nach dem ersten Release)
+*Validated in Phase 1: Foundation (2026-04-29)*
+
+- [x] Admin (einmalig in PHP-Config hinterlegt) kann Teams anlegen und Trainer zuweisen
+- [x] Trainer erhalten automatisch generierte Zugangsdaten (Benutzername + Passwort, einmalig angezeigt)
+- [x] Admin kann das Passwort von Trainern zurücksetzen (neues Passwort wird auf dem Bildschirm angezeigt)
+- [x] Jeder Benutzer gehört genau einem Team an (Schema-Isolation via DB_SCHEMA, RLS)
 
 ### Active
 
-- [ ] Admin (einmalig in PHP-Config hinterlegt) kann Teams anlegen und Trainer zuweisen
-- [ ] Trainer und Spieler erhalten automatisch generierte Zugangsdaten (Benutzername + Passwort)
-- [ ] Jeder Benutzer gehört genau einem Team an
+- [ ] Spieler erhalten automatisch generierte Zugangsdaten (Benutzername + Passwort)
 - [ ] Trainer können Spieler ihres Teams verwalten (anlegen, deaktivieren)
 - [ ] Trainer können das Passwort von Spielern zurücksetzen (neues Passwort wird auf dem Bildschirm angezeigt)
-- [ ] Admin kann das Passwort von Trainern zurücksetzen (neues Passwort wird auf dem Bildschirm angezeigt)
 - [ ] Zugangsdaten sind nicht vom Benutzer selbst editierbar
 - [ ] Trainer können Listen anlegen (flexibler Zweck: Spiel, Training, etc.)
 - [ ] Jede Liste hat Zeilen (eine pro Spieler) und Spalten (global oder lokal)
@@ -86,4 +88,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 after initialization*
+*Last updated: 2026-04-29 after Phase 1: Foundation complete*
