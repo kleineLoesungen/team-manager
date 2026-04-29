@@ -3,6 +3,7 @@
 
 require_once dirname(__DIR__, 2) . '/config.php';
 require_once dirname(__DIR__) . '/utils/helpers.php';
+require_once dirname(__DIR__) . '/db/connection.php';
 
 /**
  * Start a secure session with OWASP-compliant cookie settings.
@@ -30,7 +31,7 @@ function start_secure_session(): void {
     ini_set('session.use_only_cookies',  '1');
     ini_set('session.gc_maxlifetime',    (string)SESSION_TIMEOUT);
     ini_set('session.cookie_lifetime',   (string)SESSION_TIMEOUT);
-    ini_set('session.sid_length',        '256');
+    ini_set('session.sid_length',        '64');   // 64 × 6 bits = 384 bits entropy; fits in 255-char filename limit
     ini_set('session.sid_bits_per_character', '6');
 
     session_start();
@@ -81,6 +82,19 @@ function require_admin(): void {
     if (empty($_SESSION['is_admin'])) {
         redirect('/login');
     }
+    set_admin_context(get_db());
+}
+
+/**
+ * Require a coach session. Per D-04:
+ * Checks $_SESSION['role'] === 'coach', sets RLS team context, redirects on failure.
+ */
+function require_coach(): void {
+    check_session_timeout();
+    if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'coach') {
+        redirect('/login');
+    }
+    set_team_context(get_db(), (int)$_SESSION['team_id']);
 }
 
 /**

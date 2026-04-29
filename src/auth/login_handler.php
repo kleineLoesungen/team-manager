@@ -11,7 +11,12 @@ if (is_admin()) {
     redirect('/admin');
 }
 if (is_authenticated()) {
-    redirect('/dashboard'); // Phase 2+
+    // Role-based redirect for already-authenticated users — per D-02
+    if (($_SESSION['role'] ?? '') === 'coach') {
+        redirect('/coach/players');
+    } else {
+        redirect('/player'); // Phase 3+ placeholder
+    }
 }
 
 $error   = '';
@@ -67,8 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['display_name']  = $user['first_name'] . ' ' . $user['last_name'];
                         $_SESSION['last_activity'] = time();
 
-                        // Future: redirect coaches to /coach, players to /player
-                        redirect('/dashboard');
+                        // Role-based redirect — per D-02
+                        if ($user['role'] === 'coach') {
+                            redirect('/coach/players');
+                        } else {
+                            redirect('/player'); // Phase 3+ placeholder — returns 404 until player area exists
+                        }
                     }
                 } else {
                     // Deliberately vague — do not reveal which field failed
