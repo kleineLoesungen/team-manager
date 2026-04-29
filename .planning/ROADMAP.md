@@ -109,3 +109,23 @@ Plans:
 - Authorization leakage is mitigated by centralizing visibility logic and enforcing PostgreSQL RLS from Phase 1
 - EAV (Entity-Attribute-Value) pattern used for dynamic columns to avoid schema migrations
 - Credential display is time-limited and never logged
+
+---
+
+## Backlog
+
+### Phase 999.1: Admin UI — Team & Coach Grouping (BACKLOG)
+
+**Goal:** Improve admin dashboard UX: activate/deactivate teams and coaches, group active items at top (expanded) and inactive at bottom (collapsed).
+
+**Scope:**
+- Team activate action (reverse of deactivate)
+- Coach deactivate / activate (soft delete, same `is_active` flag)
+- Dashboard groups teams: active group open at top, inactive group collapsed at end
+- Coaches list groups the same way: active coaches first, inactive below
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
