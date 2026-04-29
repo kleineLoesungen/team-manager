@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Foundation** - Authentication, Database Schema, Admin Setup
+- [x] **Phase 1: Foundation** - Authentication, Database Schema, Admin Setup ✓ 2026-04-29
 - [ ] **Phase 2: Team & Player Management** - Player CRUD, Password Reset, Credentials
 - [ ] **Phase 3: Lists, Columns & Cells** - Spreadsheet Core, Visibility States, Cell Editing
 - [ ] **Phase 4: Statistics & Aggregation** - Per-Player Stats, Filtering, Leaderboards
@@ -27,7 +27,7 @@
 4. Database schema is in place with teams, users, sessions, team isolation via team_id columns, and PostgreSQL Row-Level Security enforced
 5. Credentials (usernames/passwords) are securely hashed and never displayed in logs
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md — Project bootstrap: directory structure, DB schema, PDO connection, CSRF utils, front controller router
@@ -97,7 +97,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress|  |
+| 1. Foundation | 3/3 | Complete | 2026-04-29 |
 | 2. Team & Player Management | 0/2 | Not started | — |
 | 3. Lists, Columns & Cells | 0/4 | Not started | — |
 | 4. Statistics & Aggregation | 0/3 | Not started | — |
