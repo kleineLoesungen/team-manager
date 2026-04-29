@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-29T04:58:51.912Z"
+last_updated: "2026-04-29T20:09:03.186Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-29 (Plan 01-03 complete — Phase 1 DONE)  
+**Last Updated:** 2026-04-29 (Plan 02-01 complete — Coach area foundation)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -32,8 +32,8 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (team-player-mgmt) — EXECUTING
+Plan: 2 of 3
 
 ## Phase Summary
 
@@ -63,6 +63,9 @@ Plan: Not started
 | render_admin_page() takes callable $body | Admin pages pass closures, keeping template logic co-located with data; avoids scattered variable injection | 01-03 |
 | Credential modal as full-page include (not Bootstrap .modal) | Cache-Control: no-store header set before HTML, no Bootstrap JS dependency for security display | 01-03 |
 | POST-redirect-GET pattern for admin errors via ?error= | Prevents form resubmission on browser refresh | 01-03 |
+| Separate coach layout from admin layout | No cross-role template sharing; each role owns its layout | 02-01 |
+| Phase 2 coach nav has only Spieler | No placeholder items for unimplemented routes | 02-01 |
+| Already-authenticated redirect also updated in login_handler | Covers both post-login and revisiting /login while logged in | 02-01 |
 
 ---
 
@@ -131,3 +134,4 @@ Plan: Not started
 | Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |
 | Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
 | Phase 01-foundation P03 | 6 | 2 tasks | 11 files |
+| Phase 02-team-player-mgmt P01 | 5 | 2 tasks | 4 files |
