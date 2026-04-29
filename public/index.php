@@ -61,6 +61,20 @@ match (true) {
             require ROOT_PATH . '/src/admin/coach_action_handler.php';
         })(),
 
+    // ── Coach: Players ─────────────────────────────────────────────────
+    $path === '/coach' || $path === '/coach/players'
+        => require ROOT_PATH . '/src/coach/players_handler.php',
+
+    $path === '/coach/players/create'
+        => require ROOT_PATH . '/src/coach/player_create_handler.php',
+
+    (bool)preg_match('#^/coach/players/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            $_REQUEST['action']    = $matches[2];
+            require ROOT_PATH . '/src/coach/player_action_handler.php';
+        })(),
+
     // ── 404 ────────────────────────────────────────────────────────────
     default => (function() {
         http_response_code(404);
