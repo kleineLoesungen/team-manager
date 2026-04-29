@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-29T04:43:21.810Z"
+last_updated: "2026-04-29T04:57:48.107Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-29 (Plan 01-02 complete)  
+**Last Updated:** 2026-04-29 (Plan 01-03 complete — Phase 1 DONE)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -32,14 +32,14 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Plan: 3 of 3
+Phase: 01 (foundation) — COMPLETE (ready for verification/transition)
+Plan: 3 of 3 (all plans complete)
 
 ## Phase Summary
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 1 | Foundation | 7 (AUTH×4, TEAM×3) | Pending |
+| 1 | Foundation | 7 (AUTH×4, TEAM×3) | **COMPLETE** |
 | 2 | Team & Player Mgmt | 1 (TEAM×1) | Pending |
 | 3 | Lists, Columns & Cells | 9 (LIST×5, CELL×4) | Pending |
 | 4 | Statistics & Aggregation | 3 (STAT×3) | Pending |
@@ -60,6 +60,9 @@ Plan: 3 of 3
 | render_login_page() in layout.php (not separate controller) | Keeps layout contract centralized; single location for page assembly | 01-02 |
 | Bootstrap 5.3 via CDN with SRI integrity hashes | No build step needed; tamper-resistant delivery | 01-02 |
 | Vague error messages for all credential failures | No per-field information disclosure; prevents username enumeration | 01-02 |
+| render_admin_page() takes callable $body | Admin pages pass closures, keeping template logic co-located with data; avoids scattered variable injection | 01-03 |
+| Credential modal as full-page include (not Bootstrap .modal) | Cache-Control: no-store header set before HTML, no Bootstrap JS dependency for security display | 01-03 |
+| POST-redirect-GET pattern for admin errors via ?error= | Prevents form resubmission on browser refresh | 01-03 |
 
 ---
 
@@ -127,3 +130,4 @@ Plan: 3 of 3
 **Roadmap Status:** Awaiting user review and approval before planning commences.
 | Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |
 | Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
+| Phase 01-foundation P03 | 6 | 2 tasks | 11 files |

@@ -10,7 +10,7 @@
 - [x] **AUTH-01**: Benutzer kann sich mit Benutzername und Passwort anmelden
 - [x] **AUTH-02**: Session läuft nach Inaktivität automatisch ab und der Benutzer wird zum Login weitergeleitet
 - [ ] **AUTH-03**: Trainer kann das Passwort eines Spielers zurücksetzen — neues zufälliges Passwort wird einmalig auf dem Bildschirm angezeigt
-- [ ] **AUTH-04**: Admin kann das Passwort eines Trainers zurücksetzen — neues zufälliges Passwort wird einmalig auf dem Bildschirm angezeigt
+- [x] **AUTH-04**: Admin kann das Passwort eines Trainers zurücksetzen — neues zufälliges Passwort wird einmalig auf dem Bildschirm angezeigt
 
 ### Team-Verwaltung (TEAM)
 
@@ -73,7 +73,7 @@
 | AUTH-01 | 1 | Complete |
 | AUTH-02 | 1 | Complete |
 | AUTH-03 | 2 | Pending |
-| AUTH-04 | 1 | Pending |
+| AUTH-04 | 1 | Complete |
 | TEAM-01 | 1 | Complete |
 | TEAM-02 | 1 | Complete |
 | TEAM-03 | 1 | Complete |
