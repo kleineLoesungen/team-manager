@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-29T20:09:03.186Z"
+last_updated: "2026-04-29T20:13:05.191Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-29 (Plan 02-01 complete — Coach area foundation)  
+**Last Updated:** 2026-04-29 (Plan 02-02 complete — Coach player listing and creation)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -33,7 +33,7 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ## Current Position
 
 Phase: 02 (team-player-mgmt) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Phase Summary
 
@@ -66,6 +66,9 @@ Plan: 2 of 3
 | Separate coach layout from admin layout | No cross-role template sharing; each role owns its layout | 02-01 |
 | Phase 2 coach nav has only Spieler | No placeholder items for unimplemented routes | 02-01 |
 | Already-authenticated redirect also updated in login_handler | Covers both post-login and revisiting /login while logged in | 02-01 |
+| RLS-only player listing: require_coach() sets team context; no explicit team_id WHERE clause needed | RLS enforces isolation at DB level; query remains readable | 02-02 |
+| Reuse admin credential_modal.php for player creation | Consistent UX, no template duplication across roles | 02-02 |
+| $_SESSION['team_id'] used for INSERT team_id on player create | Coach session carries validated team_id set at login; no DB re-query | 02-02 |
 
 ---
 
@@ -135,3 +138,4 @@ Plan: 2 of 3
 | Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
 | Phase 01-foundation P03 | 6 | 2 tasks | 11 files |
 | Phase 02-team-player-mgmt P01 | 5 | 2 tasks | 4 files |
+| Phase 02-team-player-mgmt P02 | 5 | 2 tasks | 4 files |
