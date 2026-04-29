@@ -151,3 +151,20 @@ Plans:
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
+
+---
+
+### Phase 999.3: App Branding — Name & Accent Color (BACKLOG)
+
+**Goal:** Admin kann App-Name und Akzentfarbe anpassen, sodass jeder Verein sein eigenes Branding sieht statt "Team Manager".
+
+**Scope:**
+- Admin-Einstellungsseite: Textfeld für App-Name (wird in Navbar und Seitentiteln angezeigt)
+- Admin wählt Akzentfarbe aus vordefinierten Optionen (z.B. Bootstrap-Farbpalette)
+- Einstellungen werden global auf alle Views angewendet
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
