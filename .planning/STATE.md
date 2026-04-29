@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-29T20:13:05.191Z"
+last_updated: "2026-04-29T20:15:45.365Z"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-29 (Plan 02-02 complete — Coach player listing and creation)  
+**Last Updated:** 2026-04-29 (Plan 02-03 complete — Player action handler: reset-password, deactivate, reactivate)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -32,15 +32,15 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-Phase: 02 (team-player-mgmt) — EXECUTING
-Plan: 3 of 3
+Phase: 02 (team-player-mgmt) — COMPLETE
+Plan: 3 of 3 (all complete)
 
 ## Phase Summary
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 1 | Foundation | 7 (AUTH×4, TEAM×3) | **COMPLETE** |
-| 2 | Team & Player Mgmt | 1 (TEAM×1) | Pending |
+| 2 | Team & Player Mgmt | 1 (TEAM×1) | **COMPLETE** |
 | 3 | Lists, Columns & Cells | 9 (LIST×5, CELL×4) | Pending |
 | 4 | Statistics & Aggregation | 3 (STAT×3) | Pending |
 
@@ -69,6 +69,8 @@ Plan: 3 of 3
 | RLS-only player listing: require_coach() sets team context; no explicit team_id WHERE clause needed | RLS enforces isolation at DB level; query remains readable | 02-02 |
 | Reuse admin credential_modal.php for player creation | Consistent UX, no template duplication across roles | 02-02 |
 | $_SESSION['team_id'] used for INSERT team_id on player create | Coach session carries validated team_id set at login; no DB re-query | 02-02 |
+| Triple-constraint ownership check (id + team_id + role='player') on all player actions | Prevents cross-team access even if RLS is bypassed; defense-in-depth in UPDATE statements too | 02-03 |
+| Reuse admin credential_modal.php for player password reset in coach context | Consistent UX across roles, no template duplication | 02-03 |
 
 ---
 
@@ -139,3 +141,4 @@ Plan: 3 of 3
 | Phase 01-foundation P03 | 6 | 2 tasks | 11 files |
 | Phase 02-team-player-mgmt P01 | 5 | 2 tasks | 4 files |
 | Phase 02-team-player-mgmt P02 | 5 | 2 tasks | 4 files |
+| Phase 02-team-player-mgmt P03 | 5min | 1 tasks | 1 files |

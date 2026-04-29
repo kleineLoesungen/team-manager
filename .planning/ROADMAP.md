@@ -7,7 +7,7 @@
 ## Phases
 
 - [x] **Phase 1: Foundation** - Authentication, Database Schema, Admin Setup ✓ 2026-04-29
-- [ ] **Phase 2: Team & Player Management** - Player CRUD, Password Reset, Credentials
+- [x] **Phase 2: Team & Player Management** - Player CRUD, Password Reset, Credentials (completed 2026-04-29)
 - [ ] **Phase 3: Lists, Columns & Cells** - Spreadsheet Core, Visibility States, Cell Editing
 - [ ] **Phase 4: Statistics & Aggregation** - Per-Player Stats, Filtering, Leaderboards
 
@@ -50,12 +50,12 @@ Plans:
 4. Admin can reset a coach's password and see the new random password displayed on-screen
 5. Credentials are never shown in browser history or logs; display is time-limited (cleared after 60 seconds)
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md — Coach area foundation: require_coach() middleware, role-based login redirect, coach layout template, router stubs
 - [x] 02-02-PLAN.md — Player listing and creation: /coach/players card view, /coach/players/create with credential modal (TEAM-04)
-- [ ] 02-03-PLAN.md — Player actions: reset-password with credential modal (AUTH-03), deactivate, reactivate
+- [x] 02-03-PLAN.md — Player actions: reset-password with credential modal (AUTH-03), deactivate, reactivate
 
 ---
 
@@ -103,7 +103,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-04-29 |
-| 2. Team & Player Management | 2/3 | In Progress|  |
+| 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
 | 3. Lists, Columns & Cells | 0/4 | Not started | — |
 | 4. Statistics & Aggregation | 0/3 | Not started | — |
 
