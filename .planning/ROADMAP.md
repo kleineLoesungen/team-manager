@@ -30,7 +30,7 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project bootstrap: directory structure, DB schema, PDO connection, CSRF utils, front controller router
+- [x] 01-01-PLAN.md — Project bootstrap: directory structure, DB schema, PDO connection, CSRF utils, front controller router
 - [ ] 01-02-PLAN.md — Authentication: login/logout handlers, shared Bootstrap 5 layout, login page template
 - [ ] 01-03-PLAN.md — Admin panel: team CRUD, coach CRUD, password reset with 60s credential modal
 

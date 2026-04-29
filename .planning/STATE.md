@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-04-29T04:39:59.750Z"
+progress:
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 3
+  completed_plans: 1
+---
+
 # Project State: Team Manager
 
 **Last Updated:** 2026-04-28 (Roadmap Created)  
@@ -19,17 +32,8 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-**Milestone:** v1  
-**Current Phase:** None (awaiting approval)  
-**Current Plan:** None
-
-**Progress:** Roadmap created (4 phases, 20/20 requirements mapped)
-
-```
-[████░░░░░░░░░░░░░░░░] 20% — Roadmap → Planning approval
-```
-
----
+Phase: 01 (foundation) — EXECUTING
+Plan: 2 of 3
 
 ## Phase Summary
 
@@ -50,6 +54,9 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 | PostgreSQL RLS from Phase 1 | Authorization leakage is retrofitted with pain; must be correct from day one | Design principle |
 | EAV pattern for dynamic columns | Avoids schema migrations when coaches add columns; proven PostgreSQL pattern | Design principle |
 | Credential display time-limit (60s) | Prevents credentials reaching logs or browser history; matches offline-only password-reset constraint | Design principle |
+| Admin credentials in config.php/env (not users table) | Eliminates auth bootstrapping problem; single admin per D-02 | 01-01 |
+| PDO ATTR_EMULATE_PREPARES=false | Mandatory for PostgreSQL — native prepared statements with real type safety | 01-01 |
+| SESSION_TIMEOUT = 8h sliding window with cookie_samesite=Strict | Balance coach usability vs security; Strict prevents all cross-site CSRF | 01-01 |
 
 ---
 
@@ -84,17 +91,20 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ## Session Continuity
 
 **Knowledge Retained:**
+
 - Project uses vanilla PHP (no Laravel/Symfony)
 - Security is the dominant risk surface (auth leakage, credential exposure)
 - Research has vetted stack + architecture (HIGH confidence for technical execution)
 - 4-phase structure is stable (unlikely to change with new information)
 
 **Assumptions Made:**
+
 - Timezone: Europe/Berlin (German users)
 - Number columns: Integers (can be refined in Phase 1 design)
 - Statistics granularity: Computed on-demand (can be optimized in Phase 4)
 
 **Open Questions (Research Flag):**
+
 - Phase 3: EAV query patterns for visibility-filtered cell reads; confirm CSRF strategy for inline forms
 - Phase 4: Statistics query performance — may need caching or materialized views
 
@@ -112,3 +122,4 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ---
 
 **Roadmap Status:** Awaiting user review and approval before planning commences.
+| Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |

@@ -7,16 +7,16 @@
 
 ### Authentifizierung (AUTH)
 
-- [ ] **AUTH-01**: Benutzer kann sich mit Benutzername und Passwort anmelden
-- [ ] **AUTH-02**: Session läuft nach Inaktivität automatisch ab und der Benutzer wird zum Login weitergeleitet
+- [x] **AUTH-01**: Benutzer kann sich mit Benutzername und Passwort anmelden
+- [x] **AUTH-02**: Session läuft nach Inaktivität automatisch ab und der Benutzer wird zum Login weitergeleitet
 - [ ] **AUTH-03**: Trainer kann das Passwort eines Spielers zurücksetzen — neues zufälliges Passwort wird einmalig auf dem Bildschirm angezeigt
 - [ ] **AUTH-04**: Admin kann das Passwort eines Trainers zurücksetzen — neues zufälliges Passwort wird einmalig auf dem Bildschirm angezeigt
 
 ### Team-Verwaltung (TEAM)
 
-- [ ] **TEAM-01**: Admin kann ein neues Team mit Name anlegen
-- [ ] **TEAM-02**: Admin kann einem Team einen oder mehrere Trainer zuweisen
-- [ ] **TEAM-03**: Admin kann ein Team umbenennen oder deaktivieren
+- [x] **TEAM-01**: Admin kann ein neues Team mit Name anlegen
+- [x] **TEAM-02**: Admin kann einem Team einen oder mehrere Trainer zuweisen
+- [x] **TEAM-03**: Admin kann ein Team umbenennen oder deaktivieren
 - [ ] **TEAM-04**: Trainer kann einen neuen Spieler anlegen — Benutzername und zufälliges Passwort werden automatisch generiert und angezeigt
 
 ### Listen & Spalten (LIST)
@@ -70,13 +70,13 @@
 
 | Anforderung | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | 1 | Pending |
-| AUTH-02 | 1 | Pending |
-| AUTH-03 | 1 | Pending |
+| AUTH-01 | 1 | Complete |
+| AUTH-02 | 1 | Complete |
+| AUTH-03 | 2 | Pending |
 | AUTH-04 | 1 | Pending |
-| TEAM-01 | 1 | Pending |
-| TEAM-02 | 1 | Pending |
-| TEAM-03 | 1 | Pending |
+| TEAM-01 | 1 | Complete |
+| TEAM-02 | 1 | Complete |
+| TEAM-03 | 1 | Complete |
 | TEAM-04 | 2 | Pending |
 | LIST-01 | 3 | Pending |
 | LIST-02 | 3 | Pending |
