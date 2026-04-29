@@ -30,10 +30,27 @@ function get_db(): PDO {
 
 /**
  * Set PostgreSQL session context for RLS team isolation.
- * Must be called on every request after the team_id is known.
- * Admin requests: do NOT call this (admin bypasses RLS at app layer).
+ * Must be called on every request after the team_id is known (coach/player sessions).
  */
 function set_team_context(PDO $pdo, int $team_id): void {
     $stmt = $pdo->prepare("SELECT set_config('app.current_team_id', ?, false)");
     $stmt->execute([(string)$team_id]);
+}
+
+/**
+ * Grant admin bypass for RLS policies on this connection.
+ * Called automatically by require_admin() — do not call manually.
+ */
+function set_admin_context(PDO $pdo): void {
+    $pdo->exec("SELECT set_config('app.is_admin', 'true', false)");
+}
+
+/**
+ * Reset all RLS context GUCs to empty state.
+ * Must be called after any temporary admin bypass (e.g. login lookup) and at the
+ * start of every coach/player request — PHP-FPM reuses connections across requests,
+ * so a prior request's GUC values would otherwise leak.
+ */
+function reset_rls_context(PDO $pdo): void {
+    $pdo->exec("SELECT set_config('app.is_admin', '', false), set_config('app.current_team_id', '', false)");
 }

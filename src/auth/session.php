@@ -94,7 +94,9 @@ function require_coach(): void {
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'coach') {
         redirect('/login');
     }
-    set_team_context(get_db(), (int)$_SESSION['team_id']);
+    $pdo = get_db();
+    reset_rls_context($pdo); // Clear any stale admin context from a prior request on this connection
+    set_team_context($pdo, (int)$_SESSION['team_id']);
 }
 
 /**

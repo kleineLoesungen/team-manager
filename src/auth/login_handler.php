@@ -48,13 +48,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ── Regular user login (DB) ────────────────────────────────
         if (!$authenticated) {
             try {
-                $pdo  = get_db();
+                $pdo = get_db();
+                // RLS blocks unauthenticated reads — temporarily bypass for credential lookup
+                set_admin_context($pdo);
                 $stmt = $pdo->prepare(
                     "SELECT id, team_id, role, first_name, last_name, is_active, password_hash
                      FROM users WHERE username = ?"
                 );
                 $stmt->execute([$username]);
                 $user = $stmt->fetch();
+                // Reset immediately — team context will be set after successful auth
+                reset_rls_context($pdo);
 
                 if ($user && password_verify($password, $user['password_hash'])) {
                     // Block inactive users — per D-03
