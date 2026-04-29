@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-29T04:39:59.750Z"
+last_updated: "2026-04-29T04:43:21.810Z"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-28 (Roadmap Created)  
+**Last Updated:** 2026-04-29 (Plan 01-02 complete)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -33,7 +33,7 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Phase Summary
 
@@ -57,6 +57,9 @@ Plan: 2 of 3
 | Admin credentials in config.php/env (not users table) | Eliminates auth bootstrapping problem; single admin per D-02 | 01-01 |
 | PDO ATTR_EMULATE_PREPARES=false | Mandatory for PostgreSQL — native prepared statements with real type safety | 01-01 |
 | SESSION_TIMEOUT = 8h sliding window with cookie_samesite=Strict | Balance coach usability vs security; Strict prevents all cross-site CSRF | 01-01 |
+| render_login_page() in layout.php (not separate controller) | Keeps layout contract centralized; single location for page assembly | 01-02 |
+| Bootstrap 5.3 via CDN with SRI integrity hashes | No build step needed; tamper-resistant delivery | 01-02 |
+| Vague error messages for all credential failures | No per-field information disclosure; prevents username enumeration | 01-02 |
 
 ---
 
@@ -123,3 +126,4 @@ Plan: 2 of 3
 
 **Roadmap Status:** Awaiting user review and approval before planning commences.
 | Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |
+| Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
