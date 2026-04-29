@@ -146,6 +146,17 @@ None - no external service configuration required.
 - Action buttons are rendered in the card footer but point to unimplemented routes — Plan 02-03 will implement those handlers
 - Credential modal reuse pattern is established for any future credential display needs
 
+## Self-Check: PASSED
+
+- FOUND: src/coach/players_handler.php
+- FOUND: src/coach/player_create_handler.php
+- FOUND: src/templates/coach/players.php
+- FOUND: src/templates/coach/player_form.php
+- FOUND: .planning/phases/02-team-player-mgmt/02-02-SUMMARY.md
+- FOUND commit: dee7a08 (Task 1)
+- FOUND commit: 939ec56 (Task 2)
+- FOUND commit: b57540c (metadata)
+
 ---
 *Phase: 02-team-player-mgmt*
 *Completed: 2026-04-29*
