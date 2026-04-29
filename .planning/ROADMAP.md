@@ -41,7 +41,7 @@ Plans:
 
 **Depends on**: Phase 1
 
-**Requirements**: TEAM-04
+**Requirements**: TEAM-04, AUTH-03
 
 **Success Criteria** (what must be TRUE):
 1. Coach can create a new player with auto-generated username and random password displayed once on-screen
@@ -50,7 +50,12 @@ Plans:
 4. Admin can reset a coach's password and see the new random password displayed on-screen
 5. Credentials are never shown in browser history or logs; display is time-limited (cleared after 60 seconds)
 
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Coach area foundation: require_coach() middleware, role-based login redirect, coach layout template, router stubs
+- [ ] 02-02-PLAN.md — Player listing and creation: /coach/players card view, /coach/players/create with credential modal (TEAM-04)
+- [ ] 02-03-PLAN.md — Player actions: reset-password with credential modal (AUTH-03), deactivate, reactivate
 
 ---
 
@@ -98,7 +103,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-04-29 |
-| 2. Team & Player Management | 0/2 | Not started | — |
+| 2. Team & Player Management | 0/3 | Not started | — |
 | 3. Lists, Columns & Cells | 0/4 | Not started | — |
 | 4. Statistics & Aggregation | 0/3 | Not started | — |
 
