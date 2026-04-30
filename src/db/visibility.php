@@ -10,7 +10,7 @@ declare(strict_types=1);
  *
  * Rules:
  * - Coaches can view any list belonging to their team (public, protected, private)
- * - Players can view only public lists belonging to their team
+ * - Players can view only public lists; protected and private are invisible to players
  *
  * @param int $list_id  The list to check
  * @return bool
