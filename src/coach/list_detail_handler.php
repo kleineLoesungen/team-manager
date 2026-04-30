@@ -61,8 +61,60 @@ foreach ($cell_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
     $cells[(int)$cell['player_id']][(int)$cell['column_id']] = $cell['value'];
 }
 
-$error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
-$success = !empty($_GET['success']) ? 'Zeile gespeichert.' : '';
+$post_error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+
+    try {
+        $submitted = $_POST['cells'] ?? [];
+
+        foreach ($players as $player) {
+            $pid = (int)$player['id'];
+            foreach ($columns as $col) {
+                $col_id    = (int)$col['id'];
+                $data_type = $col['data_type'];
+                $raw_value = $submitted[$pid][$col_id] ?? null;
+
+                switch ($data_type) {
+                    case 'boolean':
+                        $validated_value = isset($submitted[$pid][$col_id]) ? '1' : '0';
+                        break;
+                    case 'number':
+                        if ($raw_value !== null && $raw_value !== '') {
+                            $int_valid   = filter_var($raw_value, FILTER_VALIDATE_INT)   !== false;
+                            $float_valid = filter_var($raw_value, FILTER_VALIDATE_FLOAT) !== false;
+                            $validated_value = ($int_valid || $float_valid) ? $raw_value : null;
+                        } else {
+                            $validated_value = null;
+                        }
+                        break;
+                    case 'text':
+                    default:
+                        $validated_value = ($raw_value !== null) ? mb_substr($raw_value, 0, 255) : null;
+                        break;
+                }
+
+                $upsert = $pdo->prepare(
+                    "INSERT INTO cells (list_id, column_id, player_id, value)
+                     VALUES (?, ?, ?, ?)
+                     ON CONFLICT (list_id, column_id, player_id)
+                     DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
+                );
+                $upsert->execute([$list_id, $col_id, $pid, $validated_value]);
+            }
+        }
+
+        redirect('/coach/lists/' . $list_id . '?success=1');
+
+    } catch (PDOException $e) {
+        error_log('Bulk cell save error: ' . $e->getMessage());
+        $post_error = 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
+    }
+}
+
+$error   = $post_error !== '' ? $post_error : (!empty($_GET['error']) ? e($_GET['error']) : '');
+$success = !empty($_GET['success']) ? 'Gespeichert.' : '';
 
 require ROOT_PATH . '/src/templates/coach/layout.php';
 
