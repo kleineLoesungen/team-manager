@@ -31,10 +31,17 @@ function get_db(): PDO {
 /**
  * Set PostgreSQL session context for RLS team isolation.
  * Must be called on every request after the team_id is known (coach/player sessions).
+ *
+ * @param int         $team_id  The team the current user belongs to.
+ * @param string|null $role     'coach' or 'player' — required for Phase 3 visibility RLS.
+ * @param int|null    $user_id  The current user's id — required for player cell ownership RLS.
  */
-function set_team_context(PDO $pdo, int $team_id): void {
-    $stmt = $pdo->prepare("SELECT set_config('app.current_team_id', ?, false)");
-    $stmt->execute([(string)$team_id]);
+function set_team_context(PDO $pdo, int $team_id, ?string $role = null, ?int $user_id = null): void {
+    $pdo->exec(
+        "SELECT set_config('app.current_team_id', " . $pdo->quote((string)$team_id) . ", false)" .
+        ", set_config('app.current_role', " . $pdo->quote((string)($role ?? '')) . ", false)" .
+        ", set_config('app.current_user_id', " . $pdo->quote((string)($user_id ?? '')) . ", false)"
+    );
 }
 
 /**
@@ -52,5 +59,10 @@ function set_admin_context(PDO $pdo): void {
  * so a prior request's GUC values would otherwise leak.
  */
 function reset_rls_context(PDO $pdo): void {
-    $pdo->exec("SELECT set_config('app.is_admin', '', false), set_config('app.current_team_id', '', false)");
+    $pdo->exec(
+        "SELECT set_config('app.is_admin', '', false)" .
+        ", set_config('app.current_team_id', '', false)" .
+        ", set_config('app.current_role', '', false)" .
+        ", set_config('app.current_user_id', '', false)"
+    );
 }

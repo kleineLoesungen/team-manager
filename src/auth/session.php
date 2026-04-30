@@ -96,7 +96,21 @@ function require_coach(): void {
     }
     $pdo = get_db();
     reset_rls_context($pdo); // Clear any stale admin context from a prior request on this connection
-    set_team_context($pdo, (int)$_SESSION['team_id']);
+    set_team_context($pdo, (int)$_SESSION['team_id'], 'coach', (int)$_SESSION['user_id']);
+}
+
+/**
+ * Require a player session.
+ * Checks $_SESSION['role'] === 'player', sets RLS team context with role + user_id, redirects on failure.
+ */
+function require_player(): void {
+    check_session_timeout();
+    if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'player') {
+        redirect('/login');
+    }
+    $pdo = get_db();
+    reset_rls_context($pdo);
+    set_team_context($pdo, (int)$_SESSION['team_id'], 'player', (int)$_SESSION['user_id']);
 }
 
 /**
