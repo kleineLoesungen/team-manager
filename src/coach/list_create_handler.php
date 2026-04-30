@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $name          = trim($_POST['name'] ?? '');
     $visibility    = $_POST['visibility'] ?? 'public';
-    $show_all_rows = isset($_POST['show_all_rows']) ? true : false;
+    $show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
     $selected_cols = array_map('intval', (array)($_POST['global_columns'] ?? []));
     $defaults      = (array)($_POST['defaults'] ?? []);  // [col_id => raw_value]
 

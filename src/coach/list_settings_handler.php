@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
     $new_visibility    = $_POST['visibility'] ?? '';
-    $new_show_all_rows = isset($_POST['show_all_rows']) ? true : false;
+    $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
 
     if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
         $error = 'Ungültiger Sichtbarkeits-Status.';
