@@ -44,6 +44,11 @@ if ($action === 'edit') {
     $stmt->execute([$team_id]);
     redirect('/admin/teams');
 
+} elseif ($action === 'reactivate') {
+    $stmt = $pdo->prepare("UPDATE teams SET is_active = TRUE WHERE id = ?");
+    $stmt->execute([$team_id]);
+    redirect('/admin/teams');
+
 } else {
     redirect('/admin/teams');
 }
