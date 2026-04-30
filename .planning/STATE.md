@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-30T12:44:16.467Z"
+last_updated: "2026-04-30T12:47:31.475Z"
 progress:
   total_phases: 9
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-30 (Plan 04-02 complete — coach statistics page with aggregation table, filters, and leaderboard)  
+**Last Updated:** 2026-04-30 (Plan 04-03 complete — player statistics page, own-row visibility-filtered aggregation, STAT-01 satisfied for player role)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -42,7 +42,7 @@ Plan: 3 of 3
 | 1 | Foundation | 7 (AUTH×4, TEAM×3) | **COMPLETE** |
 | 2 | Team & Player Mgmt | 1 (TEAM×1) | **COMPLETE** |
 | 3 | Lists, Columns & Cells | 9 (LIST×5, CELL×4) | **COMPLETE** |
-| 4 | Statistics & Aggregation | 3 (STAT×3) | Pending |
+| 4 | Statistics & Aggregation | 3 (STAT×3) | **COMPLETE** |
 
 ---
 
@@ -76,6 +76,8 @@ Plan: 3 of 3
 | can_edit_cell() returns true for coaches regardless of visibility (CELL-03); players restricted to public + own row (CELL-01) | Single authoritative PHP check; RLS is defense-in-depth | 03-01 |
 | CROSS JOIN on global columns subquery for aggregation | Guarantees all-player × all-column matrix regardless of cell existence; COALESCE converts NULLs to 0 | 04-02 |
 | Leaderboard carries filter state via hidden inputs | Ensures list_id and date range filters apply consistently to both stats table and leaderboard ranking | 04-02 |
+| Player stats visibility filter on LEFT JOIN condition (not WHERE) | Ensures players with zero cells still appear with 0 values via COALESCE; WHERE would exclude them | 04-03 |
+| No player name column in player stats table | Player always views own row — name label is redundant and consumes mobile screen width | 04-03 |
 
 ---
 
@@ -154,3 +156,4 @@ Plan: 3 of 3
 | Phase 03-lists-columns-cells P05 | 5 | 2 tasks | 6 files |
 | Phase 04 P01 | 5 | 2 tasks | 3 files |
 | Phase 04 P02 | 6 | 2 tasks | 2 files |
+| Phase 04-statistics-aggregation P03 | 2 | 2 tasks | 2 files |

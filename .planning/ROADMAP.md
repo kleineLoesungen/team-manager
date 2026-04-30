@@ -106,7 +106,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Navigation + routing: Statistik nav entries and /coach/stats, /player/stats routes
 - [x] 04-02-PLAN.md — Coach stats page: aggregation table, filter form, leaderboard (STAT-01, STAT-02, STAT-03)
-- [ ] 04-03-PLAN.md — Player stats page: own-row visibility-filtered statistics (STAT-01)
+- [x] 04-03-PLAN.md — Player stats page: own-row visibility-filtered statistics (STAT-01)
 
 ---
 
