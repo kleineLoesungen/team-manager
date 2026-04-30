@@ -118,6 +118,48 @@ CREATE POLICY columns_insert ON columns
         )
     );
 
+-- List–global-column junction: coaches manage; players read (visibility follows parent list)
+ALTER TABLE list_global_columns ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY lgc_select ON list_global_columns
+    FOR SELECT
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM lists
+            WHERE lists.id = list_global_columns.list_id
+              AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    );
+
+CREATE POLICY lgc_insert ON list_global_columns
+    FOR INSERT
+    WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coach'
+            AND EXISTS (
+                SELECT 1 FROM lists
+                WHERE lists.id = list_global_columns.list_id
+                  AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            )
+        )
+    );
+
+CREATE POLICY lgc_delete ON list_global_columns
+    FOR DELETE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coach'
+            AND EXISTS (
+                SELECT 1 FROM lists
+                WHERE lists.id = list_global_columns.list_id
+                  AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            )
+        )
+    );
+
 -- Cells SELECT: visibility inherited from parent list
 CREATE POLICY cells_visibility_select ON cells
     FOR SELECT

@@ -40,15 +40,22 @@ $list_stmt = $pdo->prepare("SELECT id, name, visibility FROM lists WHERE id = ?"
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fetch columns (global first, then local)
+// Fetch columns: local + only global columns selected for this list (D-11)
 $col_stmt = $pdo->prepare(
-    "SELECT id, name, data_type, list_id
-     FROM columns
-     WHERE (list_id = ? OR (list_id IS NULL AND team_id = ?))
-       AND is_active = TRUE
-     ORDER BY (list_id IS NULL) DESC, sort_order, created_at"
+    "SELECT c.id, c.name, c.data_type, c.list_id
+     FROM columns c
+     WHERE c.is_active = TRUE
+       AND (
+         c.list_id = ?
+         OR (c.list_id IS NULL AND c.team_id = ?
+             AND EXISTS (
+               SELECT 1 FROM list_global_columns lgc
+               WHERE lgc.list_id = ? AND lgc.column_id = c.id
+             ))
+       )
+     ORDER BY (c.list_id IS NULL) DESC, c.sort_order, c.created_at"
 );
-$col_stmt->execute([$list_id, $_SESSION['team_id']]);
+$col_stmt->execute([$list_id, $_SESSION['team_id'], $list_id]);
 $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch existing cell values for this player in this list

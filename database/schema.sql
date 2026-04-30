@@ -63,6 +63,16 @@ CREATE TABLE IF NOT EXISTS columns (
 CREATE INDEX IF NOT EXISTS idx_columns_team_id  ON columns(team_id);
 CREATE INDEX IF NOT EXISTS idx_columns_list_id  ON columns(list_id);
 
+-- List–global-column associations — which global columns appear in each list (D-11)
+-- A global column only shows in a list if a row exists here for that (list_id, column_id) pair.
+CREATE TABLE IF NOT EXISTS list_global_columns (
+    list_id   INTEGER NOT NULL REFERENCES lists(id)   ON DELETE CASCADE,
+    column_id INTEGER NOT NULL REFERENCES columns(id) ON DELETE CASCADE,
+    PRIMARY KEY (list_id, column_id)
+);
+CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON list_global_columns(list_id);
+CREATE INDEX IF NOT EXISTS idx_lgc_column_id ON list_global_columns(column_id);
+
 -- Cells — EAV values (value stored as TEXT; parsed by app layer per column.data_type)
 CREATE TABLE IF NOT EXISTS cells (
     id          SERIAL PRIMARY KEY,

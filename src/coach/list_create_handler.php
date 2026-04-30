@@ -42,9 +42,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$_SESSION['team_id'], $name, $visibility]);
             $list_id = (int)$stmt->fetchColumn();
 
-            // NOTE: global columns are NOT stored per-list — they are available in all lists of
-            // the team automatically (queried by team_id, list_id IS NULL). The checkboxes in
-            // the create form are informational UX only; no DB association is needed.
+            // Link selected global columns to this list via junction table (D-11)
+            if (!empty($selected_cols)) {
+                // Verify each ID belongs to this team and is actually global (list_id IS NULL)
+                $placeholders = implode(',', array_fill(0, count($selected_cols), '?'));
+                $valid_stmt = $pdo->prepare(
+                    "SELECT id FROM columns
+                     WHERE id IN ($placeholders) AND team_id = ? AND list_id IS NULL AND is_active = TRUE"
+                );
+                $valid_stmt->execute([...$selected_cols, $_SESSION['team_id']]);
+                $valid_ids = $valid_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                $link_stmt = $pdo->prepare(
+                    "INSERT INTO list_global_columns (list_id, column_id) VALUES (?, ?)"
+                );
+                foreach ($valid_ids as $col_id) {
+                    $link_stmt->execute([$list_id, (int)$col_id]);
+                }
+            }
 
             $pdo->commit();
             redirect('/coach/lists/' . $list_id . '?success=1');

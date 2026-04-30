@@ -1,6 +1,6 @@
 <?php
 // src/templates/coach/list_form.php — Create list form
-// Per D-11: three sections: name, visibility, global column selection (informational)
+// Per D-11: three sections: name, visibility, global column selection
 // Variables: $error (string), $global_columns (array of global column rows)
 ?>
 <?php if ($error): ?>
@@ -33,12 +33,12 @@
                 </div>
             </div>
 
-            <!-- Section 3: Global columns (informational) -->
+            <!-- Section 3: Global column selection — determines which appear in this list (D-11) -->
             <?php if (!empty($global_columns)): ?>
             <div class="mb-4">
-                <label class="form-label fw-semibold">Verfügbare globale Spalten</label>
+                <label class="form-label fw-semibold">Globale Spalten auswählen</label>
                 <div class="form-text mb-2">
-                    Diese Spalten stehen in allen Listen Ihres Teams zur Verfügung.
+                    Welche globalen Spalten sollen in dieser Liste erscheinen?
                 </div>
                 <?php foreach ($global_columns as $col): ?>
                 <div class="form-check">
