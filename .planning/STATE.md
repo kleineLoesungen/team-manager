@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-29T20:16:55.734Z"
+last_updated: "2026-04-30T10:55:21.010Z"
 progress:
-  total_phases: 5
+  total_phases: 7
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 11
+  completed_plans: 7
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-29 (Plan 02-03 complete — Player action handler: reset-password, deactivate, reactivate)  
+**Last Updated:** 2026-04-30 (Plan 03-01 complete — EAV schema, visibility RLS, PHP visibility helpers)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -32,8 +32,8 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
+Phase: 03 (lists-columns-cells) — EXECUTING
+Plan: 2 of 5
 
 ## Phase Summary
 
@@ -71,6 +71,9 @@ Plan: Not started
 | $_SESSION['team_id'] used for INSERT team_id on player create | Coach session carries validated team_id set at login; no DB re-query | 02-02 |
 | Triple-constraint ownership check (id + team_id + role='player') on all player actions | Prevents cross-team access even if RLS is bypassed; defense-in-depth in UPDATE statements too | 02-03 |
 | Reuse admin credential_modal.php for player password reset in coach context | Consistent UX across roles, no template duplication | 02-03 |
+| EAV global columns use list_id IS NULL as flag (no separate is_global boolean) | Single-column sentinel avoids redundant boolean; aligns with SQL pattern for optional FK | 03-01 |
+| set_team_context() extended with role and user_id params | Phase 3 RLS visibility policies require app.current_role and app.current_user_id; set at session establishment | 03-01 |
+| can_edit_cell() returns true for coaches regardless of visibility (CELL-03); players restricted to public + own row (CELL-01) | Single authoritative PHP check; RLS is defense-in-depth | 03-01 |
 
 ---
 
@@ -142,3 +145,4 @@ Plan: Not started
 | Phase 02-team-player-mgmt P01 | 5 | 2 tasks | 4 files |
 | Phase 02-team-player-mgmt P02 | 5 | 2 tasks | 4 files |
 | Phase 02-team-player-mgmt P03 | 5min | 1 tasks | 1 files |
+| Phase 03-lists-columns-cells P01 | 10 | 3 tasks | 5 files |
