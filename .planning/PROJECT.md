@@ -25,18 +25,26 @@ Trainer können den Spielereinsatz und beliebige Kennzahlen über alle Listen hi
 - [x] Trainer können Spieler ihres Teams verwalten (anlegen, deaktivieren)
 - [x] Trainer können das Passwort von Spielern zurücksetzen (neues Passwort wird auf dem Bildschirm angezeigt)
 
-### Active
+### Active (Phase 3 + 4 — Validated 2026-04-30)
+
+*Validated in Phase 3: Lists, Columns & Cells (2026-04-30)*
+
+- [x] Trainer können Listen anlegen (flexibler Zweck: Spiel, Training, etc.)
+- [x] Jede Liste hat Zeilen (eine pro Spieler) und Spalten (global oder lokal)
+- [x] Globale Spalten: auf Teamebene definiert, erscheinen in jeder Liste, Typ boolean oder Zahl
+- [x] Lokale Spalten: pro Liste definiert, Typ boolean, Zahl oder Text, nicht statistisch ausgewertet
+- [x] Listen-Status: public (Spieler lesen + eigene Zeile bearbeiten, Trainer alles), protected (Spieler nur lesen, Trainer bearbeiten), private (nur Trainer sichtbar + bearbeitbar)
+- [x] Spieler können nur ihre eigene Zeile bearbeiten
+
+*Validated in Phase 4: Statistics & Aggregation (2026-04-30)*
+
+- [x] Statistikseite: pro Spieler Summe/Zählung aller globalen Spalten über alle Listen
+- [x] Boolean-Globalspalten: Anzahl der true-Werte (z. B. 12 Spiele absolviert)
+- [x] Zahlen-Globalspalten: Gesamtsumme (z. B. 15 Tore gesamt)
+
+### Remaining
 
 - [ ] Zugangsdaten sind nicht vom Benutzer selbst editierbar
-- [ ] Trainer können Listen anlegen (flexibler Zweck: Spiel, Training, etc.)
-- [ ] Jede Liste hat Zeilen (eine pro Spieler) und Spalten (global oder lokal)
-- [ ] Globale Spalten: auf Teamebene definiert, erscheinen in jeder Liste, Typ boolean oder Zahl
-- [ ] Lokale Spalten: pro Liste definiert, Typ boolean, Zahl oder Text, nicht statistisch ausgewertet
-- [ ] Listen-Status: public (Spieler lesen + eigene Zeile bearbeiten, Trainer alles), protected (Spieler nur lesen, Trainer bearbeiten), private (nur Trainer sichtbar + bearbeitbar)
-- [ ] Spieler können nur ihre eigene Zeile bearbeiten
-- [ ] Statistikseite: pro Spieler Summe/Zählung aller globalen Spalten über alle Listen
-- [ ] Boolean-Globalspalten: Anzahl der true-Werte (z. B. 12 Spiele absolviert)
-- [ ] Zahlen-Globalspalten: Gesamtsumme (z. B. 15 Tore gesamt)
 
 ### Out of Scope
 
