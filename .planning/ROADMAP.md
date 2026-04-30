@@ -8,7 +8,7 @@
 
 - [x] **Phase 1: Foundation** - Authentication, Database Schema, Admin Setup ✓ 2026-04-29
 - [x] **Phase 2: Team & Player Management** - Player CRUD, Password Reset, Credentials ✓ 2026-04-30
-- [ ] **Phase 3: Lists, Columns & Cells** - Spreadsheet Core, Visibility States, Cell Editing
+- [x] **Phase 3: Lists, Columns & Cells** - Spreadsheet Core, Visibility States, Cell Editing (completed 2026-04-30)
 - [ ] **Phase 4: Statistics & Aggregation** - Per-Player Stats, Filtering, Leaderboards
 
 ## Phase Details
@@ -76,7 +76,7 @@ Plans:
 7. Private lists are invisible to players; coaches have full read/write access
 8. All visibility rules are enforced: players cannot see data they shouldn't and cannot edit cells outside their row; coaches cannot edit/see private lists by accident
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 03-01-PLAN.md — EAV schema (lists/columns/cells tables), RLS policies, visibility.php helpers
@@ -111,7 +111,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-04-29 |
 | 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
-| 3. Lists, Columns & Cells | 4/5 | In Progress|  |
+| 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
 | 4. Statistics & Aggregation | 0/3 | Not started | — |
 
 ---
