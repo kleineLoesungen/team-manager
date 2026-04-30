@@ -118,6 +118,10 @@ match (true) {
     $path === '/coach/columns/create'
         => require ROOT_PATH . '/src/coach/columns_create_handler.php',
 
+    // ── Coach: Statistics ──────────────────────────────────────────────
+    $path === '/coach/stats'
+        => require ROOT_PATH . '/src/coach/stats_handler.php',
+
     // ── Player: Lists ─────────────────────────────────────────────────
     $path === '/player' || $path === '/player/lists'
         => require ROOT_PATH . '/src/player/lists_handler.php',
@@ -136,6 +140,10 @@ match (true) {
             $_REQUEST['list_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/player/list_detail_handler.php';
         })(),
+
+    // ── Player: Statistics ────────────────────────────────────────────
+    $path === '/player/stats'
+        => require ROOT_PATH . '/src/player/stats_handler.php',
 
     // ── 404 ────────────────────────────────────────────────────────────
     default => (function() {
