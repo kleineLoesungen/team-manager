@@ -164,3 +164,10 @@ Plan: Not started
 | Phase 04 P01 | 5 | 2 tasks | 3 files |
 | Phase 04 P02 | 6 | 2 tasks | 2 files |
 | Phase 04-statistics-aggregation P03 | 2 | 2 tasks | 2 files |
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260430-rbt | Coach list detail — bulk inline editing | 2026-04-30 | 6e984a1 | [260430-rbt-coach-list-detail-bulk-inline-editing](./quick/260430-rbt-coach-list-detail-bulk-inline-editing/) |
+| 260430-rhh | Admin UI — active/inactive grouping for teams and coaches | 2026-04-30 | 560b81c | [260430-rhh-admin-ui-active-inactive-grouping-for-te](./quick/260430-rhh-admin-ui-active-inactive-grouping-for-te/) |
