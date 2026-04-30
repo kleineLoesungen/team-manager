@@ -2,7 +2,7 @@
 // src/templates/coach/layout.php — Coach area layout wrapper
 // Provides render_coach_page() which wraps content in Bootstrap 5 layout.
 // Per D-01: separate layout, no sharing with admin layout.
-// Per D-03: Navigation shows only "Spieler" in Phase 2 — no placeholder nav items.
+// Phase 3 adds 'lists' and 'columns' nav items (in addition to Phase 2 'players').
 
 declare(strict_types=1);
 
@@ -11,7 +11,7 @@ require_once dirname(__DIR__) . '/layout.php';
 /**
  * Render a full coach page.
  * @param string $title   Page title (German)
- * @param string $active  Active nav item — only 'players' exists in Phase 2
+ * @param string $active  Active nav item — 'players', 'lists', or 'columns'
  * @param callable $body  Function that outputs the main content HTML
  */
 function render_coach_page(string $title, string $active, callable $body): void {
@@ -30,14 +30,30 @@ function render_coach_page(string $title, string $active, callable $body): void 
                             <i class="bi bi-people-fill me-2"></i>Spieler
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'lists' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coach/lists">
+                            <i class="bi bi-table me-2"></i>Listen
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'columns' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coach/columns">
+                            <i class="bi bi-layout-three-columns me-2"></i>Spalten
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
-            <!-- Mobile top tabs (single tab in Phase 2) -->
+            <!-- Mobile top tabs -->
             <div class="d-md-none w-100 border-bottom bg-light">
                 <div class="d-flex">
                     <a class="flex-fill text-center py-2 <?= $active === 'players' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/coach/players">Spieler</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/coach/lists">Listen</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'columns' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/coach/columns">Spalten</a>
                 </div>
             </div>
 

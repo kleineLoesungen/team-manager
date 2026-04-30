@@ -15,7 +15,7 @@ if (is_authenticated()) {
     if (($_SESSION['role'] ?? '') === 'coach') {
         redirect('/coach/players');
     } else {
-        redirect('/player'); // Phase 3+ placeholder
+        redirect('/player/lists');
     }
 }
 
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($user['role'] === 'coach') {
                             redirect('/coach/players');
                         } else {
-                            redirect('/player'); // Phase 3+ placeholder — returns 404 until player area exists
+                            redirect('/player/lists');
                         }
                     }
                 } else {
