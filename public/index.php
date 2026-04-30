@@ -75,6 +75,68 @@ match (true) {
             require ROOT_PATH . '/src/coach/player_action_handler.php';
         })(),
 
+    // ── Coach: Lists ───────────────────────────────────────────────────
+    $path === '/coach/lists'
+        => require ROOT_PATH . '/src/coach/lists_handler.php',
+
+    $path === '/coach/lists/create'
+        => require ROOT_PATH . '/src/coach/list_create_handler.php',
+
+    // /coach/lists/{id}/settings — GET: show settings form; POST: change visibility (LIST-05)
+    (bool)preg_match('#^/coach/lists/(\d+)/settings$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coach/list_settings_handler.php';
+        })(),
+
+    // /coach/lists/{id}/columns/create — POST: add local column to list (LIST-03)
+    (bool)preg_match('#^/coach/lists/(\d+)/columns/create$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coach/list_column_create_handler.php';
+        })(),
+
+    // /coach/lists/{id}/rows/{player_id}/edit — GET/POST: edit player row (CELL-02)
+    (bool)preg_match('#^/coach/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id']   = (int)$matches[1];
+            $_REQUEST['player_id'] = (int)$matches[2];
+            require ROOT_PATH . '/src/coach/list_row_edit_handler.php';
+        })(),
+
+    // /coach/lists/{id} — GET: list detail table (must come AFTER more specific routes)
+    (bool)preg_match('#^/coach/lists/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coach/list_detail_handler.php';
+        })(),
+
+    // ── Coach: Columns (global) ────────────────────────────────────────
+    $path === '/coach/columns'
+        => require ROOT_PATH . '/src/coach/columns_handler.php',
+
+    $path === '/coach/columns/create'
+        => require ROOT_PATH . '/src/coach/columns_create_handler.php',
+
+    // ── Player: Lists ─────────────────────────────────────────────────
+    $path === '/player' || $path === '/player/lists'
+        => require ROOT_PATH . '/src/player/lists_handler.php',
+
+    // /player/lists/{id}/rows/{player_id}/edit — GET/POST: edit own row (CELL-01)
+    (bool)preg_match('#^/player/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id']   = (int)$matches[1];
+            $_REQUEST['player_id'] = (int)$matches[2];
+            require ROOT_PATH . '/src/player/list_row_edit_handler.php';
+        })(),
+
+    // /player/lists/{id} — GET: list detail (must come AFTER more specific routes)
+    (bool)preg_match('#^/player/lists/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/player/list_detail_handler.php';
+        })(),
+
     // ── 404 ────────────────────────────────────────────────────────────
     default => (function() {
         http_response_code(404);
