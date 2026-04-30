@@ -101,7 +101,12 @@ Plans:
 4. Statistics are only computed from public and protected lists (private lists excluded)
 5. Each player sees only their own statistics
 
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Navigation + routing: Statistik nav entries and /coach/stats, /player/stats routes
+- [ ] 04-02-PLAN.md — Coach stats page: aggregation table, filter form, leaderboard (STAT-01, STAT-02, STAT-03)
+- [ ] 04-03-PLAN.md — Player stats page: own-row visibility-filtered statistics (STAT-01)
 
 ---
 
