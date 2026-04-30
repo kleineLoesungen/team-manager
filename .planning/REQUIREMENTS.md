@@ -24,14 +24,14 @@
 - [ ] **LIST-01**: Trainer kann eine Liste mit Name anlegen (flexibler Zweck: Spiel, Training, etc.)
 - [ ] **LIST-02**: Trainer kann globale Spalten auf Teamebene definieren (Typ: boolean oder Zahl) — können in jeder Liste des Teams verwendet werden
 - [ ] **LIST-03**: Trainer kann lokale Spalten pro Liste definieren (Typ: boolean, Zahl oder Text) — nur in dieser Liste sichtbar, nicht statistisch ausgewertet
-- [ ] **LIST-04**: Jede Liste hat genau einen von drei Sichtbarkeits-States: public, protected oder private
+- [x] **LIST-04**: Jede Liste hat genau einen von drei Sichtbarkeits-States: public, protected oder private
 - [ ] **LIST-05**: Trainer kann den Sichtbarkeits-State einer bestehenden Liste ändern
 
 ### Zellen-Editing & Zugriffsregeln (CELL)
 
-- [ ] **CELL-01**: Spieler kann Werte ausschließlich in seiner eigenen Zeile bearbeiten — und nur in public Listen
-- [ ] **CELL-02**: Trainer kann alle Zeilen in public und protected Listen lesen und bearbeiten
-- [ ] **CELL-03**: Private Listen sind für Spieler vollständig unsichtbar; Trainer haben vollen Lese- und Schreibzugriff
+- [x] **CELL-01**: Spieler kann Werte ausschließlich in seiner eigenen Zeile bearbeiten — und nur in public Listen
+- [x] **CELL-02**: Trainer kann alle Zeilen in public und protected Listen lesen und bearbeiten
+- [x] **CELL-03**: Private Listen sind für Spieler vollständig unsichtbar; Trainer haben vollen Lese- und Schreibzugriff
 - [ ] **CELL-04**: Benutzer sieht alle Zeilen (alle Spieler) einer für ihn sichtbaren Liste, kann aber nur seine eigene Zeile bearbeiten (Spieler) bzw. alle Zeilen (Trainer)
 
 ### Statistik (STAT)
@@ -81,11 +81,11 @@
 | LIST-01 | 3 | Pending |
 | LIST-02 | 3 | Pending |
 | LIST-03 | 3 | Pending |
-| LIST-04 | 3 | Pending |
+| LIST-04 | 3 | Complete |
 | LIST-05 | 3 | Pending |
-| CELL-01 | 3 | Pending |
-| CELL-02 | 3 | Pending |
-| CELL-03 | 3 | Pending |
+| CELL-01 | 3 | Complete |
+| CELL-02 | 3 | Complete |
+| CELL-03 | 3 | Complete |
 | CELL-04 | 3 | Pending |
 | STAT-01 | 4 | Pending |
 | STAT-02 | 4 | Pending |
