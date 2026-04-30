@@ -36,9 +36,9 @@
 
 ### Statistik (STAT)
 
-- [ ] **STAT-01**: Pro-Spieler-Statistikseite zeigt für alle globalen Spalten: Summe (Zahl-Spalten) oder Anzahl der true-Werte (boolean-Spalten) — aggregiert über alle Listen, in denen die jeweilige globale Spalte verwendet wird
-- [ ] **STAT-02**: Statistik kann auf bestimmte Listen oder einen Zeitraum gefiltert werden
-- [ ] **STAT-03**: Teamweite Rangliste sortiert Spieler nach dem Wert einer wählbaren globalen Spalte
+- [x] **STAT-01**: Pro-Spieler-Statistikseite zeigt für alle globalen Spalten: Summe (Zahl-Spalten) oder Anzahl der true-Werte (boolean-Spalten) — aggregiert über alle Listen, in denen die jeweilige globale Spalte verwendet wird
+- [x] **STAT-02**: Statistik kann auf bestimmte Listen oder einen Zeitraum gefiltert werden
+- [x] **STAT-03**: Teamweite Rangliste sortiert Spieler nach dem Wert einer wählbaren globalen Spalte
 
 ## v2 Anforderungen
 
@@ -87,9 +87,9 @@
 | CELL-02 | 3 | Complete |
 | CELL-03 | 3 | Complete |
 | CELL-04 | 3 | Complete |
-| STAT-01 | 4 | Pending |
-| STAT-02 | 4 | Pending |
-| STAT-03 | 4 | Pending |
+| STAT-01 | 4 | Complete |
+| STAT-02 | 4 | Complete |
+| STAT-03 | 4 | Complete |
 
 **Coverage:**
 - v1 Anforderungen: 20 gesamt
