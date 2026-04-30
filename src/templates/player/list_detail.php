@@ -1,7 +1,7 @@
 <?php
-// src/templates/player/list_detail.php — List table for player (D-14, CELL-04)
-// All players visible as rows. Only own row has edit button (other rows read-only).
-// Variables: $list, $columns, $players, $cells, $current_user_id (int, from session)
+// src/templates/player/list_detail.php — List table for player
+// Variables: $list (with visibility + show_all_rows), $columns, $players, $cells, $current_user_id
+// edit button only shown for public lists + own row; protected = read-only
 ?>
 
 <div class="mb-3">
@@ -16,28 +16,33 @@
 <div class="text-center py-5"><p class="text-muted">Keine Spieler im Team.</p></div>
 <?php else: ?>
 
-<!-- Per D-04: Bootstrap table-responsive for mobile horizontal scroll -->
+<?php $can_edit = $list['visibility'] === 'public'; ?>
+
 <div class="table-responsive">
     <table class="table table-sm table-hover align-middle">
         <thead class="table-light">
             <tr>
+                <?php if ($list['show_all_rows']): ?>
                 <th class="text-nowrap">Spieler</th>
+                <?php endif; ?>
                 <?php foreach ($columns as $col): ?>
                 <th class="text-nowrap"><?= e($col['name']) ?></th>
                 <?php endforeach; ?>
-                <th></th>
+                <?php if ($can_edit): ?><th></th><?php endif; ?>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($players as $player): ?>
             <?php $is_own_row = (int)$player['id'] === $current_user_id; ?>
             <tr <?= $is_own_row ? 'class="table-primary"' : '' ?>>
+                <?php if ($list['show_all_rows']): ?>
                 <td class="text-nowrap fw-medium">
                     <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
                     <?php if ($is_own_row): ?>
                     <span class="badge bg-primary ms-1 small">Ich</span>
                     <?php endif; ?>
                 </td>
+                <?php endif; ?>
                 <?php foreach ($columns as $col): ?>
                 <td>
                     <?php
@@ -54,15 +59,16 @@
                     ?>
                 </td>
                 <?php endforeach; ?>
+                <?php if ($can_edit): ?>
                 <td>
                     <?php if ($is_own_row): ?>
-                    <!-- CELL-04 + CELL-01: only own row gets edit button -->
                     <a href="/player/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
                        class="btn btn-sm btn-outline-primary min-touch">
                         Bearbeiten
                     </a>
                     <?php endif; ?>
                 </td>
+                <?php endif; ?>
             </tr>
             <?php endforeach; ?>
         </tbody>

@@ -10,7 +10,7 @@ declare(strict_types=1);
  *
  * Rules:
  * - Coaches can view any list belonging to their team (public, protected, private)
- * - Players can view only public lists; protected and private are invisible to players
+ * - Players can view public and protected lists; private lists are invisible to players
  *
  * @param int $list_id  The list to check
  * @return bool
@@ -51,7 +51,7 @@ function can_view_list(int $list_id): bool {
     }
 
     if ($role === 'player') {
-        return $list['visibility'] === 'public'; // Players see only public lists
+        return in_array($list['visibility'], ['public', 'protected'], true);
     }
 
     return false;

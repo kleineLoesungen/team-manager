@@ -1,6 +1,6 @@
 <?php
-// src/player/lists_handler.php — GET /player/lists — public list overview for player (D-13)
-// Shows only public lists — protected and private are invisible to players (CELL-03).
+// src/player/lists_handler.php — GET /player/lists — list overview for player
+// Shows public and protected lists; private lists are invisible to players.
 
 declare(strict_types=1);
 
@@ -8,8 +8,6 @@ require_player();
 
 $pdo = get_db();
 
-// RLS context set by require_player(); public filter also applied here for clarity
-// With RLS, non-public lists are already filtered. Explicit WHERE provides defense-in-depth.
 $stmt = $pdo->prepare(
     "SELECT
         l.id,
@@ -19,7 +17,7 @@ $stmt = $pdo->prepare(
         COUNT(c.id) AS column_count
      FROM lists l
      LEFT JOIN columns c ON (c.list_id = l.id OR (c.list_id IS NULL AND c.team_id = l.team_id))
-     WHERE l.team_id = ? AND l.visibility = 'public'
+     WHERE l.team_id = ? AND l.visibility IN ('public', 'protected')
      GROUP BY l.id
      ORDER BY l.created_at DESC"
 );

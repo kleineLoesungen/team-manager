@@ -9,8 +9,8 @@ $list_id = (int)($_REQUEST['list_id'] ?? 0);
 $pdo     = get_db();
 $error   = '';
 
-// Verify list belongs to this team
-$stmt = $pdo->prepare("SELECT id, name, visibility FROM lists WHERE id = ? AND team_id = ?");
+// Fetch list including show_all_rows
+$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -25,17 +25,18 @@ require ROOT_PATH . '/src/templates/coach/layout.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    $new_visibility = $_POST['visibility'] ?? '';
+    $new_visibility    = $_POST['visibility'] ?? '';
+    $new_show_all_rows = isset($_POST['show_all_rows']) ? true : false;
 
     if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
         $error = 'Ungültiger Sichtbarkeits-Status.';
     } else {
         try {
             $upd = $pdo->prepare(
-                "UPDATE lists SET visibility = ?, updated_at = NOW()
+                "UPDATE lists SET visibility = ?, show_all_rows = ?, updated_at = NOW()
                  WHERE id = ? AND team_id = ?"
             );
-            $upd->execute([$new_visibility, $list_id, $_SESSION['team_id']]);
+            $upd->execute([$new_visibility, $new_show_all_rows, $list_id, $_SESSION['team_id']]);
             redirect('/coach/lists/' . $list_id . '?success=1');
         } catch (PDOException $e) {
             error_log('List settings error: ' . $e->getMessage());
@@ -52,19 +53,30 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             <h5 class="card-title"><?= e($list['name']) ?></h5>
             <form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>/settings">
                 <?= csrf_field() ?>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label fw-semibold">Sichtbarkeit</label>
                     <select name="visibility" class="form-select">
                         <option value="public"    <?= $list['visibility'] === 'public'    ? 'selected' : '' ?>>
-                            Öffentlich (public) — Spieler können eigene Zeile bearbeiten
+                            Öffentlich — Spieler bearbeiten eigene Zeile
                         </option>
                         <option value="protected" <?= $list['visibility'] === 'protected' ? 'selected' : '' ?>>
-                            Geschützt (protected) — Nur Trainer schreibt, Spieler sehen nichts
+                            Geschützt — Spieler sehen eigene Zeile (nur lesen)
                         </option>
                         <option value="private"   <?= $list['visibility'] === 'private'   ? 'selected' : '' ?>>
-                            Privat (private) — Nur Trainer sieht und schreibt
+                            Privat — Nur Trainer sieht und bearbeitet
                         </option>
                     </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Zeilen anderer Spieler</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="show_all_rows"
+                               id="show_all_rows" value="1"
+                               <?= $list['show_all_rows'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="show_all_rows">
+                            Spieler sehen Einträge anderer Spieler
+                        </label>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
                 <a href="/coach/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>

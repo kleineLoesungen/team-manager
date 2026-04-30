@@ -1,6 +1,5 @@
 <?php
 // src/templates/coach/list_form.php — Create list form
-// Per D-11: three sections: name, visibility, global column selection
 // Variables: $error (string), $global_columns (array of global column rows)
 ?>
 <?php if ($error): ?>
@@ -24,8 +23,8 @@
             <div class="mb-4">
                 <label class="form-label fw-semibold">Sichtbarkeit</label>
                 <select name="visibility" class="form-select">
-                    <option value="public">Öffentlich — Spieler können eigene Zeile bearbeiten</option>
-                    <option value="protected">Geschützt — Trainer schreibt; Spieler sehen nichts</option>
+                    <option value="public">Öffentlich — Spieler bearbeiten eigene Zeile</option>
+                    <option value="protected">Geschützt — Spieler sehen eigene Zeile (nur lesen)</option>
                     <option value="private">Privat — Nur für Trainer sichtbar</option>
                 </select>
                 <div class="form-text">
@@ -33,24 +32,64 @@
                 </div>
             </div>
 
-            <!-- Section 3: Global column selection — determines which appear in this list (D-11) -->
+            <!-- Section 3: Row visibility -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Zeilen anderer Spieler</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_all_rows"
+                           id="show_all_rows" value="1">
+                    <label class="form-check-label" for="show_all_rows">
+                        Spieler sehen Einträge anderer Spieler
+                    </label>
+                </div>
+                <div class="form-text">
+                    Standard: Spieler sehen nur ihre eigene Zeile. Diese Einstellung ist später änderbar.
+                </div>
+            </div>
+
+            <!-- Section 4: Global column selection with optional default values -->
             <?php if (!empty($global_columns)): ?>
             <div class="mb-4">
                 <label class="form-label fw-semibold">Globale Spalten auswählen</label>
                 <div class="form-text mb-2">
                     Welche globalen Spalten sollen in dieser Liste erscheinen?
+                    Optional: Standardwert vorausfüllen (gilt für alle Spieler beim Erstellen).
                 </div>
                 <?php foreach ($global_columns as $col): ?>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox"
-                           name="global_columns[]" value="<?= (int)$col['id'] ?>"
-                           id="col_<?= (int)$col['id'] ?>" checked>
-                    <label class="form-check-label" for="col_<?= (int)$col['id'] ?>">
-                        <?= e($col['name']) ?>
-                        <span class="badge bg-light text-dark border ms-1">
-                            <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
-                        </span>
-                    </label>
+                <?php $col_id = (int)$col['id']; ?>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               name="global_columns[]" value="<?= $col_id ?>"
+                               id="col_<?= $col_id ?>" checked>
+                        <label class="form-check-label" for="col_<?= $col_id ?>">
+                            <?= e($col['name']) ?>
+                            <span class="badge bg-light text-dark border ms-1">
+                                <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
+                            </span>
+                        </label>
+                    </div>
+                    <!-- Default value for this column (optional, only applied at list creation) -->
+                    <div class="ms-4 mt-1">
+                        <?php if ($col['data_type'] === 'boolean'): ?>
+                        <div class="form-check form-check-sm">
+                            <input class="form-check-input" type="checkbox"
+                                   name="defaults[<?= $col_id ?>]" value="1"
+                                   id="default_<?= $col_id ?>">
+                            <label class="form-check-label text-muted small" for="default_<?= $col_id ?>">
+                                Standardwert: Ja
+                            </label>
+                        </div>
+                        <?php else: ?>
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text text-muted small">Standard</span>
+                            <input type="number" step="any"
+                                   name="defaults[<?= $col_id ?>]"
+                                   class="form-control form-control-sm"
+                                   placeholder="leer lassen = kein Standardwert">
+                        </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <?php endforeach; ?>
             </div>

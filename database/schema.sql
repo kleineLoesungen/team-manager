@@ -32,15 +32,19 @@ CREATE INDEX IF NOT EXISTS idx_users_team_id  ON users(team_id);
 -- ── Phase 3: Lists, Columns & Cells ──────────────────────────────────────────
 
 -- Lists — one per team/coach usage; has visibility state
+-- show_all_rows: when TRUE players see all rows; when FALSE players see only their own row
 CREATE TABLE IF NOT EXISTS lists (
-    id          SERIAL PRIMARY KEY,
-    team_id     INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    name        VARCHAR(100) NOT NULL,
-    visibility  VARCHAR(10)  NOT NULL DEFAULT 'public'
-                CHECK (visibility IN ('public', 'protected', 'private')),
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    id            SERIAL PRIMARY KEY,
+    team_id       INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    name          VARCHAR(100) NOT NULL,
+    visibility    VARCHAR(10)  NOT NULL DEFAULT 'public'
+                  CHECK (visibility IN ('public', 'protected', 'private')),
+    show_all_rows BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+-- Migration for existing databases:
+-- ALTER TABLE lists ADD COLUMN IF NOT EXISTS show_all_rows BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_lists_team_id   ON lists(team_id);
 CREATE INDEX IF NOT EXISTS idx_lists_visibility ON lists(visibility);
 

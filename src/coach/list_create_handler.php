@@ -8,7 +8,7 @@ require_coach();
 $pdo   = get_db();
 $error = '';
 
-// Fetch all active global columns for this team (for checkbox display in form — D-11)
+// Fetch all active global columns for this team (checkbox display + default value inputs)
 $cols_stmt = $pdo->prepare(
     "SELECT id, name, data_type FROM columns
      WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
@@ -24,7 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $name          = trim($_POST['name'] ?? '');
     $visibility    = $_POST['visibility'] ?? 'public';
+    $show_all_rows = isset($_POST['show_all_rows']) ? true : false;
     $selected_cols = array_map('intval', (array)($_POST['global_columns'] ?? []));
+    $defaults      = (array)($_POST['defaults'] ?? []);  // [col_id => raw_value]
 
     if (empty($name)) {
         $error = 'Name ist erforderlich.';
@@ -35,16 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                "INSERT INTO lists (team_id, name, visibility)
-                 VALUES (?, ?, ?)
+                "INSERT INTO lists (team_id, name, visibility, show_all_rows)
+                 VALUES (?, ?, ?, ?)
                  RETURNING id"
             );
-            $stmt->execute([$_SESSION['team_id'], $name, $visibility]);
+            $stmt->execute([$_SESSION['team_id'], $name, $visibility, $show_all_rows]);
             $list_id = (int)$stmt->fetchColumn();
 
-            // Link selected global columns to this list via junction table (D-11)
+            // Link selected global columns (D-11) — validate ownership first
+            $valid_ids = [];
             if (!empty($selected_cols)) {
-                // Verify each ID belongs to this team and is actually global (list_id IS NULL)
                 $placeholders = implode(',', array_fill(0, count($selected_cols), '?'));
                 $valid_stmt = $pdo->prepare(
                     "SELECT id FROM columns
@@ -58,6 +60,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 foreach ($valid_ids as $col_id) {
                     $link_stmt->execute([$list_id, (int)$col_id]);
+                }
+            }
+
+            // Pre-populate default cell values for all active players on this team
+            if (!empty($valid_ids)) {
+                // Fetch column type map for validation
+                $type_map = [];
+                foreach ($global_columns as $gc) {
+                    $type_map[(int)$gc['id']] = $gc['data_type'];
+                }
+
+                // Fetch all active players
+                $players_stmt = $pdo->prepare(
+                    "SELECT id FROM users WHERE team_id = ? AND role = 'player' AND is_active = TRUE"
+                );
+                $players_stmt->execute([$_SESSION['team_id']]);
+                $player_ids = $players_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+                $cell_stmt = $pdo->prepare(
+                    "INSERT INTO cells (list_id, column_id, player_id, value)
+                     VALUES (?, ?, ?, ?)
+                     ON CONFLICT (list_id, column_id, player_id) DO NOTHING"
+                );
+
+                foreach ($valid_ids as $col_id) {
+                    $col_id     = (int)$col_id;
+                    $data_type  = $type_map[$col_id] ?? null;
+                    $raw        = $defaults[$col_id] ?? null;
+
+                    // Validate and normalise default value per type
+                    $value = null;
+                    if ($data_type === 'boolean') {
+                        $value = isset($defaults[$col_id]) ? '1' : '0';
+                    } elseif ($data_type === 'number' && $raw !== null && $raw !== '') {
+                        $int_ok   = filter_var($raw, FILTER_VALIDATE_INT)   !== false;
+                        $float_ok = filter_var($raw, FILTER_VALIDATE_FLOAT) !== false;
+                        if ($int_ok || $float_ok) {
+                            $value = $raw;
+                        }
+                    }
+
+                    if ($value === null) {
+                        continue; // No default set — leave cell empty
+                    }
+
+                    foreach ($player_ids as $pid) {
+                        $cell_stmt->execute([$list_id, $col_id, (int)$pid, $value]);
+                    }
                 }
             }
 
