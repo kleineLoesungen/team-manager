@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-30 (Plan 04-03 complete — player statistics page, own-row visibility-filtered aggregation, STAT-01 satisfied for player role)  
+**Last Updated:** 2026-04-30 - Completed quick task 260430-rbt: Coach list detail — bulk inline editing  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -143,6 +143,12 @@ Plan: Not started
 ---
 
 **Roadmap Status:** Awaiting user review and approval before planning commences.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260430-rbt | Coach list detail — bulk inline editing | 2026-04-30 | 6e984a1 | [260430-rbt-coach-list-detail-bulk-inline-editing](./quick/260430-rbt-coach-list-detail-bulk-inline-editing/) |
 | Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |
 | Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
 | Phase 01-foundation P03 | 6 | 2 tasks | 11 files |
