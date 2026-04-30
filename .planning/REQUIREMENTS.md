@@ -23,9 +23,9 @@
 
 - [x] **LIST-01**: Trainer kann eine Liste mit Name anlegen (flexibler Zweck: Spiel, Training, etc.)
 - [x] **LIST-02**: Trainer kann globale Spalten auf Teamebene definieren (Typ: boolean oder Zahl) — können in jeder Liste des Teams verwendet werden
-- [ ] **LIST-03**: Trainer kann lokale Spalten pro Liste definieren (Typ: boolean, Zahl oder Text) — nur in dieser Liste sichtbar, nicht statistisch ausgewertet
+- [x] **LIST-03**: Trainer kann lokale Spalten pro Liste definieren (Typ: boolean, Zahl oder Text) — nur in dieser Liste sichtbar, nicht statistisch ausgewertet
 - [x] **LIST-04**: Jede Liste hat genau einen von drei Sichtbarkeits-States: public, protected oder private
-- [ ] **LIST-05**: Trainer kann den Sichtbarkeits-State einer bestehenden Liste ändern
+- [x] **LIST-05**: Trainer kann den Sichtbarkeits-State einer bestehenden Liste ändern
 
 ### Zellen-Editing & Zugriffsregeln (CELL)
 
@@ -80,9 +80,9 @@
 | TEAM-04 | 2 | Complete |
 | LIST-01 | 3 | Complete |
 | LIST-02 | 3 | Complete |
-| LIST-03 | 3 | Pending |
+| LIST-03 | 3 | Complete |
 | LIST-04 | 3 | Complete |
-| LIST-05 | 3 | Pending |
+| LIST-05 | 3 | Complete |
 | CELL-01 | 3 | Complete |
 | CELL-02 | 3 | Complete |
 | CELL-03 | 3 | Complete |
