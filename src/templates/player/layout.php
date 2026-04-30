@@ -2,6 +2,7 @@
 // src/templates/player/layout.php — Player area layout wrapper
 // Provides render_player_page() which wraps content in Bootstrap 5 layout.
 // Per D-12: separate player layout, own navigation, single 'Listen' nav item.
+// Phase 4 adds 'stats' nav item for statistics aggregation.
 
 declare(strict_types=1);
 
@@ -10,7 +11,7 @@ require_once dirname(__DIR__) . '/layout.php';
 /**
  * Render a full player page.
  * @param string $title   Page title (German)
- * @param string $active  Active nav item — only 'lists' exists in Phase 3
+ * @param string $active  Active nav item — 'lists' or 'stats'
  * @param callable $body  Function that outputs the main content HTML
  */
 function render_player_page(string $title, string $active, callable $body): void {
@@ -29,6 +30,12 @@ function render_player_page(string $title, string $active, callable $body): void
                             <i class="bi bi-table me-2"></i>Listen
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/player/stats">
+                            <i class="bi bi-graph-up me-2"></i>Statistik
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -37,6 +44,8 @@ function render_player_page(string $title, string $active, callable $body): void
                 <div class="d-flex">
                     <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/player/lists">Listen</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/player/stats">Statistik</a>
                 </div>
             </div>
 

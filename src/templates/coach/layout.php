@@ -3,6 +3,7 @@
 // Provides render_coach_page() which wraps content in Bootstrap 5 layout.
 // Per D-01: separate layout, no sharing with admin layout.
 // Phase 3 adds 'lists' and 'columns' nav items (in addition to Phase 2 'players').
+// Phase 4 adds 'stats' nav item for statistics aggregation.
 
 declare(strict_types=1);
 
@@ -11,7 +12,7 @@ require_once dirname(__DIR__) . '/layout.php';
 /**
  * Render a full coach page.
  * @param string $title   Page title (German)
- * @param string $active  Active nav item — 'players', 'lists', or 'columns'
+ * @param string $active  Active nav item — 'players', 'lists', 'columns', or 'stats'
  * @param callable $body  Function that outputs the main content HTML
  */
 function render_coach_page(string $title, string $active, callable $body): void {
@@ -42,6 +43,12 @@ function render_coach_page(string $title, string $active, callable $body): void 
                             <i class="bi bi-layout-three-columns me-2"></i>Spalten
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coach/stats">
+                            <i class="bi bi-graph-up me-2"></i>Statistik
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -54,6 +61,8 @@ function render_coach_page(string $title, string $active, callable $body): void 
                        href="/coach/lists">Listen</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'columns' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/coach/columns">Spalten</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/coach/stats">Statistik</a>
                 </div>
             </div>
 
