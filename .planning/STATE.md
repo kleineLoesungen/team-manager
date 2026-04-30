@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-30T12:36:41.661Z"
+last_updated: "2026-04-30T12:44:16.467Z"
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-30 (Plan 03-05 complete — player list overview, list detail view, and cell editing with double ownership check)  
+**Last Updated:** 2026-04-30 (Plan 04-02 complete — coach statistics page with aggregation table, filters, and leaderboard)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -33,7 +33,7 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ## Current Position
 
 Phase: 04 (statistics-aggregation) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Phase Summary
 
@@ -74,6 +74,8 @@ Plan: 2 of 3
 | EAV global columns use list_id IS NULL as flag (no separate is_global boolean) | Single-column sentinel avoids redundant boolean; aligns with SQL pattern for optional FK | 03-01 |
 | set_team_context() extended with role and user_id params | Phase 3 RLS visibility policies require app.current_role and app.current_user_id; set at session establishment | 03-01 |
 | can_edit_cell() returns true for coaches regardless of visibility (CELL-03); players restricted to public + own row (CELL-01) | Single authoritative PHP check; RLS is defense-in-depth | 03-01 |
+| CROSS JOIN on global columns subquery for aggregation | Guarantees all-player × all-column matrix regardless of cell existence; COALESCE converts NULLs to 0 | 04-02 |
+| Leaderboard carries filter state via hidden inputs | Ensures list_id and date range filters apply consistently to both stats table and leaderboard ranking | 04-02 |
 
 ---
 
@@ -151,3 +153,4 @@ Plan: 2 of 3
 | Phase 03-lists-columns-cells P04 | 2 | 2 tasks | 4 files |
 | Phase 03-lists-columns-cells P05 | 5 | 2 tasks | 6 files |
 | Phase 04 P01 | 5 | 2 tasks | 3 files |
+| Phase 04 P02 | 6 | 2 tasks | 2 files |

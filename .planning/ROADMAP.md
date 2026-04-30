@@ -101,11 +101,11 @@ Plans:
 4. Statistics are only computed from public and protected lists (private lists excluded)
 5. Each player sees only their own statistics
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 04-01-PLAN.md — Navigation + routing: Statistik nav entries and /coach/stats, /player/stats routes
-- [ ] 04-02-PLAN.md — Coach stats page: aggregation table, filter form, leaderboard (STAT-01, STAT-02, STAT-03)
+- [x] 04-02-PLAN.md — Coach stats page: aggregation table, filter form, leaderboard (STAT-01, STAT-02, STAT-03)
 - [ ] 04-03-PLAN.md — Player stats page: own-row visibility-filtered statistics (STAT-01)
 
 ---
@@ -117,7 +117,7 @@ Plans:
 | 1. Foundation | 3/3 | Complete | 2026-04-29 |
 | 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
 | 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
-| 4. Statistics & Aggregation | 1/3 | In Progress|  |
+| 4. Statistics & Aggregation | 2/3 | In Progress|  |
 
 ---
 
