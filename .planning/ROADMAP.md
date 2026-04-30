@@ -176,3 +176,20 @@ Plans:
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
+
+---
+
+### Phase 999.4: Coach List Detail — Bulk Inline Editing (BACKLOG)
+
+**Goal:** Replace the per-row "Bearbeiten" button navigation with inline inputs directly in the list table, so coaches can update multiple player rows in one form submission.
+
+**Scope:**
+- List detail table becomes a single `<form>` with inline inputs per cell (checkbox / number / text based on column type)
+- Single "Speichern" button at bottom (or per-row) submits all changed cells at once
+- Replaces the current pattern of: click Bearbeiten → separate page → save → back to list
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
