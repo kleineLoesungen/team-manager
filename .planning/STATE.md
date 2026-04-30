@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-30 - Completed quick task 260430-rbt: Coach list detail — bulk inline editing  
+**Last Updated:** 2026-04-30 - Completed quick task 260430-rhh: Admin UI active/inactive grouping for teams and coaches  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260430-rhh | Admin UI active/inactive grouping for teams and coaches | 2026-04-30 | b15631c | [260430-rhh-admin-ui-active-inactive-grouping-for-te](./quick/260430-rhh-admin-ui-active-inactive-grouping-for-te/) |
 | 260430-rbt | Coach list detail — bulk inline editing | 2026-04-30 | 6e984a1 | [260430-rbt-coach-list-detail-bulk-inline-editing](./quick/260430-rbt-coach-list-detail-bulk-inline-editing/) |
 | Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |
 | Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
