@@ -44,7 +44,7 @@ ALTER TABLE lists   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE columns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cells   ENABLE ROW LEVEL SECURITY;
 
--- Lists SELECT: admin sees all; coaches see all lists in their team; players see only public lists
+-- Lists SELECT: admin sees all; coaches see all lists in their team; players see public + protected lists
 CREATE POLICY lists_visibility_select ON lists
     FOR SELECT
     USING (
@@ -54,7 +54,7 @@ CREATE POLICY lists_visibility_select ON lists
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
-            visibility = 'public'
+            visibility IN ('public', 'protected')
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     );
@@ -81,7 +81,7 @@ CREATE POLICY lists_update ON lists
         )
     );
 
--- Columns SELECT: admin sees all; coaches see all columns in their team; players see columns for public lists
+-- Columns SELECT: admin sees all; coaches see all columns in their team; players see columns for public + protected lists
 CREATE POLICY columns_visibility_select ON columns
     FOR SELECT
     USING (
@@ -96,13 +96,13 @@ CREATE POLICY columns_visibility_select ON columns
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
-            -- Players see local columns for public lists in their team
+            -- Players see local columns for public or protected lists in their team
             list_id IS NOT NULL
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
             AND EXISTS (
                 SELECT 1 FROM lists
                 WHERE lists.id = columns.list_id
-                AND lists.visibility = 'public'
+                AND lists.visibility IN ('public', 'protected')
             )
         )
     );
@@ -160,7 +160,7 @@ CREATE POLICY lgc_delete ON list_global_columns
         )
     );
 
--- Cells SELECT: visibility inherited from parent list
+-- Cells SELECT: visibility inherited from parent list; players can read cells from public + protected lists
 CREATE POLICY cells_visibility_select ON cells
     FOR SELECT
     USING (
@@ -174,7 +174,7 @@ CREATE POLICY cells_visibility_select ON cells
                     AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                 )
                 OR (
-                    lists.visibility = 'public'
+                    lists.visibility IN ('public', 'protected')
                     AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                 )
             )
