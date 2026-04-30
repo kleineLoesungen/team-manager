@@ -80,7 +80,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — EAV schema (lists/columns/cells tables), RLS policies, visibility.php helpers
-- [ ] 03-02-PLAN.md — Coach nav update, player layout + require_player(), router with all Phase 3 routes, login redirect fix
+- [x] 03-02-PLAN.md — Coach nav update, player layout + require_player(), router with all Phase 3 routes, login redirect fix
 - [ ] 03-03-PLAN.md — Coach list management: create/overview/settings + global and local column CRUD
 - [ ] 03-04-PLAN.md — Coach list detail table + row edit handler with type-validated cell UPSERT
 - [ ] 03-05-PLAN.md — Player area: public list overview, full table view with own-row edit button, player row edit handler
