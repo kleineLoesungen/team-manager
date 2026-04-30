@@ -1,12 +1,12 @@
 <?php
-// src/templates/player/lists.php — Public list overview for player (D-13)
-// Variables: $lists (array of public list rows)
+// src/templates/player/lists.php — List overview for player (public + protected)
+// Variables: $lists (array of list rows)
 ?>
 
 <?php if (empty($lists)): ?>
 <div class="text-center py-5">
     <p class="h5 text-muted">Keine Listen verfügbar</p>
-    <p class="text-muted">Ihr Trainer hat noch keine öffentlichen Listen angelegt.</p>
+    <p class="text-muted">Ihr Trainer hat noch keine Listen angelegt.</p>
 </div>
 
 <?php else: ?>
@@ -16,7 +16,11 @@
         <div class="card h-100 shadow-sm">
             <div class="card-header">
                 <span class="fw-semibold"><?= e($list['name']) ?></span>
+                <?php if ($list['visibility'] === 'protected'): ?>
+                <span class="badge bg-secondary ms-2">Nur lesen</span>
+                <?php else: ?>
                 <span class="badge bg-success ms-2">Öffentlich</span>
+                <?php endif; ?>
             </div>
             <div class="card-body">
                 <p class="card-text text-muted small">

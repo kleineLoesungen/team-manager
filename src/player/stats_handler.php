@@ -19,9 +19,8 @@ $cols_stmt = $pdo->prepare(
 $cols_stmt->execute([$team_id]);
 $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Aggregation query: own row, public lists only ────────────────────────────
-// LEFT JOIN on cells filtered to current player_id only (D-04: own row).
-// Only public lists count — protected and private are excluded for players.
+// ── Aggregation query: own row, public + protected lists (private excluded) ──
+// LEFT JOIN on cells filtered to current player_id only.
 // COALESCE to 0 prevents NULL display when player has no entries.
 $player_stats = [];
 
@@ -47,7 +46,7 @@ if (!empty($global_columns)) {
         LEFT JOIN cells ON cells.column_id = c.id
                        AND cells.player_id = ?
         LEFT JOIN lists ON cells.list_id = lists.id
-                       AND lists.visibility = 'public'
+                       AND lists.visibility IN ('public', 'protected')
         WHERE (cells.id IS NULL OR lists.id IS NOT NULL)
         GROUP BY c.id, c.name, c.data_type, c.sort_order
         ORDER BY c.sort_order, c.id
