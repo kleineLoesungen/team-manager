@@ -76,13 +76,13 @@ Plans:
 7. Private lists are invisible to players; coaches have full read/write access
 8. All visibility rules are enforced: players cannot see data they shouldn't and cannot edit cells outside their row; coaches cannot edit/see private lists by accident
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 03-01-PLAN.md — EAV schema (lists/columns/cells tables), RLS policies, visibility.php helpers
 - [x] 03-02-PLAN.md — Coach nav update, player layout + require_player(), router with all Phase 3 routes, login redirect fix
 - [x] 03-03-PLAN.md — Coach list management: create/overview/settings + global and local column CRUD
-- [ ] 03-04-PLAN.md — Coach list detail table + row edit handler with type-validated cell UPSERT
+- [x] 03-04-PLAN.md — Coach list detail table + row edit handler with type-validated cell UPSERT
 - [ ] 03-05-PLAN.md — Player area: public list overview, full table view with own-row edit button, player row edit handler
 
 ---
@@ -111,7 +111,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-04-29 |
 | 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
-| 3. Lists, Columns & Cells | 3/5 | In Progress|  |
+| 3. Lists, Columns & Cells | 4/5 | In Progress|  |
 | 4. Statistics & Aggregation | 0/3 | Not started | — |
 
 ---

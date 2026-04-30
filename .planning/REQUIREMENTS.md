@@ -32,7 +32,7 @@
 - [x] **CELL-01**: Spieler kann Werte ausschließlich in seiner eigenen Zeile bearbeiten — und nur in public Listen
 - [x] **CELL-02**: Trainer kann alle Zeilen in public und protected Listen lesen und bearbeiten
 - [x] **CELL-03**: Private Listen sind für Spieler vollständig unsichtbar; Trainer haben vollen Lese- und Schreibzugriff
-- [ ] **CELL-04**: Benutzer sieht alle Zeilen (alle Spieler) einer für ihn sichtbaren Liste, kann aber nur seine eigene Zeile bearbeiten (Spieler) bzw. alle Zeilen (Trainer)
+- [x] **CELL-04**: Benutzer sieht alle Zeilen (alle Spieler) einer für ihn sichtbaren Liste, kann aber nur seine eigene Zeile bearbeiten (Spieler) bzw. alle Zeilen (Trainer)
 
 ### Statistik (STAT)
 
@@ -86,7 +86,7 @@
 | CELL-01 | 3 | Complete |
 | CELL-02 | 3 | Complete |
 | CELL-03 | 3 | Complete |
-| CELL-04 | 3 | Pending |
+| CELL-04 | 3 | Complete |
 | STAT-01 | 4 | Pending |
 | STAT-02 | 4 | Pending |
 | STAT-03 | 4 | Pending |
