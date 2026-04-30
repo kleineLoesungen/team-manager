@@ -3,7 +3,7 @@
 // Per D-03: HTML table; global columns first, then local.
 // Per D-04: Bootstrap table-responsive for horizontal scroll.
 // Per D-05: empty cells show blank (not placeholder text).
-// Per D-07: each player row has "Bearbeiten" button at end.
+// Per D-07: replaced per-row "Bearbeiten" navigate-away with inline-edit form (260430-rbt).
 // Variables: $list, $columns, $players, $cells (map [player_id][column_id] => value)
 ?>
 
@@ -72,57 +72,66 @@
 </div>
 <?php else: ?>
 
-<!-- Per D-04: Bootstrap table-responsive for horizontal scroll on mobile -->
-<div class="table-responsive">
-    <table class="table table-sm table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th class="text-nowrap">Spieler</th>
-                <?php foreach ($columns as $col): ?>
-                <th class="text-nowrap">
-                    <?= e($col['name']) ?>
-                    <?php if ($col['list_id'] === null): ?>
-                        <span class="badge bg-light text-dark border ms-1" title="Globale Spalte">G</span>
-                    <?php endif; ?>
-                </th>
+<form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>">
+    <?= csrf_field() ?>
+
+    <!-- Per D-04: Bootstrap table-responsive for horizontal scroll on mobile -->
+    <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="text-nowrap">Spieler</th>
+                    <?php foreach ($columns as $col): ?>
+                    <th class="text-nowrap">
+                        <?= e($col['name']) ?>
+                        <?php if ($col['list_id'] === null): ?>
+                            <span class="badge bg-light text-dark border ms-1" title="Globale Spalte">G</span>
+                        <?php endif; ?>
+                    </th>
+                    <?php endforeach; ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($players as $player): ?>
+                <tr>
+                    <td class="text-nowrap fw-medium">
+                        <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                    </td>
+                    <?php foreach ($columns as $col): ?>
+                    <td>
+                        <?php
+                            $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
+                            if ($col['data_type'] === 'boolean') {
+                                $checked = ($val === '1') ? 'checked' : '';
+                                echo '<input type="checkbox" class="form-check-input"
+                                      name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"
+                                      value="1" ' . $checked . '>';
+                            } elseif ($col['data_type'] === 'number') {
+                                $escaped = ($val !== null && $val !== '') ? e($val) : '';
+                                echo '<input type="number" class="form-control form-control-sm"
+                                      style="min-width:70px; max-width:100px"
+                                      name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"
+                                      value="' . $escaped . '">';
+                            } else {
+                                $escaped = ($val !== null) ? e($val) : '';
+                                echo '<input type="text" class="form-control form-control-sm"
+                                      style="min-width:100px"
+                                      name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"
+                                      value="' . $escaped . '" maxlength="255">';
+                            }
+                        ?>
+                    </td>
+                    <?php endforeach; ?>
+                </tr>
                 <?php endforeach; ?>
-                <th></th><!-- edit button column -->
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($players as $player): ?>
-            <tr>
-                <td class="text-nowrap fw-medium">
-                    <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
-                </td>
-                <?php foreach ($columns as $col): ?>
-                <td>
-                    <?php
-                        $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
-                        if ($val === null || $val === '') {
-                            echo ''; // D-05: empty cells show blank
-                        } elseif ($col['data_type'] === 'boolean') {
-                            echo $val === '1'
-                                ? '<i class="bi bi-check-lg text-success"></i>'
-                                : '<i class="bi bi-x-lg text-muted"></i>';
-                        } else {
-                            echo e($val);
-                        }
-                    ?>
-                </td>
-                <?php endforeach; ?>
-                <td>
-                    <!-- D-07: coach always has edit button (CELL-02: coaches edit all rows) -->
-                    <a href="/coach/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
-                       class="btn btn-sm btn-outline-primary min-touch">
-                        Bearbeiten
-                    </a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary min-touch">Speichern</button>
+    </div>
+</form>
 
 <?php endif; ?>
 
