@@ -33,6 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_users_team_id  ON users(team_id);
 
 -- Lists — one per team/coach usage; has visibility state
 -- show_all_rows: when TRUE players see all rows; when FALSE players see only their own row
+-- is_hidden: when TRUE list is collapsed at bottom of overview (coach + player); content still accessible
 CREATE TABLE IF NOT EXISTS lists (
     id            SERIAL PRIMARY KEY,
     team_id       INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
@@ -40,11 +41,13 @@ CREATE TABLE IF NOT EXISTS lists (
     visibility    VARCHAR(10)  NOT NULL DEFAULT 'public'
                   CHECK (visibility IN ('public', 'protected', 'private')),
     show_all_rows BOOLEAN      NOT NULL DEFAULT FALSE,
+    is_hidden     BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 -- Migration for existing databases:
 -- ALTER TABLE lists ADD COLUMN IF NOT EXISTS show_all_rows BOOLEAN NOT NULL DEFAULT FALSE;
+-- ALTER TABLE lists ADD COLUMN IF NOT EXISTS is_hidden     BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_lists_team_id   ON lists(team_id);
 CREATE INDEX IF NOT EXISTS idx_lists_visibility ON lists(visibility);
 

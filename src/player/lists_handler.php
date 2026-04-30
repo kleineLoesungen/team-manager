@@ -9,17 +9,10 @@ require_player();
 $pdo = get_db();
 
 $stmt = $pdo->prepare(
-    "SELECT
-        l.id,
-        l.name,
-        l.visibility,
-        l.created_at,
-        COUNT(c.id) AS column_count
-     FROM lists l
-     LEFT JOIN columns c ON (c.list_id = l.id OR (c.list_id IS NULL AND c.team_id = l.team_id))
-     WHERE l.team_id = ? AND l.visibility IN ('public', 'protected')
-     GROUP BY l.id
-     ORDER BY l.created_at DESC"
+    "SELECT id, name, visibility, is_hidden, created_at
+     FROM lists
+     WHERE team_id = ? AND visibility IN ('public', 'protected')
+     ORDER BY is_hidden ASC, created_at DESC"
 );
 $stmt->execute([$_SESSION['team_id']]);
 $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);

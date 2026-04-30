@@ -7,19 +7,11 @@ require_coach();
 
 $pdo = get_db();
 
-// Fetch all lists for this team with column counts; RLS context already set by require_coach()
 $stmt = $pdo->prepare(
-    "SELECT
-        l.id,
-        l.name,
-        l.visibility,
-        l.created_at,
-        COUNT(c.id) AS column_count
-     FROM lists l
-     LEFT JOIN columns c ON (c.list_id = l.id OR (c.list_id IS NULL AND c.team_id = l.team_id))
-     WHERE l.team_id = ?
-     GROUP BY l.id
-     ORDER BY l.created_at DESC"
+    "SELECT id, name, visibility, is_hidden, created_at
+     FROM lists
+     WHERE team_id = ?
+     ORDER BY is_hidden ASC, created_at DESC"
 );
 $stmt->execute([$_SESSION['team_id']]);
 $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);

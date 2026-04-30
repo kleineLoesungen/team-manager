@@ -9,8 +9,8 @@ $list_id = (int)($_REQUEST['list_id'] ?? 0);
 $pdo     = get_db();
 $error   = '';
 
-// Fetch list including show_all_rows
-$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows FROM lists WHERE id = ? AND team_id = ?");
+// Fetch list including show_all_rows and is_hidden
+$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -27,16 +27,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $new_visibility    = $_POST['visibility'] ?? '';
     $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
+    $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
 
     if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
         $error = 'Ungültiger Sichtbarkeits-Status.';
     } else {
         try {
             $upd = $pdo->prepare(
-                "UPDATE lists SET visibility = ?, show_all_rows = ?, updated_at = NOW()
+                "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, updated_at = NOW()
                  WHERE id = ? AND team_id = ?"
             );
-            $upd->execute([$new_visibility, $new_show_all_rows, $list_id, $_SESSION['team_id']]);
+            $upd->execute([$new_visibility, $new_show_all_rows, $new_is_hidden, $list_id, $_SESSION['team_id']]);
             redirect('/coach/lists/' . $list_id . '?success=1');
         } catch (PDOException $e) {
             error_log('List settings error: ' . $e->getMessage());
@@ -75,6 +76,17 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                                <?= $list['show_all_rows'] ? 'checked' : '' ?>>
                         <label class="form-check-label" for="show_all_rows">
                             Spieler sehen Einträge anderer Spieler
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Sichtbarkeit in der Übersicht</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_hidden"
+                               id="is_hidden" value="1"
+                               <?= $list['is_hidden'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="is_hidden">
+                            Liste verstecken (erscheint eingeklappt am Ende der Übersicht)
                         </label>
                     </div>
                 </div>
