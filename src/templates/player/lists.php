@@ -22,11 +22,7 @@
                 <span class="badge bg-success ms-2">Öffentlich</span>
                 <?php endif; ?>
             </div>
-            <div class="card-body">
-                <p class="card-text text-muted small">
-                    <i class="bi bi-layout-three-columns me-1"></i><?= (int)$list['column_count'] ?> Spalten
-                </p>
-            </div>
+
             <div class="card-footer bg-transparent">
                 <a href="/player/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-primary min-touch">
                     <i class="bi bi-box-arrow-in-right me-1"></i>Öffnen
