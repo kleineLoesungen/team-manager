@@ -7,7 +7,7 @@
 ## Phases
 
 - [x] **Phase 1: Foundation** - Authentication, Database Schema, Admin Setup ✓ 2026-04-29
-- [x] **Phase 2: Team & Player Management** - Player CRUD, Password Reset, Credentials (completed 2026-04-29)
+- [x] **Phase 2: Team & Player Management** - Player CRUD, Password Reset, Credentials ✓ 2026-04-30
 - [ ] **Phase 3: Lists, Columns & Cells** - Spreadsheet Core, Visibility States, Cell Editing
 - [ ] **Phase 4: Statistics & Aggregation** - Per-Player Stats, Filtering, Leaderboards
 
