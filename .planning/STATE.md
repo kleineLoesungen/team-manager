@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-04-30 - Completed quick task 260430-rhh: Admin UI active/inactive grouping for teams and coaches  
+**Last Updated:** 2026-05-01 - Completed quick task 260430-rqd: App Title Branding  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -169,5 +169,6 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260430-rqd | App Title Branding — admin sets app title, navbar shows title + team | 2026-05-01 | 3c21e8a | [260430-rqd-admin-could-set-title-of-app-in-admin-pa](./quick/260430-rqd-admin-could-set-title-of-app-in-admin-pa/) |
 | 260430-rbt | Coach list detail — bulk inline editing | 2026-04-30 | 6e984a1 | [260430-rbt-coach-list-detail-bulk-inline-editing](./quick/260430-rbt-coach-list-detail-bulk-inline-editing/) |
 | 260430-rhh | Admin UI — active/inactive grouping for teams and coaches | 2026-04-30 | 560b81c | [260430-rhh-admin-ui-active-inactive-grouping-for-te](./quick/260430-rhh-admin-ui-active-inactive-grouping-for-te/) |
