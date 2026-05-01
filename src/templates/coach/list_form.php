@@ -19,6 +19,20 @@
                        placeholder="z. B. Spiel gegen FC Beispiel">
             </div>
 
+            <!-- Section: Date (optional) -->
+            <div class="mb-4">
+                <label for="list_date" class="form-label fw-semibold">Datum <span class="text-muted fw-normal">(optional)</span></label>
+                <input type="date" id="list_date" name="date" class="form-control">
+                <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
+            </div>
+
+            <!-- Section: Description (optional) -->
+            <div class="mb-4">
+                <label for="list_desc" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
+                <textarea id="list_desc" name="description" class="form-control" rows="2" maxlength="500"
+                          placeholder="z. B. Heimspiel gegen FC Muster, Pokalrunde 2"></textarea>
+            </div>
+
             <!-- Section 2: Visibility -->
             <div class="mb-4">
                 <label class="form-label fw-semibold">Sichtbarkeit</label>

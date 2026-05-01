@@ -27,6 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
     $selected_cols = array_map('intval', (array)($_POST['global_columns'] ?? []));
     $defaults      = (array)($_POST['defaults'] ?? []);  // [col_id => raw_value]
+    $date        = trim($_POST['date'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    if ($date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        $date = '';
+    }
 
     if (empty($name)) {
         $error = 'Name ist erforderlich.';
@@ -37,11 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                "INSERT INTO lists (team_id, name, visibility, show_all_rows)
-                 VALUES (?, ?, ?, ?)
+                "INSERT INTO lists (team_id, name, visibility, show_all_rows, date, description)
+                 VALUES (?, ?, ?, ?, ?, ?)
                  RETURNING id"
             );
-            $stmt->execute([$_SESSION['team_id'], $name, $visibility, $show_all_rows]);
+            $stmt->execute([
+                $_SESSION['team_id'],
+                $name,
+                $visibility,
+                $show_all_rows,
+                $date !== '' ? $date : null,
+                $description !== '' ? $description : null,
+            ]);
             $list_id = (int)$stmt->fetchColumn();
 
             // Link selected global columns (D-11) — validate ownership first

@@ -9,8 +9,8 @@ $list_id = (int)($_REQUEST['list_id'] ?? 0);
 $pdo     = get_db();
 $error   = '';
 
-// Fetch list including show_all_rows and is_hidden
-$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden FROM lists WHERE id = ? AND team_id = ?");
+// Fetch list including show_all_rows, is_hidden, date, and description
+$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -28,16 +28,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_visibility    = $_POST['visibility'] ?? '';
     $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
     $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
+    $new_date          = trim($_POST['date'] ?? '');
+    $new_description   = trim($_POST['description'] ?? '');
+    if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
+        $new_date = '';
+    }
 
     if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
         $error = 'Ungültiger Sichtbarkeits-Status.';
     } else {
         try {
             $upd = $pdo->prepare(
-                "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, updated_at = NOW()
+                "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, description = ?, updated_at = NOW()
                  WHERE id = ? AND team_id = ?"
             );
-            $upd->execute([$new_visibility, $new_show_all_rows, $new_is_hidden, $list_id, $_SESSION['team_id']]);
+            $upd->execute([
+                $new_visibility,
+                $new_show_all_rows,
+                $new_is_hidden,
+                $new_date !== '' ? $new_date : null,
+                $new_description !== '' ? $new_description : null,
+                $list_id,
+                $_SESSION['team_id'],
+            ]);
             redirect('/coach/lists/' . $list_id . '?success=1');
         } catch (PDOException $e) {
             error_log('List settings error: ' . $e->getMessage());
@@ -89,6 +102,17 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                             Liste verstecken (erscheint eingeklappt am Ende der Übersicht)
                         </label>
                     </div>
+                </div>
+                <div class="mb-4">
+                    <label for="list_date" class="form-label fw-semibold">Datum <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="date" id="list_date" name="date" class="form-control"
+                           value="<?= e($list['date'] ?? '') ?>">
+                    <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
+                </div>
+                <div class="mb-4">
+                    <label for="list_desc" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea id="list_desc" name="description" class="form-control" rows="2" maxlength="500"
+                              placeholder="z. B. Heimspiel gegen FC Muster, Pokalrunde 2"><?= e($list['description'] ?? '') ?></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
                 <a href="/coach/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
