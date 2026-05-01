@@ -1,12 +1,8 @@
-# Block direct HTTP access to app internals
-<FilesMatch "^config\.php$">
+# Protect credentials and SQL files from direct HTTP access
+<FilesMatch "(^config\.php$|\.sql$)">
     Order deny,allow
     Deny from all
 </FilesMatch>
-<DirectoryMatch "(src|database)">
-    Order deny,allow
-    Deny from all
-</DirectoryMatch>
 
 # Front controller
 RewriteEngine On
