@@ -25,7 +25,23 @@ function get_db(): PDO {
     $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA); // sanitize identifier
     $pdo->exec("SET search_path TO {$schema}, public");
 
+    maybe_init_db($pdo);
+
     return $pdo;
+}
+
+/**
+ * Initialize database schema on first boot.
+ * Runs schema.sql and rls_policies.sql if the teams table does not exist yet.
+ * Safe to call on every request — exits immediately if tables already exist.
+ */
+function maybe_init_db(PDO $pdo): void {
+    $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
+    $exists = $pdo->query("SELECT to_regclass('{$schema}.teams')")->fetchColumn();
+    if ($exists !== null) return;
+
+    $pdo->exec(file_get_contents(ROOT_PATH . '/database/schema.sql'));
+    $pdo->exec(file_get_contents(ROOT_PATH . '/database/rls_policies.sql'));
 }
 
 /**
