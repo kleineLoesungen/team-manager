@@ -1,16 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEST="${1:-}"
+FTP_HOST="${1:-}"
+FTP_USER="${2:-}"
+FTP_PASS="${3:-}"
 
-if [[ -z "$DEST" ]]; then
-    echo "Usage: ./deploy.sh user@server:/var/www/team-manager"
+if [[ -z "$FTP_HOST" || -z "$FTP_USER" || -z "$FTP_PASS" ]]; then
+    echo "Usage: ./deploy.sh ftp.your-domain.de username password"
+    echo ""
+    echo "Uploads:"
+    echo "  public/  → public_html/team-manager/"
+    echo "  src/ database/ → apps/team-manager/"
+    echo ""
+    echo "config.php is NOT uploaded — create it once on the server manually."
+    echo "DB tables are created automatically on first HTTP request."
+    echo ""
+    echo "Requires lftp: brew install lftp (macOS) or apt install lftp (Linux)"
     exit 1
 fi
 
-echo "Deploying to $DEST ..."
+echo "==> Deploying to $FTP_HOST ..."
 
-rsync -avz --delete \
+lftp -u "$FTP_USER,$FTP_PASS" "$FTP_HOST" <<FTPEOF
+# Webroot: only front controller + .htaccess
+mirror --reverse --delete \
+    --exclude-glob='.DS_Store' \
+    public/ public_html/team-manager/
+
+# App source: all files except credentials and dev-only artifacts
+mirror --reverse \
     --exclude='.git/' \
     --exclude='.planning/' \
     --exclude='docker/' \
@@ -18,11 +36,17 @@ rsync -avz --delete \
     --exclude='.env' \
     --exclude='.env.docker' \
     --exclude='.env.example' \
+    --exclude='config.php' \
     --exclude='deploy.sh' \
-    . "$DEST"
+    --exclude='public/' \
+    --exclude='README.md' \
+    . apps/team-manager/
+
+bye
+FTPEOF
 
 echo ""
-echo "Done. Don't forget:"
-echo "  1. Set environment variables on the server (see README.md)"
-echo "  2. Point webroot to public/"
-echo "  3. On first deploy: run database/schema.sql and database/rls_policies.sql"
+echo "==> Done."
+echo ""
+echo "First deploy only: create apps/team-manager/config.php on the server with DB credentials."
+echo "DB tables are created automatically on first HTTP request."
