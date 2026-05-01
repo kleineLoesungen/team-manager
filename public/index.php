@@ -4,7 +4,13 @@
 
 declare(strict_types=1);
 
-define('ROOT_PATH', dirname(__DIR__));
+$_parent = dirname(__DIR__);
+if (is_dir($_parent . '/src')) {
+    define('ROOT_PATH', $_parent);
+} else {
+    define('ROOT_PATH', dirname($_parent) . '/apps/team-manager');
+}
+unset($_parent);
 
 require_once ROOT_PATH . '/config.php';
 require_once ROOT_PATH . '/src/auth/session.php';
