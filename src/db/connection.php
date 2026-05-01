@@ -34,6 +34,9 @@ function get_db(): PDO {
  * Initialize database schema on first boot.
  * Runs schema.sql and rls_policies.sql if the teams table does not exist yet.
  * Safe to call on every request — exits immediately if tables already exist.
+ *
+ * Executes statements one at a time (autocommit) so a single failure does not
+ * roll back all preceding DDL, and the exact failing statement gets logged.
  */
 function maybe_init_db(PDO $pdo): void {
     $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
@@ -41,7 +44,7 @@ function maybe_init_db(PDO $pdo): void {
     if ($exists !== null) return;
 
     // Schema creation may fail on shared hosting where the DB user lacks CREATE privilege.
-    // Attempt it separately so a permission error here doesn't abort table creation.
+    // Attempt it separately so a permission error does not abort table creation.
     try {
         $pdo->exec("CREATE SCHEMA IF NOT EXISTS {$schema}");
     } catch (PDOException $e) {
@@ -52,15 +55,36 @@ function maybe_init_db(PDO $pdo): void {
     $rls_sql    = file_get_contents(ROOT_PATH . '/database/rls_policies.sql');
 
     if ($schema_sql === false || $rls_sql === false) {
-        error_log('team-manager: cannot read SQL files from ' . ROOT_PATH . '/database/');
-        throw new RuntimeException('Database SQL files not found. Check ROOT_PATH configuration.');
+        $msg = 'team-manager: cannot read SQL files from ' . ROOT_PATH . '/database/';
+        error_log($msg);
+        throw new RuntimeException($msg);
     }
 
-    // Strip the CREATE SCHEMA line — already handled above
-    $schema_sql = preg_replace('/^\s*CREATE SCHEMA\b.*$/mi', '', $schema_sql);
+    db_exec_statements($pdo, $schema_sql);
+    db_exec_statements($pdo, $rls_sql);
+}
 
-    $pdo->exec($schema_sql);
-    $pdo->exec($rls_sql);
+/**
+ * Execute a SQL string as individual statements (split on ";").
+ * Each statement commits independently so prior DDL survives later failures.
+ * Skips blank lines and comment-only lines.
+ */
+function db_exec_statements(PDO $pdo, string $sql): void {
+    // Split on semicolons, trim whitespace, drop blanks and pure-comment lines
+    $statements = array_filter(
+        array_map('trim', explode(';', $sql)),
+        fn(string $s): bool => $s !== '' && !preg_match('/^\s*--/', $s)
+    );
+
+    foreach ($statements as $stmt) {
+        try {
+            $pdo->exec($stmt);
+        } catch (PDOException $e) {
+            error_log('team-manager init SQL error: ' . $e->getMessage()
+                . ' | statement: ' . substr($stmt, 0, 200));
+            throw $e;
+        }
+    }
 }
 
 /**
