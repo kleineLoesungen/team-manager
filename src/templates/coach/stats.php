@@ -18,14 +18,23 @@
         </select>
     </div>
     <div class="col-auto">
-        <label for="date_from" class="form-label form-label-sm mb-1">Von</label>
+        <label for="date_from" class="form-label form-label-sm mb-1">Listendatum von</label>
         <input type="date" name="date_from" id="date_from" class="form-control form-control-sm"
                value="<?= e($filter_date_from ?? '') ?>">
     </div>
     <div class="col-auto">
-        <label for="date_to" class="form-label form-label-sm mb-1">Bis</label>
+        <label for="date_to" class="form-label form-label-sm mb-1">bis</label>
         <input type="date" name="date_to" id="date_to" class="form-control form-control-sm"
                value="<?= e($filter_date_to ?? '') ?>">
+    </div>
+    <div class="col-auto d-flex align-items-end pb-1">
+        <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" name="include_undated" id="include_undated"
+                   value="1" <?= $filter_include_undated ? 'checked' : '' ?>>
+            <label class="form-check-label small" for="include_undated">
+                Ohne Datum einschließen
+            </label>
+        </div>
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-sm btn-primary">Filtern</button>
@@ -94,9 +103,10 @@
 
     <!-- Leaderboard column selector -->
     <form method="get" action="/coach/stats" class="d-flex align-items-center gap-2 mb-3">
-        <?php if ($filter_list_id):  ?><input type="hidden" name="list_id"   value="<?= (int)$filter_list_id ?>">  <?php endif; ?>
-        <?php if ($filter_date_from): ?><input type="hidden" name="date_from" value="<?= e($filter_date_from) ?>"> <?php endif; ?>
-        <?php if ($filter_date_to):   ?><input type="hidden" name="date_to"   value="<?= e($filter_date_to) ?>">   <?php endif; ?>
+        <?php if ($filter_list_id):         ?><input type="hidden" name="list_id"        value="<?= (int)$filter_list_id ?>">   <?php endif; ?>
+        <?php if ($filter_date_from):       ?><input type="hidden" name="date_from"      value="<?= e($filter_date_from) ?>">  <?php endif; ?>
+        <?php if ($filter_date_to):         ?><input type="hidden" name="date_to"        value="<?= e($filter_date_to) ?>">    <?php endif; ?>
+        <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1">                           <?php endif; ?>
         <label for="sort_by" class="form-label mb-0 text-nowrap">Sortieren nach:</label>
         <select name="sort_by" id="sort_by" class="form-select form-select-sm" style="max-width: 200px;"
                 onchange="this.form.submit()">

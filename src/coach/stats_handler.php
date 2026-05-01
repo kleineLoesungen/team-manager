@@ -10,9 +10,10 @@ $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 
 // ── Filter parameters (STAT-02) ───────────────────────────────────────────────
-$filter_list_id   = isset($_GET['list_id'])   && $_GET['list_id']   !== '' ? (int)$_GET['list_id']   : null;
-$filter_date_from = isset($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from']       : null;
-$filter_date_to   = isset($_GET['date_to'])   && $_GET['date_to']   !== '' ? $_GET['date_to']         : null;
+$filter_list_id          = isset($_GET['list_id'])   && $_GET['list_id']   !== '' ? (int)$_GET['list_id']   : null;
+$filter_date_from        = isset($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from']       : null;
+$filter_date_to          = isset($_GET['date_to'])   && $_GET['date_to']   !== '' ? $_GET['date_to']         : null;
+$filter_include_undated  = !empty($_GET['include_undated']);
 
 // ── Fetch available lists for filter dropdown ─────────────────────────────────
 $lists_stmt = $pdo->prepare(
@@ -71,14 +72,24 @@ if ($filter_list_id !== null) {
     $agg_params[] = $filter_list_id;
 }
 
-if ($filter_date_from !== null) {
-    $agg_sql    .= " AND (cells.updated_at >= ? OR cells.updated_at IS NULL)";
-    $agg_params[] = $filter_date_from . ' 00:00:00+00';
-}
-
-if ($filter_date_to !== null) {
-    $agg_sql    .= " AND (cells.updated_at <= ? OR cells.updated_at IS NULL)";
-    $agg_params[] = $filter_date_to . ' 23:59:59+00';
+if ($filter_date_from !== null || $filter_date_to !== null) {
+    $date_conds = ['cells.id IS NULL'];  // CROSS JOIN artifact — always include
+    if ($filter_include_undated) {
+        $date_conds[] = 'lists.date IS NULL';
+    }
+    $range_conds = [];
+    if ($filter_date_from !== null) {
+        $range_conds[] = 'lists.date >= ?';
+        $agg_params[] = $filter_date_from;
+    }
+    if ($filter_date_to !== null) {
+        $range_conds[] = 'lists.date <= ?';
+        $agg_params[] = $filter_date_to;
+    }
+    if (!empty($range_conds)) {
+        $date_conds[] = '(lists.date IS NOT NULL AND ' . implode(' AND ', $range_conds) . ')';
+    }
+    $agg_sql .= ' AND (' . implode(' OR ', $date_conds) . ')';
 }
 
 $agg_sql .= "
@@ -155,13 +166,24 @@ if ($leaderboard_column !== null) {
         $lb_sql    .= " AND (cells.list_id = ? OR cells.list_id IS NULL)";
         $lb_params[] = $filter_list_id;
     }
-    if ($filter_date_from !== null) {
-        $lb_sql    .= " AND (cells.updated_at >= ? OR cells.updated_at IS NULL)";
-        $lb_params[] = $filter_date_from . ' 00:00:00+00';
-    }
-    if ($filter_date_to !== null) {
-        $lb_sql    .= " AND (cells.updated_at <= ? OR cells.updated_at IS NULL)";
-        $lb_params[] = $filter_date_to . ' 23:59:59+00';
+    if ($filter_date_from !== null || $filter_date_to !== null) {
+        $lb_date_conds = ['cells.id IS NULL'];  // no-cell rows — always include
+        if ($filter_include_undated) {
+            $lb_date_conds[] = 'lists.date IS NULL';
+        }
+        $lb_range_conds = [];
+        if ($filter_date_from !== null) {
+            $lb_range_conds[] = 'lists.date >= ?';
+            $lb_params[] = $filter_date_from;
+        }
+        if ($filter_date_to !== null) {
+            $lb_range_conds[] = 'lists.date <= ?';
+            $lb_params[] = $filter_date_to;
+        }
+        if (!empty($lb_range_conds)) {
+            $lb_date_conds[] = '(lists.date IS NOT NULL AND ' . implode(' AND ', $lb_range_conds) . ')';
+        }
+        $lb_sql .= ' AND (' . implode(' OR ', $lb_date_conds) . ')';
     }
 
     $lb_sql .= " GROUP BY u.id, u.first_name, u.last_name ORDER BY rank_value DESC NULLS LAST, u.last_name, u.first_name";
@@ -175,7 +197,7 @@ require ROOT_PATH . '/src/templates/coach/layout.php';
 
 render_coach_page('Statistik', 'stats', function() use (
     $global_columns, $player_stats, $player_order,
-    $available_lists, $filter_list_id, $filter_date_from, $filter_date_to,
+    $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
     $leaderboard, $leaderboard_column, $sort_by_id
 ) {
     require ROOT_PATH . '/src/templates/coach/stats.php';
