@@ -54,6 +54,9 @@ match (true) {
     $path === '/admin/coaches/create'
         => require ROOT_PATH . '/src/admin/coach_create_handler.php',
 
+    $path === '/admin/settings'
+        => require ROOT_PATH . '/src/admin/settings_handler.php',
+
     (bool)preg_match('#^/admin/coaches/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['coach_id'] = (int)$matches[1];

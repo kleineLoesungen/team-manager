@@ -4,6 +4,8 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/layout.php';
+
 /**
  * Render a full admin page.
  * @param string $title   Page title
@@ -32,6 +34,12 @@ function render_admin_page(string $title, string $active, callable $body): void 
                             <i class="bi bi-person-badge me-2"></i>Trainer
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'settings' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/admin/settings">
+                            <i class="bi bi-gear-fill me-2"></i>Einstellungen
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -42,6 +50,8 @@ function render_admin_page(string $title, string $active, callable $body): void 
                        href="/admin/teams">Teams</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'coaches' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/admin/coaches">Trainer</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'settings' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/admin/settings">Einstellungen</a>
                 </div>
             </div>
 
