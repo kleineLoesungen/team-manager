@@ -40,8 +40,27 @@ function maybe_init_db(PDO $pdo): void {
     $exists = $pdo->query("SELECT to_regclass('{$schema}.teams')")->fetchColumn();
     if ($exists !== null) return;
 
-    $pdo->exec(file_get_contents(ROOT_PATH . '/database/schema.sql'));
-    $pdo->exec(file_get_contents(ROOT_PATH . '/database/rls_policies.sql'));
+    // Schema creation may fail on shared hosting where the DB user lacks CREATE privilege.
+    // Attempt it separately so a permission error here doesn't abort table creation.
+    try {
+        $pdo->exec("CREATE SCHEMA IF NOT EXISTS {$schema}");
+    } catch (PDOException $e) {
+        error_log('team-manager: schema creation skipped (' . $e->getMessage() . ')');
+    }
+
+    $schema_sql = file_get_contents(ROOT_PATH . '/database/schema.sql');
+    $rls_sql    = file_get_contents(ROOT_PATH . '/database/rls_policies.sql');
+
+    if ($schema_sql === false || $rls_sql === false) {
+        error_log('team-manager: cannot read SQL files from ' . ROOT_PATH . '/database/');
+        throw new RuntimeException('Database SQL files not found. Check ROOT_PATH configuration.');
+    }
+
+    // Strip the CREATE SCHEMA line — already handled above
+    $schema_sql = preg_replace('/^\s*CREATE SCHEMA\b.*$/mi', '', $schema_sql);
+
+    $pdo->exec($schema_sql);
+    $pdo->exec($rls_sql);
 }
 
 /**
