@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-01 - Completed quick task 260501-9rx: Production Deployment Script  
+**Last Updated:** 2026-05-01 - Completed quick task 260501-ahg: Hetzner Shared Hosting restructure  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260501-ahg | Hetzner Shared Hosting — ROOT_PATH auto-detect, DB self-init, FORCE RLS, FTP deploy | 2026-05-01 | 5945bf7 | [260501-ahg-restructure-for-hetzner-shared-hosting-p](./quick/260501-ahg-restructure-for-hetzner-shared-hosting-p/) |
 | 260501-9rx | Production Deployment Script — deploy.sh rsync script + public/.htaccess | 2026-05-01 | 5c42c27 | [260501-9rx-production-deployment-should-be-just-cop](./quick/260501-9rx-production-deployment-should-be-just-cop/) |
 | 260430-rqd | App Title Branding — admin sets app title, navbar shows title + team | 2026-05-01 | 3c21e8a | [260430-rqd-admin-could-set-title-of-app-in-admin-pa](./quick/260430-rqd-admin-could-set-title-of-app-in-admin-pa/) |
 | 260430-rhh | Admin UI active/inactive grouping for teams and coaches | 2026-04-30 | b15631c | [260430-rhh-admin-ui-active-inactive-grouping-for-te](./quick/260430-rhh-admin-ui-active-inactive-grouping-for-te/) |
