@@ -148,27 +148,6 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260430-rqd | App Title Branding — admin sets app title, navbar shows title + team | 2026-05-01 | 3c21e8a | [260430-rqd-admin-could-set-title-of-app-in-admin-pa](./quick/260430-rqd-admin-could-set-title-of-app-in-admin-pa/) |
 | 260430-rhh | Admin UI active/inactive grouping for teams and coaches | 2026-04-30 | b15631c | [260430-rhh-admin-ui-active-inactive-grouping-for-te](./quick/260430-rhh-admin-ui-active-inactive-grouping-for-te/) |
 | 260430-rbt | Coach list detail — bulk inline editing | 2026-04-30 | 6e984a1 | [260430-rbt-coach-list-detail-bulk-inline-editing](./quick/260430-rbt-coach-list-detail-bulk-inline-editing/) |
-| Phase 01-foundation P01-01 | ~25min | 3 tasks | 9 files |
-| Phase 01-foundation P02 | 2min | 2 tasks | 4 files |
-| Phase 01-foundation P03 | 6 | 2 tasks | 11 files |
-| Phase 02-team-player-mgmt P01 | 5 | 2 tasks | 4 files |
-| Phase 02-team-player-mgmt P02 | 5 | 2 tasks | 4 files |
-| Phase 02-team-player-mgmt P03 | 5min | 1 tasks | 1 files |
-| Phase 03-lists-columns-cells P01 | 10 | 3 tasks | 5 files |
-| Phase 03-lists-columns-cells P02 | 2 | 2 tasks | 4 files |
-| Phase 03 P03 | 8 | 2 tasks | 10 files |
-| Phase 03-lists-columns-cells P04 | 2 | 2 tasks | 4 files |
-| Phase 03-lists-columns-cells P05 | 5 | 2 tasks | 6 files |
-| Phase 04 P01 | 5 | 2 tasks | 3 files |
-| Phase 04 P02 | 6 | 2 tasks | 2 files |
-| Phase 04-statistics-aggregation P03 | 2 | 2 tasks | 2 files |
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260430-rqd | App Title Branding — admin sets app title, navbar shows title + team | 2026-05-01 | 3c21e8a | [260430-rqd-admin-could-set-title-of-app-in-admin-pa](./quick/260430-rqd-admin-could-set-title-of-app-in-admin-pa/) |
-| 260430-rbt | Coach list detail — bulk inline editing | 2026-04-30 | 6e984a1 | [260430-rbt-coach-list-detail-bulk-inline-editing](./quick/260430-rbt-coach-list-detail-bulk-inline-editing/) |
-| 260430-rhh | Admin UI — active/inactive grouping for teams and coaches | 2026-04-30 | 560b81c | [260430-rhh-admin-ui-active-inactive-grouping-for-te](./quick/260430-rhh-admin-ui-active-inactive-grouping-for-te/) |
