@@ -51,12 +51,16 @@ CREATE TABLE IF NOT EXISTS lists (
                   CHECK (visibility IN ('public', 'protected', 'private')),
     show_all_rows BOOLEAN      NOT NULL DEFAULT FALSE,
     is_hidden     BOOLEAN      NOT NULL DEFAULT FALSE,
+    description   TEXT                     NULL,
+    date          DATE                     NULL,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 -- Migration for existing databases:
 -- ALTER TABLE lists ADD COLUMN IF NOT EXISTS show_all_rows BOOLEAN NOT NULL DEFAULT FALSE;
 -- ALTER TABLE lists ADD COLUMN IF NOT EXISTS is_hidden     BOOLEAN NOT NULL DEFAULT FALSE;
+-- ALTER TABLE lists ADD COLUMN IF NOT EXISTS description TEXT NULL;
+-- ALTER TABLE lists ADD COLUMN IF NOT EXISTS date DATE NULL;
 CREATE INDEX IF NOT EXISTS idx_lists_team_id   ON lists(team_id);
 CREATE INDEX IF NOT EXISTS idx_lists_visibility ON lists(visibility);
 
