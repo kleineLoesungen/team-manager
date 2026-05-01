@@ -9,6 +9,7 @@
 SET search_path TO team_manager, public;
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users FORCE ROW LEVEL SECURITY;
 
 -- SELECT: admin sees all rows; others see only their own team
 CREATE POLICY team_isolation_users_select ON users
@@ -41,8 +42,11 @@ CREATE POLICY team_isolation_users_update ON users
 -- require_coach() passes role='coach'; require_player() passes role='player'.
 
 ALTER TABLE lists   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lists   FORCE ROW LEVEL SECURITY;
 ALTER TABLE columns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE columns FORCE ROW LEVEL SECURITY;
 ALTER TABLE cells   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cells   FORCE ROW LEVEL SECURITY;
 
 -- Lists SELECT: admin sees all; coaches see all lists in their team; players see public + protected lists
 CREATE POLICY lists_visibility_select ON lists
@@ -120,6 +124,7 @@ CREATE POLICY columns_insert ON columns
 
 -- List–global-column junction: coaches manage; players read (visibility follows parent list)
 ALTER TABLE list_global_columns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE list_global_columns FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY lgc_select ON list_global_columns
     FOR SELECT
