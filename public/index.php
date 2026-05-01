@@ -8,7 +8,7 @@ $_parent = dirname(__DIR__);
 if (is_dir($_parent . '/src')) {
     define('ROOT_PATH', $_parent);
 } else {
-    define('ROOT_PATH', dirname($_parent) . '/apps/team-manager');
+    define('ROOT_PATH', $_parent . '/apps/team-manager');
 }
 unset($_parent);
 
