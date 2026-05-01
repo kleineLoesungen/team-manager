@@ -70,10 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Set RLS context before any further queries
                         set_team_context($pdo, (int)$user['team_id']);
 
+                        // Fetch team name for display in navbar
+                        $team_stmt = $pdo->prepare("SELECT name FROM teams WHERE id = ?");
+                        $team_stmt->execute([$user['team_id']]);
+                        $team_row = $team_stmt->fetch();
+
                         $_SESSION['user_id']       = $user['id'];
                         $_SESSION['team_id']       = $user['team_id'];
                         $_SESSION['role']          = $user['role'];
                         $_SESSION['display_name']  = $user['first_name'] . ' ' . $user['last_name'];
+                        $_SESSION['team_name']     = $team_row ? $team_row['name'] : '';
                         $_SESSION['last_activity'] = time();
 
                         // Role-based redirect — per D-02

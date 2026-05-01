@@ -29,6 +29,15 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_team_id  ON users(team_id);
 
+-- ── Settings ──────────────────────────────────────────────────────────────────
+
+-- Global app settings (key/value pairs)
+CREATE TABLE IF NOT EXISTS settings (
+    key   VARCHAR(100) PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT ''
+);
+INSERT INTO settings (key, value) VALUES ('app_title', 'Team Manager') ON CONFLICT DO NOTHING;
+
 -- ── Phase 3: Lists, Columns & Cells ──────────────────────────────────────────
 
 -- Lists — one per team/coach usage; has visibility state
