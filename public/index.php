@@ -4,13 +4,17 @@
 
 declare(strict_types=1);
 
-$_parent = dirname(__DIR__);
-if (is_dir($_parent . '/src')) {
-    define('ROOT_PATH', $_parent);
+$_p1 = dirname(__DIR__);     // parent of public/ (project root in dev, public_html/ on Hetzner)
+$_p2 = dirname($_p1);         // grandparent (FTP home on Hetzner)
+
+if (is_dir($_p1 . '/src')) {
+    define('ROOT_PATH', $_p1);                              // dev: src/ is sibling of public/
+} elseif (is_dir($_p2 . '/apps/team-manager/src')) {
+    define('ROOT_PATH', $_p2 . '/apps/team-manager');      // Hetzner: ~/public_html/app/ layout
 } else {
-    define('ROOT_PATH', $_parent . '/apps/team-manager');
+    define('ROOT_PATH', $_p1 . '/apps/team-manager');      // single-level fallback
 }
-unset($_parent);
+unset($_p1, $_p2);
 
 require_once ROOT_PATH . '/config.php';
 require_once ROOT_PATH . '/src/auth/session.php';

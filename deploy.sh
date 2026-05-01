@@ -9,7 +9,7 @@ if [[ -z "$FTP_HOST" || -z "$FTP_USER" || -z "$FTP_PASS" ]]; then
     echo "Usage: ./deploy.sh ftp.your-domain.de username password"
     echo ""
     echo "Uploads:"
-    echo "  public/  → team-manager/"
+    echo "  public/  → public_html/team-manager/"
     echo "  src/ database/ → apps/team-manager/"
     echo ""
     echo "config.php is NOT uploaded — create it once on the server manually."
@@ -25,7 +25,7 @@ lftp -u "$FTP_USER,$FTP_PASS" "$FTP_HOST" <<FTPEOF
 # Webroot: only front controller + .htaccess
 mirror --reverse --delete \
     --exclude-glob='.DS_Store' \
-    public/ team-manager/
+    public/ public_html/team-manager/
 
 # App source: all files except credentials and dev-only artifacts
 mirror --reverse \
