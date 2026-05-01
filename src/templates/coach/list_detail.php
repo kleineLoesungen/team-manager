@@ -24,6 +24,9 @@
             };
         ?>
         <span class="badge <?= $badge_class ?> me-2"><?= $badge_label ?></span>
+        <?php if (!empty($list['date'])): ?>
+        <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?></span>
+        <?php endif; ?>
     </div>
     <div class="d-flex gap-2">
         <a href="/coach/lists/<?= (int)$list['id'] ?>/settings"
@@ -32,6 +35,10 @@
         </a>
     </div>
 </div>
+
+<?php if (!empty($list['description'])): ?>
+<p class="text-muted small mb-3"><?= e($list['description']) ?></p>
+<?php endif; ?>
 
 <!-- Add local column form — inline at top (D-10) -->
 <details class="mb-3">

@@ -19,7 +19,7 @@ if (!can_view_list($list_id)) {
 }
 
 // Fetch list metadata
-$list_stmt = $pdo->prepare("SELECT id, name, visibility FROM lists WHERE id = ?");
+$list_stmt = $pdo->prepare("SELECT id, name, visibility, date, description FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 

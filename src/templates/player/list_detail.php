@@ -4,11 +4,17 @@
 // edit button only shown for public lists + own row; protected = read-only
 ?>
 
-<div class="mb-3">
+<div class="d-flex justify-content-between align-items-center mb-1">
     <a href="/player/lists" class="text-muted small">
         <i class="bi bi-arrow-left me-1"></i>Alle Listen
     </a>
+    <?php if (!empty($list['date'])): ?>
+    <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?></span>
+    <?php endif; ?>
 </div>
+<?php if (!empty($list['description'])): ?>
+<p class="text-muted small mb-3"><?= e($list['description']) ?></p>
+<?php endif; ?>
 
 <?php if (empty($columns)): ?>
 <div class="alert alert-info">Diese Liste hat noch keine Spalten.</div>
