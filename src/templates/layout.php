@@ -47,6 +47,23 @@ function render_layout_head(string $title = 'Team Manager'): void {
  * Shows app name left, current user + logout right.
  */
 function render_navbar(): void {
+    static $app_title = null;
+    if ($app_title === null) {
+        try {
+            $pdo   = get_db();
+            $stmt  = $pdo->prepare("SELECT value FROM settings WHERE key = 'app_title'");
+            $stmt->execute();
+            $app_title = $stmt->fetchColumn() ?: 'Team Manager';
+        } catch (Throwable $e) {
+            $app_title = 'Team Manager';
+        }
+    }
+
+    $brand = e($app_title);
+    if (!empty($_SESSION['team_name'])) {
+        $brand .= ' · ' . e($_SESSION['team_name']);
+    }
+
     $display_name = '';
     $role_label   = '';
 
@@ -59,7 +76,7 @@ function render_navbar(): void {
     }
     ?>
     <nav class="navbar navbar-light bg-white border-bottom px-3">
-        <span class="navbar-brand fw-semibold">Team Manager</span>
+        <span class="navbar-brand fw-semibold"><?= $brand ?></span>
         <?php if ($display_name): ?>
         <div class="d-flex align-items-center gap-3">
             <small class="text-muted">
