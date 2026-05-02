@@ -40,8 +40,13 @@ function get_db(): PDO {
  */
 function maybe_init_db(PDO $pdo): void {
     $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
-    $exists = $pdo->query("SELECT to_regclass('{$schema}.teams')")->fetchColumn();
-    if ($exists !== null) return;
+    // Check for a column that only exists after a complete init, not just the table.
+    // This catches partial runs that created some tables but failed mid-way.
+    $complete = $pdo->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = '{$schema}' AND table_name = 'users' AND column_name = 'username'"
+    )->fetchColumn();
+    if ($complete !== false) return;
 
     // Schema creation may fail on shared hosting where the DB user lacks CREATE privilege.
     // Attempt it separately so a permission error does not abort table creation.
