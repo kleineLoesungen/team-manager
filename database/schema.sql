@@ -79,8 +79,11 @@ CREATE TABLE IF NOT EXISTS team_manager.columns (
     -- Application layer must enforce: data_type='text' only when list_id IS NOT NULL
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
     sort_order  INTEGER      NOT NULL DEFAULT 0,
+    coach_only  BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+-- Migration for existing databases:
+-- ALTER TABLE columns ADD COLUMN IF NOT EXISTS coach_only BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_columns_team_id  ON team_manager.columns(team_id);
 CREATE INDEX IF NOT EXISTS idx_columns_list_id  ON team_manager.columns(list_id);
 

@@ -24,6 +24,7 @@ function get_db(): PDO {
     $pdo->exec("SET search_path TO {$schema}, public");
 
     maybe_init_db($pdo);
+    maybe_migrate_db($pdo);
 
     return $pdo;
 }
@@ -50,6 +51,35 @@ function maybe_init_db(PDO $pdo): void {
 
     db_init_schema($pdo, $schema);
     db_init_rls($pdo, $schema);
+}
+
+/**
+ * Idempotent incremental migrations. Runs on every boot — all statements must be safe to re-run.
+ * ADD COLUMN IF NOT EXISTS and DROP POLICY IF EXISTS + recreate satisfy this.
+ */
+function maybe_migrate_db(PDO $pdo): void {
+    $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
+    // Migration 001: coach_only flag on columns
+    $pdo->exec(
+        "ALTER TABLE {$schema}.columns
+         ADD COLUMN IF NOT EXISTS coach_only BOOLEAN NOT NULL DEFAULT FALSE"
+    );
+    // Migration 001: update columns_visibility_select RLS to respect coach_only
+    // DROP + recreate is idempotent (IF EXISTS guard)
+    $pdo->exec("DROP POLICY IF EXISTS columns_visibility_select ON {$schema}.columns");
+    $pdo->exec("CREATE POLICY columns_visibility_select ON {$schema}.columns FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (list_id IS NULL
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (list_id IS NOT NULL
+            AND coach_only = FALSE
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$schema}.lists
+                        WHERE lists.id = columns.list_id
+                        AND lists.visibility IN ('public', 'protected')))
+    )");
 }
 
 /**
@@ -115,6 +145,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         data_type  VARCHAR(10) NOT NULL CHECK (data_type IN ('boolean', 'number', 'text')),
         is_active  BOOLEAN NOT NULL DEFAULT TRUE,
         sort_order INTEGER NOT NULL DEFAULT 0,
+        coach_only BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
@@ -203,6 +234,7 @@ function db_init_rls(PDO $pdo, string $s): void {
         OR (list_id IS NULL
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
         OR (list_id IS NOT NULL
+            AND coach_only = FALSE
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = columns.list_id

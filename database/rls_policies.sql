@@ -101,7 +101,9 @@ CREATE POLICY columns_visibility_select ON columns
         )
         OR (
             -- Players see local columns for public or protected lists in their team
+            -- coach_only columns are excluded from player visibility
             list_id IS NOT NULL
+            AND coach_only = FALSE
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
             AND EXISTS (
                 SELECT 1 FROM lists
