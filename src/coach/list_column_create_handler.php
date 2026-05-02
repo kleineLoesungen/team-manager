@@ -17,6 +17,7 @@ require_csrf();
 $pdo       = get_db();
 $name      = trim($_POST['name'] ?? '');
 $data_type = $_POST['data_type'] ?? '';
+$coach_only = isset($_POST['coach_only']) && $_POST['coach_only'] === '1';
 
 // Verify list belongs to this coach's team
 $check = $pdo->prepare("SELECT id FROM lists WHERE id = ? AND team_id = ?");
@@ -37,10 +38,10 @@ if (!in_array($data_type, ['boolean', 'number', 'text'])) {
 
 try {
     $stmt = $pdo->prepare(
-        "INSERT INTO columns (team_id, list_id, name, data_type)
-         VALUES (?, ?, ?, ?)"
+        "INSERT INTO columns (team_id, list_id, name, data_type, coach_only)
+         VALUES (?, ?, ?, ?, ?)"
     );
-    $stmt->execute([$_SESSION['team_id'], $list_id, $name, $data_type]);
+    $stmt->execute([$_SESSION['team_id'], $list_id, $name, $data_type, $coach_only]);
     redirect('/coach/lists/' . $list_id . '?success=1');
 } catch (PDOException $e) {
     error_log('Local column create error: ' . $e->getMessage());

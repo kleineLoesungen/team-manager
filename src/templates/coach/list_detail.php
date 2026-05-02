@@ -64,6 +64,16 @@
                     <button type="submit" class="btn btn-sm btn-outline-primary min-touch">Hinzufügen</button>
                 </div>
             </div>
+            <div class="row g-2 mt-1">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="coach_only" value="1" id="coach_only_chk">
+                        <label class="form-check-label small" for="coach_only_chk">
+                            Nur für Trainer
+                        </label>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 </details>
@@ -93,6 +103,9 @@
                         <?= e($col['name']) ?>
                         <?php if ($col['list_id'] === null): ?>
                             <span class="badge bg-light text-dark border ms-1" title="Globale Spalte">G</span>
+                        <?php endif; ?>
+                        <?php if ($col['list_id'] !== null && !empty($col['coach_only'])): ?>
+                            <span class="badge bg-danger ms-1" title="Nur für Trainer">T</span>
                         <?php endif; ?>
                     </th>
                     <?php endforeach; ?>
