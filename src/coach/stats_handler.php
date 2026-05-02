@@ -1,5 +1,5 @@
 <?php
-// src/coach/stats_handler.php — GET /coach/stats — statistics + leaderboard (STAT-01, STAT-02, STAT-03)
+// src/coach/stats_handler.php — GET /coach/stats — statistics + ranking (STAT-01, STAT-02, STAT-03)
 // Per D-02: coaches see ALL list visibility states (public, protected, private).
 
 declare(strict_types=1);
@@ -117,80 +117,166 @@ foreach ($raw_stats as $row) {
     $player_stats[$pid]['cols'][(int)$row['column_id']] = $row['aggregated_value'];
 }
 
-// ── Leaderboard (STAT-03) ────────────────────────────────────────────────────
-// GET param: sort_by = column_id. Default: first global column (if any).
-$sort_by_id = isset($_GET['sort_by']) && $_GET['sort_by'] !== '' ? (int)$_GET['sort_by'] : 0;
+// ── Ranking with time-window aggregation (STAT-03) ───────────────────────────
+// GET params: sort_col (column_id), sort_win (all|4w|4_8w|8_12w)
+// time-window columns use their own date ranges — they ignore date filters but respect list_id filter.
 
-// Default to first global column if no sort_by set
-if ($sort_by_id === 0 && !empty($global_columns)) {
-    $sort_by_id = (int)$global_columns[0]['id'];
+$allowed_wins = ['all', '4w', '4_8w', '8_12w'];
+
+// Validate sort_win
+$sort_win = isset($_GET['sort_win']) && in_array($_GET['sort_win'], $allowed_wins, true)
+    ? $_GET['sort_win']
+    : 'all';
+
+// Validate sort_col_id (must be a known global column)
+$valid_col_ids = array_map(fn($c) => (int)$c['id'], $global_columns);
+$sort_col_id   = isset($_GET['sort_col']) && $_GET['sort_col'] !== '' ? (int)$_GET['sort_col'] : 0;
+if (!in_array($sort_col_id, $valid_col_ids, true)) {
+    $sort_col_id = !empty($valid_col_ids) ? $valid_col_ids[0] : 0;
 }
 
-$leaderboard        = [];
-$leaderboard_column = null;
+// Build the ranking query with 4 time-window conditional SUMs
+// "Gesamt" (sum_all) respects the existing date filters; time-window columns use fixed intervals.
+// list_id filter applies to all columns.
 
-if ($sort_by_id > 0 && !empty($global_columns)) {
-    // Find the column metadata for the chosen sort column
-    foreach ($global_columns as $col) {
-        if ((int)$col['id'] === $sort_by_id) {
-            $leaderboard_column = $col;
-            break;
-        }
+// Build the sum_all date condition mirroring the $date_conds approach above, but as CASE WHEN
+// so it works inside SUM without WHERE-level filtering.
+$sum_all_cond_num  = 'cells.id IS NULL OR TRUE'; // default: include all rows
+$sum_all_cond_bool = 'cells.id IS NULL OR TRUE';
+$ranking_params    = [$team_id, $team_id];
+
+// The date condition for sum_all must be expressed inline in CASE WHEN.
+// We'll build the condition as a SQL fragment for the CASE WHEN ... THEN ... END.
+// For simplicity: if date filters apply, we only SUM when the cell matches date criteria.
+// The cell must match: (cells.id IS NULL) OR (date filter passes).
+$sum_all_date_sql = '1=1'; // default: no filter applied, all cells count
+$ranking_extra_params = [];
+
+if ($filter_date_from !== null || $filter_date_to !== null) {
+    $dc = ['cells.id IS NULL'];
+    if ($filter_include_undated) {
+        $dc[] = 'lists.date IS NULL';
     }
+    $rc = [];
+    if ($filter_date_from !== null) {
+        $rc[] = 'lists.date >= ?';
+        $ranking_extra_params[] = $filter_date_from;
+    }
+    if ($filter_date_to !== null) {
+        $rc[] = 'lists.date <= ?';
+        $ranking_extra_params[] = $filter_date_to;
+    }
+    if (!empty($rc)) {
+        $dc[] = '(lists.date IS NOT NULL AND ' . implode(' AND ', $rc) . ')';
+    }
+    $sum_all_date_sql = '(' . implode(' OR ', $dc) . ')';
 }
 
-if ($leaderboard_column !== null) {
-    $lb_type = $leaderboard_column['data_type'];
-    $lb_sql  = "
-        SELECT
-            u.id AS player_id,
-            u.first_name,
-            u.last_name,
-            COALESCE(
-                CASE
-                    WHEN ? = 'number'  THEN SUM(CAST(cells.value AS NUMERIC))
-                    WHEN ? = 'boolean' THEN SUM(CASE WHEN cells.value = 'true' OR cells.value = '1' THEN 1 ELSE 0 END)
-                END,
-                0
-            ) AS rank_value
-        FROM users u
-        LEFT JOIN cells ON cells.player_id = u.id AND cells.column_id = ?
-        LEFT JOIN lists ON cells.list_id = lists.id
-        WHERE u.team_id = ?
-          AND u.role = 'player'
-          AND u.is_active = TRUE
-    ";
-    $lb_params = [$lb_type, $lb_type, $sort_by_id, $team_id];
+$ranking_sql = "
+    SELECT
+        u.id           AS player_id,
+        u.first_name,
+        u.last_name,
+        c.id           AS column_id,
+        c.name         AS column_name,
+        c.data_type,
+        c.sort_order,
 
-    if ($filter_list_id !== null) {
-        $lb_sql    .= " AND (cells.list_id = ? OR cells.list_id IS NULL)";
-        $lb_params[] = $filter_list_id;
+        COALESCE(
+            CASE
+                WHEN c.data_type = 'number'  THEN SUM(CASE WHEN {$sum_all_date_sql} THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN {$sum_all_date_sql} AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+            END, 0
+        ) AS sum_all,
+
+        COALESCE(
+            CASE
+                WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+            END, 0
+        ) AS sum_4w,
+
+        COALESCE(
+            CASE
+                WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+            END, 0
+        ) AS sum_4_8w,
+
+        COALESCE(
+            CASE
+                WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+            END, 0
+        ) AS sum_8_12w
+
+    FROM users u
+    CROSS JOIN (
+        SELECT id, name, data_type, sort_order
+        FROM columns
+        WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
+    ) c
+    LEFT JOIN cells ON cells.player_id = u.id AND cells.column_id = c.id
+    LEFT JOIN lists ON cells.list_id = lists.id
+    WHERE u.team_id = ?
+      AND u.role = 'player'
+      AND u.is_active = TRUE
+";
+
+// Merge date filter params after the two team_id params
+$ranking_params = array_merge($ranking_params, $ranking_extra_params);
+
+if ($filter_list_id !== null) {
+    $ranking_sql    .= " AND (cells.list_id = ? OR cells.list_id IS NULL)";
+    $ranking_params[] = $filter_list_id;
+}
+
+$ranking_sql .= "
+    GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.data_type, c.sort_order
+    ORDER BY u.last_name, u.first_name, c.sort_order
+";
+
+$ranking_stmt = $pdo->prepare($ranking_sql);
+$ranking_stmt->execute($ranking_params);
+$raw_ranking  = $ranking_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Reshape: $ranking[player_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[col_id => [all,4w,4_8w,8_12w]]]
+$ranking       = [];
+$ranking_order = [];
+
+foreach ($raw_ranking as $row) {
+    $pid = (int)$row['player_id'];
+    $cid = (int)$row['column_id'];
+    if (!isset($ranking[$pid])) {
+        $ranking[$pid] = [
+            'first_name' => $row['first_name'],
+            'last_name'  => $row['last_name'],
+            'cols'       => [],
+        ];
+        $ranking_order[] = $pid;
     }
-    if ($filter_date_from !== null || $filter_date_to !== null) {
-        $lb_date_conds = ['cells.id IS NULL'];  // no-cell rows — always include
-        if ($filter_include_undated) {
-            $lb_date_conds[] = 'lists.date IS NULL';
-        }
-        $lb_range_conds = [];
-        if ($filter_date_from !== null) {
-            $lb_range_conds[] = 'lists.date >= ?';
-            $lb_params[] = $filter_date_from;
-        }
-        if ($filter_date_to !== null) {
-            $lb_range_conds[] = 'lists.date <= ?';
-            $lb_params[] = $filter_date_to;
-        }
-        if (!empty($lb_range_conds)) {
-            $lb_date_conds[] = '(lists.date IS NOT NULL AND ' . implode(' AND ', $lb_range_conds) . ')';
-        }
-        $lb_sql .= ' AND (' . implode(' OR ', $lb_date_conds) . ')';
-    }
+    $ranking[$pid]['cols'][$cid] = [
+        'all'    => (float)$row['sum_all'],
+        '4w'     => (float)$row['sum_4w'],
+        '4_8w'   => (float)$row['sum_4_8w'],
+        '8_12w'  => (float)$row['sum_8_12w'],
+    ];
+}
 
-    $lb_sql .= " GROUP BY u.id, u.first_name, u.last_name ORDER BY rank_value DESC NULLS LAST, u.last_name, u.first_name";
-
-    $lb_stmt = $pdo->prepare($lb_sql);
-    $lb_stmt->execute($lb_params);
-    $leaderboard = $lb_stmt->fetchAll(PDO::FETCH_ASSOC);
+// Sort $ranking_order by chosen sort_col + sort_win descending; ties broken by last_name, first_name
+if ($sort_col_id > 0) {
+    usort($ranking_order, function(int $a, int $b) use ($ranking, $sort_col_id, $sort_win): int {
+        $va = $ranking[$a]['cols'][$sort_col_id][$sort_win] ?? 0;
+        $vb = $ranking[$b]['cols'][$sort_col_id][$sort_win] ?? 0;
+        if ($va !== $vb) {
+            return $vb <=> $va; // descending
+        }
+        $cmp = strcmp($ranking[$a]['last_name'], $ranking[$b]['last_name']);
+        if ($cmp !== 0) {
+            return $cmp;
+        }
+        return strcmp($ranking[$a]['first_name'], $ranking[$b]['first_name']);
+    });
 }
 
 require ROOT_PATH . '/src/templates/coach/layout.php';
@@ -198,7 +284,7 @@ require ROOT_PATH . '/src/templates/coach/layout.php';
 render_coach_page('Statistik', 'stats', function() use (
     $global_columns, $player_stats, $player_order,
     $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
-    $leaderboard, $leaderboard_column, $sort_by_id
+    $ranking, $ranking_order, $sort_col_id, $sort_win
 ) {
     require ROOT_PATH . '/src/templates/coach/stats.php';
 });
