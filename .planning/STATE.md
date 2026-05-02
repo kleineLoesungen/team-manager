@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260503-06c | Coach delete list — two-step confirm (Gefahrenzone + confirmation page, no JS) | 2026-05-03 | 543d2f7 | [260503-06c-add-delete-list-for-coaches-before-actio](./quick/260503-06c-add-delete-list-for-coaches-before-actio/) |
 | 260502-wfw | List totals row (Gesamt-Zeile) + coach stats column-filter dropdown | 2026-05-02 | 3448187 | [260502-wfw-list-view-totals-row-stats-ranking-colum](./quick/260502-wfw-list-view-totals-row-stats-ranking-colum/) |
 | 260501-txm | add list optional date and description; use date in stats filter with toggle | 2026-05-01 | 66512b9 | [260501-txm-add-list-optional-date-and-description-u](./quick/260501-txm-add-list-optional-date-and-description-u/) |
 | 260502-w8p | Coach-only local columns — 'Nur für Trainer' flag; player view silently omits them via PHP filter + RLS | 2026-05-02 | 6059ad2 | [260502-w8p-add-feature-at-list-to-add-local-columns](./quick/260502-w8p-add-feature-at-list-to-add-local-columns/) |
