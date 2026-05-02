@@ -82,10 +82,24 @@ function maybe_init_db(PDO $pdo): void {
 
     try {
         db_exec_statements($pdo, $schema_sql);
-        db_exec_statements($pdo, $rls_sql);
     } catch (Throwable $e) {
-        throw new RuntimeException($e->getMessage() . "\n\n" . $pre_dump, 0, $e);
+        // Snapshot what actually got created before the failure
+        $post = $pdo->query(
+            "SELECT c.relname, a.attname
+             FROM pg_class c
+             JOIN pg_namespace n ON n.oid = c.relnamespace
+             LEFT JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0
+             WHERE n.nspname = '{$schema}'
+             ORDER BY c.relname, a.attnum"
+        )->fetchAll(PDO::FETCH_KEY_PAIR);
+        throw new RuntimeException(
+            $e->getMessage()
+            . "\n\n" . $pre_dump
+            . "\n\nPost-failure schema contents: " . json_encode($post),
+            0, $e
+        );
     }
+    db_exec_statements($pdo, $rls_sql);
 }
 
 /**
