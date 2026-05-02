@@ -57,7 +57,6 @@
                 <tr>
                     <th class="text-nowrap">Spieler</th>
                     <?php foreach ($global_columns as $col): ?>
-                        <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <th class="text-nowrap text-end">
                             <?= e($col['name']) ?>
                             <small class="text-muted fw-normal d-block">
@@ -75,7 +74,6 @@
                             <?= e($p['last_name'] . ', ' . $p['first_name']) ?>
                         </td>
                         <?php foreach ($global_columns as $col): ?>
-                            <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                             <td class="text-end text-nowrap">
                                 <?php
                                     $val = $p['cols'][(int)$col['id']] ?? null;
@@ -100,7 +98,7 @@
     </div>
 
     <!-- ── Rangliste mit Zeitfenstern (STAT-03) ───────────────────────── -->
-    <!-- Spalten-Dropdown: filtert Rangliste und Spielerstatistiken auf eine globale Spalte -->
+    <!-- Spalten-Dropdown: filtert nur die Rangliste auf eine globale Spalte -->
     <form method="get" action="/coach/stats" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
         <?php if ($filter_list_id): ?><input type="hidden" name="list_id" value="<?= (int)$filter_list_id ?>"><?php endif; ?>
         <?php if ($filter_date_from): ?><input type="hidden" name="date_from" value="<?= e($filter_date_from) ?>"><?php endif; ?>
@@ -110,7 +108,6 @@
         <input type="hidden" name="sort_win" value="<?= e($sort_win) ?>">
         <label for="col_filter_select" class="form-label mb-0 small fw-medium">Spalte:</label>
         <select name="col_filter" id="col_filter_select" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
-            <option value="">Alle Spalten</option>
             <?php foreach ($global_columns as $col): ?>
                 <option value="<?= (int)$col['id'] ?>" <?= $col_filter === (int)$col['id'] ? 'selected' : '' ?>>
                     <?= e($col['name']) ?>

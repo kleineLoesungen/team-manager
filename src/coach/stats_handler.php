@@ -135,10 +135,10 @@ if (!in_array($sort_col_id, $valid_col_ids, true)) {
     $sort_col_id = !empty($valid_col_ids) ? $valid_col_ids[0] : 0;
 }
 
-// Validate col_filter (0 = alle Spalten, sonst column_id einer globalen Spalte)
+// col_filter: always a specific column — default to first column when unset or invalid
 $col_filter = isset($_GET['col_filter']) && $_GET['col_filter'] !== '' ? (int)$_GET['col_filter'] : 0;
-if ($col_filter !== 0 && !in_array($col_filter, $valid_col_ids, true)) {
-    $col_filter = 0;
+if (!in_array($col_filter, $valid_col_ids, true)) {
+    $col_filter = !empty($valid_col_ids) ? $valid_col_ids[0] : 0;
 }
 
 // Build the ranking query with 4 time-window conditional SUMs
