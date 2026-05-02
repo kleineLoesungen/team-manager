@@ -37,11 +37,19 @@ if (!in_array($data_type, ['boolean', 'number', 'text'])) {
 }
 
 try {
-    $stmt = $pdo->prepare(
-        "INSERT INTO columns (team_id, list_id, name, data_type, coach_only)
-         VALUES (?, ?, ?, ?, ?)"
-    );
-    $stmt->execute([$_SESSION['team_id'], $list_id, $name, $data_type, $coach_only]);
+    if (DB_HAS_COACH_ONLY) {
+        $stmt = $pdo->prepare(
+            "INSERT INTO columns (team_id, list_id, name, data_type, coach_only)
+             VALUES (?, ?, ?, ?, ?)"
+        );
+        $stmt->execute([$_SESSION['team_id'], $list_id, $name, $data_type, $coach_only ? 1 : 0]);
+    } else {
+        $stmt = $pdo->prepare(
+            "INSERT INTO columns (team_id, list_id, name, data_type)
+             VALUES (?, ?, ?, ?)"
+        );
+        $stmt->execute([$_SESSION['team_id'], $list_id, $name, $data_type]);
+    }
     redirect('/coach/lists/' . $list_id . '?success=1');
 } catch (PDOException $e) {
     error_log('Local column create error: ' . $e->getMessage());

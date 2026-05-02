@@ -25,7 +25,7 @@ $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Fetch columns for this list: local columns + only the global columns selected for this list (D-11)
 $col_stmt = $pdo->prepare(
-    "SELECT c.id, c.name, c.data_type, c.list_id, c.coach_only
+    "SELECT c.id, c.name, c.data_type, c.list_id, " . (DB_HAS_COACH_ONLY ? 'c.coach_only' : 'FALSE AS coach_only') . "
      FROM columns c
      WHERE c.is_active = TRUE
        AND (

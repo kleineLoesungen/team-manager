@@ -24,12 +24,14 @@ $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Fetch columns: local + global columns selected for this list (D-11)
+// coach_only filter only added when column exists in DB (migration may not have run yet)
+$local_filter = DB_HAS_COACH_ONLY ? '(c.list_id = ? AND c.coach_only = FALSE)' : 'c.list_id = ?';
 $col_stmt = $pdo->prepare(
     "SELECT c.id, c.name, c.data_type, c.list_id
      FROM columns c
      WHERE c.is_active = TRUE
        AND (
-         (c.list_id = ? AND c.coach_only = FALSE)
+         {$local_filter}
          OR (c.list_id IS NULL AND c.team_id = ?
              AND EXISTS (
                SELECT 1 FROM list_global_columns lgc
