@@ -56,6 +56,17 @@ function maybe_init_db(PDO $pdo): void {
         error_log('team-manager: schema creation skipped (' . $e->getMessage() . ')');
     }
 
+    // DIAGNOSTIC: snapshot everything already in the schema before we touch it
+    $pre_existing = $pdo->query(
+        "SELECT table_name, column_name
+         FROM information_schema.columns
+         WHERE table_schema = '{$schema}'
+         ORDER BY table_name, ordinal_position"
+    )->fetchAll(PDO::FETCH_KEY_PAIR);
+    $pre_dump = $pre_existing
+        ? 'Pre-existing in schema: ' . json_encode($pre_existing)
+        : 'Schema is empty before init';
+
     $schema_file = ROOT_PATH . '/database/schema.sql';
     $rls_file    = ROOT_PATH . '/database/rls_policies.sql';
     $schema_sql  = file_get_contents($schema_file);
@@ -69,8 +80,12 @@ function maybe_init_db(PDO $pdo): void {
         );
     }
 
-    db_exec_statements($pdo, $schema_sql);
-    db_exec_statements($pdo, $rls_sql);
+    try {
+        db_exec_statements($pdo, $schema_sql);
+        db_exec_statements($pdo, $rls_sql);
+    } catch (Throwable $e) {
+        throw new RuntimeException($e->getMessage() . "\n\n" . $pre_dump, 0, $e);
+    }
 }
 
 /**
