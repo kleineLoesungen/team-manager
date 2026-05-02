@@ -19,25 +19,51 @@ $cols_stmt = $pdo->prepare(
 $cols_stmt->execute([$team_id]);
 $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Aggregation query: own row, public + protected lists (private excluded) ──
-// LEFT JOIN on cells filtered to current player_id only.
-// COALESCE to 0 prevents NULL display when player has no entries.
+// ── Aggregation query: own row, public + protected lists, 4 time windows ─────
+// LEFT JOIN cells restricted to this player; LEFT JOIN lists restricted to public/protected.
+// WHERE (cells.id IS NULL OR lists.id IS NOT NULL) ensures CROSS JOIN rows are kept but
+// cells belonging to private lists are excluded (lists.id IS NULL means visibility filter rejected them).
 $player_stats = [];
 
 if (!empty($global_columns)) {
     $agg_sql = "
         SELECT
-            c.id           AS column_id,
-            c.name         AS column_name,
+            c.id        AS column_id,
+            c.name      AS column_name,
             c.data_type,
+
+            -- Gesamt: all public/protected cells (dated and undated)
             COALESCE(
                 CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CAST(cells.value AS NUMERIC))
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.value = 'true' OR cells.value = '1' THEN 1 ELSE 0 END)
-                    ELSE NULL
-                END,
-                0
-            ) AS aggregated_value
+                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN cells.id IS NOT NULL THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.id IS NOT NULL AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+                END, 0
+            ) AS sum_all,
+
+            -- Letzte 4 Wochen: lists.date within last 28 days
+            COALESCE(
+                CASE
+                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+                END, 0
+            ) AS sum_4w,
+
+            -- 4–8 Wochen
+            COALESCE(
+                CASE
+                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+                END, 0
+            ) AS sum_4_8w,
+
+            -- 8–12 Wochen
+            COALESCE(
+                CASE
+                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+                END, 0
+            ) AS sum_8_12w
+
         FROM (
             SELECT id, name, data_type, sort_order
             FROM columns
@@ -57,7 +83,12 @@ if (!empty($global_columns)) {
     $raw = $agg_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($raw as $row) {
-        $player_stats[(int)$row['column_id']] = $row['aggregated_value'];
+        $player_stats[(int)$row['column_id']] = [
+            'all'    => (float)$row['sum_all'],
+            '4w'     => (float)$row['sum_4w'],
+            '4_8w'   => (float)$row['sum_4_8w'],
+            '8_12w'  => (float)$row['sum_8_12w'],
+        ];
     }
 }
 
