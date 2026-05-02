@@ -57,6 +57,7 @@
                 <tr>
                     <th class="text-nowrap">Spieler</th>
                     <?php foreach ($global_columns as $col): ?>
+                        <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <th class="text-nowrap text-end">
                             <?= e($col['name']) ?>
                             <small class="text-muted fw-normal d-block">
@@ -74,6 +75,7 @@
                             <?= e($p['last_name'] . ', ' . $p['first_name']) ?>
                         </td>
                         <?php foreach ($global_columns as $col): ?>
+                            <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                             <td class="text-end text-nowrap">
                                 <?php
                                     $val = $p['cols'][(int)$col['id']] ?? null;
@@ -98,6 +100,25 @@
     </div>
 
     <!-- ── Rangliste mit Zeitfenstern (STAT-03) ───────────────────────── -->
+    <!-- Spalten-Dropdown: filtert Rangliste und Spielerstatistiken auf eine globale Spalte -->
+    <form method="get" action="/coach/stats" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+        <?php if ($filter_list_id): ?><input type="hidden" name="list_id" value="<?= (int)$filter_list_id ?>"><?php endif; ?>
+        <?php if ($filter_date_from): ?><input type="hidden" name="date_from" value="<?= e($filter_date_from) ?>"><?php endif; ?>
+        <?php if ($filter_date_to): ?><input type="hidden" name="date_to" value="<?= e($filter_date_to) ?>"><?php endif; ?>
+        <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1"><?php endif; ?>
+        <input type="hidden" name="sort_col" value="<?= (int)$sort_col_id ?>">
+        <input type="hidden" name="sort_win" value="<?= e($sort_win) ?>">
+        <label for="col_filter_select" class="form-label mb-0 small fw-medium">Spalte:</label>
+        <select name="col_filter" id="col_filter_select" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+            <option value="">Alle Spalten</option>
+            <?php foreach ($global_columns as $col): ?>
+                <option value="<?= (int)$col['id'] ?>" <?= $col_filter === (int)$col['id'] ? 'selected' : '' ?>>
+                    <?= e($col['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </form>
+
     <h5 class="mb-3">Rangliste</h5>
     <p class="text-muted small mb-3">
         Klicken Sie auf eine Spaltenüberschrift, um die Rangliste danach zu sortieren.
@@ -108,10 +129,11 @@
     // Helper: build URL for sorting by given col_id + win, preserving current filter state
     function ranking_sort_url(int $col_id, string $win, array $current_get): string {
         $params = array_filter([
-            'list_id'         => $current_get['list_id']   ?? '',
-            'date_from'       => $current_get['date_from'] ?? '',
-            'date_to'         => $current_get['date_to']   ?? '',
+            'list_id'         => $current_get['list_id']    ?? '',
+            'date_from'       => $current_get['date_from']  ?? '',
+            'date_to'         => $current_get['date_to']    ?? '',
             'include_undated' => ($current_get['include_undated'] ?? '') ? '1' : '',
+            'col_filter'      => $current_get['col_filter'] ?? '',
             'sort_col'        => $col_id,
             'sort_win'        => $win,
         ], fn($v) => $v !== '');
@@ -132,11 +154,13 @@
                 <tr>
                     <th rowspan="2" class="align-middle text-nowrap">Spieler</th>
                     <?php foreach ($global_columns as $col): ?>
+                        <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <th colspan="4" class="text-center border-start"><?= e($col['name']) ?></th>
                     <?php endforeach; ?>
                 </tr>
                 <tr>
                     <?php foreach ($global_columns as $col): ?>
+                        <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <?php foreach ($windows as $win_key => $win_label): ?>
                             <?php $active = ($sort_col_id === (int)$col['id'] && $sort_win === $win_key); ?>
                             <th class="text-end text-nowrap border-start<?= $active ? ' text-primary' : '' ?>">
@@ -155,6 +179,7 @@
                     <tr>
                         <td class="fw-semibold text-nowrap"><?= e($p['last_name'] . ', ' . $p['first_name']) ?></td>
                         <?php foreach ($global_columns as $col): ?>
+                            <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                             <?php $cid = (int)$col['id']; ?>
                             <?php foreach (array_keys($windows) as $win_key): ?>
                                 <?php

@@ -135,6 +135,12 @@ if (!in_array($sort_col_id, $valid_col_ids, true)) {
     $sort_col_id = !empty($valid_col_ids) ? $valid_col_ids[0] : 0;
 }
 
+// Validate col_filter (0 = alle Spalten, sonst column_id einer globalen Spalte)
+$col_filter = isset($_GET['col_filter']) && $_GET['col_filter'] !== '' ? (int)$_GET['col_filter'] : 0;
+if ($col_filter !== 0 && !in_array($col_filter, $valid_col_ids, true)) {
+    $col_filter = 0;
+}
+
 // Build the ranking query with 4 time-window conditional SUMs
 // "Gesamt" (sum_all) respects the existing date filters; time-window columns use fixed intervals.
 // list_id filter applies to all columns.
@@ -284,7 +290,7 @@ require ROOT_PATH . '/src/templates/coach/layout.php';
 render_coach_page('Statistik', 'stats', function() use (
     $global_columns, $player_stats, $player_order,
     $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
-    $ranking, $ranking_order, $sort_col_id, $sort_win
+    $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter
 ) {
     require ROOT_PATH . '/src/templates/coach/stats.php';
 });
