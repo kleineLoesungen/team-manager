@@ -11,15 +11,6 @@ define('ROOT_PATH', is_dir($_parent . '/src') ? $_parent : __DIR__);
 unset($_parent);
 
 require_once ROOT_PATH . '/config.php';
-
-// TEMP DIAGNOSTIC — remove after Hetzner init issue is resolved
-set_exception_handler(function(Throwable $e): void {
-    http_response_code(500);
-    echo '<pre style="font-family:monospace;padding:1em;white-space:pre-wrap">';
-    echo htmlspecialchars($e::class . ': ' . $e->getMessage() . "\n\n" . $e->getTraceAsString());
-    echo '</pre>';
-});
-
 require_once ROOT_PATH . '/src/auth/session.php';
 require_once ROOT_PATH . '/src/db/connection.php';
 require_once ROOT_PATH . '/src/utils/csrf.php';
