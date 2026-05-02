@@ -12,6 +12,8 @@ $teams = $teams_stmt->fetchAll();
 $error = '';
 $selected_team_id = null;
 
+require ROOT_PATH . '/src/templates/admin/layout.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
@@ -57,8 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-require ROOT_PATH . '/src/templates/admin/layout.php';
 
 render_admin_page('Trainer hinzufügen', 'coaches', function() use ($teams, $error, $selected_team_id) {
     require ROOT_PATH . '/src/templates/admin/coach_form.php';
