@@ -91,9 +91,10 @@ function db_exec_statements(PDO $pdo, string $sql): void {
         try {
             $pdo->exec($stmt);
         } catch (PDOException $e) {
-            error_log('team-manager init SQL error: ' . $e->getMessage()
-                . ' | statement: ' . substr($stmt, 0, 200));
-            throw $e;
+            throw new RuntimeException(
+                $e->getMessage() . "\n\nFailing SQL:\n" . $stmt,
+                0, $e
+            );
         }
     }
 }
