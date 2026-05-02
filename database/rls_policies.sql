@@ -85,6 +85,16 @@ CREATE POLICY lists_update ON lists
         )
     );
 
+CREATE POLICY lists_delete ON lists
+    FOR DELETE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    );
+
 -- Columns SELECT: admin sees all; coaches see all columns in their team; players see columns for public + protected lists
 CREATE POLICY columns_visibility_select ON columns
     FOR SELECT

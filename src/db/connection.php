@@ -104,6 +104,18 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log('team-manager: migration 001 RLS skipped — ' . $e->getMessage());
         }
     }
+
+    // Migration 002: lists_delete RLS policy (missing from initial schema)
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS lists_delete ON {$schema}.lists");
+        $pdo->exec("CREATE POLICY lists_delete ON {$schema}.lists FOR DELETE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (current_setting('app.current_role', true) = 'coach'
+                AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 002 RLS skipped — ' . $e->getMessage());
+    }
 }
 
 /**
@@ -243,6 +255,12 @@ function db_init_rls(PDO $pdo, string $s): void {
     )");
 
     $pdo->exec("CREATE POLICY lists_update ON {$s}.lists FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("CREATE POLICY lists_delete ON {$s}.lists FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coach'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
