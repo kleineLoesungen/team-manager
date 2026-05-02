@@ -20,9 +20,7 @@ function get_db(): PDO {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
 
-    // Isolate this app's tables from other apps sharing the same database.
-    // DB_SCHEMA defaults to 'team_manager'; override via DB_SCHEMA env var.
-    $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA); // sanitize identifier
+    $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
     $pdo->exec("SET search_path TO {$schema}, public");
 
     maybe_init_db($pdo);
@@ -32,110 +30,255 @@ function get_db(): PDO {
 
 /**
  * Initialize database schema on first boot.
- * Runs schema.sql and rls_policies.sql if the teams table does not exist yet.
- * Safe to call on every request — exits immediately if tables already exist.
- *
- * Executes statements one at a time (autocommit) so a single failure does not
- * roll back all preceding DDL, and the exact failing statement gets logged.
+ * Detected via users.username column — absent means schema is missing or incomplete.
+ * Uses inline DDL (no file parsing) to avoid exec() quirks on shared hosting.
  */
 function maybe_init_db(PDO $pdo): void {
     $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
-    // Check for a column that only exists after a complete init, not just the table.
-    // This catches partial runs that created some tables but failed mid-way.
+
     $complete = $pdo->query(
         "SELECT 1 FROM information_schema.columns
          WHERE table_schema = '{$schema}' AND table_name = 'users' AND column_name = 'username'"
     )->fetchColumn();
     if ($complete !== false) return;
 
-    // Schema creation may fail on shared hosting where the DB user lacks CREATE privilege.
-    // Attempt it separately so a permission error does not abort table creation.
     try {
         $pdo->exec("CREATE SCHEMA IF NOT EXISTS {$schema}");
     } catch (PDOException $e) {
         error_log('team-manager: schema creation skipped (' . $e->getMessage() . ')');
     }
 
-    // DIAGNOSTIC: snapshot everything already in the schema before we touch it
-    $pre_existing = $pdo->query(
-        "SELECT table_name, column_name
-         FROM information_schema.columns
-         WHERE table_schema = '{$schema}'
-         ORDER BY table_name, ordinal_position"
-    )->fetchAll(PDO::FETCH_KEY_PAIR);
-    $pre_dump = $pre_existing
-        ? 'Pre-existing in schema: ' . json_encode($pre_existing)
-        : 'Schema is empty before init';
-
-    $schema_file = ROOT_PATH . '/database/schema.sql';
-    $rls_file    = ROOT_PATH . '/database/rls_policies.sql';
-    $schema_sql  = file_get_contents($schema_file);
-    $rls_sql     = file_get_contents($rls_file);
-
-    if ($schema_sql === false || $rls_sql === false) {
-        throw new RuntimeException(
-            'Cannot read SQL files. ROOT_PATH=' . ROOT_PATH
-            . ' schema_exists=' . (file_exists($schema_file) ? 'yes' : 'no')
-            . ' rls_exists=' . (file_exists($rls_file) ? 'yes' : 'no')
-        );
-    }
-
-    try {
-        db_exec_statements($pdo, $schema_sql);
-    } catch (Throwable $e) {
-        // Snapshot what actually got created before the failure
-        $post = $pdo->query(
-            "SELECT c.relname, a.attname
-             FROM pg_class c
-             JOIN pg_namespace n ON n.oid = c.relnamespace
-             LEFT JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0
-             WHERE n.nspname = '{$schema}'
-             ORDER BY c.relname, a.attnum"
-        )->fetchAll(PDO::FETCH_KEY_PAIR);
-        throw new RuntimeException(
-            $e->getMessage()
-            . "\n\n" . $pre_dump
-            . "\n\nPost-failure schema contents: " . json_encode($post),
-            0, $e
-        );
-    }
-    db_exec_statements($pdo, $rls_sql);
+    db_init_schema($pdo, $schema);
+    db_init_rls($pdo, $schema);
 }
 
 /**
- * Execute a SQL string as individual statements (split on ";").
- * Each statement commits independently so prior DDL survives later failures.
- * Skips blank lines and comment-only lines.
+ * Create all application tables. Each exec() is its own autocommit transaction.
+ * No IF NOT EXISTS — the maybe_init_db completeness check gates this function,
+ * so we only run here on a fresh (or partial) schema.
  */
-function db_exec_statements(PDO $pdo, string $sql): void {
-    // Strip line comments before splitting — some PostgreSQL/PDO versions skip
-    // the SQL that follows a leading "--" comment in a single exec() call.
-    $sql = preg_replace('/--[^\n]*/u', '', $sql);
+function db_init_schema(PDO $pdo, string $s): void {
+    $pdo->exec("SET search_path TO {$s}, public");
 
-    $statements = array_filter(
-        array_map('trim', explode(';', $sql)),
-        fn(string $s): bool => $s !== ''
-    );
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.teams (
+        id         SERIAL PRIMARY KEY,
+        name       VARCHAR(100) NOT NULL,
+        is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
 
-    foreach ($statements as $stmt) {
-        try {
-            $pdo->exec($stmt);
-        } catch (PDOException $e) {
-            throw new RuntimeException(
-                $e->getMessage() . "\n\nFailing SQL:\n" . $stmt,
-                0, $e
-            );
-        }
-    }
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
+        id            SERIAL PRIMARY KEY,
+        team_id       INTEGER REFERENCES {$s}.teams(id) ON DELETE SET NULL,
+        role          VARCHAR(10) NOT NULL CHECK (role IN ('coach', 'player')),
+        first_name    VARCHAR(100) NOT NULL,
+        last_name     VARCHAR(100) NOT NULL,
+        username      VARCHAR(50) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_username ON {$s}.users(username)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_team_id  ON {$s}.users(team_id)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.settings (
+        key   VARCHAR(100) PRIMARY KEY,
+        value TEXT NOT NULL DEFAULT ''
+    )");
+
+    $pdo->exec("INSERT INTO {$s}.settings (key, value)
+        VALUES ('app_title', 'Team Manager') ON CONFLICT DO NOTHING");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.lists (
+        id            SERIAL PRIMARY KEY,
+        team_id       INTEGER NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
+        name          VARCHAR(100) NOT NULL,
+        visibility    VARCHAR(10) NOT NULL DEFAULT 'public'
+                      CHECK (visibility IN ('public', 'protected', 'private')),
+        show_all_rows BOOLEAN NOT NULL DEFAULT FALSE,
+        is_hidden     BOOLEAN NOT NULL DEFAULT FALSE,
+        description   TEXT NULL,
+        date          DATE NULL,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lists_team_id    ON {$s}.lists(team_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lists_visibility ON {$s}.lists(visibility)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.columns (
+        id         SERIAL PRIMARY KEY,
+        team_id    INTEGER NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
+        list_id    INTEGER REFERENCES {$s}.lists(id) ON DELETE CASCADE,
+        name       VARCHAR(100) NOT NULL,
+        data_type  VARCHAR(10) NOT NULL CHECK (data_type IN ('boolean', 'number', 'text')),
+        is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_columns_team_id ON {$s}.columns(team_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_columns_list_id ON {$s}.columns(list_id)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.list_global_columns (
+        list_id   INTEGER NOT NULL REFERENCES {$s}.lists(id)   ON DELETE CASCADE,
+        column_id INTEGER NOT NULL REFERENCES {$s}.columns(id) ON DELETE CASCADE,
+        PRIMARY KEY (list_id, column_id)
+    )");
+
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON {$s}.list_global_columns(list_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lgc_column_id ON {$s}.list_global_columns(column_id)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.cells (
+        id         SERIAL PRIMARY KEY,
+        list_id    INTEGER NOT NULL REFERENCES {$s}.lists(id)    ON DELETE CASCADE,
+        column_id  INTEGER NOT NULL REFERENCES {$s}.columns(id)  ON DELETE CASCADE,
+        player_id  INTEGER NOT NULL REFERENCES {$s}.users(id)    ON DELETE CASCADE,
+        value      TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (list_id, column_id, player_id)
+    )");
+
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_list_id   ON {$s}.cells(list_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_column_id ON {$s}.cells(column_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_player_id ON {$s}.cells(player_id)");
+}
+
+/**
+ * Apply RLS policies. Each statement is a separate exec().
+ */
+function db_init_rls(PDO $pdo, string $s): void {
+    $pdo->exec("SET search_path TO {$s}, public");
+
+    $pdo->exec("ALTER TABLE {$s}.users ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.users FORCE ROW LEVEL SECURITY");
+
+    $pdo->exec("CREATE POLICY team_isolation_users_select ON {$s}.users FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+
+    $pdo->exec("CREATE POLICY team_isolation_users_insert ON {$s}.users FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+
+    $pdo->exec("CREATE POLICY team_isolation_users_update ON {$s}.users FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.lists ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.lists FORCE ROW LEVEL SECURITY");
+
+    $pdo->exec("CREATE POLICY lists_visibility_select ON {$s}.lists FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (visibility IN ('public', 'protected')
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("CREATE POLICY lists_insert ON {$s}.lists FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("CREATE POLICY lists_update ON {$s}.lists FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.columns ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.columns FORCE ROW LEVEL SECURITY");
+
+    $pdo->exec("CREATE POLICY columns_visibility_select ON {$s}.columns FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (list_id IS NULL
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (list_id IS NOT NULL
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = columns.list_id
+                        AND lists.visibility IN ('public', 'protected')))
+    )");
+
+    $pdo->exec("CREATE POLICY columns_insert ON {$s}.columns FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.list_global_columns ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.list_global_columns FORCE ROW LEVEL SECURITY");
+
+    $pdo->exec("CREATE POLICY lgc_select ON {$s}.list_global_columns FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (SELECT 1 FROM {$s}.lists
+                   WHERE lists.id = list_global_columns.list_id
+                   AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("CREATE POLICY lgc_insert ON {$s}.list_global_columns FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = list_global_columns.list_id
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
+
+    $pdo->exec("CREATE POLICY lgc_delete ON {$s}.list_global_columns FOR DELETE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coach'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = list_global_columns.list_id
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.cells ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.cells FORCE ROW LEVEL SECURITY");
+
+    $pdo->exec("CREATE POLICY cells_visibility_select ON {$s}.cells FOR SELECT USING (
+        EXISTS (SELECT 1 FROM {$s}.lists
+                WHERE lists.id = cells.list_id
+                AND (current_setting('app.is_admin', true) = 'true'
+                     OR (current_setting('app.current_role', true) = 'coach'
+                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                     OR (lists.visibility IN ('public', 'protected')
+                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)))
+    )");
+
+    $pdo->exec("CREATE POLICY cells_insert ON {$s}.cells FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'player'
+            AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = cells.list_id
+                        AND lists.visibility = 'public'
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
+
+    $pdo->exec("CREATE POLICY cells_ownership_update ON {$s}.cells FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'player'
+            AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = cells.list_id
+                        AND lists.visibility = 'public'
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
 }
 
 /**
  * Set PostgreSQL session context for RLS team isolation.
- * Must be called on every request after the team_id is known (coach/player sessions).
- *
- * @param int         $team_id  The team the current user belongs to.
- * @param string|null $role     'coach' or 'player' — required for Phase 3 visibility RLS.
- * @param int|null    $user_id  The current user's id — required for player cell ownership RLS.
  */
 function set_team_context(PDO $pdo, int $team_id, ?string $role = null, ?int $user_id = null): void {
     $pdo->exec(
@@ -147,7 +290,6 @@ function set_team_context(PDO $pdo, int $team_id, ?string $role = null, ?int $us
 
 /**
  * Grant admin bypass for RLS policies on this connection.
- * Called automatically by require_admin() — do not call manually.
  */
 function set_admin_context(PDO $pdo): void {
     $pdo->exec("SELECT set_config('app.is_admin', 'true', false)");
@@ -155,9 +297,6 @@ function set_admin_context(PDO $pdo): void {
 
 /**
  * Reset all RLS context GUCs to empty state.
- * Must be called after any temporary admin bypass (e.g. login lookup) and at the
- * start of every coach/player request — PHP-FPM reuses connections across requests,
- * so a prior request's GUC values would otherwise leak.
  */
 function reset_rls_context(PDO $pdo): void {
     $pdo->exec(
