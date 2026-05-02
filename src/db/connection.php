@@ -94,9 +94,10 @@ function maybe_init_db(PDO $pdo): void {
  * Skips blank lines and comment-only lines.
  */
 function db_exec_statements(PDO $pdo, string $sql): void {
-    // Split on semicolons; drop truly empty chunks only.
-    // PostgreSQL handles inline comments fine — do NOT filter by leading "--"
-    // because CREATE TABLE blocks often begin with a comment line.
+    // Strip line comments before splitting — some PostgreSQL/PDO versions skip
+    // the SQL that follows a leading "--" comment in a single exec() call.
+    $sql = preg_replace('/--[^\n]*/u', '', $sql);
+
     $statements = array_filter(
         array_map('trim', explode(';', $sql)),
         fn(string $s): bool => $s !== ''
