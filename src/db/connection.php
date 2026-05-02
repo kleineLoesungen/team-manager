@@ -54,32 +54,50 @@ function maybe_init_db(PDO $pdo): void {
 }
 
 /**
- * Idempotent incremental migrations. Runs on every boot — all statements must be safe to re-run.
- * ADD COLUMN IF NOT EXISTS and DROP POLICY IF EXISTS + recreate satisfy this.
+ * Idempotent incremental migrations. Runs on every boot — skips statements whose effect is
+ * already present. Catches permission errors gracefully (e.g. app user doesn't own the table
+ * in Docker dev setups where a superuser ran the initial schema).
  */
 function maybe_migrate_db(PDO $pdo): void {
     $schema = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
+
     // Migration 001: coach_only flag on columns
-    $pdo->exec(
-        "ALTER TABLE {$schema}.columns
-         ADD COLUMN IF NOT EXISTS coach_only BOOLEAN NOT NULL DEFAULT FALSE"
-    );
+    $col_exists = $pdo->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = '{$schema}' AND table_name = 'columns' AND column_name = 'coach_only'"
+    )->fetchColumn();
+
+    if (!$col_exists) {
+        try {
+            $pdo->exec(
+                "ALTER TABLE {$schema}.columns
+                 ADD COLUMN IF NOT EXISTS coach_only BOOLEAN NOT NULL DEFAULT FALSE"
+            );
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 001 ALTER skipped — ' . $e->getMessage());
+            return; // can't update RLS either without the column
+        }
+    }
+
     // Migration 001: update columns_visibility_select RLS to respect coach_only
-    // DROP + recreate is idempotent (IF EXISTS guard)
-    $pdo->exec("DROP POLICY IF EXISTS columns_visibility_select ON {$schema}.columns");
-    $pdo->exec("CREATE POLICY columns_visibility_select ON {$schema}.columns FOR SELECT USING (
-        current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
-            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
-        OR (list_id IS NULL
-            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
-        OR (list_id IS NOT NULL
-            AND coach_only = FALSE
-            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-            AND EXISTS (SELECT 1 FROM {$schema}.lists
-                        WHERE lists.id = columns.list_id
-                        AND lists.visibility IN ('public', 'protected')))
-    )");
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS columns_visibility_select ON {$schema}.columns");
+        $pdo->exec("CREATE POLICY columns_visibility_select ON {$schema}.columns FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (current_setting('app.current_role', true) = 'coach'
+                AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            OR (list_id IS NULL
+                AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            OR (list_id IS NOT NULL
+                AND coach_only = FALSE
+                AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                AND EXISTS (SELECT 1 FROM {$schema}.lists
+                            WHERE lists.id = columns.list_id
+                            AND lists.visibility IN ('public', 'protected')))
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 001 RLS skipped — ' . $e->getMessage());
+    }
 }
 
 /**
