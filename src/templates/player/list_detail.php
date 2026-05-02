@@ -78,6 +78,46 @@
             </tr>
             <?php endforeach; ?>
         </tbody>
+        <?php
+            // Build totals per column over visible $players
+            $col_totals = [];
+            foreach ($columns as $col) {
+                $cid = (int)$col['id'];
+                if ($col['data_type'] === 'number') {
+                    $sum = 0;
+                    foreach ($players as $player) {
+                        $v = $cells[(int)$player['id']][$cid] ?? null;
+                        if ($v !== null && $v !== '' && is_numeric($v)) {
+                            $sum += (float)$v;
+                        }
+                    }
+                    $col_totals[$cid] = ($sum == floor($sum))
+                        ? (int)$sum
+                        : number_format($sum, 2, ',', '.');
+                } elseif ($col['data_type'] === 'boolean') {
+                    $count = 0;
+                    foreach ($players as $player) {
+                        if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
+                            $count++;
+                        }
+                    }
+                    $col_totals[$cid] = $count;
+                } else {
+                    $col_totals[$cid] = '';
+                }
+            }
+        ?>
+        <tfoot class="table-light">
+            <tr>
+                <?php if ($list['show_all_rows']): ?>
+                <td class="text-nowrap fw-bold">Gesamt</td>
+                <?php endif; ?>
+                <?php foreach ($columns as $col): ?>
+                <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
+                <?php endforeach; ?>
+                <?php if ($can_edit): ?><td></td><?php endif; ?>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
