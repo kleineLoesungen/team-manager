@@ -29,7 +29,7 @@ $col_stmt = $pdo->prepare(
      FROM columns c
      WHERE c.is_active = TRUE
        AND (
-         c.list_id = ?
+         (c.list_id = ? AND c.coach_only = FALSE)
          OR (c.list_id IS NULL AND c.team_id = ?
              AND EXISTS (
                SELECT 1 FROM list_global_columns lgc
