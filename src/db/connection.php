@@ -51,13 +51,17 @@ function maybe_init_db(PDO $pdo): void {
         error_log('team-manager: schema creation skipped (' . $e->getMessage() . ')');
     }
 
-    $schema_sql = file_get_contents(ROOT_PATH . '/database/schema.sql');
-    $rls_sql    = file_get_contents(ROOT_PATH . '/database/rls_policies.sql');
+    $schema_file = ROOT_PATH . '/database/schema.sql';
+    $rls_file    = ROOT_PATH . '/database/rls_policies.sql';
+    $schema_sql  = file_get_contents($schema_file);
+    $rls_sql     = file_get_contents($rls_file);
 
     if ($schema_sql === false || $rls_sql === false) {
-        $msg = 'team-manager: cannot read SQL files from ' . ROOT_PATH . '/database/';
-        error_log($msg);
-        throw new RuntimeException($msg);
+        throw new RuntimeException(
+            'Cannot read SQL files. ROOT_PATH=' . ROOT_PATH
+            . ' schema_exists=' . (file_exists($schema_file) ? 'yes' : 'no')
+            . ' rls_exists=' . (file_exists($rls_file) ? 'yes' : 'no')
+        );
     }
 
     db_exec_statements($pdo, $schema_sql);
