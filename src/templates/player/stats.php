@@ -7,43 +7,36 @@
 <?php else: ?>
 
     <p class="text-muted mb-4 small">
-        Statistiken werden aus allen öffentlichen und geschützten Listen berechnet. Private Listen werden nicht einbezogen.
+        Statistiken werden aus allen öffentlichen und geschützten Listen berechnet.
+        Die Zeitfenster zeigen Werte der letzten 4, 4–8 und 8–12 Wochen (nur Listen mit Datum).
     </p>
 
     <div class="table-responsive mb-4">
         <table class="table table-sm table-bordered align-middle">
             <thead class="table-light">
                 <tr>
-                    <?php foreach ($global_columns as $col): ?>
-                        <th class="text-nowrap text-end">
-                            <?= e($col['name']) ?>
-                            <small class="text-muted fw-normal d-block">
-                                <?= $col['data_type'] === 'number' ? 'Summe' : 'Anzahl' ?>
-                            </small>
-                        </th>
-                    <?php endforeach; ?>
+                    <th>Spalte</th>
+                    <th class="text-end text-nowrap">Gesamt</th>
+                    <th class="text-end text-nowrap">Letzte&nbsp;4&nbsp;Wo.</th>
+                    <th class="text-end text-nowrap">4–8&nbsp;Wo.</th>
+                    <th class="text-end text-nowrap">8–12&nbsp;Wo.</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <?php foreach ($global_columns as $col): ?>
-                        <td class="text-end text-nowrap fw-semibold">
+                <?php foreach ($global_columns as $col): ?>
+                    <?php $vals = $player_stats[(int)$col['id']] ?? ['all' => 0, '4w' => 0, '4_8w' => 0, '8_12w' => 0]; ?>
+                    <tr>
+                        <td class="fw-semibold text-nowrap"><?= e($col['name']) ?></td>
+                        <?php foreach (['all', '4w', '4_8w', '8_12w'] as $win): ?>
                             <?php
-                                $val = $player_stats[(int)$col['id']] ?? null;
-                                if ($col['data_type'] === 'boolean') {
-                                    echo ($val !== null) ? (int)$val : '0';
-                                } else {
-                                    if ($val === null) {
-                                        echo '0';
-                                    } else {
-                                        $n = (float)$val;
-                                        echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
-                                    }
-                                }
+                                $v = (float)($vals[$win] ?? 0);
+                                echo '<td class="text-end text-nowrap fw-semibold">';
+                                echo ($v == floor($v)) ? (int)$v : number_format($v, 2, ',', '.');
+                                echo '</td>';
                             ?>
-                        </td>
-                    <?php endforeach; ?>
-                </tr>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
             </tbody>
         </table>
     </div>

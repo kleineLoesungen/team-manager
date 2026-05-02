@@ -96,67 +96,81 @@
             </tbody>
         </table>
     </div>
-<?php endif; ?>
 
-<?php if (!empty($global_columns) && !empty($player_order)): ?>
+    <!-- ── Rangliste mit Zeitfenstern (STAT-03) ───────────────────────── -->
     <h5 class="mb-3">Rangliste</h5>
+    <p class="text-muted small mb-3">
+        Klicken Sie auf eine Spaltenüberschrift, um die Rangliste danach zu sortieren.
+        <em>Gesamt</em> berücksichtigt die Datumsfilter oben; die Zeitfenster verwenden feste Intervalle.
+    </p>
 
-    <!-- Leaderboard column selector -->
-    <form method="get" action="/coach/stats" class="d-flex align-items-center gap-2 mb-3">
-        <?php if ($filter_list_id):         ?><input type="hidden" name="list_id"        value="<?= (int)$filter_list_id ?>">   <?php endif; ?>
-        <?php if ($filter_date_from):       ?><input type="hidden" name="date_from"      value="<?= e($filter_date_from) ?>">  <?php endif; ?>
-        <?php if ($filter_date_to):         ?><input type="hidden" name="date_to"        value="<?= e($filter_date_to) ?>">    <?php endif; ?>
-        <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1">                           <?php endif; ?>
-        <label for="sort_by" class="form-label mb-0 text-nowrap">Sortieren nach:</label>
-        <select name="sort_by" id="sort_by" class="form-select form-select-sm" style="max-width: 200px;"
-                onchange="this.form.submit()">
-            <?php foreach ($global_columns as $col): ?>
-                <option value="<?= (int)$col['id'] ?>"
-                    <?= $sort_by_id === (int)$col['id'] ? 'selected' : '' ?>>
-                    <?= e($col['name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <noscript><button type="submit" class="btn btn-sm btn-secondary">OK</button></noscript>
-    </form>
+    <?php
+    // Helper: build URL for sorting by given col_id + win, preserving current filter state
+    function ranking_sort_url(int $col_id, string $win, array $current_get): string {
+        $params = array_filter([
+            'list_id'         => $current_get['list_id']   ?? '',
+            'date_from'       => $current_get['date_from'] ?? '',
+            'date_to'         => $current_get['date_to']   ?? '',
+            'include_undated' => ($current_get['include_undated'] ?? '') ? '1' : '',
+            'sort_col'        => $col_id,
+            'sort_win'        => $win,
+        ], fn($v) => $v !== '');
+        return '/coach/stats?' . http_build_query($params);
+    }
 
-    <?php if (!empty($leaderboard)): ?>
-        <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Spieler</th>
-                        <th class="text-end text-nowrap">
-                            <?= $leaderboard_column ? e($leaderboard_column['name']) : '' ?>
-                            <small class="text-muted fw-normal d-block">
-                                <?= ($leaderboard_column && $leaderboard_column['data_type'] === 'number') ? 'Summe' : 'Anzahl' ?>
-                            </small>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $rank = 1; foreach ($leaderboard as $row): ?>
-                        <tr>
-                            <td class="text-muted"><?= $rank++ ?></td>
-                            <td class="fw-semibold text-nowrap">
-                                <?= e($row['last_name'] . ', ' . $row['first_name']) ?>
-                            </td>
-                            <td class="text-end text-nowrap">
-                                <?php
-                                    $v = $row['rank_value'];
-                                    if ($leaderboard_column && $leaderboard_column['data_type'] === 'boolean') {
-                                        echo (int)$v;
-                                    } else {
-                                        $n = (float)$v;
-                                        echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
-                                    }
-                                ?>
-                            </td>
-                        </tr>
+    $windows = [
+        'all'    => 'Gesamt',
+        '4w'     => 'Letzte&nbsp;4&nbsp;Wo.',
+        '4_8w'   => '4–8&nbsp;Wo.',
+        '8_12w'  => '8–12&nbsp;Wo.',
+    ];
+    ?>
+
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th rowspan="2" class="align-middle text-nowrap">Spieler</th>
+                    <?php foreach ($global_columns as $col): ?>
+                        <th colspan="4" class="text-center border-start"><?= e($col['name']) ?></th>
                     <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
+                </tr>
+                <tr>
+                    <?php foreach ($global_columns as $col): ?>
+                        <?php foreach ($windows as $win_key => $win_label): ?>
+                            <?php $active = ($sort_col_id === (int)$col['id'] && $sort_win === $win_key); ?>
+                            <th class="text-end text-nowrap border-start<?= $active ? ' text-primary' : '' ?>">
+                                <a href="<?= ranking_sort_url((int)$col['id'], $win_key, $_GET) ?>"
+                                   class="text-decoration-none<?= $active ? ' text-primary fw-bold' : ' text-body' ?>">
+                                    <?= $win_label ?>
+                                </a>
+                            </th>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($ranking_order as $pid): ?>
+                    <?php $p = $ranking[$pid]; ?>
+                    <tr>
+                        <td class="fw-semibold text-nowrap"><?= e($p['last_name'] . ', ' . $p['first_name']) ?></td>
+                        <?php foreach ($global_columns as $col): ?>
+                            <?php $cid = (int)$col['id']; ?>
+                            <?php foreach (array_keys($windows) as $win_key): ?>
+                                <?php
+                                    $val         = $p['cols'][$cid][$win_key] ?? 0;
+                                    $active_cell = ($sort_col_id === $cid && $sort_win === $win_key);
+                                    $n           = (float)$val;
+                                    $display     = ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
+                                ?>
+                                <td class="text-end text-nowrap border-start<?= $active_cell ? ' table-active fw-semibold' : '' ?>">
+                                    <?= $display ?>
+                                </td>
+                            <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 <?php endif; ?>
