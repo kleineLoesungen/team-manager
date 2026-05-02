@@ -105,6 +105,13 @@ match (true) {
             require ROOT_PATH . '/src/coach/list_settings_handler.php';
         })(),
 
+    // /coach/lists/{id}/delete — POST: two-step list deletion (LIST-DELETE)
+    (bool)preg_match('#^/coach/lists/(\d+)/delete$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coach/list_delete_handler.php';
+        })(),
+
     // /coach/lists/{id}/columns/create — POST: add local column to list (LIST-03)
     (bool)preg_match('#^/coach/lists/(\d+)/columns/create$#', $path, $matches)
         => (function() use ($matches) {

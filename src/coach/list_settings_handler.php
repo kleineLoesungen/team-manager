@@ -119,5 +119,16 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             </form>
         </div>
     </div>
+    <div class="card border-danger mt-4">
+        <div class="card-body">
+            <h6 class="card-title text-danger">Gefahrenzone</h6>
+            <p class="text-muted small mb-3">Diese Liste und alle enthaltenen Daten werden unwiderruflich gelöscht.</p>
+            <form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>/delete">
+                <?= csrf_field() ?>
+                <input type="hidden" name="confirm" value="0">
+                <button type="submit" class="btn btn-outline-danger min-touch">Liste löschen</button>
+            </form>
+        </div>
+    </div>
     <?php
 });
