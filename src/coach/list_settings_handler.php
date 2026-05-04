@@ -20,46 +20,81 @@ if (!$list) {
     exit;
 }
 
+// Fetch local columns for this list (list_id IS NOT NULL = local columns only)
+$local_cols_stmt = $pdo->prepare(
+    "SELECT id, name, data_type FROM columns
+     WHERE list_id = ? AND team_id = ? AND is_active = TRUE
+     ORDER BY sort_order, created_at"
+);
+$local_cols_stmt->execute([$list_id, $_SESSION['team_id']]);
+$local_columns = $local_cols_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$delete_pending_col_id = null;
+
 require ROOT_PATH . '/src/templates/coach/layout.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    $new_visibility    = $_POST['visibility'] ?? '';
-    $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
-    $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
-    $new_date          = trim($_POST['date'] ?? '');
-    $new_description   = trim($_POST['description'] ?? '');
-    if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
-        $new_date = '';
-    }
+    // Handle column deletion (two-step: first POST shows confirm, second POST executes)
+    if (isset($_POST['action']) && $_POST['action'] === 'delete_column') {
+        $col_id  = (int)($_POST['column_id'] ?? 0);
+        $confirm = (int)($_POST['confirm']   ?? 0);
 
-    if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
-        $error = 'Ungültiger Sichtbarkeits-Status.';
+        if ($confirm !== 1) {
+            // Show confirmation step — store pending col_id and fall through to render
+            $delete_pending_col_id = $col_id;
+        } else {
+            // Execute deletion — triple ownership check (id + list_id + team_id)
+            try {
+                $del = $pdo->prepare(
+                    "DELETE FROM columns WHERE id = ? AND list_id = ? AND team_id = ?"
+                );
+                $del->execute([$col_id, $list_id, $_SESSION['team_id']]);
+                // Cells cascade-delete automatically via FK (cells.column_id REFERENCES columns ON DELETE CASCADE)
+                redirect('/moderator/lists/' . $list_id . '/settings?success=1');
+            } catch (PDOException $e) {
+                error_log('Column delete error: ' . $e->getMessage());
+                $error = 'Fehler beim Löschen der Spalte.';
+            }
+        }
     } else {
-        try {
-            $upd = $pdo->prepare(
-                "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, description = ?, updated_at = NOW()
-                 WHERE id = ? AND team_id = ?"
-            );
-            $upd->execute([
-                $new_visibility,
-                $new_show_all_rows,
-                $new_is_hidden,
-                $new_date !== '' ? $new_date : null,
-                $new_description !== '' ? $new_description : null,
-                $list_id,
-                $_SESSION['team_id'],
-            ]);
-            redirect('/moderator/lists/' . $list_id . '?success=1');
-        } catch (PDOException $e) {
-            error_log('List settings error: ' . $e->getMessage());
-            $error = 'Ein Fehler ist aufgetreten.';
+        $new_visibility    = $_POST['visibility'] ?? '';
+        $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
+        $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
+        $new_date          = trim($_POST['date'] ?? '');
+        $new_description   = trim($_POST['description'] ?? '');
+        if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
+            $new_date = '';
+        }
+
+        if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
+            $error = 'Ungültiger Sichtbarkeits-Status.';
+        } else {
+            try {
+                $upd = $pdo->prepare(
+                    "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, description = ?, updated_at = NOW()
+                     WHERE id = ? AND team_id = ?"
+                );
+                $upd->execute([
+                    $new_visibility,
+                    $new_show_all_rows,
+                    $new_is_hidden,
+                    $new_date !== '' ? $new_date : null,
+                    $new_description !== '' ? $new_description : null,
+                    $list_id,
+                    $_SESSION['team_id'],
+                ]);
+                redirect('/moderator/lists/' . $list_id . '?success=1');
+            } catch (PDOException $e) {
+                error_log('List settings error: ' . $e->getMessage());
+                $error = 'Ein Fehler ist aufgetreten.';
+            }
         }
     }
 }
 
-render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error) {
+render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <div class="card shadow-sm">
@@ -119,6 +154,45 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             </form>
         </div>
     </div>
+    <?php if (!empty($local_columns)): ?>
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h6 class="card-title">Lokale Spalten</h6>
+            <p class="text-muted small mb-3">Lokale Spalten gehören nur zu dieser Liste. Löschen entfernt auch alle zugehörigen Einträge.</p>
+            <ul class="list-group list-group-flush">
+                <?php foreach ($local_columns as $col): ?>
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                        <span class="fw-medium"><?= e($col['name']) ?></span>
+                        <span class="badge bg-light text-dark border ms-2 small">
+                            <?= match($col['data_type']) { 'boolean' => 'Ja/Nein', 'number' => 'Zahl', 'text' => 'Text', default => e($col['data_type']) } ?>
+                        </span>
+                    </div>
+                    <?php if ($delete_pending_col_id !== null && $delete_pending_col_id === (int)$col['id']): ?>
+                        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/settings" class="d-flex gap-2 align-items-center">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="delete_column">
+                            <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
+                            <input type="hidden" name="confirm" value="1">
+                            <span class="text-danger small me-2">Spalte und alle Einträge löschen?</span>
+                            <button type="submit" class="btn btn-sm btn-danger min-touch">Ja, löschen</button>
+                            <a href="/moderator/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-sm btn-outline-secondary min-touch">Abbrechen</a>
+                        </form>
+                    <?php else: ?>
+                        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/settings">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="delete_column">
+                            <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
+                            <input type="hidden" name="confirm" value="0">
+                            <button type="submit" class="btn btn-sm btn-outline-danger min-touch">Löschen</button>
+                        </form>
+                    <?php endif; ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
+    <?php endif; ?>
     <div class="card border-danger mt-4">
         <div class="card-body">
             <h6 class="card-title text-danger">Gefahrenzone</h6>
