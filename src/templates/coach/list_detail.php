@@ -91,9 +91,11 @@
             </div>
             <div class="row g-2 mt-1">
                 <div class="col-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="coach_only" value="1" id="coach_only_chk">
-                        <label class="form-check-label small" for="coach_only_chk">
+                    <div class="form-check form-switch" style="min-height:1.75em;">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3em;height:1.75em;cursor:pointer;"
+                               name="coach_only" value="1" id="coach_only_free_chk">
+                        <label class="form-check-label small" for="coach_only_free_chk">
                             Nur für Moderatoren
                         </label>
                     </div>
@@ -156,6 +158,15 @@
 <div class="alert alert-info mt-2">Noch keine Spalten definiert. Füge oben eine lokale Spalte hinzu.</div>
 <?php else: ?>
 
+<?php foreach ($free_rows as $row): ?>
+<form id="delete-row-<?= (int)$row['id'] ?>" method="POST"
+      action="/moderator/lists/<?= (int)$list['id'] ?>">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="delete_row">
+    <input type="hidden" name="row_id" value="<?= (int)$row['id'] ?>">
+</form>
+<?php endforeach; ?>
+
 <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save_cells">
@@ -209,12 +220,8 @@
                     </td>
                     <?php endforeach; ?>
                     <td>
-                        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="delete_row">
-                            <input type="hidden" name="row_id" value="<?= (int)$row['id'] ?>">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Löschen</button>
-                        </form>
+                        <button type="submit" form="delete-row-<?= (int)$row['id'] ?>"
+                                class="btn btn-sm btn-outline-danger">Löschen</button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -296,9 +303,11 @@
             </div>
             <div class="row g-2 mt-1">
                 <div class="col-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="coach_only" value="1" id="coach_only_chk">
-                        <label class="form-check-label small" for="coach_only_chk">
+                    <div class="form-check form-switch" style="min-height:1.75em;">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3em;height:1.75em;cursor:pointer;"
+                               name="coach_only" value="1" id="coach_only_member_chk">
+                        <label class="form-check-label small" for="coach_only_member_chk">
                             Nur für Moderatoren
                         </label>
                     </div>

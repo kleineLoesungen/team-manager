@@ -67,9 +67,10 @@
             <!-- Section 3: Row visibility -->
             <div class="mb-4">
                 <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="show_all_rows"
-                           id="show_all_rows" value="1">
+                <div class="form-check form-switch" style="min-height:1.75em;">
+                    <input class="form-check-input" type="checkbox" role="switch"
+                           style="width:3em;height:1.75em;cursor:pointer;"
+                           name="show_all_rows" id="show_all_rows" value="1">
                     <label class="form-check-label" for="show_all_rows">
                         Mitglieder sehen Einträge anderer Mitglieder
                     </label>
