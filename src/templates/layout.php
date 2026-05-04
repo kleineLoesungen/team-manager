@@ -10,6 +10,19 @@ declare(strict_types=1);
  * @param string $title Page title (German, appended to "Team Manager")
  */
 function render_layout_head(string $title = 'Team Manager'): void {
+    static $brand_color = null;
+    if ($brand_color === null) {
+        try {
+            $pdo   = get_db();
+            $stmt  = $pdo->prepare("SELECT value FROM settings WHERE key = 'app_color'");
+            $stmt->execute();
+            $raw   = $stmt->fetchColumn() ?: '#2563eb';
+            $brand_color = preg_match('/^#[0-9a-fA-F]{6}$/', $raw) ? $raw : '#2563eb';
+        } catch (Throwable) {
+            $brand_color = '#2563eb';
+        }
+    }
+    $safe_color = htmlspecialchars($brand_color, ENT_QUOTES);
     $full_title = $title !== 'Team Manager' ? e($title) . ' — Team Manager' : 'Team Manager';
     ?>
 <!DOCTYPE html>
@@ -27,15 +40,105 @@ function render_layout_head(string $title = 'Team Manager'): void {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
           rel="stylesheet">
     <style>
+        /* Brand color custom property */
+        :root {
+            --brand: <?= $safe_color ?>;
+            --bs-primary: var(--brand);
+            --bs-btn-bg: var(--brand);
+            --bs-btn-border-color: var(--brand);
+        }
+
         /* Mobile-first base styles */
-        body { font-size: 1rem; line-height: 1.5; }
+        body { font-size: 1rem; line-height: 1.5; background: #f8f9fa; }
         .min-touch { min-height: 44px; }
         code, .credential-block { font-family: 'SFMono-Regular', Consolas, monospace; }
         .credential-block {
-            background: #f8f9fa;
-            border-radius: 4px;
+            background: #fff;
+            border-radius: 0.5rem;
             padding: 1rem;
+            border: 1px solid #e9ecef;
         }
+
+        /* Navbar — brand color background */
+        nav.navbar {
+            background-color: var(--brand) !important;
+            border-bottom: none !important;
+        }
+        nav.navbar .navbar-brand,
+        nav.navbar span.navbar-brand {
+            color: #fff !important;
+            font-weight: 600;
+        }
+        nav.navbar .text-muted { color: rgba(255,255,255,.75) !important; }
+        nav.navbar .badge.bg-secondary { background-color: rgba(0,0,0,.25) !important; }
+        nav.navbar .btn-outline-secondary {
+            color: #fff;
+            border-color: rgba(255,255,255,.5);
+        }
+        nav.navbar .btn-outline-secondary:hover {
+            background-color: rgba(255,255,255,.15);
+        }
+
+        /* Sidebar active links */
+        .nav-link.active,
+        a.nav-link.active {
+            background-color: var(--brand) !important;
+            color: #fff !important;
+        }
+
+        /* Mobile tab active indicator */
+        .border-primary { border-color: var(--brand) !important; }
+        .text-primary    { color: var(--brand) !important; }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--brand);
+            border-color: var(--brand);
+            border-radius: 0.5rem;
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: color-mix(in srgb, var(--brand) 85%, #000);
+            border-color: color-mix(in srgb, var(--brand) 80%, #000);
+        }
+        .btn-outline-primary {
+            color: var(--brand);
+            border-color: var(--brand);
+            border-radius: 0.5rem;
+        }
+        .btn-outline-primary:hover {
+            background-color: var(--brand);
+            color: #fff;
+        }
+        .btn { border-radius: 0.5rem; }
+
+        /* Cards */
+        .card {
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            border: 1px solid #e9ecef;
+        }
+
+        /* Tables — horizontal borders only */
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .table > :not(caption) > * > * {
+            border-right: none;
+            border-left: none;
+        }
+        .table > thead > tr > th,
+        .table > tbody > tr > td,
+        .table > tfoot > tr > td {
+            border-top: none;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .table > thead > tr > th { border-bottom-width: 2px; }
+        .table > tfoot > tr > td { border-top: 1px solid #dee2e6; border-bottom: none; }
+
+        /* Sidebar background */
+        .sidebar { background: #fff !important; border-right: 1px solid #e9ecef !important; }
+        .bg-light { background-color: #f8f9fa !important; }
     </style>
 </head>
 <body>
@@ -75,7 +178,7 @@ function render_navbar(): void {
         $role_label   = ($_SESSION['role'] ?? '') === 'coach' ? 'Trainer' : 'Spieler';
     }
     ?>
-    <nav class="navbar navbar-light bg-white border-bottom px-3">
+    <nav class="navbar px-3">
         <span class="navbar-brand fw-semibold"><?= $brand ?></span>
         <?php if ($display_name): ?>
         <div class="d-flex align-items-center gap-3">
