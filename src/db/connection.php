@@ -105,6 +105,14 @@ function maybe_migrate_db(PDO $pdo): void {
         }
     }
 
+    // Migration 003: app_color setting
+    try {
+        $pdo->exec("INSERT INTO {$schema}.settings (key, value)
+            VALUES ('app_color', '#2563eb') ON CONFLICT DO NOTHING");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 003 skipped — ' . $e->getMessage());
+    }
+
     // Migration 002: lists_delete RLS policy (missing from initial schema)
     try {
         $pdo->exec("DROP POLICY IF EXISTS lists_delete ON {$schema}.lists");
@@ -155,6 +163,9 @@ function db_init_schema(PDO $pdo, string $s): void {
 
     $pdo->exec("INSERT INTO {$s}.settings (key, value)
         VALUES ('app_title', 'Team Manager') ON CONFLICT DO NOTHING");
+
+    $pdo->exec("INSERT INTO {$s}.settings (key, value)
+        VALUES ('app_color', '#2563eb') ON CONFLICT DO NOTHING");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.lists (
         id            SERIAL PRIMARY KEY,
