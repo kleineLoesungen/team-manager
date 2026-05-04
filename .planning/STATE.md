@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-04 - Completed quick task 260504-hx2: stats fix name format, add percentage, fix PDO bind param error  
+**Last Updated:** 2026-05-04 - Completed quick task 260504-i94: rename DB role values coach→moderator, player→mitglied  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260504-i94 | rename DB role values coach→moderator, player→mitglied: migrate DB + update all PHP references | 2026-05-04 | 94372d2 | [260504-i94-rename-db-role-values-coach-moderator-pl](.planning/quick/260504-i94-rename-db-role-values-coach-moderator-pl/) |
 | 260504-hx2 | stats: fix name format (first+last), add percentage to ranking, fix PDO bind param error on filter | 2026-05-04 | fb095e9 | [260504-hx2-stats-fix-name-format-first-last-add-per](.planning/quick/260504-hx2-stats-fix-name-format-first-last-add-per/) |
 | 260504-ajx | Language: Du-speech, sort by first name, Trainer→Moderator, Spieler→Mitglied | 2026-05-04 | 50105b2 | [260504-ajx-task-change-language-use-german-du-speec](.planning/quick/260504-ajx-task-change-language-use-german-du-speec/) |
 | 260504-8s1 | Styling overhaul — modern design, toggle switches for boolean, admin-configurable brand color | 2026-05-04 | 66990e0 | [260504-8s1-styling-overhaul-modern-design-toggle-sw](./quick/260504-8s1-styling-overhaul-modern-design-toggle-sw/) |
