@@ -147,19 +147,14 @@ if (!in_array($col_filter, $valid_col_ids, true)) {
 
 // Build the sum_all date condition mirroring the $date_conds approach above, but as CASE WHEN
 // so it works inside SUM without WHERE-level filtering.
-$sum_all_cond_num  = 'cells.id IS NULL OR TRUE'; // default: include all rows
-$sum_all_cond_bool = 'cells.id IS NULL OR TRUE';
-$ranking_params    = [$team_id, $team_id];
-
 // The date condition for sum_all must be expressed inline in CASE WHEN.
 // We'll build the condition as a SQL fragment for the CASE WHEN ... THEN ... END.
 // For simplicity: if date filters apply, we only SUM when the cell matches date criteria.
-// The cell must match: (cells.id IS NULL) OR (date filter passes).
-$sum_all_date_sql = '1=1'; // default: no filter applied, all cells count
+$sum_all_date_inner   = '1=1'; // default: include all cells
 $ranking_extra_params = [];
 
 if ($filter_date_from !== null || $filter_date_to !== null) {
-    $dc = ['cells.id IS NULL'];
+    $dc = [];
     if ($filter_include_undated) {
         $dc[] = 'lists.date IS NULL';
     }
@@ -175,8 +170,17 @@ if ($filter_date_from !== null || $filter_date_to !== null) {
     if (!empty($rc)) {
         $dc[] = '(lists.date IS NOT NULL AND ' . implode(' AND ', $rc) . ')';
     }
-    $sum_all_date_sql = '(' . implode(' OR ', $dc) . ')';
+    if (!empty($dc)) {
+        $sum_all_date_inner = '(' . implode(' OR ', $dc) . ')';
+    }
 }
+
+// Param order: sum_all date params + count_all date params + CROSS JOIN team_id + WHERE team_id
+$ranking_params = array_merge(
+    $ranking_extra_params, // date params for sum_all
+    $ranking_extra_params, // date params for count_all
+    [$team_id, $team_id]   // CROSS JOIN subquery + main WHERE
+);
 
 $ranking_sql = "
     SELECT
@@ -188,12 +192,22 @@ $ranking_sql = "
         c.data_type,
         c.sort_order,
 
-        COALESCE(
+        COALESCE(SUM(
             CASE
-                WHEN c.data_type = 'number'  THEN SUM(CASE WHEN {$sum_all_date_sql} THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN {$sum_all_date_sql} AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
-            END, 0
-        ) AS sum_all,
+                WHEN cells.id IS NULL THEN NULL
+                WHEN {$sum_all_date_inner} THEN
+                    CASE
+                        WHEN c.data_type = 'number' AND cells.value IS NOT NULL THEN CAST(cells.value AS NUMERIC)
+                        WHEN c.data_type = 'boolean' AND cells.value IN ('true','1') THEN 1.0
+                        ELSE 0.0
+                    END
+                ELSE NULL
+            END
+        ), 0) AS sum_all,
+
+        COALESCE(SUM(
+            CASE WHEN cells.id IS NOT NULL AND {$sum_all_date_inner} THEN 1 ELSE NULL END
+        ), 0) AS count_all,
 
         COALESCE(
             CASE
@@ -214,7 +228,13 @@ $ranking_sql = "
                 WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
                 WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
             END, 0
-        ) AS sum_8_12w
+        ) AS sum_8_12w,
+
+        COALESCE(SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE THEN 1 ELSE NULL END), 0) AS count_4w,
+
+        COALESCE(SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' THEN 1 ELSE NULL END), 0) AS count_4_8w,
+
+        COALESCE(SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN 1 ELSE NULL END), 0) AS count_8_12w
 
     FROM users u
     CROSS JOIN (
@@ -228,9 +248,6 @@ $ranking_sql = "
       AND u.role = 'player'
       AND u.is_active = TRUE
 ";
-
-// Merge date filter params after the two team_id params
-$ranking_params = array_merge($ranking_params, $ranking_extra_params);
 
 if ($filter_list_id !== null) {
     $ranking_sql    .= " AND (cells.list_id = ? OR cells.list_id IS NULL)";
@@ -262,11 +279,25 @@ foreach ($raw_ranking as $row) {
         $ranking_order[] = $pid;
     }
     $ranking[$pid]['cols'][$cid] = [
-        'all'    => (float)$row['sum_all'],
-        '4w'     => (float)$row['sum_4w'],
-        '4_8w'   => (float)$row['sum_4_8w'],
-        '8_12w'  => (float)$row['sum_8_12w'],
+        'all'        => (float)$row['sum_all'],
+        '4w'         => (float)$row['sum_4w'],
+        '4_8w'       => (float)$row['sum_4_8w'],
+        '8_12w'      => (float)$row['sum_8_12w'],
+        'cnt_all'    => (int)$row['count_all'],
+        'cnt_4w'     => (int)$row['count_4w'],
+        'cnt_4_8w'   => (int)$row['count_4_8w'],
+        'cnt_8_12w'  => (int)$row['count_8_12w'],
     ];
+}
+
+// Column totals per window (used for number % display)
+$col_totals = [];
+foreach ($ranking as $pdata) {
+    foreach ($pdata['cols'] as $cid => $wins) {
+        foreach (['all', '4w', '4_8w', '8_12w'] as $w) {
+            $col_totals[$cid][$w] = ($col_totals[$cid][$w] ?? 0.0) + $wins[$w];
+        }
+    }
 }
 
 // Sort $ranking_order by chosen sort_col + sort_win descending; ties broken by first_name, last_name
@@ -277,11 +308,11 @@ if ($sort_col_id > 0) {
         if ($va !== $vb) {
             return $vb <=> $va; // descending
         }
-        $cmp = strcmp($ranking[$a]['last_name'], $ranking[$b]['last_name']);
+        $cmp = strcmp($ranking[$a]['first_name'], $ranking[$b]['first_name']);
         if ($cmp !== 0) {
             return $cmp;
         }
-        return strcmp($ranking[$a]['first_name'], $ranking[$b]['first_name']);
+        return strcmp($ranking[$a]['last_name'], $ranking[$b]['last_name']);
     });
 }
 
@@ -290,7 +321,7 @@ require ROOT_PATH . '/src/templates/coach/layout.php';
 render_coach_page('Statistik', 'stats', function() use (
     $global_columns, $player_stats, $player_order,
     $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
-    $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter
+    $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter, $col_totals
 ) {
     require ROOT_PATH . '/src/templates/coach/stats.php';
 });

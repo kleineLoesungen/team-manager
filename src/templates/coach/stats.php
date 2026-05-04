@@ -71,7 +71,7 @@
                     <?php $p = $player_stats[$pid]; ?>
                     <tr>
                         <td class="fw-semibold text-nowrap">
-                            <?= e($p['last_name'] . ', ' . $p['first_name']) ?>
+                            <?= e($p['first_name'] . ' ' . $p['last_name']) ?>
                         </td>
                         <?php foreach ($global_columns as $col): ?>
                             <td class="text-end text-nowrap">
@@ -174,7 +174,7 @@
                 <?php foreach ($ranking_order as $pid): ?>
                     <?php $p = $ranking[$pid]; ?>
                     <tr>
-                        <td class="fw-semibold text-nowrap"><?= e($p['last_name'] . ', ' . $p['first_name']) ?></td>
+                        <td class="fw-semibold text-nowrap"><?= e($p['first_name'] . ' ' . $p['last_name']) ?></td>
                         <?php foreach ($global_columns as $col): ?>
                             <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                             <?php $cid = (int)$col['id']; ?>
@@ -184,9 +184,22 @@
                                     $active_cell = ($sort_col_id === $cid && $sort_win === $win_key);
                                     $n           = (float)$val;
                                     $display     = ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
+                                    // Percentage: boolean = val/cnt; number = val/col_total
+                                    $cnt_key = 'cnt_' . $win_key;
+                                    $pct = null;
+                                    if ($col['data_type'] === 'boolean') {
+                                        $cnt = $p['cols'][$cid][$cnt_key] ?? 0;
+                                        if ($cnt > 0) { $pct = round($val / $cnt * 100); }
+                                    } else {
+                                        $total = $col_totals[$cid][$win_key] ?? 0;
+                                        if ($total > 0) { $pct = round($val / $total * 100); }
+                                    }
                                 ?>
                                 <td class="text-end text-nowrap border-start<?= $active_cell ? ' table-active fw-semibold' : '' ?>">
                                     <?= $display ?>
+                                    <?php if ($pct !== null): ?>
+                                        <small class="text-muted fw-normal ms-1">(<?= $pct ?>%)</small>
+                                    <?php endif; ?>
                                 </td>
                             <?php endforeach; ?>
                         <?php endforeach; ?>
