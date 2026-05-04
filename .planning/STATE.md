@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-04 - Completed quick task 260504-s22 Plan C: larger boolean toggle switches in list templates  
+**Last Updated:** 2026-05-04 - Completed quick task 260504-s22: free list type with custom rows, delete local columns, bigger boolean toggles  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,7 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
-| 260504-s22-C | Larger boolean toggle switches in all list templates (coach bulk table, coach row form, player row form) | 2026-05-04 | d394148 | [260504-s22-free-list-type-with-custom-rows-delete-l](.planning/quick/260504-s22-free-list-type-with-custom-rows-delete-l/) |
+| 260504-s22 | free list type (custom rows, moderator-managed), delete local columns, bigger boolean toggles | 2026-05-04 | 3cd8cda | [260504-s22-free-list-type-with-custom-rows-delete-l](.planning/quick/260504-s22-free-list-type-with-custom-rows-delete-l/) |
 | 260504-rg6 | delete applied migration scripts migrate_004 and migrate_005 from repository | 2026-05-04 | 55b679d | [260504-rg6-delete-applied-migration-scripts-migrate](.planning/quick/260504-rg6-delete-applied-migration-scripts-migrate/) |
 | 260504-i94 | rename DB role values coach→moderator, player→mitglied: migrate DB + update all PHP references | 2026-05-04 | 94372d2 | [260504-i94-rename-db-role-values-coach-moderator-pl](.planning/quick/260504-i94-rename-db-role-values-coach-moderator-pl/) |
 | 260504-hx2 | stats: fix name format (first+last), add percentage to ranking, fix PDO bind param error on filter | 2026-05-04 | fb095e9 | [260504-hx2-stats-fix-name-format-first-last-add-per](.planning/quick/260504-hx2-stats-fix-name-format-first-last-add-per/) |
