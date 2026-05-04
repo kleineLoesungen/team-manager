@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
 CREATE TABLE IF NOT EXISTS team_manager.users (
     id            SERIAL PRIMARY KEY,
     team_id       INTEGER REFERENCES team_manager.teams(id) ON DELETE SET NULL,
-    role          VARCHAR(10) NOT NULL CHECK (role IN ('moderator', 'mitglied')),
+    role          VARCHAR(10) NOT NULL CHECK (role IN ('moderator', 'member')),
     first_name    VARCHAR(100) NOT NULL,
     last_name     VARCHAR(100) NOT NULL,
     username      VARCHAR(50)  NOT NULL UNIQUE,

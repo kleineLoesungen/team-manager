@@ -5,7 +5,7 @@
 ?>
 
 <div class="mb-3">
-    <a href="/coach/lists/<?= (int)$list['id'] ?>" class="text-muted small">
+    <a href="/moderator/lists/<?= (int)$list['id'] ?>" class="text-muted small">
         <i class="bi bi-arrow-left me-1"></i><?= e($list['name']) ?>
     </a>
 </div>
@@ -18,7 +18,7 @@
     </div>
     <div class="card-body">
         <form method="POST"
-              action="/coach/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit">
+              action="/moderator/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit">
             <?= csrf_field() ?>
 
             <?php if (empty($columns)): ?>
@@ -71,7 +71,7 @@
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
-                <a href="/coach/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary min-touch">
+                <a href="/moderator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary min-touch">
                     Abbrechen
                 </a>
             </div>

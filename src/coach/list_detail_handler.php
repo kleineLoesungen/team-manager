@@ -1,5 +1,5 @@
 <?php
-// src/coach/list_detail_handler.php — GET /coach/lists/{id} — list table view (CELL-04)
+// src/coach/list_detail_handler.php — GET /moderator/lists/{id} — list table view (CELL-04)
 // Shows all players as rows, all columns (global + local) as table columns.
 // Per D-03: global columns first, then local. Per D-05: empty cells show blank.
 
@@ -45,7 +45,7 @@ $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 $player_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name
      FROM users
-     WHERE team_id = ? AND role = 'mitglied' AND is_active = TRUE
+     WHERE team_id = ? AND role = 'member' AND is_active = TRUE
      ORDER BY first_name, last_name"
 );
 $player_stmt->execute([$_SESSION['team_id']]);
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        redirect('/coach/lists/' . $list_id . '?success=1');
+        redirect('/moderator/lists/' . $list_id . '?success=1');
 
     } catch (PDOException $e) {
         error_log('Bulk cell save error: ' . $e->getMessage());

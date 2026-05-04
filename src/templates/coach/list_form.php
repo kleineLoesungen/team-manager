@@ -8,7 +8,7 @@
 
 <div class="card shadow-sm" style="max-width: 600px;">
     <div class="card-body">
-        <form method="POST" action="/coach/lists/create">
+        <form method="POST" action="/moderator/lists/create">
             <?= csrf_field() ?>
 
             <!-- Section 1: Name -->
@@ -112,13 +112,13 @@
                 <p class="text-muted small">
                     <i class="bi bi-info-circle me-1"></i>
                     Noch keine globalen Spalten definiert.
-                    <a href="/coach/columns">Spalten anlegen</a>
+                    <a href="/moderator/columns">Spalten anlegen</a>
                 </p>
             </div>
             <?php endif; ?>
 
             <button type="submit" class="btn btn-primary min-touch">Liste anlegen</button>
-            <a href="/coach/lists" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
+            <a href="/moderator/lists" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
         </form>
     </div>
 </div>

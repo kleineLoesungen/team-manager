@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = $pdo->prepare(
                 "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash)
-                 VALUES (?, 'mitglied', ?, ?, ?, ?)"
+                 VALUES (?, 'member', ?, ?, ?, ?)"
             );
             $stmt->execute([$team_id, $first_name, $last_name, $username, $password_hash]);
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // NEVER log $plain_password — per Pitfall 2
             $credential_username = $username;
             $credential_password = $plain_password;
-            $redirect_url        = '/coach/players';
+            $redirect_url        = '/moderator/members';
 
             render_layout_head('Neue Anmeldedaten');
             render_navbar();

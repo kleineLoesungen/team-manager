@@ -1,12 +1,12 @@
 <?php
-// src/coach/list_delete_handler.php — POST /coach/lists/{id}/delete (LIST-DELETE)
+// src/coach/list_delete_handler.php — POST /moderator/lists/{id}/delete (LIST-DELETE)
 
 declare(strict_types=1);
 
 require_coach();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/coach/lists');
+    redirect('/moderator/lists');
 }
 
 require_csrf();
@@ -21,7 +21,7 @@ $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$list) {
-    redirect('/coach/lists');
+    redirect('/moderator/lists');
 }
 
 require ROOT_PATH . '/src/templates/coach/layout.php';
@@ -34,11 +34,11 @@ if ($confirm !== 1) {
             Liste <strong><?= e($list['name']) ?></strong> wirklich löschen?
             Alle Daten (Spalten, Einträge) werden <strong>unwiderruflich</strong> gelöscht.
         </div>
-        <form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>/delete">
+        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/delete">
             <?= csrf_field() ?>
             <input type="hidden" name="confirm" value="1">
             <button type="submit" class="btn btn-danger min-touch">Endgültig löschen</button>
-            <a href="/coach/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
+            <a href="/moderator/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
         </form>
         <?php
     });
@@ -49,7 +49,7 @@ if ($confirm !== 1) {
 try {
     $del = $pdo->prepare("DELETE FROM lists WHERE id = ? AND team_id = ?");
     $del->execute([$list_id, $_SESSION['team_id']]);
-    redirect('/coach/lists');
+    redirect('/moderator/lists');
 } catch (PDOException $e) {
     error_log('List delete error: ' . $e->getMessage());
     render_coach_page('Liste löschen', 'lists', function() {

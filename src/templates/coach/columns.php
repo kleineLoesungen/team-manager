@@ -1,5 +1,5 @@
 <?php
-// src/templates/coach/columns.php — Global columns overview (LIST-02)
+// src/templates/moderator/columns.php — Global columns overview (LIST-02)
 // Variables: $columns (array of global column rows)
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -42,7 +42,7 @@
 <div class="card shadow-sm" style="max-width: 500px;">
     <div class="card-header fw-semibold">Neue globale Spalte anlegen</div>
     <div class="card-body">
-        <form method="POST" action="/coach/columns/create">
+        <form method="POST" action="/moderator/columns/create">
             <?= csrf_field() ?>
             <div class="mb-3">
                 <label for="col_name" class="form-label">Name</label>

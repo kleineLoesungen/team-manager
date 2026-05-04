@@ -13,9 +13,9 @@ if (is_admin()) {
 if (is_authenticated()) {
     // Role-based redirect for already-authenticated users — per D-02
     if (($_SESSION['role'] ?? '') === 'moderator') {
-        redirect('/coach/players');
+        redirect('/moderator/members');
     } else {
-        redirect('/player/lists');
+        redirect('/member/lists');
     }
 }
 
@@ -75,10 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $team_stmt->execute([$user['team_id']]);
                         $team_row = $team_stmt->fetch();
 
-                        // Map legacy role values in case DB migration 004 hasn't run yet
+                        // Map legacy role values in case DB migrations haven't fully run
                         $role = $user['role'];
-                        if ($role === 'coach')  $role = 'moderator';
-                        if ($role === 'player') $role = 'mitglied';
+                        if ($role === 'coach')    $role = 'moderator';
+                        if ($role === 'player')   $role = 'member';
+                        if ($role === 'mitglied') $role = 'member';
 
                         $_SESSION['user_id']       = $user['id'];
                         $_SESSION['team_id']       = $user['team_id'];
@@ -89,9 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Role-based redirect — per D-02
                         if ($role === 'moderator') {
-                            redirect('/coach/players');
+                            redirect('/moderator/members');
                         } else {
-                            redirect('/player/lists');
+                            redirect('/member/lists');
                         }
                     }
                 } else {

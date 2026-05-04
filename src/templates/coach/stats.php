@@ -1,7 +1,7 @@
-<?php // src/templates/coach/stats.php — Coach statistics page (STAT-01, STAT-02, STAT-03) ?>
+<?php // src/templates/moderator/stats.php — Coach statistics page (STAT-01, STAT-02, STAT-03) ?>
 
 <!-- Filter form: list dropdown + date range, GET method (PRG pattern) -->
-<form method="get" action="/coach/stats" class="row g-2 mb-4 align-items-end">
+<form method="get" action="/moderator/stats" class="row g-2 mb-4 align-items-end">
     <div class="col-auto">
         <label for="list_filter" class="form-label form-label-sm mb-1">Liste</label>
         <select name="list_id" id="list_filter" class="form-select form-select-sm" style="max-width: 200px;">
@@ -38,14 +38,14 @@
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-sm btn-primary">Filtern</button>
-        <a href="/coach/stats" class="btn btn-sm btn-outline-secondary ms-1">Zurücksetzen</a>
+        <a href="/moderator/stats" class="btn btn-sm btn-outline-secondary ms-1">Zurücksetzen</a>
     </div>
 </form>
 
 <?php if (empty($global_columns)): ?>
     <div class="alert alert-info">
         Noch keine globalen Spalten definiert. Legen Sie globale Spalten unter
-        <a href="/coach/columns">Spalten</a> an.
+        <a href="/moderator/columns">Spalten</a> an.
     </div>
 <?php elseif (empty($player_order)): ?>
     <div class="alert alert-info">Keine aktiven Mitglieder im Team.</div>
@@ -99,7 +99,7 @@
 
     <!-- ── Rangliste mit Zeitfenstern (STAT-03) ───────────────────────── -->
     <!-- Spalten-Dropdown: filtert nur die Rangliste auf eine globale Spalte -->
-    <form method="get" action="/coach/stats" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+    <form method="get" action="/moderator/stats" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
         <?php if ($filter_list_id): ?><input type="hidden" name="list_id" value="<?= (int)$filter_list_id ?>"><?php endif; ?>
         <?php if ($filter_date_from): ?><input type="hidden" name="date_from" value="<?= e($filter_date_from) ?>"><?php endif; ?>
         <?php if ($filter_date_to): ?><input type="hidden" name="date_to" value="<?= e($filter_date_to) ?>"><?php endif; ?>
@@ -134,7 +134,7 @@
             'sort_col'        => $col_id,
             'sort_win'        => $win,
         ], fn($v) => $v !== '');
-        return '/coach/stats?' . http_build_query($params);
+        return '/moderator/stats?' . http_build_query($params);
     }
 
     $windows = [

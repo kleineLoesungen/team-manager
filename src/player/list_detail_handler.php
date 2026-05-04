@@ -48,7 +48,7 @@ if ($list['show_all_rows']) {
     $player_stmt = $pdo->prepare(
         "SELECT id, first_name, last_name
          FROM users
-         WHERE team_id = ? AND role = 'mitglied' AND is_active = TRUE
+         WHERE team_id = ? AND role = 'member' AND is_active = TRUE
          ORDER BY first_name, last_name"
     );
     $player_stmt->execute([$_SESSION['team_id']]);
@@ -56,7 +56,7 @@ if ($list['show_all_rows']) {
     $player_stmt = $pdo->prepare(
         "SELECT id, first_name, last_name
          FROM users
-         WHERE id = ? AND team_id = ? AND role = 'mitglied' AND is_active = TRUE"
+         WHERE id = ? AND team_id = ? AND role = 'member' AND is_active = TRUE"
     );
     $player_stmt->execute([$current_user_id, $_SESSION['team_id']]);
 }

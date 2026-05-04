@@ -29,7 +29,7 @@
         <?php endif; ?>
     </div>
     <div class="d-flex gap-2">
-        <a href="/coach/lists/<?= (int)$list['id'] ?>/settings"
+        <a href="/moderator/lists/<?= (int)$list['id'] ?>/settings"
            class="btn btn-sm btn-outline-secondary min-touch">
             <i class="bi bi-gear me-1"></i>Einstellungen
         </a>
@@ -46,7 +46,7 @@
         <i class="bi bi-plus-circle me-1"></i>Lokale Spalte hinzufügen
     </summary>
     <div class="card card-body mt-2" style="max-width: 400px;">
-        <form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>/columns/create">
+        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/columns/create">
             <?= csrf_field() ?>
             <div class="row g-2">
                 <div class="col">
@@ -85,11 +85,11 @@
 <?php elseif (empty($columns)): ?>
 <div class="alert alert-info">
     Noch keine Spalten definiert.
-    <a href="/coach/columns">Globale Spalten anlegen</a> oder eine lokale Spalte oben hinzufügen.
+    <a href="/moderator/columns">Globale Spalten anlegen</a> oder eine lokale Spalte oben hinzufügen.
 </div>
 <?php else: ?>
 
-<form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>">
+<form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>">
     <?= csrf_field() ?>
 
     <!-- Per D-04: Bootstrap table-responsive for horizontal scroll on mobile -->
@@ -195,7 +195,7 @@
 <?php endif; ?>
 
 <div class="mt-3">
-    <a href="/coach/lists" class="btn btn-sm btn-outline-secondary">
+    <a href="/moderator/lists" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
     </a>
 </div>

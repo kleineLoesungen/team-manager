@@ -1,5 +1,5 @@
 <?php
-// src/coach/list_row_edit_handler.php — GET/POST /coach/lists/{id}/rows/{player_id}/edit
+// src/coach/list_row_edit_handler.php — GET/POST /moderator/lists/{id}/rows/{player_id}/edit
 // Coach edits all cells for a specific player row. (CELL-02)
 // Access: coaches can edit in public and protected lists; blocked from private? No — CELL-03 says
 // coaches have full access to private lists. can_edit_cell() returns true for coaches always.
@@ -24,7 +24,7 @@ if (!can_edit_cell($list_id, $player_id)) {
 $player_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name
      FROM users
-     WHERE id = ? AND team_id = ? AND role = 'mitglied'"
+     WHERE id = ? AND team_id = ? AND role = 'member'"
 );
 $player_stmt->execute([$player_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Re-check authorization on POST (defense-in-depth)
     if (!can_edit_cell($list_id, $player_id)) {
-        redirect('/coach/lists/' . $list_id . '?error=' . urlencode('Nicht berechtigt.'));
+        redirect('/moderator/lists/' . $list_id . '?error=' . urlencode('Nicht berechtigt.'));
     }
 
     try {
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $upsert->execute([$list_id, $col_id, $player_id, $validated_value]);
         }
 
-        redirect('/coach/lists/' . $list_id . '?success=1');
+        redirect('/moderator/lists/' . $list_id . '?success=1');
 
     } catch (PDOException $e) {
         error_log('Row edit error: ' . $e->getMessage());

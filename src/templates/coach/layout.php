@@ -27,25 +27,25 @@ function render_coach_page(string $title, string $active, callable $body): void 
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'players' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coach/players">
+                           href="/moderator/members">
                             <i class="bi bi-people-fill me-2"></i>Mitglieder
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'lists' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coach/lists">
+                           href="/moderator/lists">
                             <i class="bi bi-table me-2"></i>Listen
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'columns' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coach/columns">
+                           href="/moderator/columns">
                             <i class="bi bi-layout-three-columns me-2"></i>Spalten
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coach/stats">
+                           href="/moderator/stats">
                             <i class="bi bi-graph-up me-2"></i>Statistik
                         </a>
                     </li>
@@ -56,13 +56,13 @@ function render_coach_page(string $title, string $active, callable $body): void 
             <div class="d-md-none w-100 border-bottom bg-light">
                 <div class="d-flex">
                     <a class="flex-fill text-center py-2 <?= $active === 'players' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coach/players">Mitglieder</a>
+                       href="/moderator/members">Mitglieder</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coach/lists">Listen</a>
+                       href="/moderator/lists">Listen</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'columns' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coach/columns">Spalten</a>
+                       href="/moderator/columns">Spalten</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coach/stats">Statistik</a>
+                       href="/moderator/stats">Statistik</a>
                 </div>
             </div>
 

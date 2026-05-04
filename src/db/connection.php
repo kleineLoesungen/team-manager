@@ -133,8 +133,8 @@ function maybe_migrate_db(PDO $pdo): void {
         if ($old_roles_exist) {
             $pdo->exec("ALTER TABLE {$schema}.users DROP CONSTRAINT IF EXISTS users_role_check");
             $pdo->exec("UPDATE {$schema}.users SET role = 'moderator' WHERE role = 'coach'");
-            $pdo->exec("UPDATE {$schema}.users SET role = 'mitglied'  WHERE role = 'player'");
-            $pdo->exec("ALTER TABLE {$schema}.users ADD CONSTRAINT users_role_check CHECK (role IN ('moderator', 'mitglied'))");
+            $pdo->exec("UPDATE {$schema}.users SET role = 'member'  WHERE role = 'player'");
+            $pdo->exec("ALTER TABLE {$schema}.users ADD CONSTRAINT users_role_check CHECK (role IN ('moderator', 'member'))");
             // Recreate all role-dependent RLS policies with new values
             // Lists
             $pdo->exec("DROP POLICY IF EXISTS lists_visibility_select ON {$schema}.lists");
@@ -198,7 +198,7 @@ function maybe_migrate_db(PDO $pdo): void {
             $pdo->exec("CREATE POLICY cells_insert ON {$schema}.cells FOR INSERT WITH CHECK (
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'moderator'
-                OR (current_setting('app.current_role', true) = 'mitglied'
+                OR (current_setting('app.current_role', true) = 'member'
                     AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
             )");
@@ -206,14 +206,49 @@ function maybe_migrate_db(PDO $pdo): void {
             $pdo->exec("CREATE POLICY cells_ownership_update ON {$schema}.cells FOR UPDATE USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'moderator'
-                OR (current_setting('app.current_role', true) = 'mitglied'
+                OR (current_setting('app.current_role', true) = 'member'
                     AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
             )");
-            error_log('Migration 004: renamed roles coach→moderator, player→mitglied and recreated RLS policies');
+            error_log('Migration 004: renamed roles coach→moderator, player→member and recreated RLS policies');
         }
     } catch (PDOException $e) {
         error_log('Migration 004 error: ' . $e->getMessage());
+    }
+
+    // Migration 005: rename role value mitglied→member
+    try {
+        $mitglied_exists = (bool)$pdo->query(
+            "SELECT 1 FROM {$schema}.users WHERE role = 'mitglied' LIMIT 1"
+        )->fetchColumn();
+        if ($mitglied_exists) {
+            $pdo->exec("ALTER TABLE {$schema}.users DROP CONSTRAINT IF EXISTS users_role_check");
+            $pdo->exec("UPDATE {$schema}.users SET role = 'member' WHERE role = 'mitglied'");
+            $pdo->exec("ALTER TABLE {$schema}.users ADD CONSTRAINT users_role_check CHECK (role IN ('moderator', 'member'))");
+        }
+        // Ensure constraint is correct regardless (idempotent)
+        $pdo->exec("ALTER TABLE {$schema}.users DROP CONSTRAINT IF EXISTS users_role_check");
+        $pdo->exec("ALTER TABLE {$schema}.users ADD CONSTRAINT users_role_check CHECK (role IN ('moderator', 'member'))");
+        // Recreate cells RLS policies with 'member'
+        $pdo->exec("DROP POLICY IF EXISTS cells_insert ON {$schema}.cells");
+        $pdo->exec("CREATE POLICY cells_insert ON {$schema}.cells FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'moderator'
+            OR (current_setting('app.current_role', true) = 'member'
+                AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        )");
+        $pdo->exec("DROP POLICY IF EXISTS cells_ownership_update ON {$schema}.cells");
+        $pdo->exec("CREATE POLICY cells_ownership_update ON {$schema}.cells FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'moderator'
+            OR (current_setting('app.current_role', true) = 'member'
+                AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        )");
+        error_log('Migration 005: role member ensured, RLS policies updated');
+    } catch (PDOException $e) {
+        error_log('Migration 005 error: ' . $e->getMessage());
     }
 }
 
@@ -235,7 +270,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
         id            SERIAL PRIMARY KEY,
         team_id       INTEGER REFERENCES {$s}.teams(id) ON DELETE SET NULL,
-        role          VARCHAR(10) NOT NULL CHECK (role IN ('moderator', 'mitglied')),
+        role          VARCHAR(10) NOT NULL CHECK (role IN ('moderator', 'member')),
         first_name    VARCHAR(100) NOT NULL,
         last_name     VARCHAR(100) NOT NULL,
         username      VARCHAR(50) NOT NULL UNIQUE,
@@ -433,7 +468,7 @@ function db_init_rls(PDO $pdo, string $s): void {
     $pdo->exec("CREATE POLICY cells_insert ON {$s}.cells FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'moderator'
-        OR (current_setting('app.current_role', true) = 'mitglied'
+        OR (current_setting('app.current_role', true) = 'member'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id
@@ -444,7 +479,7 @@ function db_init_rls(PDO $pdo, string $s): void {
     $pdo->exec("CREATE POLICY cells_ownership_update ON {$s}.cells FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'moderator'
-        OR (current_setting('app.current_role', true) = 'mitglied'
+        OR (current_setting('app.current_role', true) = 'member'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id

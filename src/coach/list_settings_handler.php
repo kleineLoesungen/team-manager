@@ -1,5 +1,5 @@
 <?php
-// src/coach/list_settings_handler.php — GET/POST /coach/lists/{id}/settings (LIST-05)
+// src/coach/list_settings_handler.php — GET/POST /moderator/lists/{id}/settings (LIST-05)
 
 declare(strict_types=1);
 
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $list_id,
                 $_SESSION['team_id'],
             ]);
-            redirect('/coach/lists/' . $list_id . '?success=1');
+            redirect('/moderator/lists/' . $list_id . '?success=1');
         } catch (PDOException $e) {
             error_log('List settings error: ' . $e->getMessage());
             $error = 'Ein Fehler ist aufgetreten.';
@@ -65,7 +65,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
     <div class="card shadow-sm">
         <div class="card-body">
             <h5 class="card-title"><?= e($list['name']) ?></h5>
-            <form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>/settings">
+            <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/settings">
                 <?= csrf_field() ?>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Sichtbarkeit</label>
@@ -115,7 +115,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                               placeholder="z. B. Heimspiel gegen FC Muster, Pokalrunde 2"><?= e($list['description'] ?? '') ?></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
-                <a href="/coach/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
+                <a href="/moderator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
             </form>
         </div>
     </div>
@@ -123,7 +123,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
         <div class="card-body">
             <h6 class="card-title text-danger">Gefahrenzone</h6>
             <p class="text-muted small mb-3">Diese Liste und alle enthaltenen Daten werden unwiderruflich gelöscht.</p>
-            <form method="POST" action="/coach/lists/<?= (int)$list['id'] ?>/delete">
+            <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/delete">
                 <?= csrf_field() ?>
                 <input type="hidden" name="confirm" value="0">
                 <button type="submit" class="btn btn-outline-danger min-touch">Liste löschen</button>

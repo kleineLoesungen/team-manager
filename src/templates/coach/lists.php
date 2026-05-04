@@ -1,12 +1,12 @@
 <?php
-// src/templates/coach/lists.php — List overview cards (LIST-01, LIST-04)
+// src/templates/moderator/lists.php — List overview cards (LIST-01, LIST-04)
 // Variables: $lists (array of list rows ordered is_hidden ASC, created_at DESC)
 $visible = array_filter($lists, fn($l) => !$l['is_hidden']);
 $hidden  = array_filter($lists, fn($l) =>  $l['is_hidden']);
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($lists) ?> <?= count($lists) === 1 ? 'Liste' : 'Listen' ?></span>
-    <a href="/coach/lists/create" class="btn btn-primary min-touch">
+    <a href="/moderator/lists/create" class="btn btn-primary min-touch">
         <i class="bi bi-plus-lg me-1"></i>Neue Liste anlegen
     </a>
 </div>
@@ -43,10 +43,10 @@ $render_card = function(array $list): void { ?>
             <span class="badge <?= $badge_class ?>"><?= $badge_label ?></span>
         </div>
         <div class="card-footer bg-transparent d-flex gap-2">
-            <a href="/coach/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-primary min-touch">
+            <a href="/moderator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-primary min-touch">
                 <i class="bi bi-box-arrow-in-right me-1"></i>Öffnen
             </a>
-            <a href="/coach/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-sm btn-outline-secondary min-touch">
+            <a href="/moderator/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-sm btn-outline-secondary min-touch">
                 <i class="bi bi-gear me-1"></i>Einstellungen
             </a>
         </div>

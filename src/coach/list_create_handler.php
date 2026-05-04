@@ -1,5 +1,5 @@
 <?php
-// src/coach/list_create_handler.php — GET/POST /coach/lists/create (LIST-01, LIST-04)
+// src/coach/list_create_handler.php — GET/POST /moderator/lists/create (LIST-01, LIST-04)
 
 declare(strict_types=1);
 
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Fetch all active players
                 $players_stmt = $pdo->prepare(
-                    "SELECT id FROM users WHERE team_id = ? AND role = 'mitglied' AND is_active = TRUE"
+                    "SELECT id FROM users WHERE team_id = ? AND role = 'member' AND is_active = TRUE"
                 );
                 $players_stmt->execute([$_SESSION['team_id']]);
                 $player_ids = $players_stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $pdo->commit();
-            redirect('/coach/lists/' . $list_id . '?success=1');
+            redirect('/moderator/lists/' . $list_id . '?success=1');
 
         } catch (PDOException $e) {
             $pdo->rollBack();

@@ -50,7 +50,7 @@ function can_view_list(int $list_id): bool {
         return true; // Coaches see all lists in their team
     }
 
-    if ($role === 'mitglied') {
+    if ($role === 'member') {
         return in_array($list['visibility'], ['public', 'protected'], true);
     }
 
@@ -106,7 +106,7 @@ function can_edit_cell(int $list_id, int $player_id): bool {
         return true;
     }
 
-    if ($role === 'mitglied') {
+    if ($role === 'member') {
         // CELL-01: players can only edit their own row in public lists
         $is_own_row = (int)$_SESSION['user_id'] === $player_id;
         $is_public  = $visibility === 'public';

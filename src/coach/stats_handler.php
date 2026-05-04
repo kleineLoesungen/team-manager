@@ -61,7 +61,7 @@ $agg_sql = "
     LEFT JOIN cells ON cells.player_id = u.id AND cells.column_id = c.id
     LEFT JOIN lists ON cells.list_id = lists.id
     WHERE u.team_id = ?
-      AND u.role = 'mitglied'
+      AND u.role = 'member'
       AND u.is_active = TRUE
 ";
 
@@ -245,7 +245,7 @@ $ranking_sql = "
     LEFT JOIN cells ON cells.player_id = u.id AND cells.column_id = c.id
     LEFT JOIN lists ON cells.list_id = lists.id
     WHERE u.team_id = ?
-      AND u.role = 'mitglied'
+      AND u.role = 'member'
       AND u.is_active = TRUE
 ";
 

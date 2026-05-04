@@ -5,7 +5,7 @@
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-1">
-    <a href="/player/lists" class="text-muted small">
+    <a href="/member/lists" class="text-muted small">
         <i class="bi bi-arrow-left me-1"></i>Alle Listen
     </a>
     <?php if (!empty($list['date'])): ?>
@@ -68,7 +68,7 @@
                 <?php if ($can_edit): ?>
                 <td>
                     <?php if ($is_own_row): ?>
-                    <a href="/player/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
+                    <a href="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
                        class="btn btn-sm btn-outline-primary min-touch">
                         Bearbeiten
                     </a>

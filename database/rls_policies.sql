@@ -39,7 +39,7 @@ CREATE POLICY team_isolation_users_update ON users
 
 -- ── Phase 3: Lists, Columns & Cells — Visibility RLS ────────────────────────
 -- Note: app.current_role and app.current_user_id are set by set_team_context() in src/db/connection.php.
--- require_coach() passes role='moderator'; require_player() passes role='mitglied'.
+-- require_coach() passes role='moderator'; require_player() passes role='member'.
 
 ALTER TABLE lists   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lists   FORCE ROW LEVEL SECURITY;
@@ -205,7 +205,7 @@ CREATE POLICY cells_insert ON cells
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'moderator'
         OR (
-            current_setting('app.current_role', true) = 'mitglied'
+            current_setting('app.current_role', true) = 'member'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (
                 SELECT 1 FROM lists
@@ -223,7 +223,7 @@ CREATE POLICY cells_ownership_update ON cells
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'moderator'
         OR (
-            current_setting('app.current_role', true) = 'mitglied'
+            current_setting('app.current_role', true) = 'member'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (
                 SELECT 1 FROM lists

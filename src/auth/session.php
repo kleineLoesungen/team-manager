@@ -101,16 +101,16 @@ function require_coach(): void {
 
 /**
  * Require a player session.
- * Checks $_SESSION['role'] === 'mitglied', sets RLS team context with role + user_id, redirects on failure.
+ * Checks $_SESSION['role'] === 'member', sets RLS team context with role + user_id, redirects on failure.
  */
 function require_player(): void {
     check_session_timeout();
-    if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'mitglied') {
+    if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'member') {
         redirect('/login');
     }
     $pdo = get_db();
     reset_rls_context($pdo);
-    set_team_context($pdo, (int)$_SESSION['team_id'], 'mitglied', (int)$_SESSION['user_id']);
+    set_team_context($pdo, (int)$_SESSION['team_id'], 'member', (int)$_SESSION['user_id']);
 }
 
 /**

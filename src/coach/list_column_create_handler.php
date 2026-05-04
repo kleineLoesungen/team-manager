@@ -1,5 +1,5 @@
 <?php
-// src/coach/list_column_create_handler.php — POST /coach/lists/{id}/columns/create (LIST-03)
+// src/coach/list_column_create_handler.php — POST /moderator/lists/{id}/columns/create (LIST-03)
 // Creates a LOCAL column (list_id IS NOT NULL). Text type IS allowed for local columns.
 
 declare(strict_types=1);
@@ -9,7 +9,7 @@ require_coach();
 $list_id = (int)($_REQUEST['list_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/coach/lists/' . $list_id);
+    redirect('/moderator/lists/' . $list_id);
 }
 
 require_csrf();
@@ -29,11 +29,11 @@ if (!$check->fetch()) {
 }
 
 if (empty($name)) {
-    redirect('/coach/lists/' . $list_id . '?error=' . urlencode('Spaltenname ist erforderlich.'));
+    redirect('/moderator/lists/' . $list_id . '?error=' . urlencode('Spaltenname ist erforderlich.'));
 }
 // Local columns allow boolean, number, text (unlike global columns)
 if (!in_array($data_type, ['boolean', 'number', 'text'])) {
-    redirect('/coach/lists/' . $list_id . '?error=' . urlencode('Ungültiger Spaltentyp.'));
+    redirect('/moderator/lists/' . $list_id . '?error=' . urlencode('Ungültiger Spaltentyp.'));
 }
 
 try {
@@ -50,8 +50,8 @@ try {
         );
         $stmt->execute([$_SESSION['team_id'], $list_id, $name, $data_type]);
     }
-    redirect('/coach/lists/' . $list_id . '?success=1');
+    redirect('/moderator/lists/' . $list_id . '?success=1');
 } catch (PDOException $e) {
     error_log('Local column create error: ' . $e->getMessage());
-    redirect('/coach/lists/' . $list_id . '?error=' . urlencode('Ein Fehler ist aufgetreten.'));
+    redirect('/moderator/lists/' . $list_id . '?error=' . urlencode('Ein Fehler ist aufgetreten.'));
 }

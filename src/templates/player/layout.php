@@ -26,13 +26,13 @@ function render_player_page(string $title, string $active, callable $body): void
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'lists' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/player/lists">
+                           href="/member/lists">
                             <i class="bi bi-table me-2"></i>Listen
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/player/stats">
+                           href="/member/stats">
                             <i class="bi bi-graph-up me-2"></i>Statistik
                         </a>
                     </li>
@@ -43,9 +43,9 @@ function render_player_page(string $title, string $active, callable $body): void
             <div class="d-md-none w-100 border-bottom bg-light">
                 <div class="d-flex">
                     <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/player/lists">Listen</a>
+                       href="/member/lists">Listen</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/player/stats">Statistik</a>
+                       href="/member/stats">Statistik</a>
                 </div>
             </div>
 

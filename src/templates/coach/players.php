@@ -1,5 +1,5 @@
 <?php
-// src/templates/coach/players.php — Player card list for coach area
+// src/templates/moderator/members.php — Player card list for coach area
 // Per D-05: Bootstrap cards. Per D-06: actions inline in card.
 // Per D-07: active players at top; inactive in <details> at bottom.
 
@@ -8,7 +8,7 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($active_players) ?> aktive Mitglieder</span>
-    <a href="/coach/players/create" class="btn btn-primary min-touch">
+    <a href="/moderator/members/create" class="btn btn-primary min-touch">
         <i class="bi bi-plus-lg me-1"></i>Neues Mitglied anlegen
     </a>
 </div>
@@ -34,14 +34,14 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                 <span class="badge bg-success">Aktiv</span>
             </div>
             <div class="card-footer bg-transparent d-flex gap-2">
-                <form method="POST" action="/coach/players/<?= (int)$player['id'] ?>/reset-password"
+                <form method="POST" action="/moderator/members/<?= (int)$player['id'] ?>/reset-password"
                       onsubmit="return confirm('Das Passwort wird zurückgesetzt und einmalig angezeigt.')">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-outline-primary min-touch">
                         <i class="bi bi-key me-1"></i>Passwort zurücksetzen
                     </button>
                 </form>
-                <form method="POST" action="/coach/players/<?= (int)$player['id'] ?>/deactivate"
+                <form method="POST" action="/moderator/members/<?= (int)$player['id'] ?>/deactivate"
                       onsubmit="return confirm('Mitglied deaktivieren?')">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-outline-danger min-touch">
@@ -73,7 +73,7 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                     <span class="badge bg-secondary">Inaktiv</span>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <form method="POST" action="/coach/players/<?= (int)$player['id'] ?>/reactivate"
+                    <form method="POST" action="/moderator/members/<?= (int)$player['id'] ?>/reactivate"
                           onsubmit="return confirm('Mitglied reaktivieren?')">
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-sm btn-outline-success min-touch">

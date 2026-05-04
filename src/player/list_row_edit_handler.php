@@ -1,5 +1,5 @@
 <?php
-// src/player/list_row_edit_handler.php — GET/POST /player/lists/{id}/rows/{player_id}/edit
+// src/player/list_row_edit_handler.php — GET/POST /member/lists/{id}/rows/{player_id}/edit
 // Player edits only their own row in public lists only. (CELL-01, D-15)
 // Server-side ownership check: $_SESSION['user_id'] === $player_id (D-15)
 
@@ -31,7 +31,7 @@ if ((int)$_SESSION['user_id'] !== $player_id) {
 $player_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name
      FROM users
-     WHERE id = ? AND team_id = ? AND role = 'mitglied' AND is_active = TRUE"
+     WHERE id = ? AND team_id = ? AND role = 'member' AND is_active = TRUE"
 );
 $player_stmt->execute([$player_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Re-check authorization on POST (defense-in-depth)
     if (!can_edit_cell($list_id, $player_id) || (int)$_SESSION['user_id'] !== $player_id) {
-        redirect('/player/lists/' . $list_id . '?error=' . urlencode('Nicht berechtigt.'));
+        redirect('/member/lists/' . $list_id . '?error=' . urlencode('Nicht berechtigt.'));
     }
 
     try {
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $upsert->execute([$list_id, $col_id, $player_id, $validated_value]);
         }
 
-        redirect('/player/lists/' . $list_id . '?success=1');
+        redirect('/member/lists/' . $list_id . '?success=1');
 
     } catch (PDOException $e) {
         error_log('Player row edit error: ' . $e->getMessage());

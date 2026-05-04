@@ -7,7 +7,7 @@
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
 
-<form method="POST" action="/coach/players/create" class="row g-3" style="max-width: 480px;">
+<form method="POST" action="/moderator/members/create" class="row g-3" style="max-width: 480px;">
     <?= csrf_field() ?>
 
     <div class="col-12">
@@ -43,6 +43,6 @@
         <button type="submit" class="btn btn-primary min-touch">
             <i class="bi bi-person-plus me-1"></i>Mitglied anlegen
         </button>
-        <a href="/coach/players" class="btn btn-outline-secondary min-touch">Abbrechen</a>
+        <a href="/moderator/members" class="btn btn-outline-secondary min-touch">Abbrechen</a>
     </div>
 </form>

@@ -1,5 +1,5 @@
 <?php
-// src/templates/player/lists.php — List overview for player (public + protected)
+// src/templates/member/lists.php — List overview for player (public + protected)
 // Variables: $lists (array of list rows ordered is_hidden ASC, created_at DESC)
 $visible = array_filter($lists, fn($l) => !$l['is_hidden']);
 $hidden  = array_filter($lists, fn($l) =>  $l['is_hidden']);
@@ -18,7 +18,7 @@ $render_card = function(array $list): void { ?>
             <?php endif; ?>
         </div>
         <div class="card-footer bg-transparent">
-            <a href="/player/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-primary min-touch">
+            <a href="/member/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-primary min-touch">
                 <i class="bi bi-box-arrow-in-right me-1"></i>Öffnen
             </a>
         </div>
