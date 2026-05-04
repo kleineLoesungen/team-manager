@@ -8,7 +8,6 @@
 --   3. Updates the CHECK constraint on users.role
 --   4. Recreates all RLS policies that reference app.current_role 'coach'/'player'
 
-\set ON_ERROR_STOP on
 SET search_path TO team_manager, public;
 
 BEGIN;
@@ -215,5 +214,3 @@ CREATE POLICY cells_ownership_update ON cells
     );
 
 COMMIT;
-
-\echo 'Migration 004 complete.'
