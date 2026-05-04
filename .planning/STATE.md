@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-04 - Completed quick task 260504-s22: free list type with custom rows, delete local columns, bigger boolean toggles  
+**Last Updated:** 2026-05-04 - Completed quick task 260504-sn6: fix free list nested form bug and replace checkboxes with toggles  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260504-sn6 | fix free list nested form bug and replace checkboxes with toggles | 2026-05-04 | 2090acf | [260504-sn6-fix-free-list-nested-form-bug-and-replac](.planning/quick/260504-sn6-fix-free-list-nested-form-bug-and-replac/) |
 | 260504-s22 | free list type (custom rows, moderator-managed), delete local columns, bigger boolean toggles | 2026-05-04 | 3cd8cda | [260504-s22-free-list-type-with-custom-rows-delete-l](.planning/quick/260504-s22-free-list-type-with-custom-rows-delete-l/) |
 | 260504-rg6 | delete applied migration scripts migrate_004 and migrate_005 from repository | 2026-05-04 | 55b679d | [260504-rg6-delete-applied-migration-scripts-migrate](.planning/quick/260504-rg6-delete-applied-migration-scripts-migrate/) |
 | 260504-i94 | rename DB role values coach→moderator, player→mitglied: migrate DB + update all PHP references | 2026-05-04 | 94372d2 | [260504-i94-rename-db-role-values-coach-moderator-pl](.planning/quick/260504-i94-rename-db-role-values-coach-moderator-pl/) |
