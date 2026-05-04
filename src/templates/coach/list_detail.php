@@ -123,9 +123,11 @@
                             $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
                             if ($col['data_type'] === 'boolean') {
                                 $checked = ($val === '1') ? 'checked' : '';
-                                echo '<input type="checkbox" class="form-check-input"
-                                      name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"
-                                      value="1" ' . $checked . '>';
+                                echo '<div class="form-check form-switch mb-0">'
+                                    . '<input class="form-check-input" type="checkbox" role="switch"'
+                                    . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                                    . ' value="1" ' . $checked . '>'
+                                    . '</div>';
                             } elseif ($col['data_type'] === 'number') {
                                 $escaped = ($val !== null && $val !== '') ? e($val) : '';
                                 echo '<input type="number" class="form-control form-control-sm"
