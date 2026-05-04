@@ -54,7 +54,7 @@ function check_session_timeout(): void {
     $inactive = $now - $_SESSION['last_activity'];
     if ($inactive > SESSION_TIMEOUT) {
         session_destroy();
-        redirect('/login?message=' . urlencode('Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.'));
+        redirect('/login?message=' . urlencode('Deine Sitzung ist abgelaufen. Bitte meld dich erneut an.'));
     }
 
     // Extend window (sliding)

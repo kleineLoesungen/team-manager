@@ -71,24 +71,24 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                     <label class="form-label fw-semibold">Sichtbarkeit</label>
                     <select name="visibility" class="form-select">
                         <option value="public"    <?= $list['visibility'] === 'public'    ? 'selected' : '' ?>>
-                            Öffentlich — Spieler bearbeiten eigene Zeile
+                            Öffentlich — Mitglieder bearbeiten eigene Zeile
                         </option>
                         <option value="protected" <?= $list['visibility'] === 'protected' ? 'selected' : '' ?>>
-                            Geschützt — Spieler sehen eigene Zeile (nur lesen)
+                            Geschützt — Mitglieder sehen eigene Zeile (nur lesen)
                         </option>
                         <option value="private"   <?= $list['visibility'] === 'private'   ? 'selected' : '' ?>>
-                            Privat — Nur Trainer sieht und bearbeitet
+                            Privat — Nur Moderator sieht und bearbeitet
                         </option>
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Zeilen anderer Spieler</label>
+                    <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="show_all_rows"
                                id="show_all_rows" value="1"
                                <?= $list['show_all_rows'] ? 'checked' : '' ?>>
                         <label class="form-check-label" for="show_all_rows">
-                            Spieler sehen Einträge anderer Spieler
+                            Mitglieder sehen Einträge anderer Mitglieder
                         </label>
                     </div>
                 </div>

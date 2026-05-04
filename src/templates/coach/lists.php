@@ -14,7 +14,7 @@ $hidden  = array_filter($lists, fn($l) =>  $l['is_hidden']);
 <?php if (empty($lists)): ?>
 <div class="text-center py-5">
     <p class="h5 text-muted">Noch keine Listen</p>
-    <p class="text-muted">Legen Sie die erste Liste an.</p>
+    <p class="text-muted">Lege die erste Liste an.</p>
 </div>
 
 <?php else: ?>

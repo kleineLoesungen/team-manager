@@ -69,7 +69,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="coach_only" value="1" id="coach_only_chk">
                         <label class="form-check-label small" for="coach_only_chk">
-                            Nur für Trainer
+                            Nur für Moderatoren
                         </label>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
 
 <?php if (empty($players)): ?>
 <div class="text-center py-5">
-    <p class="text-muted">Keine aktiven Spieler im Team.</p>
+    <p class="text-muted">Keine aktiven Mitglieder im Team.</p>
 </div>
 <?php elseif (empty($columns)): ?>
 <div class="alert alert-info">
@@ -97,7 +97,7 @@
         <table class="table table-sm table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="text-nowrap">Spieler</th>
+                    <th class="text-nowrap">Mitglied</th>
                     <?php foreach ($columns as $col): ?>
                     <th class="text-nowrap">
                         <?= e($col['name']) ?>
@@ -105,7 +105,7 @@
                             <span class="badge bg-light text-dark border ms-1" title="Globale Spalte">G</span>
                         <?php endif; ?>
                         <?php if ($col['list_id'] !== null && !empty($col['coach_only'])): ?>
-                            <span class="badge bg-danger ms-1" title="Nur für Trainer">T</span>
+                            <span class="badge bg-danger ms-1" title="Nur für Moderatoren">T</span>
                         <?php endif; ?>
                     </th>
                     <?php endforeach; ?>

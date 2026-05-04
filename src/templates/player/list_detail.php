@@ -19,7 +19,7 @@
 <?php if (empty($columns)): ?>
 <div class="alert alert-info">Diese Liste hat noch keine Spalten.</div>
 <?php elseif (empty($players)): ?>
-<div class="text-center py-5"><p class="text-muted">Keine Spieler im Team.</p></div>
+<div class="text-center py-5"><p class="text-muted">Keine Mitglieder im Team.</p></div>
 <?php else: ?>
 
 <?php $can_edit = $list['visibility'] === 'public'; ?>
@@ -29,7 +29,7 @@
         <thead class="table-light">
             <tr>
                 <?php if ($list['show_all_rows']): ?>
-                <th class="text-nowrap">Spieler</th>
+                <th class="text-nowrap">Mitglied</th>
                 <?php endif; ?>
                 <?php foreach ($columns as $col): ?>
                 <th class="text-nowrap"><?= e($col['name']) ?></th>

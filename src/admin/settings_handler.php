@@ -57,7 +57,7 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
                     <label for="app_title" class="form-label fw-semibold">App-Titel</label>
                     <input type="text" class="form-control" id="app_title" name="app_title"
                            value="<?= e($app_title) ?>" maxlength="100" required>
-                    <div class="form-text">Wird in der Navigationsleiste für Trainer und Spieler angezeigt.</div>
+                    <div class="form-text">Wird in der Navigationsleiste für Moderatoren und Mitglieder angezeigt.</div>
                 </div>
                 <div class="mb-4">
                     <label for="app_color" class="form-label fw-semibold">Brand-Farbe</label>

@@ -17,7 +17,7 @@ header('Pragma: no-cache');
             </div>
             <div class="modal-body">
                 <p class="text-muted small mb-3">
-                    Notieren Sie diese Daten. Das Fenster schließt sich automatisch.
+                    Notiere diese Daten. Das Fenster schließt sich automatisch.
                 </p>
                 <div class="credential-block mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">

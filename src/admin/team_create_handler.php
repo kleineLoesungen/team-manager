@@ -24,5 +24,5 @@ try {
     redirect('/admin/teams');
 } catch (PDOException $e) {
     error_log('Team create error: ' . $e->getMessage());
-    redirect('/admin/teams?error=' . urlencode('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'));
+    redirect('/admin/teams?error=' . urlencode('Ein Fehler ist aufgetreten. Bitte versuch es später erneut.'));
 }

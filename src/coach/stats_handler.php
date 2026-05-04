@@ -94,7 +94,7 @@ if ($filter_date_from !== null || $filter_date_to !== null) {
 
 $agg_sql .= "
     GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.data_type, c.sort_order
-    ORDER BY u.last_name, u.first_name, c.sort_order
+    ORDER BY u.first_name, u.last_name, c.sort_order
 ";
 
 $agg_stmt = $pdo->prepare($agg_sql);
@@ -239,7 +239,7 @@ if ($filter_list_id !== null) {
 
 $ranking_sql .= "
     GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.data_type, c.sort_order
-    ORDER BY u.last_name, u.first_name, c.sort_order
+    ORDER BY u.first_name, u.last_name, c.sort_order
 ";
 
 $ranking_stmt = $pdo->prepare($ranking_sql);
@@ -269,7 +269,7 @@ foreach ($raw_ranking as $row) {
     ];
 }
 
-// Sort $ranking_order by chosen sort_col + sort_win descending; ties broken by last_name, first_name
+// Sort $ranking_order by chosen sort_col + sort_win descending; ties broken by first_name, last_name
 if ($sort_col_id > 0) {
     usort($ranking_order, function(int $a, int $b) use ($ranking, $sort_col_id, $sort_win): int {
         $va = $ranking[$a]['cols'][$sort_col_id][$sort_win] ?? 0;

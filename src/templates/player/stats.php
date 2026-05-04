@@ -2,7 +2,7 @@
 
 <?php if (empty($global_columns)): ?>
     <div class="alert alert-info">
-        Ihr Trainer hat noch keine globalen Spalten definiert. Sobald globale Spalten angelegt sind, erscheinen hier Ihre Statistiken.
+        Dein Moderator hat noch keine globalen Spalten definiert. Sobald globale Spalten angelegt sind, erscheinen hier deine Statistiken.
     </div>
 <?php else: ?>
 

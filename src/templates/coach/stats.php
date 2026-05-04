@@ -48,14 +48,14 @@
         <a href="/coach/columns">Spalten</a> an.
     </div>
 <?php elseif (empty($player_order)): ?>
-    <div class="alert alert-info">Keine aktiven Spieler im Team.</div>
+    <div class="alert alert-info">Keine aktiven Mitglieder im Team.</div>
 <?php else: ?>
-    <h5 class="mb-3">Spielerstatistiken</h5>
+    <h5 class="mb-3">Mitgliederstatistiken</h5>
     <div class="table-responsive mb-5">
         <table class="table table-sm table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="text-nowrap">Spieler</th>
+                    <th class="text-nowrap">Mitglied</th>
                     <?php foreach ($global_columns as $col): ?>
                         <th class="text-nowrap text-end">
                             <?= e($col['name']) ?>
@@ -118,7 +118,7 @@
 
     <h5 class="mb-3">Rangliste</h5>
     <p class="text-muted small mb-3">
-        Klicken Sie auf eine Spaltenüberschrift, um die Rangliste danach zu sortieren.
+        Klicke auf eine Spaltenüberschrift, um die Rangliste danach zu sortieren.
         <em>Gesamt</em> berücksichtigt die Datumsfilter oben; die Zeitfenster verwenden feste Intervalle.
     </p>
 
@@ -149,7 +149,7 @@
         <table class="table table-sm table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th rowspan="2" class="align-middle text-nowrap">Spieler</th>
+                    <th rowspan="2" class="align-middle text-nowrap">Mitglied</th>
                     <?php foreach ($global_columns as $col): ?>
                         <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <th colspan="4" class="text-center border-start"><?= e($col['name']) ?></th>

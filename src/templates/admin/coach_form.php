@@ -41,6 +41,6 @@
     </div>
     <div class="d-flex gap-2">
         <a href="/admin/coaches" class="btn btn-outline-secondary">Abbrechen</a>
-        <button type="submit" class="btn btn-primary">Trainer hinzufügen</button>
+        <button type="submit" class="btn btn-primary">Moderator hinzufügen</button>
     </div>
 </form>

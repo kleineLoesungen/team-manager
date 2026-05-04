@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($first_name) || empty($last_name)) {
         $error = 'Vor- und Nachname sind erforderlich.';
     } elseif ($team_id <= 0) {
-        $error = 'Bitte wählen Sie ein Team aus.';
+        $error = 'Bitte wähle ein Team aus.';
     } else {
         try {
             // Generate unique username — per D-11: initials + 4-digit number
@@ -55,11 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         } catch (PDOException $e) {
             error_log('Coach create error: ' . $e->getMessage());
-            $error = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
+            $error = 'Ein Fehler ist aufgetreten. Bitte versuch es später erneut.';
         }
     }
 }
 
-render_admin_page('Trainer hinzufügen', 'coaches', function() use ($teams, $error, $selected_team_id) {
+render_admin_page('Moderator hinzufügen', 'coaches', function() use ($teams, $error, $selected_team_id) {
     require ROOT_PATH . '/src/templates/admin/coach_form.php';
 });

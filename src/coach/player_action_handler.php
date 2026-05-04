@@ -82,5 +82,5 @@ try {
 
 } catch (PDOException $e) {
     error_log('Player action error for player id=' . $player_id . ' action=' . $action . ': ' . $e->getMessage());
-    redirect('/coach/players?error=' . urlencode('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'));
+    redirect('/coach/players?error=' . urlencode('Ein Fehler ist aufgetreten. Bitte versuch es später erneut.'));
 }

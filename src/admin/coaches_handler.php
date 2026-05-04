@@ -13,7 +13,7 @@ $coaches_stmt = $pdo->query(
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
      WHERE u.role = 'coach'
-     ORDER BY u.last_name, u.first_name"
+     ORDER BY u.first_name, u.last_name"
 );
 $coaches = $coaches_stmt->fetchAll();
 
@@ -27,22 +27,22 @@ $inactive_coaches = array_filter($coaches, fn($c) => !$c['is_active']);
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Trainer verwalten', 'coaches', function() use ($active_coaches, $inactive_coaches, $teams, $error) {
+render_admin_page('Moderatoren verwalten', 'coaches', function() use ($active_coaches, $inactive_coaches, $teams, $error) {
     if ($error) {
         echo '<div class="alert alert-danger">' . $error . '</div>';
     }
     ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <span class="text-muted"><?= count($active_coaches) ?> aktive Trainer</span>
+        <span class="text-muted"><?= count($active_coaches) ?> aktive Moderatoren</span>
         <a href="/admin/coaches/create" class="btn btn-primary min-touch">
-            <i class="bi bi-plus-lg me-1"></i>Trainer hinzufügen
+            <i class="bi bi-plus-lg me-1"></i>Moderator hinzufügen
         </a>
     </div>
 
     <?php if (empty($active_coaches) && empty($inactive_coaches)): ?>
     <div class="text-center py-5">
-        <p class="h5 text-muted">Keine Trainer zugewiesen</p>
-        <p class="text-muted">Fügen Sie einen oder mehrere Trainer hinzu.</p>
+        <p class="h5 text-muted">Keine Moderatoren zugewiesen</p>
+        <p class="text-muted">Füge einen oder mehrere Moderatoren hinzu.</p>
     </div>
     <?php else: ?>
 
@@ -59,7 +59,7 @@ render_admin_page('Trainer verwalten', 'coaches', function() use ($active_coache
                 <div class="d-flex gap-2 flex-wrap justify-content-end">
                     <form method="POST"
                           action="/admin/coaches/<?= $coach['id'] ?>/deactivate"
-                          onsubmit="return confirm('<?= e('Der Trainer wird deaktiviert und kann sich nicht mehr anmelden.') ?>')">
+                          onsubmit="return confirm('<?= e('Der Moderator wird deaktiviert und kann sich nicht mehr anmelden.') ?>')">
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-sm btn-outline-warning">
                             Deaktivieren
@@ -103,7 +103,7 @@ render_admin_page('Trainer verwalten', 'coaches', function() use ($active_coache
                         </div>
                         <form method="POST"
                               action="/admin/coaches/<?= $coach['id'] ?>/reactivate"
-                              onsubmit="return confirm('<?= e('Der Trainer wird reaktiviert und kann sich wieder anmelden.') ?>')">
+                              onsubmit="return confirm('<?= e('Der Moderator wird reaktiviert und kann sich wieder anmelden.') ?>')">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-success">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren

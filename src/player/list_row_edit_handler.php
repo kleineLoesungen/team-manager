@@ -38,7 +38,7 @@ $player = $player_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$player) {
     http_response_code(404);
-    echo '<h1>Spieler nicht gefunden</h1>';
+    echo '<h1>Mitglied nicht gefunden</h1>';
     exit;
 }
 
@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } catch (PDOException $e) {
         error_log('Player row edit error: ' . $e->getMessage());
-        $error = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
+        $error = 'Ein Fehler ist aufgetreten. Bitte versuch es später erneut.';
     }
 }
 

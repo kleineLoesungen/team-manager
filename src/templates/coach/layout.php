@@ -28,7 +28,7 @@ function render_coach_page(string $title, string $active, callable $body): void 
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'players' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/coach/players">
-                            <i class="bi bi-people-fill me-2"></i>Spieler
+                            <i class="bi bi-people-fill me-2"></i>Mitglieder
                         </a>
                     </li>
                     <li class="nav-item">

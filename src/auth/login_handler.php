@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if (empty($username) || empty($password)) {
-        $error = 'Benutzername oder Passwort falsch. Versuchen Sie es erneut.';
+        $error = 'Benutzername oder Passwort falsch. Versuch es erneut.';
     } else {
         $authenticated = false;
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($user && password_verify($password, $user['password_hash'])) {
                     // Block inactive users — per D-03
                     if (!$user['is_active']) {
-                        $error = 'Ihr Konto ist deaktiviert. Bitte wenden Sie sich an Ihren Trainer.';
+                        $error = 'Dein Konto ist deaktiviert. Bitte wende dich an deinen Moderator.';
                     } else {
                         session_regenerate_id(true); // Prevent session fixation
 
@@ -91,12 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     // Deliberately vague — do not reveal which field failed
-                    $error = 'Benutzername oder Passwort falsch. Versuchen Sie es erneut.';
+                    $error = 'Benutzername oder Passwort falsch. Versuch es erneut.';
                 }
             } catch (PDOException $e) {
                 // Log without credentials, per Pitfall 2
                 error_log('Login DB error: ' . $e->getMessage());
-                $error = 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.';
+                $error = 'Ein Fehler ist aufgetreten. Bitte versuch es später erneut.';
             }
         }
     }

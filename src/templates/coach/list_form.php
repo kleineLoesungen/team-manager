@@ -37,27 +37,27 @@
             <div class="mb-4">
                 <label class="form-label fw-semibold">Sichtbarkeit</label>
                 <select name="visibility" class="form-select">
-                    <option value="public">Öffentlich — Spieler bearbeiten eigene Zeile</option>
-                    <option value="protected">Geschützt — Spieler sehen eigene Zeile (nur lesen)</option>
-                    <option value="private">Privat — Nur für Trainer sichtbar</option>
+                    <option value="public">Öffentlich — Mitglieder bearbeiten eigene Zeile</option>
+                    <option value="protected">Geschützt — Mitglieder sehen eigene Zeile (nur lesen)</option>
+                    <option value="private">Privat — Nur für Moderatoren sichtbar</option>
                 </select>
                 <div class="form-text">
-                    Sie können die Sichtbarkeit später jederzeit unter "Einstellungen" ändern.
+                    Du kannst die Sichtbarkeit später jederzeit unter "Einstellungen" ändern.
                 </div>
             </div>
 
             <!-- Section 3: Row visibility -->
             <div class="mb-4">
-                <label class="form-label fw-semibold">Zeilen anderer Spieler</label>
+                <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="show_all_rows"
                            id="show_all_rows" value="1">
                     <label class="form-check-label" for="show_all_rows">
-                        Spieler sehen Einträge anderer Spieler
+                        Mitglieder sehen Einträge anderer Mitglieder
                     </label>
                 </div>
                 <div class="form-text">
-                    Standard: Spieler sehen nur ihre eigene Zeile. Diese Einstellung ist später änderbar.
+                    Standard: Mitglieder sehen nur ihre eigene Zeile. Diese Einstellung ist später änderbar.
                 </div>
             </div>
 
@@ -67,7 +67,7 @@
                 <label class="form-label fw-semibold">Globale Spalten auswählen</label>
                 <div class="form-text mb-2">
                     Welche globalen Spalten sollen in dieser Liste erscheinen?
-                    Optional: Standardwert vorausfüllen (gilt für alle Spieler beim Erstellen).
+                    Optional: Standardwert vorausfüllen (gilt für alle Mitglieder beim Erstellen).
                 </div>
                 <?php foreach ($global_columns as $col): ?>
                 <?php $col_id = (int)$col['id']; ?>

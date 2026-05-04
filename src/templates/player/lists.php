@@ -29,7 +29,7 @@ $render_card = function(array $list): void { ?>
 <?php if (empty($lists)): ?>
 <div class="text-center py-5">
     <p class="h5 text-muted">Keine Listen verfügbar</p>
-    <p class="text-muted">Ihr Trainer hat noch keine Listen angelegt.</p>
+    <p class="text-muted">Dein Moderator hat noch keine Listen angelegt.</p>
 </div>
 
 <?php else: ?>

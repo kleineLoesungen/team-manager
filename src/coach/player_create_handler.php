@@ -54,6 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Neuen Spieler anlegen', 'players', function() use ($error) {
+render_coach_page('Neues Mitglied anlegen', 'players', function() use ($error) {
     require ROOT_PATH . '/src/templates/coach/player_form.php';
 });

@@ -57,7 +57,7 @@ if ($action === 'reset-password') {
 
     } catch (PDOException $e) {
         error_log('Password reset error for coach id=' . $coach_id . ': ' . $e->getMessage());
-        redirect('/admin/coaches?error=' . urlencode('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'));
+        redirect('/admin/coaches?error=' . urlencode('Ein Fehler ist aufgetreten. Bitte versuch es später erneut.'));
     }
 
 } elseif ($action === 'deactivate') {

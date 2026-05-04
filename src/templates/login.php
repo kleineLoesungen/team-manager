@@ -32,7 +32,7 @@
                         class="form-control min-touch"
                         id="username"
                         name="username"
-                        placeholder="Geben Sie Ihren Benutzernamen ein"
+                        placeholder="Deinen Benutzernamen eingeben"
                         value="<?= e($_POST['username'] ?? '') ?>"
                         required
                         autocomplete="username"

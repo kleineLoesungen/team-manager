@@ -49,7 +49,7 @@ if ($list['show_all_rows']) {
         "SELECT id, first_name, last_name
          FROM users
          WHERE team_id = ? AND role = 'player' AND is_active = TRUE
-         ORDER BY last_name, first_name"
+         ORDER BY first_name, last_name"
     );
     $player_stmt->execute([$_SESSION['team_id']]);
 } else {

@@ -14,7 +14,7 @@ $teams = $teams_stmt->fetchAll();
 // Fetch all coaches grouped by team_id
 $coaches_stmt = $pdo->query(
     "SELECT id, team_id, first_name, last_name, username, is_active
-     FROM users WHERE role = 'coach' ORDER BY last_name, first_name"
+     FROM users WHERE role = 'coach' ORDER BY first_name, last_name"
 );
 $coaches_by_team = [];
 foreach ($coaches_stmt->fetchAll() as $coach) {

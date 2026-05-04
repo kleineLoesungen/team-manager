@@ -41,7 +41,7 @@
 
     <div class="col-12 d-flex gap-2">
         <button type="submit" class="btn btn-primary min-touch">
-            <i class="bi bi-person-plus me-1"></i>Spieler anlegen
+            <i class="bi bi-person-plus me-1"></i>Mitglied anlegen
         </button>
         <a href="/coach/players" class="btn btn-outline-secondary min-touch">Abbrechen</a>
     </div>

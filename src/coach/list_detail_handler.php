@@ -46,7 +46,7 @@ $player_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name
      FROM users
      WHERE team_id = ? AND role = 'player' AND is_active = TRUE
-     ORDER BY last_name, first_name"
+     ORDER BY first_name, last_name"
 );
 $player_stmt->execute([$_SESSION['team_id']]);
 $players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);

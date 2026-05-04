@@ -7,16 +7,16 @@ $active_players   = array_filter($players, fn($p) => $p['is_active']);
 $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <span class="text-muted"><?= count($active_players) ?> aktive Spieler</span>
+    <span class="text-muted"><?= count($active_players) ?> aktive Mitglieder</span>
     <a href="/coach/players/create" class="btn btn-primary min-touch">
-        <i class="bi bi-plus-lg me-1"></i>Neuen Spieler anlegen
+        <i class="bi bi-plus-lg me-1"></i>Neues Mitglied anlegen
     </a>
 </div>
 
 <?php if (empty($active_players) && empty($inactive_players)): ?>
 <div class="text-center py-5">
-    <p class="h5 text-muted">Noch keine Spieler im Team</p>
-    <p class="text-muted">Legen Sie den ersten Spieler an.</p>
+    <p class="h5 text-muted">Noch keine Mitglieder im Team</p>
+    <p class="text-muted">Lege das erste Mitglied an.</p>
 </div>
 
 <?php else: ?>
@@ -42,7 +42,7 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                     </button>
                 </form>
                 <form method="POST" action="/coach/players/<?= (int)$player['id'] ?>/deactivate"
-                      onsubmit="return confirm('Spieler deaktivieren?')">
+                      onsubmit="return confirm('Mitglied deaktivieren?')">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-outline-danger min-touch">
                         Deaktivieren
@@ -59,7 +59,7 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
 <details class="mt-2">
     <summary class="text-muted small mb-3" style="cursor:pointer; list-style:none;">
         <i class="bi bi-chevron-right me-1"></i>
-        Inaktive Spieler (<?= count($inactive_players) ?>)
+        Inaktive Mitglieder (<?= count($inactive_players) ?>)
     </summary>
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mt-1">
         <?php foreach ($inactive_players as $player): ?>
@@ -74,7 +74,7 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                 </div>
                 <div class="card-footer bg-transparent">
                     <form method="POST" action="/coach/players/<?= (int)$player['id'] ?>/reactivate"
-                          onsubmit="return confirm('Spieler reaktivieren?')">
+                          onsubmit="return confirm('Mitglied reaktivieren?')">
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-sm btn-outline-success min-touch">
                             Reaktivieren

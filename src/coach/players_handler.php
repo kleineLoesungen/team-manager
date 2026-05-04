@@ -12,7 +12,7 @@ $stmt = $pdo->prepare(
     "SELECT id, first_name, last_name, username, is_active
      FROM users
      WHERE role = 'player'
-     ORDER BY is_active DESC, last_name, first_name"
+     ORDER BY is_active DESC, first_name, last_name"
 );
 $stmt->execute();
 $players = $stmt->fetchAll();
@@ -21,7 +21,7 @@ $error = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 require ROOT_PATH . '/src/templates/coach/layout.php';
 
-render_coach_page('Spieler', 'players', function() use ($players, $error) {
+render_coach_page('Mitglieder', 'players', function() use ($players, $error) {
     if ($error) {
         echo '<div class="alert alert-danger">' . $error . '</div>';
     }
