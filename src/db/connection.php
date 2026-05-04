@@ -250,6 +250,118 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('Migration 005 error: ' . $e->getMessage());
     }
+
+    // Migration 006: list_type column + free_list_rows table + drop cells.player_id FK
+    // list_type allows 'member' (default) or 'free' lists where rows are custom labels.
+    $list_type_exists = (bool)$pdo->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = '{$schema}' AND table_name = 'lists' AND column_name = 'list_type'"
+    )->fetchColumn();
+
+    if (!$list_type_exists) {
+        try {
+            $pdo->exec(
+                "ALTER TABLE {$schema}.lists
+                 ADD COLUMN IF NOT EXISTS list_type VARCHAR(10) NOT NULL DEFAULT 'member'
+                 CHECK (list_type IN ('member', 'free'))"
+            );
+            $list_type_exists = true;
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 006 ALTER lists.list_type skipped — ' . $e->getMessage());
+        }
+    }
+
+    define('DB_HAS_LIST_TYPE', $list_type_exists);
+
+    // Drop cells.player_id FK so free_list_rows IDs can be stored in cells.player_id.
+    // The app layer enforces ownership; RLS enforces row visibility.
+    try {
+        // Find the actual FK constraint name (may differ from default)
+        $fk_name = $pdo->query(
+            "SELECT tc.constraint_name FROM information_schema.table_constraints tc
+             JOIN information_schema.key_column_usage kcu
+               ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+             WHERE tc.table_schema = '{$schema}' AND tc.table_name = 'cells'
+               AND tc.constraint_type = 'FOREIGN KEY'
+               AND kcu.column_name = 'player_id'
+             LIMIT 1"
+        )->fetchColumn();
+        if ($fk_name) {
+            $pdo->exec("ALTER TABLE {$schema}.cells DROP CONSTRAINT IF EXISTS " . $fk_name);
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 006 drop cells.player_id FK skipped — ' . $e->getMessage());
+    }
+
+    // Create free_list_rows table
+    $flr_exists = (bool)$pdo->query(
+        "SELECT 1 FROM information_schema.tables
+         WHERE table_schema = '{$schema}' AND table_name = 'free_list_rows'"
+    )->fetchColumn();
+
+    if (!$flr_exists) {
+        try {
+            $pdo->exec(
+                "CREATE TABLE {$schema}.free_list_rows (
+                    id         SERIAL PRIMARY KEY,
+                    list_id    INTEGER NOT NULL REFERENCES {$schema}.lists(id) ON DELETE CASCADE,
+                    label      TEXT NOT NULL,
+                    position   INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )"
+            );
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_flr_list_id ON {$schema}.free_list_rows(list_id)");
+            $flr_exists = true;
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 006 CREATE free_list_rows skipped — ' . $e->getMessage());
+        }
+    }
+
+    // RLS on free_list_rows (drop-and-recreate for idempotency)
+    if ($flr_exists) {
+        try {
+            $pdo->exec("ALTER TABLE {$schema}.free_list_rows ENABLE ROW LEVEL SECURITY");
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 006 ENABLE RLS free_list_rows skipped — ' . $e->getMessage());
+        }
+        try {
+            $pdo->exec("ALTER TABLE {$schema}.free_list_rows FORCE ROW LEVEL SECURITY");
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 006 FORCE RLS free_list_rows skipped (non-fatal) — ' . $e->getMessage());
+        }
+        try {
+            $pdo->exec("DROP POLICY IF EXISTS flr_select ON {$schema}.free_list_rows");
+            $pdo->exec("CREATE POLICY flr_select ON {$schema}.free_list_rows FOR SELECT USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator'
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists
+                                WHERE lists.id = free_list_rows.list_id
+                                AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+                OR EXISTS (SELECT 1 FROM {$schema}.lists
+                           WHERE lists.id = free_list_rows.list_id
+                           AND lists.visibility IN ('public', 'protected')
+                           AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS flr_insert ON {$schema}.free_list_rows");
+            $pdo->exec("CREATE POLICY flr_insert ON {$schema}.free_list_rows FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator'
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists
+                                WHERE lists.id = free_list_rows.list_id
+                                AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS flr_delete ON {$schema}.free_list_rows");
+            $pdo->exec("CREATE POLICY flr_delete ON {$schema}.free_list_rows FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator'
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists
+                                WHERE lists.id = free_list_rows.list_id
+                                AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+            )");
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 006 RLS free_list_rows skipped — ' . $e->getMessage());
+        }
+    }
 }
 
 /**
@@ -299,6 +411,8 @@ function db_init_schema(PDO $pdo, string $s): void {
         name          VARCHAR(100) NOT NULL,
         visibility    VARCHAR(10) NOT NULL DEFAULT 'public'
                       CHECK (visibility IN ('public', 'protected', 'private')),
+        list_type     VARCHAR(10) NOT NULL DEFAULT 'member'
+                      CHECK (list_type IN ('member', 'free')),
         show_all_rows BOOLEAN NOT NULL DEFAULT FALSE,
         is_hidden     BOOLEAN NOT NULL DEFAULT FALSE,
         description   TEXT NULL,
@@ -334,11 +448,13 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON {$s}.list_global_columns(list_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lgc_column_id ON {$s}.list_global_columns(column_id)");
 
+    // Note: player_id has no FK to users — it also stores free_list_rows.id for free lists.
+    // The app layer enforces ownership; RLS enforces row visibility.
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.cells (
         id         SERIAL PRIMARY KEY,
         list_id    INTEGER NOT NULL REFERENCES {$s}.lists(id)    ON DELETE CASCADE,
         column_id  INTEGER NOT NULL REFERENCES {$s}.columns(id)  ON DELETE CASCADE,
-        player_id  INTEGER NOT NULL REFERENCES {$s}.users(id)    ON DELETE CASCADE,
+        player_id  INTEGER NOT NULL,
         value      TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -348,6 +464,16 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_list_id   ON {$s}.cells(list_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_column_id ON {$s}.cells(column_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_player_id ON {$s}.cells(player_id)");
+
+    // free_list_rows: custom row labels for 'free' type lists
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.free_list_rows (
+        id         SERIAL PRIMARY KEY,
+        list_id    INTEGER NOT NULL REFERENCES {$s}.lists(id) ON DELETE CASCADE,
+        label      TEXT NOT NULL,
+        position   INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_flr_list_id ON {$s}.free_list_rows(list_id)");
 }
 
 /**
@@ -484,6 +610,42 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id
                         AND lists.visibility = 'public'
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
+
+    // free_list_rows RLS
+    $pdo->exec("ALTER TABLE {$s}.free_list_rows ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.free_list_rows FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS free_list_rows skipped (non-fatal) — ' . $e->getMessage());
+    }
+
+    $pdo->exec("CREATE POLICY flr_select ON {$s}.free_list_rows FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'moderator'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = free_list_rows.list_id
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        OR EXISTS (SELECT 1 FROM {$s}.lists
+                   WHERE lists.id = free_list_rows.list_id
+                   AND lists.visibility IN ('public', 'protected')
+                   AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
+    $pdo->exec("CREATE POLICY flr_insert ON {$s}.free_list_rows FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'moderator'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = free_list_rows.list_id
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
+
+    $pdo->exec("CREATE POLICY flr_delete ON {$s}.free_list_rows FOR DELETE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'moderator'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = free_list_rows.list_id
                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
     )");
 }
