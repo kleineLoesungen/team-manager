@@ -56,7 +56,7 @@ function render_coach_page(string $title, string $active, callable $body): void 
             <div class="d-md-none w-100 border-bottom bg-light">
                 <div class="d-flex">
                     <a class="flex-fill text-center py-2 <?= $active === 'players' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coach/players">Spieler</a>
+                       href="/coach/players">Mitglieder</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/coach/lists">Listen</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'columns' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"

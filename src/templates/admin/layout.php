@@ -49,7 +49,7 @@ function render_admin_page(string $title, string $active, callable $body): void 
                     <a class="flex-fill text-center py-2 <?= $active === 'teams' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/admin/teams">Teams</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'coaches' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/admin/coaches">Trainer</a>
+                       href="/admin/coaches">Moderatoren</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'settings' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/admin/settings">Einstellungen</a>
                 </div>
