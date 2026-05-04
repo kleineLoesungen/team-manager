@@ -36,12 +36,13 @@
                 ?>
 
                 <?php if ($col['data_type'] === 'boolean'): ?>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox"
+                    <div class="form-check form-switch" style="min-height:2em;">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3.5em;height:2em;cursor:pointer;"
                                name="cells[<?= $col_id ?>]" value="1"
                                id="cell_<?= $col_id ?>"
                                <?= $current_val === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="cell_<?= $col_id ?>">Ja</label>
+                        <label class="form-check-label ms-1 align-self-center" for="cell_<?= $col_id ?>">Ja</label>
                     </div>
 
                 <?php elseif ($col['data_type'] === 'number'): ?>

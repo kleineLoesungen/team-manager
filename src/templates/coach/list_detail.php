@@ -186,8 +186,9 @@
                             $val = $cells[(int)$row['id']][(int)$col['id']] ?? null;
                             if ($col['data_type'] === 'boolean') {
                                 $checked = ($val === '1') ? 'checked' : '';
-                                echo '<div class="form-check form-switch mb-0">'
+                                echo '<div class="form-check form-switch mb-0" style="min-height:1.75em;">'
                                     . '<input class="form-check-input" type="checkbox" role="switch"'
+                                    . ' style="width:3em;height:1.75em;cursor:pointer;"'
                                     . ' name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"'
                                     . ' value="1" ' . $checked . '>'
                                     . '</div>';
@@ -352,8 +353,9 @@
                             $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
                             if ($col['data_type'] === 'boolean') {
                                 $checked = ($val === '1') ? 'checked' : '';
-                                echo '<div class="form-check form-switch mb-0">'
+                                echo '<div class="form-check form-switch mb-0" style="min-height:1.75em;">'
                                     . '<input class="form-check-input" type="checkbox" role="switch"'
+                                    . ' style="width:3em;height:1.75em;cursor:pointer;"'
                                     . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
                                     . ' value="1" ' . $checked . '>'
                                     . '</div>';
