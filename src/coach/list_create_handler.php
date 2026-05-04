@@ -19,12 +19,15 @@ $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coach/layout.php';
 
+$list_type = 'member'; // default for GET and error re-render
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
     $name          = trim($_POST['name'] ?? '');
     $visibility    = $_POST['visibility'] ?? 'public';
     $show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
+    $list_type     = in_array($_POST['list_type'] ?? 'member', ['member', 'free']) ? $_POST['list_type'] : 'member';
     $selected_cols = array_map('intval', (array)($_POST['global_columns'] ?? []));
     $defaults      = (array)($_POST['defaults'] ?? []);  // [col_id => raw_value]
     $date        = trim($_POST['date'] ?? '');
@@ -41,24 +44,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            $stmt = $pdo->prepare(
-                "INSERT INTO lists (team_id, name, visibility, show_all_rows, date, description)
-                 VALUES (?, ?, ?, ?, ?, ?)
-                 RETURNING id"
-            );
-            $stmt->execute([
-                $_SESSION['team_id'],
-                $name,
-                $visibility,
-                $show_all_rows,
-                $date !== '' ? $date : null,
-                $description !== '' ? $description : null,
-            ]);
+            if (defined('DB_HAS_LIST_TYPE') && DB_HAS_LIST_TYPE) {
+                $stmt = $pdo->prepare(
+                    "INSERT INTO lists (team_id, name, visibility, list_type, show_all_rows, date, description)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)
+                     RETURNING id"
+                );
+                $stmt->execute([
+                    $_SESSION['team_id'],
+                    $name,
+                    $visibility,
+                    $list_type,
+                    $show_all_rows,
+                    $date !== '' ? $date : null,
+                    $description !== '' ? $description : null,
+                ]);
+            } else {
+                $stmt = $pdo->prepare(
+                    "INSERT INTO lists (team_id, name, visibility, show_all_rows, date, description)
+                     VALUES (?, ?, ?, ?, ?, ?)
+                     RETURNING id"
+                );
+                $stmt->execute([
+                    $_SESSION['team_id'],
+                    $name,
+                    $visibility,
+                    $show_all_rows,
+                    $date !== '' ? $date : null,
+                    $description !== '' ? $description : null,
+                ]);
+            }
             $list_id = (int)$stmt->fetchColumn();
 
             // Link selected global columns (D-11) — validate ownership first
+            // Free lists do not support global columns
             $valid_ids = [];
-            if (!empty($selected_cols)) {
+            if ($list_type === 'member' && !empty($selected_cols)) {
                 $placeholders = implode(',', array_fill(0, count($selected_cols), '?'));
                 $valid_stmt = $pdo->prepare(
                     "SELECT id FROM columns
@@ -134,6 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Neue Liste anlegen', 'lists', function() use ($error, $global_columns) {
+render_coach_page('Neue Liste anlegen', 'lists', function() use ($error, $global_columns, $list_type) {
     require ROOT_PATH . '/src/templates/coach/list_form.php';
 });

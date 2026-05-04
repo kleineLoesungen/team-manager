@@ -1,6 +1,6 @@
 <?php
 // src/templates/coach/list_form.php — Create list form
-// Variables: $error (string), $global_columns (array of global column rows)
+// Variables: $error (string), $global_columns (array of global column rows), $list_type (string)
 ?>
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
@@ -10,6 +10,24 @@
     <div class="card-body">
         <form method="POST" action="/moderator/lists/create">
             <?= csrf_field() ?>
+
+            <!-- Section: Listentyp -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Listentyp</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="list_type" value="member" id="lt_member"
+                           <?= (($list_type ?? 'member') === 'member') ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="lt_member">Mitgliederliste — Zeilen sind Mitglieder</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="list_type" value="free" id="lt_free"
+                           <?= (($list_type ?? 'member') === 'free') ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="lt_free">
+                        Freie Liste — Zeilen frei definierbar
+                        <span class="text-muted small d-block">Globale Spalten sind bei freien Listen nicht verfügbar.</span>
+                    </label>
+                </div>
+            </div>
 
             <!-- Section 1: Name -->
             <div class="mb-4">
@@ -61,8 +79,8 @@
                 </div>
             </div>
 
-            <!-- Section 4: Global column selection with optional default values -->
-            <?php if (!empty($global_columns)): ?>
+            <!-- Section 4: Global column selection with optional default values (member lists only) -->
+            <?php if (($list_type ?? 'member') === 'member' && !empty($global_columns)): ?>
             <div class="mb-4">
                 <label class="form-label fw-semibold">Globale Spalten auswählen</label>
                 <div class="form-text mb-2">
@@ -107,7 +125,7 @@
                 </div>
                 <?php endforeach; ?>
             </div>
-            <?php else: ?>
+            <?php elseif (($list_type ?? 'member') === 'member'): ?>
             <div class="mb-4">
                 <p class="text-muted small">
                     <i class="bi bi-info-circle me-1"></i>
