@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = $pdo->prepare(
                 "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash)
-                 VALUES (?, 'coach', ?, ?, ?, ?)"
+                 VALUES (?, 'moderator', ?, ?, ?, ?)"
             );
             $stmt->execute([$team_id, $first_name, $last_name, $username, $password_hash]);
 

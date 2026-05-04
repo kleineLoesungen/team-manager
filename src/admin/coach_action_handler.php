@@ -24,7 +24,7 @@ $pdo = get_db();
 
 // Verify coach exists and is a coach role
 $check = $pdo->prepare(
-    "SELECT id, username, first_name, last_name FROM users WHERE id = ? AND role = 'coach'"
+    "SELECT id, username, first_name, last_name FROM users WHERE id = ? AND role = 'moderator'"
 );
 $check->execute([$coach_id]);
 $coach = $check->fetch();
@@ -38,7 +38,7 @@ if ($action === 'reset-password') {
         $plain_password = generate_random_password();
         $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
-        $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ? AND role = 'coach'");
+        $stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ? AND role = 'moderator'");
         $stmt->execute([$password_hash, $coach_id]);
 
         // NEVER log $plain_password — per Pitfall 2
@@ -61,12 +61,12 @@ if ($action === 'reset-password') {
     }
 
 } elseif ($action === 'deactivate') {
-    $stmt = $pdo->prepare("UPDATE users SET is_active = FALSE WHERE id = ? AND role = 'coach'");
+    $stmt = $pdo->prepare("UPDATE users SET is_active = FALSE WHERE id = ? AND role = 'moderator'");
     $stmt->execute([$coach_id]);
     redirect('/admin/coaches');
 
 } elseif ($action === 'reactivate') {
-    $stmt = $pdo->prepare("UPDATE users SET is_active = TRUE WHERE id = ? AND role = 'coach'");
+    $stmt = $pdo->prepare("UPDATE users SET is_active = TRUE WHERE id = ? AND role = 'moderator'");
     $stmt->execute([$coach_id]);
     redirect('/admin/coaches');
 

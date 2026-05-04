@@ -89,7 +89,7 @@ function maybe_migrate_db(PDO $pdo): void {
             $pdo->exec("DROP POLICY IF EXISTS columns_visibility_select ON {$schema}.columns");
             $pdo->exec("CREATE POLICY columns_visibility_select ON {$schema}.columns FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
-                OR (current_setting('app.current_role', true) = 'coach'
+                OR (current_setting('app.current_role', true) = 'moderator'
                     AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
                 OR (list_id IS NULL
                     AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
@@ -118,11 +118,102 @@ function maybe_migrate_db(PDO $pdo): void {
         $pdo->exec("DROP POLICY IF EXISTS lists_delete ON {$schema}.lists");
         $pdo->exec("CREATE POLICY lists_delete ON {$schema}.lists FOR DELETE USING (
             current_setting('app.is_admin', true) = 'true'
-            OR (current_setting('app.current_role', true) = 'coach'
+            OR (current_setting('app.current_role', true) = 'moderator'
                 AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
         )");
     } catch (PDOException $e) {
         error_log('team-manager: migration 002 RLS skipped — ' . $e->getMessage());
+    }
+
+    // Migration 004: rename role values coach→moderator, player→mitglied
+    try {
+        $old_roles_exist = (bool)$pdo->query(
+            "SELECT 1 FROM {$schema}.users WHERE role IN ('coach', 'player') LIMIT 1"
+        )->fetchColumn();
+        if ($old_roles_exist) {
+            $pdo->exec("ALTER TABLE {$schema}.users DROP CONSTRAINT IF EXISTS users_role_check");
+            $pdo->exec("UPDATE {$schema}.users SET role = 'moderator' WHERE role = 'coach'");
+            $pdo->exec("UPDATE {$schema}.users SET role = 'mitglied'  WHERE role = 'player'");
+            $pdo->exec("ALTER TABLE {$schema}.users ADD CONSTRAINT users_role_check CHECK (role IN ('moderator', 'mitglied'))");
+            // Recreate all role-dependent RLS policies with new values
+            // Lists
+            $pdo->exec("DROP POLICY IF EXISTS lists_visibility_select ON {$schema}.lists");
+            $pdo->exec("CREATE POLICY lists_visibility_select ON {$schema}.lists FOR SELECT USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator' AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                OR (visibility IN ('public', 'protected') AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS lists_insert ON {$schema}.lists");
+            $pdo->exec("CREATE POLICY lists_insert ON {$schema}.lists FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator' AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS lists_update ON {$schema}.lists");
+            $pdo->exec("CREATE POLICY lists_update ON {$schema}.lists FOR UPDATE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator' AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS lists_delete ON {$schema}.lists");
+            $pdo->exec("CREATE POLICY lists_delete ON {$schema}.lists FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator' AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            // Columns visibility (respects coach_only)
+            $pdo->exec("DROP POLICY IF EXISTS columns_visibility_select ON {$schema}.columns");
+            $pdo->exec("CREATE POLICY columns_visibility_select ON {$schema}.columns FOR SELECT USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator' AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                OR (list_id IS NULL AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                OR (list_id IS NOT NULL AND coach_only = FALSE AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = columns.list_id AND lists.visibility IN ('public', 'protected')))
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS columns_insert ON {$schema}.columns");
+            $pdo->exec("CREATE POLICY columns_insert ON {$schema}.columns FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator' AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            // list_global_columns
+            $pdo->exec("DROP POLICY IF EXISTS lgc_insert ON {$schema}.list_global_columns");
+            $pdo->exec("CREATE POLICY lgc_insert ON {$schema}.list_global_columns FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator'
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = list_global_columns.list_id AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS lgc_delete ON {$schema}.list_global_columns");
+            $pdo->exec("CREATE POLICY lgc_delete ON {$schema}.list_global_columns FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator'
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = list_global_columns.list_id AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+            )");
+            // Cells
+            $pdo->exec("DROP POLICY IF EXISTS cells_visibility_select ON {$schema}.cells");
+            $pdo->exec("CREATE POLICY cells_visibility_select ON {$schema}.cells FOR SELECT USING (
+                EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND (
+                    current_setting('app.is_admin', true) = 'true'
+                    OR (current_setting('app.current_role', true) = 'moderator' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                    OR (lists.visibility IN ('public', 'protected') AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                ))
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS cells_insert ON {$schema}.cells");
+            $pdo->exec("CREATE POLICY cells_insert ON {$schema}.cells FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR current_setting('app.current_role', true) = 'moderator'
+                OR (current_setting('app.current_role', true) = 'mitglied'
+                    AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS cells_ownership_update ON {$schema}.cells");
+            $pdo->exec("CREATE POLICY cells_ownership_update ON {$schema}.cells FOR UPDATE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR current_setting('app.current_role', true) = 'moderator'
+                OR (current_setting('app.current_role', true) = 'mitglied'
+                    AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                    AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+            )");
+            error_log('Migration 004: renamed roles coach→moderator, player→mitglied and recreated RLS policies');
+        }
+    } catch (PDOException $e) {
+        error_log('Migration 004 error: ' . $e->getMessage());
     }
 }
 
@@ -144,7 +235,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
         id            SERIAL PRIMARY KEY,
         team_id       INTEGER REFERENCES {$s}.teams(id) ON DELETE SET NULL,
-        role          VARCHAR(10) NOT NULL CHECK (role IN ('coach', 'player')),
+        role          VARCHAR(10) NOT NULL CHECK (role IN ('moderator', 'mitglied')),
         first_name    VARCHAR(100) NOT NULL,
         last_name     VARCHAR(100) NOT NULL,
         username      VARCHAR(50) NOT NULL UNIQUE,
@@ -253,7 +344,7 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY lists_visibility_select ON {$s}.lists FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
         OR (visibility IN ('public', 'protected')
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
@@ -261,19 +352,19 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY lists_insert ON {$s}.lists FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
     )");
 
     $pdo->exec("CREATE POLICY lists_update ON {$s}.lists FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
     )");
 
     $pdo->exec("CREATE POLICY lists_delete ON {$s}.lists FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
     )");
 
@@ -282,7 +373,7 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY columns_visibility_select ON {$s}.columns FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
         OR (list_id IS NULL
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
@@ -296,7 +387,7 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY columns_insert ON {$s}.columns FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
     )");
 
@@ -312,7 +403,7 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY lgc_insert ON {$s}.list_global_columns FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = list_global_columns.list_id
                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
@@ -320,7 +411,7 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY lgc_delete ON {$s}.list_global_columns FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
-        OR (current_setting('app.current_role', true) = 'coach'
+        OR (current_setting('app.current_role', true) = 'moderator'
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = list_global_columns.list_id
                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
@@ -333,7 +424,7 @@ function db_init_rls(PDO $pdo, string $s): void {
         EXISTS (SELECT 1 FROM {$s}.lists
                 WHERE lists.id = cells.list_id
                 AND (current_setting('app.is_admin', true) = 'true'
-                     OR (current_setting('app.current_role', true) = 'coach'
+                     OR (current_setting('app.current_role', true) = 'moderator'
                          AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
                      OR (lists.visibility IN ('public', 'protected')
                          AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)))
@@ -341,8 +432,8 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY cells_insert ON {$s}.cells FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
-        OR current_setting('app.current_role', true) = 'coach'
-        OR (current_setting('app.current_role', true) = 'player'
+        OR current_setting('app.current_role', true) = 'moderator'
+        OR (current_setting('app.current_role', true) = 'mitglied'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id
@@ -352,8 +443,8 @@ function db_init_rls(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE POLICY cells_ownership_update ON {$s}.cells FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
-        OR current_setting('app.current_role', true) = 'coach'
-        OR (current_setting('app.current_role', true) = 'player'
+        OR current_setting('app.current_role', true) = 'moderator'
+        OR (current_setting('app.current_role', true) = 'mitglied'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id

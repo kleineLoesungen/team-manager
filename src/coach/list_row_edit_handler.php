@@ -24,7 +24,7 @@ if (!can_edit_cell($list_id, $player_id)) {
 $player_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name
      FROM users
-     WHERE id = ? AND team_id = ? AND role = 'player'"
+     WHERE id = ? AND team_id = ? AND role = 'mitglied'"
 );
 $player_stmt->execute([$player_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);

@@ -31,7 +31,7 @@ if ((int)$_SESSION['user_id'] !== $player_id) {
 $player_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name
      FROM users
-     WHERE id = ? AND team_id = ? AND role = 'player' AND is_active = TRUE"
+     WHERE id = ? AND team_id = ? AND role = 'mitglied' AND is_active = TRUE"
 );
 $player_stmt->execute([$player_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);

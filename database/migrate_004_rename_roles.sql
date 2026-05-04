@@ -1,54 +1,46 @@
--- PostgreSQL Row-Level Security Policies
--- Apply AFTER schema.sql has been run.
--- Defense-in-depth: application layer ALSO enforces team_id checks.
+-- Migration 004: rename user role values coach → moderator, player → mitglied
+-- Idempotent: safe to run multiple times on a live database.
+-- Run with: psql -U <user> -d <database> -f database/migrate_004_rename_roles.sql
 --
--- Two bypass mechanisms:
---   app.current_team_id — set per request for coach/player sessions (team isolation)
---   app.is_admin        — set per request for admin sessions (cross-team access)
+-- What this does:
+--   1. Renames role='coach' rows to role='moderator'
+--   2. Renames role='player' rows to role='mitglied'
+--   3. Updates the CHECK constraint on users.role
+--   4. Recreates all RLS policies that reference app.current_role 'coach'/'player'
 
+\set ON_ERROR_STOP on
 SET search_path TO team_manager, public;
 
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users FORCE ROW LEVEL SECURITY;
+BEGIN;
 
--- SELECT: admin sees all rows; others see only their own team
-CREATE POLICY team_isolation_users_select ON users
-    FOR SELECT
-    USING (
-        current_setting('app.is_admin', true) = 'true'
-        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-    );
+-- ── Step 1: Data + constraint migration ──────────────────────────────────────
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM team_manager.users WHERE role IN ('coach', 'player')) THEN
+        -- Remove old CHECK constraint
+        ALTER TABLE team_manager.users DROP CONSTRAINT IF EXISTS users_role_check;
 
--- INSERT: admin can insert into any team; others only into current team context
-CREATE POLICY team_isolation_users_insert ON users
-    FOR INSERT
-    WITH CHECK (
-        current_setting('app.is_admin', true) = 'true'
-        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-    );
+        -- Rename roles
+        UPDATE team_manager.users SET role = 'moderator' WHERE role = 'coach';
+        UPDATE team_manager.users SET role = 'mitglied'  WHERE role = 'player';
 
--- UPDATE: admin can update any row; others only rows within their own team
-CREATE POLICY team_isolation_users_update ON users
-    FOR UPDATE
-    USING (
-        current_setting('app.is_admin', true) = 'true'
-        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-    );
+        -- Add updated CHECK constraint
+        ALTER TABLE team_manager.users
+            ADD CONSTRAINT users_role_check CHECK (role IN ('moderator', 'mitglied'));
 
--- Teams table: no RLS needed (admin manages all teams; coaches read their own via team_id FK)
+        RAISE NOTICE 'Migration 004: role values renamed.';
+    ELSE
+        RAISE NOTICE 'Migration 004: roles already renamed, skipping data migration.';
+    END IF;
 
--- ── Phase 3: Lists, Columns & Cells — Visibility RLS ────────────────────────
--- Note: app.current_role and app.current_user_id are set by set_team_context() in src/db/connection.php.
--- require_coach() passes role='moderator'; require_player() passes role='mitglied'.
+    -- Always recreate CHECK in case it was left in broken state
+    -- (DROP + ADD is idempotent thanks to IF EXISTS above)
+END $$;
 
-ALTER TABLE lists   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE lists   FORCE ROW LEVEL SECURITY;
-ALTER TABLE columns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE columns FORCE ROW LEVEL SECURITY;
-ALTER TABLE cells   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cells   FORCE ROW LEVEL SECURITY;
+-- ── Step 2: Recreate all RLS policies referencing app.current_role ────────────
 
--- Lists SELECT: admin sees all; coaches see all lists in their team; players see public + protected lists
+-- Lists
+DROP POLICY IF EXISTS lists_visibility_select ON lists;
 CREATE POLICY lists_visibility_select ON lists
     FOR SELECT
     USING (
@@ -63,7 +55,7 @@ CREATE POLICY lists_visibility_select ON lists
         )
     );
 
--- Lists INSERT: admin or coach can create lists in their team
+DROP POLICY IF EXISTS lists_insert ON lists;
 CREATE POLICY lists_insert ON lists
     FOR INSERT
     WITH CHECK (
@@ -74,7 +66,7 @@ CREATE POLICY lists_insert ON lists
         )
     );
 
--- Lists UPDATE: admin or coach can update lists in their team
+DROP POLICY IF EXISTS lists_update ON lists;
 CREATE POLICY lists_update ON lists
     FOR UPDATE
     USING (
@@ -85,6 +77,7 @@ CREATE POLICY lists_update ON lists
         )
     );
 
+DROP POLICY IF EXISTS lists_delete ON lists;
 CREATE POLICY lists_delete ON lists
     FOR DELETE
     USING (
@@ -95,7 +88,8 @@ CREATE POLICY lists_delete ON lists
         )
     );
 
--- Columns SELECT: admin sees all; coaches see all columns in their team; players see columns for public + protected lists
+-- Columns
+DROP POLICY IF EXISTS columns_visibility_select ON columns;
 CREATE POLICY columns_visibility_select ON columns
     FOR SELECT
     USING (
@@ -105,13 +99,10 @@ CREATE POLICY columns_visibility_select ON columns
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
-            -- Players see global columns (list_id IS NULL) for their team
             list_id IS NULL
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
-            -- Players see local columns for public or protected lists in their team
-            -- coach_only columns are excluded from player visibility
             list_id IS NOT NULL
             AND coach_only = FALSE
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
@@ -123,7 +114,7 @@ CREATE POLICY columns_visibility_select ON columns
         )
     );
 
--- Columns INSERT: only admin or coach can create columns
+DROP POLICY IF EXISTS columns_insert ON columns;
 CREATE POLICY columns_insert ON columns
     FOR INSERT
     WITH CHECK (
@@ -134,21 +125,8 @@ CREATE POLICY columns_insert ON columns
         )
     );
 
--- List–global-column junction: coaches manage; players read (visibility follows parent list)
-ALTER TABLE list_global_columns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE list_global_columns FORCE ROW LEVEL SECURITY;
-
-CREATE POLICY lgc_select ON list_global_columns
-    FOR SELECT
-    USING (
-        current_setting('app.is_admin', true) = 'true'
-        OR EXISTS (
-            SELECT 1 FROM lists
-            WHERE lists.id = list_global_columns.list_id
-              AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-        )
-    );
-
+-- list_global_columns
+DROP POLICY IF EXISTS lgc_insert ON list_global_columns;
 CREATE POLICY lgc_insert ON list_global_columns
     FOR INSERT
     WITH CHECK (
@@ -163,6 +141,7 @@ CREATE POLICY lgc_insert ON list_global_columns
         )
     );
 
+DROP POLICY IF EXISTS lgc_delete ON list_global_columns;
 CREATE POLICY lgc_delete ON list_global_columns
     FOR DELETE
     USING (
@@ -177,7 +156,8 @@ CREATE POLICY lgc_delete ON list_global_columns
         )
     );
 
--- Cells SELECT: visibility inherited from parent list; players can read cells from public + protected lists
+-- Cells
+DROP POLICY IF EXISTS cells_visibility_select ON cells;
 CREATE POLICY cells_visibility_select ON cells
     FOR SELECT
     USING (
@@ -198,7 +178,7 @@ CREATE POLICY cells_visibility_select ON cells
         )
     );
 
--- Cells INSERT: admin and coach can insert any cell; player can only insert their own cell in public lists
+DROP POLICY IF EXISTS cells_insert ON cells;
 CREATE POLICY cells_insert ON cells
     FOR INSERT
     WITH CHECK (
@@ -216,7 +196,7 @@ CREATE POLICY cells_insert ON cells
         )
     );
 
--- Cells UPDATE: admin and coach can update any cell; player can only update their own cell in public lists
+DROP POLICY IF EXISTS cells_ownership_update ON cells;
 CREATE POLICY cells_ownership_update ON cells
     FOR UPDATE
     USING (
@@ -233,3 +213,7 @@ CREATE POLICY cells_ownership_update ON cells
             )
         )
     );
+
+COMMIT;
+
+\echo 'Migration 004 complete.'

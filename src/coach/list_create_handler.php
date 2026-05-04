@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Fetch all active players
                 $players_stmt = $pdo->prepare(
-                    "SELECT id FROM users WHERE team_id = ? AND role = 'player' AND is_active = TRUE"
+                    "SELECT id FROM users WHERE team_id = ? AND role = 'mitglied' AND is_active = TRUE"
                 );
                 $players_stmt->execute([$_SESSION['team_id']]);
                 $player_ids = $players_stmt->fetchAll(PDO::FETCH_COLUMN);

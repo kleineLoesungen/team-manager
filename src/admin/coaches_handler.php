@@ -12,7 +12,7 @@ $coaches_stmt = $pdo->query(
             t.name AS team_name
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
-     WHERE u.role = 'coach'
+     WHERE u.role = 'moderator'
      ORDER BY u.first_name, u.last_name"
 );
 $coaches = $coaches_stmt->fetchAll();

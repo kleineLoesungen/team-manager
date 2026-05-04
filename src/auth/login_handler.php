@@ -12,7 +12,7 @@ if (is_admin()) {
 }
 if (is_authenticated()) {
     // Role-based redirect for already-authenticated users — per D-02
-    if (($_SESSION['role'] ?? '') === 'coach') {
+    if (($_SESSION['role'] ?? '') === 'moderator') {
         redirect('/coach/players');
     } else {
         redirect('/player/lists');
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['last_activity'] = time();
 
                         // Role-based redirect — per D-02
-                        if ($user['role'] === 'coach') {
+                        if ($user['role'] === 'moderator') {
                             redirect('/coach/players');
                         } else {
                             redirect('/player/lists');

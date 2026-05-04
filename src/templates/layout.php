@@ -175,7 +175,7 @@ function render_navbar(): void {
         $role_label   = 'Admin';
     } elseif (!empty($_SESSION['display_name'])) {
         $display_name = e($_SESSION['display_name']);
-        $role_label   = ($_SESSION['role'] ?? '') === 'coach' ? 'Moderator' : 'Mitglied';
+        $role_label   = ($_SESSION['role'] ?? '') === 'moderator' ? 'Moderator' : 'Mitglied';
     }
     ?>
     <nav class="navbar px-3">

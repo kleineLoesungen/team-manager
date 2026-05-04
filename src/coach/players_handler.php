@@ -11,7 +11,7 @@ $pdo = get_db();
 $stmt = $pdo->prepare(
     "SELECT id, first_name, last_name, username, is_active
      FROM users
-     WHERE role = 'player'
+     WHERE role = 'mitglied'
      ORDER BY is_active DESC, first_name, last_name"
 );
 $stmt->execute();

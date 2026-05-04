@@ -29,7 +29,7 @@ $team_id  = (int)$_SESSION['team_id'];
 $check = $pdo->prepare(
     "SELECT id, username, first_name, last_name
      FROM users
-     WHERE id = ? AND team_id = ? AND role = 'player'"
+     WHERE id = ? AND team_id = ? AND role = 'mitglied'"
 );
 $check->execute([$player_id, $team_id]);
 $player = $check->fetch();
@@ -47,7 +47,7 @@ try {
             $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
             $stmt = $pdo->prepare(
-                "UPDATE users SET password_hash = ? WHERE id = ? AND team_id = ? AND role = 'player'"
+                "UPDATE users SET password_hash = ? WHERE id = ? AND team_id = ? AND role = 'mitglied'"
             );
             $stmt->execute([$password_hash, $player_id, $team_id]);
 
@@ -67,14 +67,14 @@ try {
 
         case 'deactivate':
             $stmt = $pdo->prepare(
-                "UPDATE users SET is_active = FALSE WHERE id = ? AND team_id = ? AND role = 'player'"
+                "UPDATE users SET is_active = FALSE WHERE id = ? AND team_id = ? AND role = 'mitglied'"
             );
             $stmt->execute([$player_id, $team_id]);
             redirect('/coach/players');
 
         case 'reactivate':
             $stmt = $pdo->prepare(
-                "UPDATE users SET is_active = TRUE WHERE id = ? AND team_id = ? AND role = 'player'"
+                "UPDATE users SET is_active = TRUE WHERE id = ? AND team_id = ? AND role = 'mitglied'"
             );
             $stmt->execute([$player_id, $team_id]);
             redirect('/coach/players');
