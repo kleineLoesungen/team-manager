@@ -3,6 +3,7 @@
 -- Safe to run even if already applied (idempotent).
 -- Requires: SET app.is_admin = 'true' first (needed to bypass FORCE RLS for DML).
 
+SET search_path = manager;
 SET app.is_admin = 'true';
 
 -- Update CHECK constraint
