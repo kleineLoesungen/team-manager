@@ -67,11 +67,11 @@
             <!-- Section 3: Row visibility -->
             <div class="mb-4">
                 <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
-                <div class="form-check form-switch" style="min-height:1.75em;">
+                <div class="form-check form-switch d-flex align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" role="switch"
                            style="width:3em;height:1.75em;cursor:pointer;"
                            name="show_all_rows" id="show_all_rows" value="1">
-                    <label class="form-check-label" for="show_all_rows">
+                    <label class="form-check-label mb-0" for="show_all_rows">
                         Mitglieder sehen Einträge anderer Mitglieder
                     </label>
                 </div>
@@ -91,11 +91,12 @@
                 <?php foreach ($global_columns as $col): ?>
                 <?php $col_id = (int)$col['id']; ?>
                 <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox"
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="global_columns[]" value="<?= $col_id ?>"
                                id="col_<?= $col_id ?>" checked>
-                        <label class="form-check-label" for="col_<?= $col_id ?>">
+                        <label class="form-check-label mb-0" for="col_<?= $col_id ?>">
                             <?= e($col['name']) ?>
                             <span class="badge bg-light text-dark border ms-1">
                                 <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
@@ -105,11 +106,12 @@
                     <!-- Default value for this column (optional, only applied at list creation) -->
                     <div class="ms-4 mt-1">
                         <?php if ($col['data_type'] === 'boolean'): ?>
-                        <div class="form-check form-check-sm">
-                            <input class="form-check-input" type="checkbox"
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   style="width:3em;height:1.75em;cursor:pointer;"
                                    name="defaults[<?= $col_id ?>]" value="1"
                                    id="default_<?= $col_id ?>">
-                            <label class="form-check-label text-muted small" for="default_<?= $col_id ?>">
+                            <label class="form-check-label mb-0 text-muted small" for="default_<?= $col_id ?>">
                                 Standardwert: Ja
                             </label>
                         </div>
