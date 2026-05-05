@@ -362,6 +362,25 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log('team-manager: migration 006 RLS free_list_rows skipped — ' . $e->getMessage());
         }
     }
+
+    // Migration 007: columns_delete RLS policy (missing from initial schema)
+    // Wrap in try/catch — shared hosts may deny CREATE POLICY; safe to skip with warning.
+    try {
+        $policy_exists = (bool)$pdo->query(
+            "SELECT 1 FROM pg_policies
+             WHERE schemaname = '{$schema}' AND tablename = 'columns' AND policyname = 'columns_delete'"
+        )->fetchColumn();
+        if (!$policy_exists) {
+            $pdo->exec("CREATE POLICY columns_delete ON {$schema}.columns FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'moderator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            error_log('team-manager: migration 007 columns_delete policy created');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 007 skipped — ' . $e->getMessage());
+    }
 }
 
 /**
