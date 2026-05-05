@@ -134,6 +134,17 @@ CREATE POLICY columns_insert ON columns
         )
     );
 
+-- Columns DELETE: only admin or moderator can delete columns in their team
+CREATE POLICY columns_delete ON columns
+    FOR DELETE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'moderator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    );
+
 -- List–global-column junction: coaches manage; players read (visibility follows parent list)
 ALTER TABLE list_global_columns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE list_global_columns FORCE ROW LEVEL SECURITY;

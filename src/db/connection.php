@@ -552,6 +552,12 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
     )");
 
+    $pdo->exec("CREATE POLICY columns_delete ON {$s}.columns FOR DELETE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'moderator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+
     $pdo->exec("ALTER TABLE {$s}.list_global_columns ENABLE ROW LEVEL SECURITY");
     $pdo->exec("ALTER TABLE {$s}.list_global_columns FORCE ROW LEVEL SECURITY");
 
