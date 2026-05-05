@@ -92,8 +92,89 @@ if (!empty($global_columns)) {
     }
 }
 
+// ── Per-list breakdown: lists with global columns for this member ─────────────
+// Uses list_global_columns join table to find which lists have global columns attached.
+// Member sees public + protected lists only (D-05).
+$per_list_rows   = [];
+$per_list_cells  = [];
+$per_list_totals = [];
+$col_list_counts = [];
+
+if (!empty($global_columns)) {
+    // Query A: lists that have at least one global column attached (via list_global_columns)
+    // and are visible to member (public + protected).
+    $lists_stmt = $pdo->prepare("
+        SELECT DISTINCT l.id, l.name, l.date
+        FROM lists l
+        JOIN list_global_columns lgc ON lgc.list_id = l.id
+        JOIN columns c ON c.id = lgc.column_id
+            AND c.team_id = :team_id AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE l.team_id = :team_id2
+          AND l.visibility IN ('public', 'protected')
+        ORDER BY l.date DESC NULLS LAST, l.name
+    ");
+    $lists_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
+    $per_list_rows = $lists_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Query B: cells for this member across those lists
+    $cells_stmt = $pdo->prepare("
+        SELECT ce.list_id, ce.column_id, ce.value
+        FROM cells ce
+        JOIN lists l ON l.id = ce.list_id
+            AND l.team_id = :team_id AND l.visibility IN ('public', 'protected')
+        JOIN columns c ON c.id = ce.column_id
+            AND c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE ce.player_id = :player_id
+    ");
+    $cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':player_id' => $player_id]);
+    foreach ($cells_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
+        $per_list_cells[(int)$cell['list_id']][(int)$cell['column_id']] = $cell['value'];
+    }
+
+    // Query C: total lists per column (denominator for boolean %)
+    $cnt_stmt = $pdo->prepare("
+        SELECT c.id AS column_id, COUNT(DISTINCT l.id) AS total_lists
+        FROM columns c
+        JOIN list_global_columns lgc ON lgc.column_id = c.id
+        JOIN lists l ON l.id = lgc.list_id
+            AND l.team_id = :team_id AND l.visibility IN ('public', 'protected')
+        WHERE c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
+        GROUP BY c.id
+    ");
+    $cnt_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
+    foreach ($cnt_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $col_list_counts[(int)$row['column_id']] = (int)$row['total_lists'];
+    }
+
+    // Compute totals per column
+    foreach ($global_columns as $col) {
+        $cid = (int)$col['id'];
+        if ($col['data_type'] === 'number') {
+            $sum = 0.0;
+            foreach ($per_list_cells as $list_cells) {
+                if (isset($list_cells[$cid])) {
+                    $sum += (float)$list_cells[$cid];
+                }
+            }
+            $per_list_totals[$cid] = ['sum' => $sum];
+        } else {
+            // boolean
+            $count_true = 0;
+            foreach ($per_list_cells as $list_cells) {
+                if (isset($list_cells[$cid]) && in_array($list_cells[$cid], ['1', 'true'], true)) {
+                    $count_true++;
+                }
+            }
+            $per_list_totals[$cid] = ['count_true' => $count_true];
+        }
+    }
+}
+
 require ROOT_PATH . '/src/templates/player/layout.php';
 
-render_player_page('Meine Statistik', 'stats', function() use ($global_columns, $player_stats) {
+render_player_page('Meine Statistik', 'stats', function() use (
+    $global_columns, $player_stats,
+    $per_list_rows, $per_list_cells, $per_list_totals, $col_list_counts
+) {
     require ROOT_PATH . '/src/templates/player/stats.php';
 });
