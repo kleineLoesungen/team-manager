@@ -311,3 +311,16 @@
     <?php endif; ?>
 
 <?php endif; ?>
+
+<script>
+(function() {
+    var KEY = 'stats_scroll';
+    var saved = sessionStorage.getItem(KEY);
+    if (saved !== null) { window.scrollTo(0, +saved); sessionStorage.removeItem(KEY); }
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form[method="get"]').forEach(function(f) {
+            f.addEventListener('submit', function() { sessionStorage.setItem(KEY, window.scrollY); });
+        });
+    });
+})();
+</script>
