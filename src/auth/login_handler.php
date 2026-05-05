@@ -12,8 +12,8 @@ if (is_admin()) {
 }
 if (is_authenticated()) {
     // Role-based redirect for already-authenticated users — per D-02
-    if (($_SESSION['role'] ?? '') === 'moderator') {
-        redirect('/moderator/members');
+    if (($_SESSION['role'] ?? '') === 'coordinator') {
+        redirect('/coordinator/members');
     } else {
         redirect('/member/lists');
     }
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($user && password_verify($password, $user['password_hash'])) {
                     // Block inactive users — per D-03
                     if (!$user['is_active']) {
-                        $error = 'Dein Konto ist deaktiviert. Bitte wende dich an deinen Moderator.';
+                        $error = 'Dein Konto ist deaktiviert. Bitte wende dich an deinen Koordinator.';
                     } else {
                         session_regenerate_id(true); // Prevent session fixation
 
@@ -77,9 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Map legacy role values in case DB migrations haven't fully run
                         $role = $user['role'];
-                        if ($role === 'coach')    $role = 'moderator';
-                        if ($role === 'player')   $role = 'member';
-                        if ($role === 'mitglied') $role = 'member';
+                        if ($role === 'coach')     $role = 'coordinator';
+                        if ($role === 'moderator') $role = 'coordinator';
+                        if ($role === 'player')    $role = 'member';
+                        if ($role === 'mitglied')  $role = 'member';
 
                         $_SESSION['user_id']       = $user['id'];
                         $_SESSION['team_id']       = $user['team_id'];
@@ -89,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['last_activity'] = time();
 
                         // Role-based redirect — per D-02
-                        if ($role === 'moderator') {
-                            redirect('/moderator/members');
+                        if ($role === 'coordinator') {
+                            redirect('/coordinator/members');
                         } else {
                             redirect('/member/lists');
                         }

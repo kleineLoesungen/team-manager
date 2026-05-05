@@ -33,8 +33,8 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
                             <?php
                             $count = count($coaches_by_team[$team['id']] ?? []);
                             echo $count === 0
-                                ? 'Keine Moderatoren zugewiesen'
-                                : $count . ' Moderatoren zugewiesen';
+                                ? 'Keine Koordinatoren zugewiesen'
+                                : $count . ' Koordinatoren zugewiesen';
                             ?>
                         </p>
                     </div>
@@ -47,7 +47,7 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
                         </button>
                         <form method="POST"
                               action="/admin/teams/<?= $team['id'] ?>/deactivate"
-                              onsubmit="return confirm('<?= e('Das Team wird deaktiviert. Alle Moderatoren und Mitglieder bleiben im System, können sich aber nicht anmelden.') ?>')">
+                              onsubmit="return confirm('<?= e('Das Team wird deaktiviert. Alle Koordinatoren und Mitglieder bleiben im System, können sich aber nicht anmelden.') ?>')">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                 Team deaktivieren
@@ -141,7 +141,7 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
                             <div class="d-flex gap-2 flex-wrap justify-content-end">
                                 <form method="POST"
                                       action="/admin/teams/<?= $team['id'] ?>/reactivate"
-                                      onsubmit="return confirm('<?= e('Das Team wird reaktiviert. Moderatoren können sich wieder anmelden.') ?>')">
+                                      onsubmit="return confirm('<?= e('Das Team wird reaktiviert. Koordinatoren können sich wieder anmelden.') ?>')">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-sm btn-outline-success">
                                         <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren

@@ -29,9 +29,9 @@ function render_admin_page(string $title, string $active, callable $body): void 
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $active === 'coaches' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/coaches">
-                            <i class="bi bi-person-badge me-2"></i>Moderatoren
+                        <a class="nav-link <?= $active === 'coordinators' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/admin/coordinators">
+                            <i class="bi bi-person-badge me-2"></i>Koordinatoren
                         </a>
                     </li>
                     <li class="nav-item">
@@ -48,8 +48,8 @@ function render_admin_page(string $title, string $active, callable $body): void 
                 <div class="d-flex">
                     <a class="flex-fill text-center py-2 <?= $active === 'teams' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/admin/teams">Teams</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'coaches' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/admin/coaches">Moderatoren</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'coordinators' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/admin/coordinators">Koordinatoren</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'settings' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/admin/settings">Einstellungen</a>
                 </div>

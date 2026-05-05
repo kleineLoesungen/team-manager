@@ -86,17 +86,17 @@ function require_admin(): void {
 }
 
 /**
- * Require a coach session. Per D-04:
- * Checks $_SESSION['role'] === 'moderator', sets RLS team context, redirects on failure.
+ * Require a coordinator session. Per D-04:
+ * Checks $_SESSION['role'] === 'coordinator', sets RLS team context, redirects on failure.
  */
-function require_coach(): void {
+function require_coordinator(): void {
     check_session_timeout();
-    if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'moderator') {
+    if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'coordinator') {
         redirect('/login');
     }
     $pdo = get_db();
     reset_rls_context($pdo); // Clear any stale admin context from a prior request on this connection
-    set_team_context($pdo, (int)$_SESSION['team_id'], 'moderator', (int)$_SESSION['user_id']);
+    set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
 }
 
 /**

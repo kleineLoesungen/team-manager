@@ -39,7 +39,7 @@ CREATE POLICY team_isolation_users_update ON users
 
 -- ── Phase 3: Lists, Columns & Cells — Visibility RLS ────────────────────────
 -- Note: app.current_role and app.current_user_id are set by set_team_context() in src/db/connection.php.
--- require_coach() passes role='moderator'; require_player() passes role='member'.
+-- require_coordinator() passes role='coordinator'; require_player() passes role='member'.
 
 ALTER TABLE lists   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lists   FORCE ROW LEVEL SECURITY;
@@ -54,7 +54,7 @@ CREATE POLICY lists_visibility_select ON lists
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
@@ -69,7 +69,7 @@ CREATE POLICY lists_insert ON lists
     WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     );
@@ -80,7 +80,7 @@ CREATE POLICY lists_update ON lists
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     );
@@ -90,7 +90,7 @@ CREATE POLICY lists_delete ON lists
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     );
@@ -101,7 +101,7 @@ CREATE POLICY columns_visibility_select ON columns
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
@@ -129,18 +129,18 @@ CREATE POLICY columns_insert ON columns
     WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     );
 
--- Columns DELETE: only admin or moderator can delete columns in their team
+-- Columns DELETE: only admin or coordinator can delete columns in their team
 CREATE POLICY columns_delete ON columns
     FOR DELETE
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     );
@@ -165,7 +165,7 @@ CREATE POLICY lgc_insert ON list_global_columns
     WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND EXISTS (
                 SELECT 1 FROM lists
                 WHERE lists.id = list_global_columns.list_id
@@ -179,7 +179,7 @@ CREATE POLICY lgc_delete ON list_global_columns
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'moderator'
+            current_setting('app.current_role', true) = 'coordinator'
             AND EXISTS (
                 SELECT 1 FROM lists
                 WHERE lists.id = list_global_columns.list_id
@@ -198,7 +198,7 @@ CREATE POLICY cells_visibility_select ON cells
             AND (
                 current_setting('app.is_admin', true) = 'true'
                 OR (
-                    current_setting('app.current_role', true) = 'moderator'
+                    current_setting('app.current_role', true) = 'coordinator'
                     AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                 )
                 OR (
@@ -214,7 +214,7 @@ CREATE POLICY cells_insert ON cells
     FOR INSERT
     WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
-        OR current_setting('app.current_role', true) = 'moderator'
+        OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
@@ -232,7 +232,7 @@ CREATE POLICY cells_ownership_update ON cells
     FOR UPDATE
     USING (
         current_setting('app.is_admin', true) = 'true'
-        OR current_setting('app.current_role', true) = 'moderator'
+        OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
             AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer

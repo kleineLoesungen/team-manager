@@ -60,113 +60,113 @@ match (true) {
             require ROOT_PATH . '/src/admin/team_action_handler.php';
         })(),
 
-    // ── Admin: Coaches ─────────────────────────────────────────────────
-    $path === '/admin/coaches'
-        => require ROOT_PATH . '/src/admin/coaches_handler.php',
+    // ── Admin: Coordinators ────────────────────────────────────────────
+    $path === '/admin/coordinators'
+        => require ROOT_PATH . '/src/admin/coordinators_handler.php',
 
-    $path === '/admin/coaches/create'
-        => require ROOT_PATH . '/src/admin/coach_create_handler.php',
+    $path === '/admin/coordinators/create'
+        => require ROOT_PATH . '/src/admin/coordinator_create_handler.php',
 
     $path === '/admin/settings'
         => require ROOT_PATH . '/src/admin/settings_handler.php',
 
-    (bool)preg_match('#^/admin/coaches/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
+    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['coach_id'] = (int)$matches[1];
-            $_REQUEST['action']   = $matches[2];
-            require ROOT_PATH . '/src/admin/coach_action_handler.php';
+            $_REQUEST['coordinator_id'] = (int)$matches[1];
+            $_REQUEST['action']         = $matches[2];
+            require ROOT_PATH . '/src/admin/coordinator_action_handler.php';
         })(),
 
-    // ── Coach: Members ─────────────────────────────────────────────────
-    $path === '/moderator' || $path === '/moderator/members'
-        => require ROOT_PATH . '/src/coach/players_handler.php',
+    // ── Coordinator: Members ───────────────────────────────────────────
+    $path === '/coordinator' || $path === '/coordinator/members'
+        => require ROOT_PATH . '/src/coordinator/members_handler.php',
 
-    $path === '/moderator/members/create'
-        => require ROOT_PATH . '/src/coach/player_create_handler.php',
+    $path === '/coordinator/members/create'
+        => require ROOT_PATH . '/src/coordinator/member_create_handler.php',
 
-    (bool)preg_match('#^/moderator/members/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
+    (bool)preg_match('#^/coordinator/members/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
+            $_REQUEST['member_id'] = (int)$matches[1];
             $_REQUEST['action']    = $matches[2];
-            require ROOT_PATH . '/src/coach/player_action_handler.php';
+            require ROOT_PATH . '/src/coordinator/member_action_handler.php';
         })(),
 
-    // ── Coach: Lists ───────────────────────────────────────────────────
-    $path === '/moderator/lists'
-        => require ROOT_PATH . '/src/coach/lists_handler.php',
+    // ── Coordinator: Lists ─────────────────────────────────────────────
+    $path === '/coordinator/lists'
+        => require ROOT_PATH . '/src/coordinator/lists_handler.php',
 
-    $path === '/moderator/lists/create'
-        => require ROOT_PATH . '/src/coach/list_create_handler.php',
+    $path === '/coordinator/lists/create'
+        => require ROOT_PATH . '/src/coordinator/list_create_handler.php',
 
-    // /moderator/lists/{id}/settings — GET: show settings form; POST: change visibility (LIST-05)
-    (bool)preg_match('#^/moderator/lists/(\d+)/settings$#', $path, $matches)
+    // /coordinator/lists/{id}/settings — GET: show settings form; POST: change visibility (LIST-05)
+    (bool)preg_match('#^/coordinator/lists/(\d+)/settings$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coach/list_settings_handler.php';
+            require ROOT_PATH . '/src/coordinator/list_settings_handler.php';
         })(),
 
-    // /moderator/lists/{id}/delete — POST: two-step list deletion (LIST-DELETE)
-    (bool)preg_match('#^/moderator/lists/(\d+)/delete$#', $path, $matches)
+    // /coordinator/lists/{id}/delete — POST: two-step list deletion (LIST-DELETE)
+    (bool)preg_match('#^/coordinator/lists/(\d+)/delete$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coach/list_delete_handler.php';
+            require ROOT_PATH . '/src/coordinator/list_delete_handler.php';
         })(),
 
-    // /moderator/lists/{id}/columns/create — POST: add local column to list (LIST-03)
-    (bool)preg_match('#^/moderator/lists/(\d+)/columns/create$#', $path, $matches)
+    // /coordinator/lists/{id}/columns/create — POST: add local column to list (LIST-03)
+    (bool)preg_match('#^/coordinator/lists/(\d+)/columns/create$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coach/list_column_create_handler.php';
+            require ROOT_PATH . '/src/coordinator/list_column_create_handler.php';
         })(),
 
-    // /moderator/lists/{id}/rows/{player_id}/edit — GET/POST: edit player row (CELL-02)
-    (bool)preg_match('#^/moderator/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
+    // /coordinator/lists/{id}/rows/{player_id}/edit — GET/POST: edit player row (CELL-02)
+    (bool)preg_match('#^/coordinator/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id']   = (int)$matches[1];
             $_REQUEST['player_id'] = (int)$matches[2];
-            require ROOT_PATH . '/src/coach/list_row_edit_handler.php';
+            require ROOT_PATH . '/src/coordinator/list_row_edit_handler.php';
         })(),
 
-    // /moderator/lists/{id} — GET: list detail table (must come AFTER more specific routes)
-    (bool)preg_match('#^/moderator/lists/(\d+)$#', $path, $matches)
+    // /coordinator/lists/{id} — GET: list detail table (must come AFTER more specific routes)
+    (bool)preg_match('#^/coordinator/lists/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coach/list_detail_handler.php';
+            require ROOT_PATH . '/src/coordinator/list_detail_handler.php';
         })(),
 
-    // ── Coach: Columns (global) ────────────────────────────────────────
-    $path === '/moderator/columns'
-        => require ROOT_PATH . '/src/coach/columns_handler.php',
+    // ── Coordinator: Columns (global) ──────────────────────────────────
+    $path === '/coordinator/columns'
+        => require ROOT_PATH . '/src/coordinator/columns_handler.php',
 
-    $path === '/moderator/columns/create'
-        => require ROOT_PATH . '/src/coach/columns_create_handler.php',
+    $path === '/coordinator/columns/create'
+        => require ROOT_PATH . '/src/coordinator/columns_create_handler.php',
 
-    // ── Coach: Statistics ──────────────────────────────────────────────
-    $path === '/moderator/stats'
-        => require ROOT_PATH . '/src/coach/stats_handler.php',
+    // ── Coordinator: Statistics ────────────────────────────────────────
+    $path === '/coordinator/stats'
+        => require ROOT_PATH . '/src/coordinator/stats_handler.php',
 
     // ── Member: Lists ─────────────────────────────────────────────────
     $path === '/member' || $path === '/member/lists'
-        => require ROOT_PATH . '/src/player/lists_handler.php',
+        => require ROOT_PATH . '/src/member/lists_handler.php',
 
     // /member/lists/{id}/rows/{player_id}/edit — GET/POST: edit own row (CELL-01)
     (bool)preg_match('#^/member/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id']   = (int)$matches[1];
             $_REQUEST['player_id'] = (int)$matches[2];
-            require ROOT_PATH . '/src/player/list_row_edit_handler.php';
+            require ROOT_PATH . '/src/member/list_row_edit_handler.php';
         })(),
 
     // /member/lists/{id} — GET: list detail (must come AFTER more specific routes)
     (bool)preg_match('#^/member/lists/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/player/list_detail_handler.php';
+            require ROOT_PATH . '/src/member/list_detail_handler.php';
         })(),
 
     // ── Member: Statistics ────────────────────────────────────────────
     $path === '/member/stats'
-        => require ROOT_PATH . '/src/player/stats_handler.php',
+        => require ROOT_PATH . '/src/member/stats_handler.php',
 
     // ── 404 ────────────────────────────────────────────────────────────
     default => (function() {

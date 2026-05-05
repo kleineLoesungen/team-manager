@@ -46,8 +46,8 @@ function can_view_list(int $list_id): bool {
 
     $role = $_SESSION['role'] ?? '';
 
-    if ($role === 'moderator') {
-        return true; // Coaches see all lists in their team
+    if ($role === 'coordinator') {
+        return true; // Coordinators see all lists in their team
     }
 
     if ($role === 'member') {
@@ -101,8 +101,8 @@ function can_edit_cell(int $list_id, int $player_id): bool {
     $role       = $_SESSION['role'] ?? '';
     $visibility = $list['visibility'];
 
-    if ($role === 'moderator') {
-        // CELL-03: Coaches have full read/write access to all lists in their team (public, protected, private)
+    if ($role === 'coordinator') {
+        // CELL-03: Coordinators have full read/write access to all lists in their team (public, protected, private)
         return true;
     }
 
