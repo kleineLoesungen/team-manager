@@ -41,13 +41,13 @@
 
                 <?php if ($col['data_type'] === 'boolean'): ?>
                     <!-- Checkbox: checked if current value is '1' -->
-                    <div class="form-check form-switch" style="min-height:2em;">
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3.5em;height:2em;cursor:pointer;"
+                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="cells[<?= $col_id ?>]" value="1"
                                id="cell_<?= $col_id ?>"
                                <?= $current_val === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label ms-1 align-self-center" for="cell_<?= $col_id ?>">
+                        <label class="form-check-label mb-0" for="cell_<?= $col_id ?>">
                             Ja
                         </label>
                     </div>
