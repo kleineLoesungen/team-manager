@@ -28,12 +28,12 @@
                value="<?= e($filter_date_to ?? '') ?>">
     </div>
     <div class="col-auto d-flex align-items-end pb-1">
-        <div class="form-check mb-0">
-            <input class="form-check-input" type="checkbox" name="include_undated" id="include_undated"
-                   value="1" <?= $filter_include_undated ? 'checked' : '' ?>>
-            <label class="form-check-label small" for="include_undated">
-                Ohne Datum einschließen
-            </label>
+        <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   style="width:3em;height:1.75em;cursor:pointer;"
+                   name="include_undated" id="include_undated" value="1"
+                   <?= $filter_include_undated ? 'checked' : '' ?>>
+            <label class="form-check-label mb-0" for="include_undated">Ohne Datum einschließen</label>
         </div>
     </div>
     <div class="col-auto">

@@ -170,22 +170,24 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="show_all_rows"
-                               id="show_all_rows" value="1"
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3em;height:1.75em;cursor:pointer;"
+                               name="show_all_rows" id="show_all_rows" value="1"
                                <?= $list['show_all_rows'] ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="show_all_rows">
+                        <label class="form-check-label mb-0" for="show_all_rows">
                             Mitglieder sehen Einträge anderer Mitglieder
                         </label>
                     </div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Sichtbarkeit in der Übersicht</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="is_hidden"
-                               id="is_hidden" value="1"
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3em;height:1.75em;cursor:pointer;"
+                               name="is_hidden" id="is_hidden" value="1"
                                <?= $list['is_hidden'] ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="is_hidden">
+                        <label class="form-check-label mb-0" for="is_hidden">
                             Liste verstecken (erscheint eingeklappt am Ende der Übersicht)
                         </label>
                     </div>
