@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260505-8ph | fix missing columns_delete RLS policy — canonical SQL, db_init_rls, Migration 007 | 2026-05-05 | 92f196f | [260505-8ph-fix-missing-columns-delete-rls-policy-ca](.planning/quick/260505-8ph-fix-missing-columns-delete-rls-policy-ca/) |
 | 260504-sn6 | fix free list nested form bug and replace checkboxes with toggles | 2026-05-04 | 2090acf | [260504-sn6-fix-free-list-nested-form-bug-and-replac](.planning/quick/260504-sn6-fix-free-list-nested-form-bug-and-replac/) |
 | 260504-s22 | free list type (custom rows, moderator-managed), delete local columns, bigger boolean toggles | 2026-05-04 | 3cd8cda | [260504-s22-free-list-type-with-custom-rows-delete-l](.planning/quick/260504-s22-free-list-type-with-custom-rows-delete-l/) |
 | 260504-rg6 | delete applied migration scripts migrate_004 and migrate_005 from repository | 2026-05-04 | 55b679d | [260504-rg6-delete-applied-migration-scripts-migrate](.planning/quick/260504-rg6-delete-applied-migration-scripts-migrate/) |
