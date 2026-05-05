@@ -315,11 +315,19 @@
 <script>
 (function() {
     var KEY = 'stats_scroll';
-    var saved = sessionStorage.getItem(KEY);
-    if (saved !== null) { window.scrollTo(0, +saved); sessionStorage.removeItem(KEY); }
+    // Restore after full render so page height is established
+    window.addEventListener('load', function() {
+        var saved = sessionStorage.getItem(KEY);
+        if (saved !== null) { window.scrollTo(0, +saved); sessionStorage.removeItem(KEY); }
+    });
     document.addEventListener('DOMContentLoaded', function() {
+        function save() { sessionStorage.setItem(KEY, window.scrollY); }
         document.querySelectorAll('form[method="get"]').forEach(function(f) {
-            f.addEventListener('submit', function() { sessionStorage.setItem(KEY, window.scrollY); });
+            f.addEventListener('submit', save);
+            // form.submit() skips the submit event — catch change on selects too
+            f.querySelectorAll('select').forEach(function(s) {
+                s.addEventListener('change', save);
+            });
         });
     });
 })();
