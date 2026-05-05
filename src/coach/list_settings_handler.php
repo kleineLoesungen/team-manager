@@ -31,6 +31,19 @@ $local_columns = $local_cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $delete_pending_col_id = null;
 
+// Fetch global columns attached to this list via junction table
+$global_cols_stmt = $pdo->prepare(
+    "SELECT c.id, c.name, c.data_type
+     FROM columns c
+     JOIN list_global_columns lgc ON lgc.column_id = c.id
+     WHERE lgc.list_id = ? AND c.team_id = ? AND c.is_active = TRUE
+     ORDER BY c.sort_order, c.created_at"
+);
+$global_cols_stmt->execute([$list_id, $_SESSION['team_id']]);
+$global_columns = $global_cols_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$unbind_pending_col_id = null;
+
 require ROOT_PATH . '/src/templates/coach/layout.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -56,6 +69,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (PDOException $e) {
                 error_log('Column delete error: ' . $e->getMessage());
                 $error = 'Fehler beim Löschen der Spalte.';
+            }
+        }
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'unbind_column') {
+        $col_id  = (int)($_POST['column_id'] ?? 0);
+        $confirm = (int)($_POST['confirm']   ?? 0);
+
+        if ($confirm !== 1) {
+            // Show confirmation step — store pending col_id and fall through to render
+            $unbind_pending_col_id = $col_id;
+        } else {
+            // Ownership check: junction row must exist AND column belongs to this team
+            $check = $pdo->prepare(
+                "SELECT 1 FROM list_global_columns lgc
+                 JOIN columns c ON c.id = lgc.column_id
+                 WHERE lgc.list_id = ? AND lgc.column_id = ? AND c.team_id = ?"
+            );
+            $check->execute([$list_id, $col_id, $_SESSION['team_id']]);
+            if (!$check->fetch()) {
+                $error = 'Spalte nicht gefunden.';
+            } else {
+                try {
+                    $pdo->beginTransaction();
+                    // Delete cells for this column in this list
+                    $del_cells = $pdo->prepare(
+                        "DELETE FROM cells WHERE list_id = ? AND column_id = ?"
+                    );
+                    $del_cells->execute([$list_id, $col_id]);
+                    // Remove junction row (column itself stays untouched)
+                    $del_lgc = $pdo->prepare(
+                        "DELETE FROM list_global_columns WHERE list_id = ? AND column_id = ?"
+                    );
+                    $del_lgc->execute([$list_id, $col_id]);
+                    $pdo->commit();
+                    redirect('/moderator/lists/' . $list_id . '/settings?success=1');
+                } catch (PDOException $e) {
+                    $pdo->rollBack();
+                    error_log('Unbind column error: ' . $e->getMessage());
+                    $error = 'Fehler beim Entfernen der Spalte.';
+                }
             }
         }
     } else {
@@ -94,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id) {
+render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <div class="card shadow-sm">
@@ -185,6 +237,45 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                             <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
                             <input type="hidden" name="confirm" value="0">
                             <button type="submit" class="btn btn-sm btn-outline-danger min-touch">Löschen</button>
+                        </form>
+                    <?php endif; ?>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
+    <?php endif; ?>
+    <?php if (!empty($global_columns)): ?>
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h6 class="card-title">Globale Spalten</h6>
+            <p class="text-muted small mb-3">Globale Spalten stammen aus der Team-Konfiguration. Entfernen trennt die Spalte von dieser Liste und löscht alle zugehörigen Einträge — die Spalte selbst bleibt erhalten.</p>
+            <ul class="list-group list-group-flush">
+                <?php foreach ($global_columns as $col): ?>
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                        <span class="fw-medium"><?= e($col['name']) ?></span>
+                        <span class="badge bg-light text-dark border ms-2 small">
+                            <?= match($col['data_type']) { 'boolean' => 'Ja/Nein', 'number' => 'Zahl', 'text' => 'Text', default => e($col['data_type']) } ?>
+                        </span>
+                    </div>
+                    <?php if ($unbind_pending_col_id !== null && $unbind_pending_col_id === (int)$col['id']): ?>
+                        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/settings" class="d-flex gap-2 align-items-center">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="unbind_column">
+                            <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
+                            <input type="hidden" name="confirm" value="1">
+                            <span class="text-danger small me-2">Spalte aus dieser Liste entfernen? Alle Einträge dieser Spalte werden ebenfalls gelöscht.</span>
+                            <button type="submit" class="btn btn-sm btn-danger min-touch">Ja, entfernen</button>
+                            <a href="/moderator/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-sm btn-outline-secondary min-touch">Abbrechen</a>
+                        </form>
+                    <?php else: ?>
+                        <form method="POST" action="/moderator/lists/<?= (int)$list['id'] ?>/settings">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="action" value="unbind_column">
+                            <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
+                            <input type="hidden" name="confirm" value="0">
+                            <button type="submit" class="btn btn-sm btn-outline-danger min-touch">Entfernen</button>
                         </form>
                     <?php endif; ?>
                 </li>
