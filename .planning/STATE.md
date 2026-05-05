@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260505-r6i | replace all plain checkboxes with form-switch toggles (3em×1.75em) across 5 templates | 2026-05-05 | 64b93cd | [260505-r6i-replace-all-checkboxes-with-bigger-toggl](.planning/quick/260505-r6i-replace-all-checkboxes-with-bigger-toggl/) |
 | 260505-9eh | rename moderator→coordinator, coach→coordinator, player→member — folder renames, routes, DB role, RLS, German UI, Migration 008, pgAdmin SQL | 2026-05-05 | e358217 | [260505-9eh-replace-moderator-with-coordinator-renam](.planning/quick/260505-9eh-replace-moderator-with-coordinator-renam/) |
 | 260505-93l | member-centric stats per-list breakdown — Listenübersicht table on /coordinator/stats + member selector on /coordinator/stats | 2026-05-05 | a03622d | [260505-93l-member-centric-stats-per-list-breakdown-](.planning/quick/260505-93l-member-centric-stats-per-list-breakdown-/) |
 | 260505-8ud | unbind global columns from list in list settings — Globale Spalten card + two-step no-JS confirm | 2026-05-05 | 19eba61 | [260505-8ud-unbind-global-columns-from-list-in-list-](.planning/quick/260505-8ud-unbind-global-columns-from-list-in-list-/) |
