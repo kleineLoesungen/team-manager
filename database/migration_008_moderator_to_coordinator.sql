@@ -6,7 +6,8 @@
 SET search_path = manager;
 SET app.is_admin = 'true';
 
--- Update CHECK constraint
+-- Widen role column to fit 'coordinator' (11 chars), then update values and constraint
+ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(20);
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 UPDATE users SET role = 'coordinator' WHERE role = 'moderator';
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('coordinator', 'member'));

@@ -388,6 +388,7 @@ function maybe_migrate_db(PDO $pdo): void {
             "SELECT 1 FROM {$schema}.users WHERE role = 'moderator' LIMIT 1"
         )->fetchColumn();
         if ($moderator_exists) {
+            $pdo->exec("ALTER TABLE {$schema}.users ALTER COLUMN role TYPE VARCHAR(20)");
             $pdo->exec("ALTER TABLE {$schema}.users DROP CONSTRAINT IF EXISTS users_role_check");
             $pdo->exec("UPDATE {$schema}.users SET role = 'coordinator' WHERE role = 'moderator'");
             $pdo->exec("ALTER TABLE {$schema}.users ADD CONSTRAINT users_role_check CHECK (role IN ('coordinator', 'member'))");
@@ -520,7 +521,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
         id            SERIAL PRIMARY KEY,
         team_id       INTEGER REFERENCES {$s}.teams(id) ON DELETE SET NULL,
-        role          VARCHAR(10) NOT NULL CHECK (role IN ('coordinator', 'member')),
+        role          VARCHAR(20) NOT NULL CHECK (role IN ('coordinator', 'member')),
         first_name    VARCHAR(100) NOT NULL,
         last_name     VARCHAR(100) NOT NULL,
         username      VARCHAR(50) NOT NULL UNIQUE,
