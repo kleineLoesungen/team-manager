@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-05 - Completed quick task 260505-8ud: unbind global columns from list in list settings  
+**Last Updated:** 2026-05-05 - Completed quick task 260505-93l: member-centric stats per-list breakdown  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260505-93l | member-centric stats per-list breakdown — Listenübersicht table on /member/stats + member selector on /moderator/stats | 2026-05-05 | a03622d | [260505-93l-member-centric-stats-per-list-breakdown-](.planning/quick/260505-93l-member-centric-stats-per-list-breakdown-/) |
 | 260505-8ud | unbind global columns from list in list settings — Globale Spalten card + two-step no-JS confirm | 2026-05-05 | 19eba61 | [260505-8ud-unbind-global-columns-from-list-in-list-](.planning/quick/260505-8ud-unbind-global-columns-from-list-in-list-/) |
 | 260505-8ph | fix missing columns_delete RLS policy — canonical SQL, db_init_rls, Migration 007 | 2026-05-05 | 92f196f | [260505-8ph-fix-missing-columns-delete-rls-policy-ca](.planning/quick/260505-8ph-fix-missing-columns-delete-rls-policy-ca/) |
 | 260504-sn6 | fix free list nested form bug and replace checkboxes with toggles | 2026-05-04 | 2090acf | [260504-sn6-fix-free-list-nested-form-bug-and-replac](.planning/quick/260504-sn6-fix-free-list-nested-form-bug-and-replac/) |
