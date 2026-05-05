@@ -208,4 +208,106 @@
             </tbody>
         </table>
     </div>
+
+    <!-- ── Listenübersicht pro Mitglied ───────────────────────────────────── -->
+    <hr class="my-4">
+    <h5 class="mb-3">Listenübersicht</h5>
+
+    <form method="get" action="/moderator/stats" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+        <?php if ($filter_list_id): ?><input type="hidden" name="list_id" value="<?= (int)$filter_list_id ?>"><?php endif; ?>
+        <?php if ($filter_date_from): ?><input type="hidden" name="date_from" value="<?= e($filter_date_from) ?>"><?php endif; ?>
+        <?php if ($filter_date_to): ?><input type="hidden" name="date_to" value="<?= e($filter_date_to) ?>"><?php endif; ?>
+        <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1"><?php endif; ?>
+        <label for="member_selector" class="form-label mb-0 small fw-medium">Mitglied:</label>
+        <select name="member_id" id="member_selector" class="form-select form-select-sm" style="max-width:220px;">
+            <option value="">— Mitglied auswählen —</option>
+            <?php foreach ($all_members as $m): ?>
+                <option value="<?= (int)$m['id'] ?>" <?= $selected_member_id === (int)$m['id'] ? 'selected' : '' ?>>
+                    <?= e($m['first_name'] . ' ' . $m['last_name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary">Anzeigen</button>
+        <?php if ($selected_member_id): ?>
+            <?php
+                $reset_params = array_filter([
+                    'list_id'         => $filter_list_id ? (string)$filter_list_id : '',
+                    'date_from'       => $filter_date_from ?? '',
+                    'date_to'         => $filter_date_to ?? '',
+                    'include_undated' => $filter_include_undated ? '1' : '',
+                ], fn($v) => $v !== '');
+                $reset_url = '/moderator/stats' . (!empty($reset_params) ? '?' . http_build_query($reset_params) : '');
+            ?>
+            <a href="<?= e($reset_url) ?>" class="btn btn-sm btn-outline-secondary">Zurücksetzen</a>
+        <?php endif; ?>
+    </form>
+
+    <?php if ($selected_member_id && !empty($mod_per_list_rows)): ?>
+        <h6 class="mb-3">Listenübersicht: <?= e($selected_member_name) ?></h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-nowrap">Liste</th>
+                        <th class="text-nowrap text-muted small fw-normal">Datum</th>
+                        <?php foreach ($global_columns as $col): ?>
+                            <th class="text-end text-nowrap"><?= e($col['name']) ?></th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($mod_per_list_rows as $list_row): ?>
+                        <tr>
+                            <td class="fw-semibold text-nowrap"><?= e($list_row['name']) ?></td>
+                            <td class="text-nowrap text-muted small">
+                                <?= $list_row['date'] ? date('d.m.Y', strtotime($list_row['date'])) : '—' ?>
+                            </td>
+                            <?php foreach ($global_columns as $col): ?>
+                                <td class="text-end text-nowrap">
+                                    <?php
+                                        $cid = (int)$col['id'];
+                                        $lid = (int)$list_row['id'];
+                                        $val = $mod_per_list_cells[$lid][$cid] ?? null;
+                                        if ($val === null) {
+                                            echo '<span class="text-muted">—</span>';
+                                        } elseif ($col['data_type'] === 'boolean') {
+                                            echo in_array($val, ['1', 'true'], true) ? '✓' : '✗';
+                                        } else {
+                                            $n = (float)$val;
+                                            echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
+                                        }
+                                    ?>
+                                </td>
+                            <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot class="fw-bold">
+                    <tr>
+                        <td colspan="2">Gesamt</td>
+                        <?php foreach ($global_columns as $col): ?>
+                            <td class="text-end text-nowrap">
+                                <?php
+                                    $cid    = (int)$col['id'];
+                                    $totals = $mod_per_list_totals[$cid] ?? null;
+                                    if ($col['data_type'] === 'number') {
+                                        $n = (float)($totals['sum'] ?? 0);
+                                        echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
+                                    } else {
+                                        $count_true  = (int)($totals['count_true'] ?? 0);
+                                        $total_lists = (int)($mod_col_list_counts[$cid] ?? 0);
+                                        $pct = $total_lists > 0 ? round($count_true / $total_lists * 100) : 0;
+                                        echo $count_true . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                                    }
+                                ?>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    <?php elseif ($selected_member_id): ?>
+        <p class="text-muted small">Keine Listen mit globalen Spalten für dieses Mitglied gefunden.</p>
+    <?php endif; ?>
+
 <?php endif; ?>

@@ -316,12 +316,112 @@ if ($sort_col_id > 0) {
     });
 }
 
+// ── Per-list breakdown for selected member (moderator view) ──────────────────
+// Fetch all active members for the selector dropdown
+$members_stmt = $pdo->prepare(
+    "SELECT id, first_name, last_name FROM users
+     WHERE team_id = ? AND role = 'member' AND is_active = TRUE
+     ORDER BY first_name, last_name"
+);
+$members_stmt->execute([$team_id]);
+$all_members = $members_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Parse + validate selected member from GET
+$selected_member_id = isset($_GET['member_id']) && $_GET['member_id'] !== ''
+    ? (int)$_GET['member_id']
+    : null;
+$valid_member_ids = array_map('intval', array_column($all_members, 'id'));
+if ($selected_member_id !== null && !in_array($selected_member_id, $valid_member_ids, true)) {
+    $selected_member_id = null;
+}
+
+$mod_per_list_rows   = [];
+$mod_per_list_cells  = [];
+$mod_per_list_totals = [];
+$mod_col_list_counts = [];
+$selected_member_name = null;
+
+if ($selected_member_id !== null) {
+    // Find selected member name for heading
+    foreach ($all_members as $m) {
+        if ((int)$m['id'] === $selected_member_id) {
+            $selected_member_name = $m['first_name'] . ' ' . $m['last_name'];
+            break;
+        }
+    }
+
+    // Query A: lists with global columns for selected member (no visibility filter — moderator sees all)
+    $mod_lists_stmt = $pdo->prepare("
+        SELECT DISTINCT l.id, l.name, l.date
+        FROM lists l
+        JOIN list_global_columns lgc ON lgc.list_id = l.id
+        JOIN columns c ON c.id = lgc.column_id
+            AND c.team_id = :team_id AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE l.team_id = :team_id2
+        ORDER BY l.date DESC NULLS LAST, l.name
+    ");
+    $mod_lists_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
+    $mod_per_list_rows = $mod_lists_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Query B: cells for selected member (no visibility filter)
+    $mod_cells_stmt = $pdo->prepare("
+        SELECT ce.list_id, ce.column_id, ce.value
+        FROM cells ce
+        JOIN lists l ON l.id = ce.list_id AND l.team_id = :team_id
+        JOIN columns c ON c.id = ce.column_id
+            AND c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE ce.player_id = :member_id
+    ");
+    $mod_cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':member_id' => $selected_member_id]);
+    foreach ($mod_cells_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
+        $mod_per_list_cells[(int)$cell['list_id']][(int)$cell['column_id']] = $cell['value'];
+    }
+
+    // Query C: total lists per column (no visibility filter — moderator sees all)
+    $mod_cnt_stmt = $pdo->prepare("
+        SELECT c.id AS column_id, COUNT(DISTINCT l.id) AS total_lists
+        FROM columns c
+        JOIN list_global_columns lgc ON lgc.column_id = c.id
+        JOIN lists l ON l.id = lgc.list_id AND l.team_id = :team_id
+        WHERE c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
+        GROUP BY c.id
+    ");
+    $mod_cnt_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
+    foreach ($mod_cnt_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $mod_col_list_counts[(int)$row['column_id']] = (int)$row['total_lists'];
+    }
+
+    // Compute totals per column
+    foreach ($global_columns as $col) {
+        $cid = (int)$col['id'];
+        if ($col['data_type'] === 'number') {
+            $sum = 0.0;
+            foreach ($mod_per_list_cells as $list_cells) {
+                if (isset($list_cells[$cid])) {
+                    $sum += (float)$list_cells[$cid];
+                }
+            }
+            $mod_per_list_totals[$cid] = ['sum' => $sum];
+        } else {
+            $count_true = 0;
+            foreach ($mod_per_list_cells as $list_cells) {
+                if (isset($list_cells[$cid]) && in_array($list_cells[$cid], ['1', 'true'], true)) {
+                    $count_true++;
+                }
+            }
+            $mod_per_list_totals[$cid] = ['count_true' => $count_true];
+        }
+    }
+}
+
 require ROOT_PATH . '/src/templates/coach/layout.php';
 
 render_coach_page('Statistik', 'stats', function() use (
     $global_columns, $player_stats, $player_order,
     $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
-    $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter, $col_totals
+    $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter, $col_totals,
+    $all_members, $selected_member_id, $selected_member_name,
+    $mod_per_list_rows, $mod_per_list_cells, $mod_per_list_totals, $mod_col_list_counts
 ) {
     require ROOT_PATH . '/src/templates/coach/stats.php';
 });
