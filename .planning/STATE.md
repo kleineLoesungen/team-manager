@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-05 - Completed quick task 260505-r6i: replace all checkboxes with bigger toggle buttons, centered labels  
+**Last Updated:** 2026-05-05 - Completed quick task 260505-rpx: restore scroll position after filter change on coordinator stats page  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260505-rpx | restore scroll position after filter change on coordinator stats page — sessionStorage save/restore on GET form submit | 2026-05-05 | 8a941f0 | [260505-rpx-restore-scroll-position-after-filter-cha](.planning/quick/260505-rpx-restore-scroll-position-after-filter-cha/) |
 | 260505-r6i | replace all plain checkboxes with form-switch toggles (3em×1.75em) across 5 templates | 2026-05-05 | 64b93cd | [260505-r6i-replace-all-checkboxes-with-bigger-toggl](.planning/quick/260505-r6i-replace-all-checkboxes-with-bigger-toggl/) |
 | 260505-9eh | rename moderator→coordinator, coach→coordinator, player→member — folder renames, routes, DB role, RLS, German UI, Migration 008, pgAdmin SQL | 2026-05-05 | e358217 | [260505-9eh-replace-moderator-with-coordinator-renam](.planning/quick/260505-9eh-replace-moderator-with-coordinator-renam/) |
 | 260505-93l | member-centric stats per-list breakdown — Listenübersicht table on /coordinator/stats + member selector on /coordinator/stats | 2026-05-05 | a03622d | [260505-93l-member-centric-stats-per-list-breakdown-](.planning/quick/260505-93l-member-centric-stats-per-list-breakdown-/) |
