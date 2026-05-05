@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-05 - Completed quick task 260505-9eh: rename moderator→coordinator, coach→coordinator, player→member  
+**Last Updated:** 2026-05-05 - Completed quick task 260505-r6i: replace all checkboxes with bigger toggle buttons, centered labels  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
