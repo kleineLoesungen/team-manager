@@ -249,7 +249,9 @@
                                 $count++;
                             }
                         }
-                        $col_totals[$cid] = $count;
+                        $total_rows = count($free_rows);
+                        $pct = $total_rows > 0 ? round($count / $total_rows * 100) : 0;
+                        $col_totals[$cid] = $count . ' / ' . $total_rows . ' (' . $pct . '%)';
                     } else {
                         $col_totals[$cid] = '';
                     }
@@ -275,7 +277,7 @@
 <?php endif; // free list: rows/columns states ?>
 
 <?php else: ?>
-<!-- MEMBER LIST: existing layout -->
+<!-- MEMBER LIST -->
 
 <!-- Add local column form — inline at top (D-10) -->
 <details class="mb-3">
@@ -328,12 +330,40 @@
 </div>
 <?php else: ?>
 
+<!-- Member filter -->
+<details class="mb-3" id="member-filter-details">
+    <summary class="text-muted small d-flex align-items-center gap-1" style="cursor:pointer; list-style:none;">
+        <i class="bi bi-people me-1"></i>
+        <span id="member-filter-label">Alle <?= count($players) ?> Mitglieder ausgewählt</span>
+        <i class="bi bi-chevron-down ms-1"></i>
+    </summary>
+    <div class="card card-body mt-2 py-2">
+        <div class="d-flex gap-2 mb-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllMembers(true)">Alle</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllMembers(false)">Keine</button>
+        </div>
+        <div class="d-flex flex-wrap gap-3">
+            <?php foreach ($players as $player): ?>
+            <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
+                <input type="checkbox" class="form-check-input member-filter-cb"
+                       style="width:2.5em;height:1.5em;cursor:pointer;"
+                       data-member-id="<?= (int)$player['id'] ?>"
+                       id="mf_<?= (int)$player['id'] ?>"
+                       checked>
+                <label class="form-check-label small" for="mf_<?= (int)$player['id'] ?>">
+                    <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                </label>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</details>
+
 <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>">
     <?= csrf_field() ?>
 
-    <!-- Per D-04: Bootstrap table-responsive for horizontal scroll on mobile -->
     <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle">
+        <table class="table table-sm table-hover align-middle" id="member-list-table">
             <thead class="table-light">
                 <tr>
                     <th class="text-nowrap">Mitglied</th>
@@ -352,12 +382,12 @@
             </thead>
             <tbody>
                 <?php foreach ($players as $player): ?>
-                <tr>
+                <tr data-member-id="<?= (int)$player['id'] ?>">
                     <td class="text-nowrap fw-medium">
                         <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
                     </td>
                     <?php foreach ($columns as $col): ?>
-                    <td>
+                    <td data-col-id="<?= (int)$col['id'] ?>" data-col-type="<?= e($col['data_type']) ?>">
                         <?php
                             $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
                             if ($col['data_type'] === 'boolean') {
@@ -370,16 +400,16 @@
                                     . '</div>';
                             } elseif ($col['data_type'] === 'number') {
                                 $escaped = ($val !== null && $val !== '') ? e($val) : '';
-                                echo '<input type="number" class="form-control form-control-sm"
-                                      style="min-width:70px; max-width:100px"
-                                      name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"
-                                      value="' . $escaped . '">';
+                                echo '<input type="number" class="form-control form-control-sm"'
+                                    . ' style="min-width:70px; max-width:100px"'
+                                    . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                                    . ' value="' . $escaped . '">';
                             } else {
                                 $escaped = ($val !== null) ? e($val) : '';
-                                echo '<input type="text" class="form-control form-control-sm"
-                                      style="min-width:100px"
-                                      name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"
-                                      value="' . $escaped . '" maxlength="255">';
+                                echo '<input type="text" class="form-control form-control-sm"'
+                                    . ' style="min-width:100px"'
+                                    . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                                    . ' value="' . $escaped . '" maxlength="255">';
                             }
                         ?>
                     </td>
@@ -388,8 +418,8 @@
                 <?php endforeach; ?>
             </tbody>
             <?php
-                // Build totals per column
-                $col_totals = [];
+                $total_members = count($players);
+                $col_totals    = [];
                 foreach ($columns as $col) {
                     $cid = (int)$col['id'];
                     if ($col['data_type'] === 'number') {
@@ -410,7 +440,8 @@
                                 $count++;
                             }
                         }
-                        $col_totals[$cid] = $count;
+                        $pct = $total_members > 0 ? round($count / $total_members * 100) : 0;
+                        $col_totals[$cid] = $count . ' / ' . $total_members . ' (' . $pct . '%)';
                     } else {
                         $col_totals[$cid] = '';
                     }
@@ -420,7 +451,11 @@
                 <tr>
                     <td class="text-nowrap fw-bold">Gesamt</td>
                     <?php foreach ($columns as $col): ?>
-                    <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
+                    <td class="text-nowrap fw-bold"
+                        data-col-id="<?= (int)$col['id'] ?>"
+                        data-col-type="<?= e($col['data_type']) ?>">
+                        <?= $col_totals[(int)$col['id']] ?>
+                    </td>
                     <?php endforeach; ?>
                 </tr>
             </tfoot>
@@ -431,6 +466,88 @@
         <button type="submit" class="btn btn-primary min-touch">Speichern</button>
     </div>
 </form>
+
+<script>
+(function() {
+    var totalMembers = <?= count($players) ?>;
+
+    function getSelectedIds() {
+        var ids = new Set();
+        document.querySelectorAll('.member-filter-cb:checked').forEach(function(cb) {
+            ids.add(parseInt(cb.dataset.memberId));
+        });
+        return ids;
+    }
+
+    function updateTable() {
+        var selected = getSelectedIds();
+
+        // Show/hide rows
+        document.querySelectorAll('tr[data-member-id]').forEach(function(row) {
+            row.style.display = selected.has(parseInt(row.dataset.memberId)) ? '' : 'none';
+        });
+
+        // Update filter label
+        var label = document.getElementById('member-filter-label');
+        if (label) {
+            label.textContent = selected.size === totalMembers
+                ? 'Alle ' + totalMembers + ' Mitglieder ausgewählt'
+                : selected.size + ' / ' + totalMembers + ' Mitglieder ausgewählt';
+        }
+
+        // Recalculate tfoot
+        document.querySelectorAll('tfoot td[data-col-id]').forEach(function(td) {
+            var colId  = td.dataset.colId;
+            var colType = td.dataset.colType;
+
+            var visibleRows = Array.from(document.querySelectorAll('tr[data-member-id]'))
+                .filter(function(r) { return r.style.display !== 'none'; });
+
+            if (colType === 'number') {
+                var sum = 0;
+                visibleRows.forEach(function(row) {
+                    var cell = row.querySelector('td[data-col-id="' + colId + '"]');
+                    if (!cell) return;
+                    var inp = cell.querySelector('input');
+                    if (inp) {
+                        var v = parseFloat(inp.value);
+                        if (!isNaN(v)) sum += v;
+                    }
+                });
+                td.textContent = (sum === Math.floor(sum))
+                    ? sum
+                    : sum.toFixed(2).replace('.', ',');
+            } else if (colType === 'boolean') {
+                var count = 0;
+                visibleRows.forEach(function(row) {
+                    var cell = row.querySelector('td[data-col-id="' + colId + '"]');
+                    if (!cell) return;
+                    var cb = cell.querySelector('input[type=checkbox]');
+                    if (cb && cb.checked) count++;
+                });
+                var sel = visibleRows.length;
+                var pct = sel > 0 ? Math.round(count / sel * 100) : 0;
+                td.textContent = count + ' / ' + sel + ' (' + pct + '%)';
+            }
+        });
+    }
+
+    window.setAllMembers = function(checked) {
+        document.querySelectorAll('.member-filter-cb').forEach(function(cb) { cb.checked = checked; });
+        updateTable();
+    };
+
+    // Filter checkbox changes
+    document.querySelectorAll('.member-filter-cb').forEach(function(cb) {
+        cb.addEventListener('change', updateTable);
+    });
+
+    // Cell value changes (number inputs + boolean toggles in the table)
+    document.querySelectorAll('#member-list-table tbody input').forEach(function(inp) {
+        inp.addEventListener('change', updateTable);
+    });
+})();
+</script>
 
 <?php endif; // member list: players/columns states ?>
 
