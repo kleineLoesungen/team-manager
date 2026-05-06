@@ -501,6 +501,83 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('team-manager: migration 008 error — ' . $e->getMessage());
     }
+
+    // Migration 009: files table (markdown content type)
+    $files_exists = (bool)$pdo->query(
+        "SELECT 1 FROM information_schema.tables
+         WHERE table_schema = '{$schema}' AND table_name = 'files'"
+    )->fetchColumn();
+
+    if (!$files_exists) {
+        try {
+            $pdo->exec(
+                "CREATE TABLE {$schema}.files (
+                    id         SERIAL PRIMARY KEY,
+                    team_id    INTEGER NOT NULL REFERENCES {$schema}.teams(id) ON DELETE CASCADE,
+                    name       VARCHAR(255) NOT NULL,
+                    content    TEXT NOT NULL DEFAULT '',
+                    date       DATE NULL,
+                    visibility VARCHAR(10) NOT NULL DEFAULT 'public'
+                               CHECK (visibility IN ('public', 'protected', 'private')),
+                    is_hidden  BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )"
+            );
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_files_team_id ON {$schema}.files(team_id)");
+            $files_exists = true;
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 009 CREATE files skipped — ' . $e->getMessage());
+        }
+    }
+
+    define('DB_HAS_FILES', $files_exists);
+
+    if ($files_exists) {
+        try {
+            $pdo->exec("ALTER TABLE {$schema}.files ENABLE ROW LEVEL SECURITY");
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 009 ENABLE RLS files skipped — ' . $e->getMessage());
+        }
+        try {
+            $pdo->exec("ALTER TABLE {$schema}.files FORCE ROW LEVEL SECURITY");
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 009 FORCE RLS files skipped (non-fatal) — ' . $e->getMessage());
+        }
+        try {
+            $pdo->exec("DROP POLICY IF EXISTS files_select ON {$schema}.files");
+            $pdo->exec("CREATE POLICY files_select ON {$schema}.files FOR SELECT USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                OR (visibility IN ('public', 'protected')
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS files_insert ON {$schema}.files");
+            $pdo->exec("CREATE POLICY files_insert ON {$schema}.files FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS files_update ON {$schema}.files");
+            $pdo->exec("CREATE POLICY files_update ON {$schema}.files FOR UPDATE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                OR (current_setting('app.current_role', true) = 'member'
+                    AND visibility = 'public'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("DROP POLICY IF EXISTS files_delete ON {$schema}.files");
+            $pdo->exec("CREATE POLICY files_delete ON {$schema}.files FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 009 RLS files skipped — ' . $e->getMessage());
+        }
+    }
 }
 
 /**

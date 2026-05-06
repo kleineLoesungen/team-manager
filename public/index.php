@@ -134,6 +134,24 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/list_detail_handler.php';
         })(),
 
+    // ── Coordinator: Files ─────────────────────────────────────────────
+    $path === '/coordinator/files/create'
+        => require ROOT_PATH . '/src/coordinator/file_create_handler.php',
+
+    // /coordinator/files/{id}/delete — POST: two-step file deletion
+    (bool)preg_match('#^/coordinator/files/(\d+)/delete$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['file_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/file_delete_handler.php';
+        })(),
+
+    // /coordinator/files/{id} — GET/POST: file detail+edit (must come AFTER /delete)
+    (bool)preg_match('#^/coordinator/files/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['file_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/file_detail_handler.php';
+        })(),
+
     // ── Coordinator: Columns (global) ──────────────────────────────────
     $path === '/coordinator/columns'
         => require ROOT_PATH . '/src/coordinator/columns_handler.php',
@@ -162,6 +180,14 @@ match (true) {
         => (function() use ($matches) {
             $_REQUEST['list_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/member/list_detail_handler.php';
+        })(),
+
+    // ── Member: Files ─────────────────────────────────────────────────
+    // /member/files/{id} — GET/POST: file view (read-only protected; read+edit public)
+    (bool)preg_match('#^/member/files/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['file_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/member/file_detail_handler.php';
         })(),
 
     // ── Member: Statistics ────────────────────────────────────────────

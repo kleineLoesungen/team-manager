@@ -114,6 +114,13 @@ function require_player(): void {
 }
 
 /**
+ * Require a member session (canonical alias for require_player).
+ */
+function require_member(): void {
+    require_player();
+}
+
+/**
  * Check if the current request is authenticated as admin.
  */
 function is_admin(): bool {

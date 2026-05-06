@@ -1,54 +1,91 @@
 <?php
-// src/templates/coordinator/lists.php — List overview cards (LIST-01, LIST-04)
-// Variables: $lists (array of list rows ordered is_hidden ASC, created_at DESC)
-$visible = array_filter($lists, fn($l) => !$l['is_hidden']);
-$hidden  = array_filter($lists, fn($l) =>  $l['is_hidden']);
+// src/templates/coordinator/lists.php — overview cards (lists + files)
+// Variables: $items (merged sorted array, each with 'type' = 'list'|'file')
+
+$visible = array_filter($items, fn($i) => !$i['is_hidden']);
+$hidden  = array_filter($items, fn($i) =>  $i['is_hidden']);
+
+$badge_class = fn(string $v): string => match($v) {
+    'public'    => 'bg-success',
+    'protected' => 'bg-warning text-dark',
+    'private'   => 'bg-secondary',
+    default     => 'bg-secondary',
+};
+$badge_label = fn(string $v): string => match($v) {
+    'public'    => 'Öffentlich',
+    'protected' => 'Geschützt',
+    'private'   => 'Privat',
+    default     => e($v),
+};
 ?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <span class="text-muted"><?= count($lists) ?> <?= count($lists) === 1 ? 'Liste' : 'Listen' ?></span>
-    <a href="/coordinator/lists/create" class="btn btn-primary min-touch">
-        <i class="bi bi-plus-lg me-1"></i>Neue Liste anlegen
-    </a>
+    <span class="text-muted"><?= count($items) ?> <?= count($items) === 1 ? 'Eintrag' : 'Einträge' ?></span>
+
+    <div class="btn-group">
+        <a href="/coordinator/lists/create" class="btn btn-primary min-touch">
+            <i class="bi bi-plus-lg me-1"></i>Mitgliederliste
+        </a>
+        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="visually-hidden">Weitere Optionen</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" href="/coordinator/lists/create?type=free">
+                    <i class="bi bi-table me-2"></i>Freie Liste
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="/coordinator/files/create">
+                    <i class="bi bi-file-earmark-text me-2"></i>Datei
+                </a>
+            </li>
+        </ul>
+    </div>
 </div>
 
-<?php if (empty($lists)): ?>
+<?php if (empty($items)): ?>
 <div class="text-center py-5">
-    <p class="h5 text-muted">Noch keine Listen</p>
-    <p class="text-muted">Lege die erste Liste an.</p>
+    <p class="h5 text-muted">Noch keine Einträge</p>
+    <p class="text-muted">Lege die erste Liste oder Datei an.</p>
 </div>
 
 <?php else: ?>
 
 <?php
-// Reusable card renderer
-$render_card = function(array $list): void { ?>
+$render_card = function(array $item) use ($badge_class, $badge_label): void {
+    $is_file      = ($item['type'] === 'file');
+    $detail_url   = $is_file ? '/coordinator/files/' . (int)$item['id']
+                             : '/coordinator/lists/'  . (int)$item['id'];
+    $settings_url = $is_file ? null
+                             : '/coordinator/lists/'  . (int)$item['id'] . '/settings';
+    $icon = $is_file ? 'bi-file-earmark-text' : 'bi-table';
+    ?>
 <div class="col">
     <div class="card h-100 shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="fw-semibold"><?= e($list['name']) ?></span>
-            <?php
-                $badge_class = match($list['visibility']) {
-                    'public'    => 'bg-success',
-                    'protected' => 'bg-warning text-dark',
-                    'private'   => 'bg-secondary',
-                    default     => 'bg-secondary',
-                };
-                $badge_label = match($list['visibility']) {
-                    'public'    => 'Öffentlich',
-                    'protected' => 'Geschützt',
-                    'private'   => 'Privat',
-                    default     => e($list['visibility']),
-                };
-            ?>
-            <span class="badge <?= $badge_class ?>"><?= $badge_label ?></span>
+            <span class="fw-semibold">
+                <i class="bi <?= $icon ?> me-1 text-muted"></i><?= e($item['name']) ?>
+            </span>
+            <span class="badge <?= $badge_class($item['visibility']) ?>"><?= $badge_label($item['visibility']) ?></span>
         </div>
+        <?php if ($item['date']): ?>
+        <div class="card-body py-2 px-3">
+            <small class="text-muted">
+                <i class="bi bi-calendar3 me-1"></i><?= (new DateTime($item['date']))->format('d.m.Y') ?>
+            </small>
+        </div>
+        <?php endif; ?>
         <div class="card-footer bg-transparent d-flex gap-2">
-            <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-primary min-touch">
+            <a href="<?= $detail_url ?>" class="btn btn-sm btn-primary min-touch">
                 <i class="bi bi-box-arrow-in-right me-1"></i>Öffnen
             </a>
-            <a href="/coordinator/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-sm btn-outline-secondary min-touch">
+            <?php if ($settings_url): ?>
+            <a href="<?= $settings_url ?>" class="btn btn-sm btn-outline-secondary min-touch">
                 <i class="bi bi-gear me-1"></i>Einstellungen
             </a>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -56,7 +93,7 @@ $render_card = function(array $list): void { ?>
 
 <?php if (!empty($visible)): ?>
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
-    <?php foreach ($visible as $list): $render_card($list); endforeach; ?>
+    <?php foreach ($visible as $item): $render_card($item); endforeach; ?>
 </div>
 <?php endif; ?>
 
@@ -65,17 +102,17 @@ $render_card = function(array $list): void { ?>
     <button class="btn btn-outline-secondary btn-sm w-100 d-flex justify-content-between align-items-center"
             type="button"
             data-bs-toggle="collapse"
-            data-bs-target="#hiddenLists"
+            data-bs-target="#hiddenItems"
             aria-expanded="false"
-            aria-controls="hiddenLists">
+            aria-controls="hiddenItems">
         <span class="text-muted">
-            <i class="bi bi-eye-slash me-1"></i>Versteckte Listen (<?= count($hidden) ?>)
+            <i class="bi bi-eye-slash me-1"></i>Versteckte Einträge (<?= count($hidden) ?>)
         </span>
         <i class="bi bi-chevron-down"></i>
     </button>
-    <div class="collapse" id="hiddenLists">
+    <div class="collapse" id="hiddenItems">
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mt-1">
-            <?php foreach ($hidden as $list): $render_card($list); endforeach; ?>
+            <?php foreach ($hidden as $item): $render_card($item); endforeach; ?>
         </div>
     </div>
 </div>
