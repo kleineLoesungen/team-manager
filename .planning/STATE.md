@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-06 - Completed quick task 260506-jb7: delete migration_008, clean deploy.sh, update README role names  
+**Last Updated:** 2026-05-06 - Completed quick task 260506-jhk: remove member filter from list detail, rename back-link  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260506-jhk | remove member filter from list detail page, rename back-link to Zurück zur Übersicht | 2026-05-06 | fe83dfa | [260506-jhk-remove-member-filter-from-list-detail-pa](.planning/quick/260506-jhk-remove-member-filter-from-list-detail-pa/) |
 | 260506-jb7 | delete migration_008, remove stale migrate_004/005 echoes from deploy.sh, update README role names to Koordinator/Mitglied | 2026-05-06 | e1ffa87 | [260506-jb7-remove-all-migrations-from-source-code-a](.planning/quick/260506-jb7-remove-all-migrations-from-source-code-a/) |
 | 260506-iqm | member filter in list detail (all selected by default) + boolean totals as count / total (X%) for member and free lists | 2026-05-06 | 8022bb7 | [260506-iqm-enhance-coordinator-list-overview-with-a](.planning/quick/260506-iqm-enhance-coordinator-list-overview-with-a/) |
 | 260505-sd0 | markdown files as new content type — files table + RLS, coordinator + member routes, merged overview with sort by date, split create dropdown, marked.js preview | 2026-05-06 | cefa19f | [260505-sd0-add-markdown-files-as-new-content-type-a](.planning/quick/260505-sd0-add-markdown-files-as-new-content-type-a/) |
