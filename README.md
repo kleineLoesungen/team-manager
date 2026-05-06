@@ -1,6 +1,6 @@
 # Team Manager
 
-Mobile-first Webanwendung zur Verwaltung von Sportteams. Trainer legen Listen mit frei definierbaren Spalten an, Spieler tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Spieler zusammen.
+Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
 
@@ -74,7 +74,7 @@ Die SQL-Dateien unter `database/` werden beim ersten Start in dieser Reihenfolge
 | `database/rls_policies.sql` | Aktiviert Row-Level Security auf `users` |
 | `docker/postgres/04-grants.sql` | Erteilt `team_app` die nötigen Rechte |
 
-**Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Coach/Spieler-Requests setzen `app.current_team_id`.
+**Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Koordinator/Mitglied-Requests setzen `app.current_team_id`.
 
 ---
 
@@ -143,7 +143,7 @@ Erfordert `lftp`: `brew install lftp` (macOS) oder `apt install lftp` (Linux).
 ```
 public/          Webroot (index.php — Front Controller)
 src/
-  admin/         Admin-Handler (Teams, Trainer)
+  admin/         Admin-Handler (Teams, Koordinatoren)
   auth/          Login, Logout, Session
   db/            PDO-Verbindung
   templates/     HTML-Templates (Bootstrap 5)
