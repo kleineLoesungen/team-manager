@@ -220,7 +220,7 @@
         <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1"><?php endif; ?>
         <label for="member_selector" class="form-label mb-0 small fw-medium">Mitglied:</label>
         <select name="member_id" id="member_selector" class="form-select form-select-sm" style="max-width:220px;">
-            <option value="">— Mitglied auswählen —</option>
+            <option value="">Alle Mitglieder</option>
             <?php foreach ($all_members as $m): ?>
                 <option value="<?= (int)$m['id'] ?>" <?= $selected_member_id === (int)$m['id'] ? 'selected' : '' ?>>
                     <?= e($m['first_name'] . ' ' . $m['last_name']) ?>
@@ -308,6 +308,83 @@
         </div>
     <?php elseif ($selected_member_id): ?>
         <p class="text-muted small">Keine Listen mit globalen Spalten für dieses Mitglied gefunden.</p>
+    <?php elseif (!empty($all_lists_rows)): ?>
+        <h6 class="mb-3">Listenübersicht: Alle Mitglieder</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-nowrap">Liste</th>
+                        <th class="text-nowrap text-muted small fw-normal">Datum</th>
+                        <?php foreach ($global_columns as $col): ?>
+                            <th class="text-end text-nowrap">
+                                <?= e($col['name']) ?>
+                                <small class="text-muted fw-normal d-block">
+                                    <?= $col['data_type'] === 'number' ? 'Summe' : 'Anzahl' ?>
+                                </small>
+                            </th>
+                        <?php endforeach; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($all_lists_rows as $lid => $list_row): ?>
+                        <tr>
+                            <td class="fw-semibold text-nowrap"><?= e($list_row['name']) ?></td>
+                            <td class="text-nowrap text-muted small">
+                                <?= $list_row['date'] ? date('d.m.Y', strtotime($list_row['date'])) : '—' ?>
+                            </td>
+                            <?php foreach ($global_columns as $col): ?>
+                                <td class="text-end text-nowrap">
+                                    <?php
+                                        $cid   = (int)$col['id'];
+                                        $entry = $all_lists_agg[$lid][$cid] ?? null;
+                                        if ($entry === null) {
+                                            echo '<span class="text-muted">—</span>';
+                                        } elseif ($col['data_type'] === 'boolean') {
+                                            $cnt = (int)$entry['val'];
+                                            $pct = $total_active_members > 0 ? round($cnt / $total_active_members * 100) : 0;
+                                            echo $cnt . ' / ' . $total_active_members . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                                        } else {
+                                            $n = (float)$entry['val'];
+                                            echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
+                                        }
+                                    ?>
+                                </td>
+                            <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot class="fw-bold">
+                    <tr>
+                        <td colspan="2">Gesamt</td>
+                        <?php foreach ($global_columns as $col): ?>
+                            <td class="text-end text-nowrap">
+                                <?php
+                                    $cid            = (int)$col['id'];
+                                    $total_val      = 0.0;
+                                    $list_count_col = 0;
+                                    foreach ($all_lists_rows as $lid => $unused) {
+                                        $entry = $all_lists_agg[$lid][$cid] ?? null;
+                                        if ($entry !== null) {
+                                            $total_val += (float)$entry['val'];
+                                            $list_count_col++;
+                                        }
+                                    }
+                                    if ($col['data_type'] === 'boolean') {
+                                        $possible = $total_active_members * $list_count_col;
+                                        $pct      = $possible > 0 ? round($total_val / $possible * 100) : 0;
+                                        echo (int)$total_val . ' / ' . $possible . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                                    } else {
+                                        $n = $total_val;
+                                        echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
+                                    }
+                                ?>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     <?php endif; ?>
 
 <?php endif; ?>

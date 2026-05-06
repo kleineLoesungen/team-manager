@@ -316,7 +316,7 @@ if ($sort_col_id > 0) {
     });
 }
 
-// ── Per-list breakdown for selected member (coordinator view) ──────────────────
+// ── Per-list breakdown: member selector + all-members aggregate view ──────────
 // Fetch all active members for the selector dropdown
 $members_stmt = $pdo->prepare(
     "SELECT id, first_name, last_name FROM users
@@ -325,6 +325,7 @@ $members_stmt = $pdo->prepare(
 );
 $members_stmt->execute([$team_id]);
 $all_members = $members_stmt->fetchAll(PDO::FETCH_ASSOC);
+$total_active_members = count($all_members);
 
 // Parse + validate selected member from GET
 $selected_member_id = isset($_GET['member_id']) && $_GET['member_id'] !== ''
@@ -333,6 +334,71 @@ $selected_member_id = isset($_GET['member_id']) && $_GET['member_id'] !== ''
 $valid_member_ids = array_map('intval', array_column($all_members, 'id'));
 if ($selected_member_id !== null && !in_array($selected_member_id, $valid_member_ids, true)) {
     $selected_member_id = null;
+}
+
+// ── All-members aggregate: per-list sums (default when no member selected) ────
+$all_lists_rows = [];  // ordered list metadata
+$all_lists_agg  = [];  // [list_id][col_id] => agg_value
+
+if ($selected_member_id === null && !empty($global_columns)) {
+    $al_sql = "
+        SELECT
+            l.id, l.name, l.date,
+            c.id AS column_id,
+            c.data_type,
+            COALESCE(
+                CASE WHEN c.data_type = 'number' THEN
+                    SUM(CASE WHEN ce.value IS NOT NULL AND ce.value != '' THEN CAST(ce.value AS NUMERIC) ELSE 0 END)
+                WHEN c.data_type = 'boolean' THEN
+                    SUM(CASE WHEN ce.value IN ('1','true') THEN 1 ELSE 0 END)
+                END, 0
+            ) AS agg_value
+        FROM lists l
+        JOIN list_global_columns lgc ON lgc.list_id = l.id
+        JOIN columns c ON c.id = lgc.column_id
+            AND c.team_id = ? AND c.list_id IS NULL AND c.is_active = TRUE
+        LEFT JOIN cells ce ON ce.list_id = l.id AND ce.column_id = c.id
+        WHERE l.team_id = ?
+    ";
+    $al_params = [$team_id, $team_id];
+
+    if ($filter_list_id !== null) {
+        $al_sql      .= " AND l.id = ?";
+        $al_params[]  = $filter_list_id;
+    }
+
+    if ($filter_date_from !== null || $filter_date_to !== null) {
+        $al_dc = [];
+        if ($filter_include_undated) {
+            $al_dc[] = 'l.date IS NULL';
+        }
+        $al_rc = [];
+        if ($filter_date_from !== null) { $al_rc[] = 'l.date >= ?'; $al_params[] = $filter_date_from; }
+        if ($filter_date_to   !== null) { $al_rc[] = 'l.date <= ?'; $al_params[] = $filter_date_to;   }
+        if (!empty($al_rc)) {
+            $al_dc[] = '(l.date IS NOT NULL AND ' . implode(' AND ', $al_rc) . ')';
+        }
+        if (!empty($al_dc)) {
+            $al_sql .= ' AND (' . implode(' OR ', $al_dc) . ')';
+        }
+    }
+
+    $al_sql .= "
+        GROUP BY l.id, l.name, l.date, c.id, c.data_type
+        ORDER BY l.date DESC NULLS LAST, l.name
+    ";
+
+    $al_stmt = $pdo->prepare($al_sql);
+    $al_stmt->execute($al_params);
+
+    foreach ($al_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $lid = (int)$row['id'];
+        $cid = (int)$row['column_id'];
+        if (!isset($all_lists_rows[$lid])) {
+            $all_lists_rows[$lid] = ['id' => $lid, 'name' => $row['name'], 'date' => $row['date']];
+        }
+        $all_lists_agg[$lid][$cid] = ['val' => (float)$row['agg_value'], 'type' => $row['data_type']];
+    }
 }
 
 $mod_per_list_rows   = [];
@@ -420,7 +486,8 @@ render_coach_page('Statistik', 'stats', function() use (
     $global_columns, $player_stats, $player_order,
     $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
     $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter, $col_totals,
-    $all_members, $selected_member_id, $selected_member_name,
+    $all_members, $selected_member_id, $selected_member_name, $total_active_members,
+    $all_lists_rows, $all_lists_agg,
     $mod_per_list_rows, $mod_per_list_cells, $mod_per_list_totals, $mod_col_list_counts
 ) {
     require ROOT_PATH . '/src/templates/coordinator/stats.php';
