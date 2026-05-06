@@ -331,7 +331,7 @@
 <?php else: ?>
 
 <!-- Member filter -->
-<details class="mb-3" id="member-filter-details">
+<details class="mb-3" id="member-filter-details" open>
     <summary class="text-muted small d-flex align-items-center gap-1" style="cursor:pointer; list-style:none;">
         <i class="bi bi-people me-1"></i>
         <span id="member-filter-label">Alle <?= count($players) ?> Mitglieder ausgewählt</span>
