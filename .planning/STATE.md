@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-06 - Completed quick task 260505-sd0: markdown files as new content type alongside lists  
+**Last Updated:** 2026-05-06 - Completed quick task 260506-iqm: member filter + boolean totals with percentage in list detail  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260506-iqm | member filter in list detail (all selected by default) + boolean totals as count / total (X%) for member and free lists | 2026-05-06 | 8022bb7 | [260506-iqm-enhance-coordinator-list-overview-with-a](.planning/quick/260506-iqm-enhance-coordinator-list-overview-with-a/) |
 | 260505-sd0 | markdown files as new content type — files table + RLS, coordinator + member routes, merged overview with sort by date, split create dropdown, marked.js preview | 2026-05-06 | cefa19f | [260505-sd0-add-markdown-files-as-new-content-type-a](.planning/quick/260505-sd0-add-markdown-files-as-new-content-type-a/) |
 | 260505-rpx | restore scroll position after filter change on coordinator stats page — sessionStorage save/restore on GET form submit | 2026-05-05 | 8a941f0 | [260505-rpx-restore-scroll-position-after-filter-cha](.planning/quick/260505-rpx-restore-scroll-position-after-filter-cha/) |
 | 260505-r6i | replace all plain checkboxes with form-switch toggles (3em×1.75em) across 5 templates | 2026-05-05 | 64b93cd | [260505-r6i-replace-all-checkboxes-with-bigger-toggl](.planning/quick/260505-r6i-replace-all-checkboxes-with-bigger-toggl/) |
