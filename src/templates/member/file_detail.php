@@ -23,16 +23,15 @@
         <?php if ($file['visibility'] === 'public'): ?>
         <ul class="nav nav-tabs mb-3" id="editorTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="edit-tab" data-bs-toggle="tab"
-                        data-bs-target="#edit-pane" type="button" role="tab">
-                    Bearbeiten
+                <button class="nav-link active" id="preview-tab" data-bs-toggle="tab"
+                        data-bs-target="#preview-pane" type="button" role="tab">
+                    Anzeigen
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="preview-tab" data-bs-toggle="tab"
-                        data-bs-target="#preview-pane" type="button" role="tab"
-                        onclick="renderPreview()">
-                    Anzeigen
+                <button class="nav-link" id="edit-tab" data-bs-toggle="tab"
+                        data-bs-target="#edit-pane" type="button" role="tab">
+                    Bearbeiten
                 </button>
             </li>
         </ul>
@@ -41,13 +40,13 @@
             <?= csrf_field() ?>
 
             <div class="tab-content">
-                <div class="tab-pane fade show active" id="edit-pane" role="tabpanel">
-                    <textarea id="content-editor" name="content" class="form-control font-monospace"
-                              rows="16" style="resize: vertical;"><?= e($file['content']) ?></textarea>
-                </div>
-                <div class="tab-pane fade" id="preview-pane" role="tabpanel">
+                <div class="tab-pane fade show active" id="preview-pane" role="tabpanel">
                     <div id="preview-output" class="border rounded p-3 bg-white"
                          style="min-height: 150px;"></div>
+                </div>
+                <div class="tab-pane fade" id="edit-pane" role="tabpanel">
+                    <textarea id="content-editor" name="content" class="form-control font-monospace"
+                              rows="16" style="resize: vertical;"><?= e($file['content']) ?></textarea>
                 </div>
             </div>
 
@@ -69,10 +68,15 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 <?php if ($file['visibility'] === 'public'): ?>
-function renderPreview() {
-    var content = document.getElementById('content-editor').value;
-    document.getElementById('preview-output').innerHTML = marked.parse(content);
+document.addEventListener('DOMContentLoaded', function() {
+    var editor = document.getElementById('content-editor');
+    document.getElementById('preview-output').innerHTML = marked.parse(editor.value);
+});
+function renderPreviewFromEditor() {
+    var editor = document.getElementById('content-editor');
+    document.getElementById('preview-output').innerHTML = marked.parse(editor.value);
 }
+document.getElementById('preview-tab') && document.getElementById('preview-tab').addEventListener('show.bs.tab', renderPreviewFromEditor);
 <?php else: ?>
 document.addEventListener('DOMContentLoaded', function() {
     var raw = document.getElementById('markdown-source').textContent;

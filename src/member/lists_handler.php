@@ -45,7 +45,7 @@ $success = !empty($_GET['success']) ? 'Gespeichert.' : '';
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Listen', 'lists', function() use ($items, $success) {
+render_player_page('Inhalte', 'lists', function() use ($items, $success) {
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/member/lists.php';
 });

@@ -46,7 +46,7 @@ $success = !empty($_GET['success']) ? 'Gespeichert.' : '';
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Listen', 'lists', function() use ($items, $error, $success) {
+render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/lists.php';

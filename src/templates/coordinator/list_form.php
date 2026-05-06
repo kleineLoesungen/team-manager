@@ -10,24 +10,7 @@
     <div class="card-body">
         <form method="POST" action="/coordinator/lists/create">
             <?= csrf_field() ?>
-
-            <!-- Section: Listentyp -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Listentyp</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="list_type" value="member" id="lt_member"
-                           <?= (($list_type ?? 'member') === 'member') ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="lt_member">Mitgliederliste — Zeilen sind Mitglieder</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="list_type" value="free" id="lt_free"
-                           <?= (($list_type ?? 'member') === 'free') ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="lt_free">
-                        Freie Liste — Zeilen frei definierbar
-                        <span class="text-muted small d-block">Globale Spalten sind bei freien Listen nicht verfügbar.</span>
-                    </label>
-                </div>
-            </div>
+            <input type="hidden" name="list_type" value="<?= e($list_type ?? 'member') ?>">
 
             <!-- Section 1: Name -->
             <div class="mb-4">

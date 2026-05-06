@@ -19,7 +19,7 @@ $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-$list_type = 'member'; // default for GET and error re-render
+$list_type = in_array($_GET['type'] ?? '', ['member', 'free']) ? $_GET['type'] : 'member';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -155,6 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Neue Liste anlegen', 'lists', function() use ($error, $global_columns, $list_type) {
+$page_title = ($list_type === 'free') ? 'Neue freie Liste' : 'Neue Mitgliederliste';
+render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $list_type) {
     require ROOT_PATH . '/src/templates/coordinator/list_form.php';
 });

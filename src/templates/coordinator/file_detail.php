@@ -31,16 +31,15 @@ $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
 
         <ul class="nav nav-tabs mb-3" id="editorTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="edit-tab" data-bs-toggle="tab"
-                        data-bs-target="#edit-pane" type="button" role="tab">
-                    Bearbeiten
+                <button class="nav-link active" id="preview-tab" data-bs-toggle="tab"
+                        data-bs-target="#preview-pane" type="button" role="tab">
+                    Vorschau
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="preview-tab" data-bs-toggle="tab"
-                        data-bs-target="#preview-pane" type="button" role="tab"
-                        onclick="renderPreview()">
-                    Vorschau
+                <button class="nav-link" id="edit-tab" data-bs-toggle="tab"
+                        data-bs-target="#edit-pane" type="button" role="tab">
+                    Bearbeiten
                 </button>
             </li>
         </ul>
@@ -50,13 +49,13 @@ $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
             <input type="hidden" name="_action" value="save_content">
 
             <div class="tab-content">
-                <div class="tab-pane fade show active" id="edit-pane" role="tabpanel">
-                    <textarea id="content-editor" name="content" class="form-control font-monospace"
-                              rows="20" style="resize: vertical;"><?= e($file['content']) ?></textarea>
-                </div>
-                <div class="tab-pane fade" id="preview-pane" role="tabpanel">
+                <div class="tab-pane fade show active" id="preview-pane" role="tabpanel">
                     <div id="preview-output" class="border rounded p-3 bg-white"
                          style="min-height: 200px;"></div>
+                </div>
+                <div class="tab-pane fade" id="edit-pane" role="tabpanel">
+                    <textarea id="content-editor" name="content" class="form-control font-monospace"
+                              rows="20" style="resize: vertical;"><?= e($file['content']) ?></textarea>
                 </div>
             </div>
 
@@ -130,7 +129,11 @@ $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 function renderPreview() {
-    var content = document.getElementById('content-editor').value;
-    document.getElementById('preview-output').innerHTML = marked.parse(content);
+    var editor = document.getElementById('content-editor');
+    if (editor) {
+        document.getElementById('preview-output').innerHTML = marked.parse(editor.value);
+    }
 }
+document.addEventListener('DOMContentLoaded', renderPreview);
+document.getElementById('edit-tab') && document.getElementById('edit-tab').addEventListener('hidden.bs.tab', renderPreview);
 </script>
