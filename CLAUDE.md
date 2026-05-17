@@ -160,7 +160,7 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - No migration files in repo — schema is idempotent via `IF NOT EXISTS`; live DB patched per-task then schema updated
 
 ### Deployment
-- `deploy.sh` rsync script for Hetzner Shared Hosting
+- `deploy.sh` lftp FTP script for Hetzner Shared Hosting — mirrors repo root + `public/` into `public_html/team-manager/` (no separate apps folder)
 - `config.php` never overwritten by deploy (contains production secrets)
 - `uploads/` directory holds team logos; `.htaccess` blocks direct HTTP access to files
 <!-- GSD:conventions-end -->

@@ -88,22 +88,21 @@ Die SQL-Dateien unter `database/` werden beim ersten Start in dieser Reihenfolge
 
 ```
 ~/                              (FTP-Home)
-├── public_html/
-│   └── team-manager/           ← Subdomain-Webroot
-│       ├── index.php
-│       └── .htaccess
-└── apps/
-    └── team-manager/           ← Quelldateien (kein HTTP-Zugriff möglich)
+└── public_html/
+    └── team-manager/           ← Subdomain-Webroot (alle Quelldateien liegen hier)
+        ├── index.php           (aus public/)
+        ├── .htaccess           (aus public/)
         ├── config.php          ← Zugangsdaten (einmalig anlegen, nie überschreiben)
         ├── src/
-        └── database/
+        ├── database/
+        └── uploads/
 ```
 
 ### Ersteinrichtung
 
 **1. Subdomain anlegen** (Hetzner Konsole) mit Webroot `public_html/team-manager/`.
 
-**2. config.php anlegen** — per FTP nach `apps/team-manager/config.php` hochladen und Zugangsdaten eintragen:
+**2. config.php anlegen** — per FTP nach `public_html/team-manager/config.php` hochladen und Zugangsdaten eintragen:
 
 ```php
 <?php
