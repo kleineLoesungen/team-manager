@@ -30,6 +30,8 @@ Beim ersten Start:
 | Rolle | Benutzername | Passwort |
 |-------|-------------|---------|
 | Admin | `admin` | `admin123` |
+| Koordinator | (im Admin-Panel anlegen) | (im Admin-Panel setzen) |
+| Mitglied | (vom Koordinator anlegen) | (vom Koordinator setzen) |
 
 Admin-Zugangsdaten werden in [.env.docker](.env.docker) konfiguriert.
 
@@ -75,6 +77,8 @@ Die SQL-Dateien unter `database/` werden beim ersten Start in dieser Reihenfolge
 | `docker/postgres/04-grants.sql` | Erteilt `team_app` die nötigen Rechte |
 
 **Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Koordinator/Mitglied-Requests setzen `app.current_team_id`.
+
+**Hinweis zu selbst-initialisierenden Tabellen:** Die Tabellen `files` und `free_list_rows` werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt (via Self-Init in den Handlern), nicht über `schema.sql`. Dasselbe gilt für zusätzliche Spalten (`list_type`, `brand_color`), die per Migration nachgerüstet wurden.
 
 ---
 
@@ -141,17 +145,26 @@ Erfordert `lftp`: `brew install lftp` (macOS) oder `apt install lftp` (Linux).
 ### Projektstruktur
 
 ```
-public/          Webroot (index.php — Front Controller)
+public/             Webroot (index.php — Front Controller, .htaccess)
 src/
-  admin/         Admin-Handler (Teams, Koordinatoren)
-  auth/          Login, Logout, Session
-  db/            PDO-Verbindung
-  templates/     HTML-Templates (Bootstrap 5)
-  utils/         CSRF, Helpers
-database/        SQL-Schema und RLS-Policies
-docker/          Docker-Konfiguration
-  nginx/
-  php/
-  postgres/
-config.php       App-Konfiguration (liest Umgebungsvariablen)
+  admin/            Admin-Handler (Teams, Koordinatoren, Einstellungen)
+  auth/             Login, Logout, Session
+  coordinator/      Koordinator-Handler (Listen, Spalten, Mitglieder, Statistik, Dateien, Logo)
+  member/           Mitglieder-Handler (Listen, Statistik, Dateien)
+  db/               PDO-Verbindung, Sichtbarkeits-Helpers
+  templates/
+    admin/          Admin-Templates
+    coordinator/    Koordinator-Templates
+    member/         Mitglieder-Templates
+    layout.php      Gemeinsames Login-Layout
+    login.php       Login-Seite
+  utils/
+    csrf.php        CSRF-Token-Generierung und -Validierung
+    helpers.php     Hilfsfunktionen (redirect, htmle, require_*)
+database/           SQL-Schema und RLS-Richtlinien
+docker/             Docker-Konfiguration (nginx, php, postgres)
+landing/            Statische Produkt-Landingpage (nicht Teil der App)
+uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
+config.php          App-Konfiguration (liest Umgebungsvariablen)
+deploy.sh           Hetzner FTP-Deployment-Skript
 ```
