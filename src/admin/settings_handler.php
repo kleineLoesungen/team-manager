@@ -11,6 +11,17 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
+    if (($_POST['action'] ?? '') === 'delete_default_logo') {
+        $old_stmt = $pdo->prepare("SELECT value FROM settings WHERE key = 'default_team_logo'");
+        $old_stmt->execute();
+        $old_path = $old_stmt->fetchColumn();
+        if ($old_path && file_exists(ROOT_PATH . '/' . ltrim($old_path, '/'))) {
+            @unlink(ROOT_PATH . '/' . ltrim($old_path, '/'));
+        }
+        $pdo->prepare("DELETE FROM settings WHERE key = 'default_team_logo'")->execute();
+        redirect('/admin/settings?logo_deleted=1');
+    }
+
     $app_title = trim($_POST['app_title'] ?? '');
     if ($app_title === '') {
         $error = 'Der App-Titel darf nicht leer sein.';
@@ -91,14 +102,16 @@ $stmt3     = $pdo->prepare("SELECT value FROM settings WHERE key = 'default_team
 $stmt3->execute();
 $default_logo = $stmt3->fetchColumn() ?: '';
 
-$success   = !empty($_GET['success']);
+$success      = !empty($_GET['success']);
+$logo_deleted = !empty($_GET['logo_deleted']);
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $error, $success) {
+render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $error, $success, $logo_deleted) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
+    <?php if ($logo_deleted ?? false): ?><div class="alert alert-success">Standard-Logo gelöscht.</div><?php endif; ?>
     <div class="card shadow-sm">
         <div class="card-body">
             <form method="POST" action="/admin/settings" enctype="multipart/form-data">
@@ -134,6 +147,16 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
                         <img src="/logo?t=<?= time() ?>" alt="Aktuelles Standard-Logo"
                              style="max-height:64px; max-width:160px; object-fit:contain;" class="d-block border rounded p-1">
                     </div>
+                    <?php endif; ?>
+                    <?php if ($default_logo): ?>
+                    <form method="POST" action="/admin/settings" class="mb-2">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="delete_default_logo">
+                        <button type="submit" class="btn btn-outline-danger btn-sm min-touch"
+                                onclick="return confirm('Standard-Logo wirklich löschen?')">
+                            <i class="bi bi-trash me-1"></i>Standard-Logo löschen
+                        </button>
+                    </form>
                     <?php endif; ?>
                     <input type="file" class="form-control" id="default_logo" name="default_logo"
                            accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml">
