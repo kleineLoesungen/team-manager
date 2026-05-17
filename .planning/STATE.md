@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-17 - Completed quick task 260517-fq2: show admin default logo as read-only on coordinator logo page + navbar logo img  
+**Last Updated:** 2026-05-17 - Completed quick task 260517-fuc: update CLAUDE.md and README.md to reflect current app state (Koordinator/Mitglied roles, conventions, architecture)  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260517-fuc | update CLAUDE.md and README.md to reflect current app state (roles, conventions, architecture) | 2026-05-17 | 99d9712 | [260517-fuc-update-all-documentation-to-current-app-](.planning/quick/260517-fuc-update-all-documentation-to-current-app-/) |
 | 260517-fq2 | show admin default logo as read-only on coordinator logo page + navbar logo img | 2026-05-17 | e4cefab | [260517-fq2-show-admin-default-logo-read-only-on-coo](.planning/quick/260517-fq2-show-admin-default-logo-read-only-on-coo/) |
 | 260517-de3 | add delete-logo actions for coordinator and admin + Logo nav link in coordinator menu | 2026-05-17 | 0731cb1 | [260517-de3-add-delete-logo-action-for-coordinator-a](.planning/quick/260517-de3-add-delete-logo-action-for-coordinator-a/) |
 | 260517-auz | add team logo image upload — admin sets default, coordinator sets per-team, favicon on all pages | 2026-05-17 | 7286ff9 | [260517-auz-add-team-logo-image-upload-admin-sets-de](.planning/quick/260517-auz-add-team-logo-image-upload-admin-sets-de/) |
