@@ -33,7 +33,7 @@ mirror --reverse \
     --exclude='config.php' \
     --exclude='deploy.sh' \
     --exclude='README.md' \
-    --exclude='product.html' \
+    --exclude='landing/' \
     --exclude='public/' \
     . public_html/team-manager/
 
