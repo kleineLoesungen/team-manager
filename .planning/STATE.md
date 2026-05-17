@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-17 - Completed quick task 260517-auz: add team logo image upload (admin default + coordinator per-team, favicon)  
+**Last Updated:** 2026-05-17 - Completed quick task 260517-d33: create German product landing page (product.html) and exclude from deploy  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -149,6 +149,7 @@ Plan: Not started
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260517-auz | add team logo image upload — admin sets default, coordinator sets per-team, favicon on all pages | 2026-05-17 | 7286ff9 | [260517-auz-add-team-logo-image-upload-admin-sets-de](.planning/quick/260517-auz-add-team-logo-image-upload-admin-sets-de/) |
+| 260517-d33 | create German product landing page (product.html) + exclude from deploy.sh | 2026-05-17 | 7c3301f | [260517-d33-create-product-page-in-german-for-app-us](.planning/quick/260517-d33-create-product-page-in-german-for-app-us/) |
 | 260517-amy | add name field to list settings form and handler | 2026-05-17 | 1f97590 | [260517-amy-list-and-markdown-title-should-be-editab](.planning/quick/260517-amy-list-and-markdown-title-should-be-editab/) |
 | 260517-aat | move description edit from list settings to list detail inline form | 2026-05-17 | 9294cd5 | [260517-aat-shift-edit-list-description-from-setting](.planning/quick/260517-aat-shift-edit-list-description-from-setting/) |
 | 260506-jhk | remove member filter from list detail page, rename back-link to Zurück zur Übersicht | 2026-05-06 | fe83dfa | [260506-jhk-remove-member-filter-from-list-detail-pa](.planning/quick/260506-jhk-remove-member-filter-from-list-detail-pa/) |
