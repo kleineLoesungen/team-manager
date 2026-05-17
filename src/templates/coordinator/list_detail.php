@@ -37,6 +37,14 @@
     </div>
 </div>
 
+<?php
+// Determine if we will render the full table form (description included inside it)
+$show_full_form = $is_free_list
+    ? (!empty($free_rows) && !empty($columns))
+    : (!empty($players) && !empty($columns));
+?>
+
+<?php if (!$show_full_form): ?>
 <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>" class="mb-3">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save_description">
@@ -47,6 +55,7 @@
         <button type="submit" class="btn btn-sm btn-outline-secondary min-touch text-nowrap">Speichern</button>
     </div>
 </form>
+<?php endif; ?>
 
 <?php if ($is_free_list): ?>
 
@@ -176,7 +185,13 @@
 
 <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>">
     <?= csrf_field() ?>
-    <input type="hidden" name="action" value="save_cells">
+    <input type="hidden" name="action" value="save_all">
+
+    <div class="mb-3">
+        <textarea name="description" class="form-control form-control-sm"
+                  rows="2" maxlength="500"
+                  placeholder="Beschreibung hinzufügen (optional)…"><?= e($list['description'] ?? '') ?></textarea>
+    </div>
 
     <div class="table-responsive">
         <table class="table table-sm table-hover align-middle">
@@ -339,6 +354,13 @@
 
 <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>">
     <?= csrf_field() ?>
+    <input type="hidden" name="action" value="save_all">
+
+    <div class="mb-3">
+        <textarea name="description" class="form-control form-control-sm"
+                  rows="2" maxlength="500"
+                  placeholder="Beschreibung hinzufügen (optional)…"><?= e($list['description'] ?? '') ?></textarea>
+    </div>
 
     <div class="table-responsive">
         <table class="table table-sm table-hover align-middle">
