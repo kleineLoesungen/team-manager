@@ -172,8 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $post_error = 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
         }
 
-    } else {
+    } elseif ($action === 'save_all' || $action === 'save_cells') {
         // save_cells — works for both member and free lists
+        // save_all — additionally saves description in the same request
         try {
             $submitted = $_POST['cells'] ?? [];
 
@@ -214,6 +215,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     $upsert->execute([$list_id, $col_id, $rid, $validated_value]);
                 }
+            }
+
+            // If save_all, also save description in the same request
+            if ($action === 'save_all') {
+                $new_description = trim($_POST['description'] ?? '');
+                $upd = $pdo->prepare(
+                    "UPDATE lists SET description = ?, updated_at = NOW() WHERE id = ? AND team_id = ?"
+                );
+                $upd->execute([
+                    $new_description !== '' ? $new_description : null,
+                    $list_id,
+                    $_SESSION['team_id'],
+                ]);
             }
 
             redirect('/coordinator/lists/' . $list_id . '?success=1');
