@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-06 - Completed quick task 260506-jhk: remove member filter from list detail, rename back-link  
+**Last Updated:** 2026-05-17 - Completed quick task 260517-aat: move description edit from settings to list detail inline  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260517-aat | move description edit from list settings to list detail inline form | 2026-05-17 | 9294cd5 | [260517-aat-shift-edit-list-description-from-setting](.planning/quick/260517-aat-shift-edit-list-description-from-setting/) |
 | 260506-jhk | remove member filter from list detail page, rename back-link to Zurück zur Übersicht | 2026-05-06 | fe83dfa | [260506-jhk-remove-member-filter-from-list-detail-pa](.planning/quick/260506-jhk-remove-member-filter-from-list-detail-pa/) |
 | 260506-jb7 | delete migration_008, remove stale migrate_004/005 echoes from deploy.sh, update README role names to Koordinator/Mitglied | 2026-05-06 | e1ffa87 | [260506-jb7-remove-all-migrations-from-source-code-a](.planning/quick/260506-jb7-remove-all-migrations-from-source-code-a/) |
 | 260506-iqm | member filter in list detail (all selected by default) + boolean totals as count / total (X%) for member and free lists | 2026-05-06 | 8022bb7 | [260506-iqm-enhance-coordinator-list-overview-with-a](.planning/quick/260506-iqm-enhance-coordinator-list-overview-with-a/) |
