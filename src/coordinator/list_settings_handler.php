@@ -115,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
         $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
         $new_date          = trim($_POST['date'] ?? '');
-        $new_description   = trim($_POST['description'] ?? '');
         if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
             $new_date = '';
         }
@@ -125,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $upd = $pdo->prepare(
-                    "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, description = ?, updated_at = NOW()
+                    "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
                 );
                 $upd->execute([
@@ -133,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $new_show_all_rows,
                     $new_is_hidden,
                     $new_date !== '' ? $new_date : null,
-                    $new_description !== '' ? $new_description : null,
                     $list_id,
                     $_SESSION['team_id'],
                 ]);
@@ -197,11 +195,6 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                     <input type="date" id="list_date" name="date" class="form-control"
                            value="<?= e($list['date'] ?? '') ?>">
                     <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
-                </div>
-                <div class="mb-4">
-                    <label for="list_desc" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
-                    <textarea id="list_desc" name="description" class="form-control" rows="2" maxlength="500"
-                              placeholder="z. B. Heimspiel gegen FC Muster, Pokalrunde 2"><?= e($list['description'] ?? '') ?></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
                 <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>

@@ -37,9 +37,16 @@
     </div>
 </div>
 
-<?php if (!empty($list['description'])): ?>
-<p class="text-muted small mb-3"><?= e($list['description']) ?></p>
-<?php endif; ?>
+<form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>" class="mb-3">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="save_description">
+    <div class="d-flex gap-2 align-items-start">
+        <textarea name="description" class="form-control form-control-sm"
+                  rows="2" maxlength="500"
+                  placeholder="Beschreibung hinzufügen (optional)…"><?= e($list['description'] ?? '') ?></textarea>
+        <button type="submit" class="btn btn-sm btn-outline-secondary min-touch text-nowrap">Speichern</button>
+    </div>
+</form>
 
 <?php if ($is_free_list): ?>
 
