@@ -111,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } else {
+        $new_name          = trim($_POST['name'] ?? '');
         $new_visibility    = $_POST['visibility'] ?? '';
         $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
         $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
@@ -119,15 +120,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_date = '';
         }
 
-        if (!in_array($new_visibility, ['public', 'protected', 'private'])) {
+        if ($new_name === '') {
+            $error = 'Name ist erforderlich.';
+        } elseif (mb_strlen($new_name) > 100) {
+            $error = 'Name darf max. 100 Zeichen haben.';
+        } elseif (!in_array($new_visibility, ['public', 'protected', 'private'])) {
             $error = 'Ungültiger Sichtbarkeits-Status.';
         } else {
             try {
                 $upd = $pdo->prepare(
-                    "UPDATE lists SET visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, updated_at = NOW()
+                    "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
                 );
                 $upd->execute([
+                    $new_name,
                     $new_visibility,
                     $new_show_all_rows,
                     $new_is_hidden,
@@ -152,6 +158,12 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             <h5 class="card-title"><?= e($list['name']) ?></h5>
             <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>/settings">
                 <?= csrf_field() ?>
+                <div class="mb-4">
+                    <label for="list_name" class="form-label fw-semibold">Name</label>
+                    <input type="text" id="list_name" name="name"
+                           class="form-control" maxlength="100" required
+                           value="<?= e($list['name']) ?>">
+                </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Sichtbarkeit</label>
                     <select name="visibility" class="form-select">
