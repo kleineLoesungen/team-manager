@@ -141,6 +141,93 @@ Erfordert `lftp`: `brew install lftp` (macOS) oder `apt install lftp` (Linux).
 
 ---
 
+## Deployment (Docker-Container)
+
+Für Server-Umgebungen mit Docker-Unterstützung (VPS, Root-Server, etc.). Verwendet dieselbe `docker-compose.yml` wie die Dev-Umgebung — nur die Umgebungsvariablen werden ausgetauscht.
+
+### 1. Konfigurationsdatei anlegen
+
+`.env.docker` als Vorlage kopieren und mit Produktionswerten befüllen:
+
+```bash
+cp .env.docker .env.production
+```
+
+Dann `.env.production` anpassen:
+
+```env
+DB_NAME=team_manager_db
+DB_SCHEMA=team_manager
+DB_USER=team_app
+DB_PASS=sicheres-datenbankpasswort
+
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=sicheres-adminpasswort   # wird beim Start automatisch gehasht
+ADMIN_PASSWORD_HASH=                    # leer lassen wenn ADMIN_PASSWORD gesetzt
+
+APP_ENV=production
+BASE_URL=ihre-domain.de
+```
+
+**Sicherheitshinweis:** `.env.production` niemals in Git einchecken — steht bereits in `.gitignore`.
+
+### 2. Starten
+
+```bash
+docker compose --env-file .env.production up -d --build
+```
+
+- `-d` startet im Hintergrund
+- `--build` baut das PHP-Image neu (bei Updates notwendig)
+- Beim ersten Start legt PostgreSQL automatisch Schema, Benutzer und Berechtigungen an
+
+### 3. Port und HTTPS
+
+Nginx hört standardmäßig auf Port `8080`. Für Produktion entweder Port auf `80` ändern oder (empfohlen) hinter einen Reverse Proxy stellen:
+
+**Port direkt auf 80 umstellen** — in `docker-compose.yml`:
+```yaml
+ports:
+  - "80:80"
+```
+
+**Reverse Proxy (z. B. Caddy)** — Nginx intern lassen, Caddy übernimmt TLS:
+```
+ihre-domain.de {
+    reverse_proxy localhost:8080
+}
+```
+
+### 4. Datenbank-Backup
+
+```bash
+docker exec $(docker compose ps -q db) pg_dump -U postgres team_manager_db > backup.sql
+```
+
+Wiederherstellen:
+```bash
+docker exec -i $(docker compose ps -q db) psql -U postgres team_manager_db < backup.sql
+```
+
+### 5. Update einspielen
+
+```bash
+git pull
+docker compose --env-file .env.production up -d --build
+```
+
+Das Postgres-Volume (`pgdata`) bleibt erhalten. Neue Tabellenspalten werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt.
+
+### 6. Logs
+
+```bash
+docker compose logs -f          # alle Services
+docker compose logs -f php      # nur PHP-Fehler
+docker compose logs -f nginx    # nur Nginx-Zugriffe
+```
+
+---
+
 ### Projektstruktur
 
 ```
