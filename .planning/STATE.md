@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-17 - Completed quick task 260517-fuc: update CLAUDE.md and README.md to reflect current app state (Koordinator/Mitglied roles, conventions, architecture)  
+**Last Updated:** 2026-05-17 - Completed quick task 260517-mwr: merge description and cell values into single save form on coordinator list detail page  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260517-mwr | merge description and cell values into single save form on coordinator list detail page | 2026-05-17 | 53f37c4 | [260517-mwr-combine-description-and-list-values-save](.planning/quick/260517-mwr-combine-description-and-list-values-save/) |
 | 260517-fuc | update CLAUDE.md and README.md to reflect current app state (roles, conventions, architecture) | 2026-05-17 | 99d9712 | [260517-fuc-update-all-documentation-to-current-app-](.planning/quick/260517-fuc-update-all-documentation-to-current-app-/) |
 | 260517-fq2 | show admin default logo as read-only on coordinator logo page + navbar logo img | 2026-05-17 | e4cefab | [260517-fq2-show-admin-default-logo-read-only-on-coo](.planning/quick/260517-fq2-show-admin-default-logo-read-only-on-coo/) |
 | 260517-de3 | add delete-logo actions for coordinator and admin + Logo nav link in coordinator menu | 2026-05-17 | 0731cb1 | [260517-de3-add-delete-logo-action-for-coordinator-a](.planning/quick/260517-de3-add-delete-logo-action-for-coordinator-a/) |
