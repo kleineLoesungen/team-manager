@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-17 - Completed quick task 260517-aat: move description edit from settings to list detail inline  
+**Last Updated:** 2026-05-17 - Completed quick task 260517-amy: add name field to list settings form  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -148,6 +148,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260517-amy | add name field to list settings form and handler | 2026-05-17 | 1f97590 | [260517-amy-list-and-markdown-title-should-be-editab](.planning/quick/260517-amy-list-and-markdown-title-should-be-editab/) |
 | 260517-aat | move description edit from list settings to list detail inline form | 2026-05-17 | 9294cd5 | [260517-aat-shift-edit-list-description-from-setting](.planning/quick/260517-aat-shift-edit-list-description-from-setting/) |
 | 260506-jhk | remove member filter from list detail page, rename back-link to Zurück zur Übersicht | 2026-05-06 | fe83dfa | [260506-jhk-remove-member-filter-from-list-detail-pa](.planning/quick/260506-jhk-remove-member-filter-from-list-detail-pa/) |
 | 260506-jb7 | delete migration_008, remove stale migrate_004/005 echoes from deploy.sh, update README role names to Koordinator/Mitglied | 2026-05-06 | e1ffa87 | [260506-jb7-remove-all-migrations-from-source-code-a](.planning/quick/260506-jb7-remove-all-migrations-from-source-code-a/) |
