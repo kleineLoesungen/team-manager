@@ -140,6 +140,7 @@ function render_layout_head(string $title = 'Team Manager'): void {
         .sidebar { background: #fff !important; border-right: 1px solid #e9ecef !important; }
         .bg-light { background-color: #f8f9fa !important; }
     </style>
+    <link rel="icon" href="/logo">
 </head>
 <body>
     <?php
