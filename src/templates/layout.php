@@ -180,7 +180,12 @@ function render_navbar(): void {
     }
     ?>
     <nav class="navbar px-3">
-        <span class="navbar-brand fw-semibold"><?= $brand ?></span>
+        <span class="navbar-brand fw-semibold d-flex align-items-center gap-2">
+            <img src="/logo" alt="" aria-hidden="true"
+                 style="height:1lh; width:auto; object-fit:contain;"
+                 onerror="this.style.display='none'">
+            <?= $brand ?>
+        </span>
         <?php if ($display_name): ?>
         <div class="d-flex align-items-center gap-3">
             <small class="text-muted">
