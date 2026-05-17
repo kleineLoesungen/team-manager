@@ -49,6 +49,12 @@ function render_coach_page(string $title, string $active, callable $body): void 
                             <i class="bi bi-graph-up me-2"></i>Statistik
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'logo' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coordinator/logo">
+                            <i class="bi bi-image me-2"></i>Logo
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -63,6 +69,8 @@ function render_coach_page(string $title, string $active, callable $body): void 
                        href="/coordinator/columns">Spalten</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/coordinator/stats">Statistik</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'logo' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/coordinator/logo">Logo</a>
                 </div>
             </div>
 
