@@ -163,6 +163,10 @@ match (true) {
     $path === '/coordinator/stats'
         => require ROOT_PATH . '/src/coordinator/stats_handler.php',
 
+    // ── Coordinator: Logo ──────────────────────────────────────────────
+    $path === '/coordinator/logo'
+        => require ROOT_PATH . '/src/coordinator/logo_handler.php',
+
     // ── Member: Lists ─────────────────────────────────────────────────
     $path === '/member' || $path === '/member/lists'
         => require ROOT_PATH . '/src/member/lists_handler.php',
