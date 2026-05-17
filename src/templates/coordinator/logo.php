@@ -1,12 +1,15 @@
 <?php
 // src/templates/coordinator/logo.php
-// Variables: $error (string), $success (bool), $current_logo (string path or '')
+// Variables: $error (string), $success (bool), $deleted (bool), $current_logo (string path or '')
 ?>
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
 <?php if ($success): ?>
 <div class="alert alert-success">Logo gespeichert.</div>
+<?php endif; ?>
+<?php if ($deleted ?? false): ?>
+<div class="alert alert-success">Logo gelöscht.</div>
 <?php endif; ?>
 
 <div class="card shadow-sm">
@@ -17,6 +20,16 @@
             <img src="/logo?t=<?= time() ?>" alt="Team-Logo"
                  style="max-height:96px; max-width:200px; object-fit:contain;">
         </div>
+        <?php endif; ?>
+        <?php if ($current_logo): ?>
+        <form method="POST" action="/coordinator/logo" class="mb-3">
+            <?= csrf_field() ?>
+            <input type="hidden" name="action" value="delete_logo">
+            <button type="submit" class="btn btn-outline-danger btn-sm min-touch"
+                    onclick="return confirm('Logo wirklich löschen?')">
+                <i class="bi bi-trash me-1"></i>Logo löschen
+            </button>
+        </form>
         <?php endif; ?>
         <form method="POST" action="/coordinator/logo" enctype="multipart/form-data">
             <?= csrf_field() ?>

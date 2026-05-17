@@ -17,6 +17,15 @@ $current_logo = $team_row['logo_path'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
+    if (($_POST['action'] ?? '') === 'delete_logo') {
+        if ($current_logo && file_exists(ROOT_PATH . '/' . ltrim($current_logo, '/'))) {
+            @unlink(ROOT_PATH . '/' . ltrim($current_logo, '/'));
+        }
+        $pdo->prepare("UPDATE teams SET logo_path = NULL WHERE id = ?")
+            ->execute([(int)$_SESSION['team_id']]);
+        redirect('/coordinator/logo?deleted=1');
+    }
+
     if (!empty($_FILES['team_logo']['tmp_name'])) {
         $file    = $_FILES['team_logo'];
         $allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
@@ -61,9 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $success = !empty($_GET['success']);
+$deleted = !empty($_GET['deleted']);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Team-Logo', 'members', function() use ($error, $success, $current_logo) {
+render_coach_page('Team-Logo', 'logo', function() use ($error, $success, $deleted, $current_logo) {
     require ROOT_PATH . '/src/templates/coordinator/logo.php';
 });
