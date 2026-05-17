@@ -145,6 +145,10 @@ Erfordert `lftp`: `brew install lftp` (macOS) oder `apt install lftp` (Linux).
 
 Für Server-Umgebungen mit Docker-Unterstützung (VPS, Root-Server, etc.). Verwendet dieselbe `docker-compose.yml` wie die Dev-Umgebung — nur die Umgebungsvariablen werden ausgetauscht.
 
+**Zwei Varianten:**
+- **Inkl. eigener PostgreSQL-Instanz** (Standard, Abschnitte 1–6 unten) — alle drei Container (nginx, php, db) laufen zusammen
+- **Mit externer Datenbank** (z. B. Managed PostgreSQL beim Hoster) — nur nginx + php als Container, DB läuft woanders → [direkt zu dieser Variante](#variante-externe-datenbank)
+
 ### 1. Konfigurationsdatei anlegen
 
 `.env.docker` als Vorlage kopieren und mit Produktionswerten befüllen:
@@ -225,6 +229,69 @@ docker compose logs -f          # alle Services
 docker compose logs -f php      # nur PHP-Fehler
 docker compose logs -f nginx    # nur Nginx-Zugriffe
 ```
+
+---
+
+### Variante: Externe Datenbank
+
+Wenn PostgreSQL bereits woanders läuft (Managed DB beim Hoster, eigener DB-Server, etc.) — nur nginx und php als Container starten, `db`-Service überspringen.
+
+#### Datenbank einmalig einrichten
+
+Die SQL-Dateien müssen einmalig manuell gegen die externe DB ausgeführt werden (als Superuser):
+
+```bash
+psql -h ihr-db-host -U postgres -d ihre-datenbank -f docker/postgres/01-user.sql
+psql -h ihr-db-host -U postgres -d ihre-datenbank -f database/schema.sql
+psql -h ihr-db-host -U postgres -d ihre-datenbank -f database/rls_policies.sql
+psql -h ihr-db-host -U postgres -d ihre-datenbank -f docker/postgres/04-grants.sql
+```
+
+| Datei | Was sie tut |
+|-------|------------|
+| `docker/postgres/01-user.sql` | Legt App-Benutzer `team_app` an |
+| `database/schema.sql` | Erstellt Schema `team_manager` und alle Tabellen |
+| `database/rls_policies.sql` | Aktiviert Row-Level Security |
+| `docker/postgres/04-grants.sql` | Erteilt `team_app` die nötigen Rechte |
+
+Falls ein anderer DB-Benutzername gewünscht ist, `01-user.sql` und `04-grants.sql` vor dem Ausführen anpassen.
+
+#### Konfiguration
+
+`.env.production` wie oben anlegen, `DB_HOST` auf den externen Host zeigen lassen:
+
+```env
+DB_HOST=ihr-db-host.beispiel.de
+DB_PORT=5432
+DB_NAME=ihre-datenbank
+DB_SCHEMA=team_manager
+DB_USER=team_app
+DB_PASS=sicheres-datenbankpasswort
+
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=sicheres-adminpasswort
+ADMIN_PASSWORD_HASH=
+
+APP_ENV=production
+BASE_URL=ihre-domain.de
+```
+
+#### Nur App-Container starten
+
+```bash
+docker compose --env-file .env.production up -d --build --no-deps php nginx
+```
+
+`--no-deps` verhindert, dass Docker Compose den `db`-Container mitstartet, obwohl `php` ihn als Abhängigkeit deklariert.
+
+#### Updates
+
+```bash
+git pull
+docker compose --env-file .env.production up -d --build --no-deps php nginx
+```
+
+Die externe Datenbank wird nicht berührt. Neue Tabellenspalten werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt.
 
 ---
 
