@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Manager – Dein Team. Deine Listen. Deine Statistiken.</title>
+
+  <!-- Bootstrap 5.3 -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+        crossorigin="anonymous" />
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+
+  <style>
+    /* ── Custom Properties ─────────────────────────────────────── */
+    :root {
+      --color-dark:    #0f172a;
+      --color-dark-2:  #1e293b;
+      --color-accent:  #6366f1;
+      --color-accent-h:#4f46e5;
+      --color-muted:   #94a3b8;
+      --color-light:   #f8fafc;
+      --color-border:  #e2e8f0;
+      --radius-card:   12px;
+    }
+
+    /* ── Base ──────────────────────────────────────────────────── */
+    html {
+      scroll-behavior: smooth;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background-color: var(--color-light);
+      color: var(--color-dark);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Navbar ────────────────────────────────────────────────── */
+    .tm-navbar {
+      background-color: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .tm-navbar .navbar-brand {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .tm-navbar .navbar-brand span {
+      color: var(--color-accent);
+    }
+
+    /* ── Hero ──────────────────────────────────────────────────── */
+    .tm-hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--color-dark) 0%, #1a1060 60%, var(--color-dark-2) 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .tm-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 30%, rgba(99, 102, 241, 0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 20% 80%, rgba(99, 102, 241, 0.10) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Decorative SVG blob */
+    .tm-blob {
+      position: absolute;
+      right: -80px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 520px;
+      max-width: 55vw;
+      opacity: 0.07;
+      pointer-events: none;
+    }
+
+    .tm-hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .tm-hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      color: #fff;
+      letter-spacing: -0.03em;
+    }
+
+    .tm-hero h1 .highlight {
+      color: var(--color-accent);
+    }
+
+    .tm-hero p.lead {
+      color: var(--color-muted);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      max-width: 540px;
+      line-height: 1.7;
+    }
+
+    .tm-btn-primary {
+      background-color: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #fff;
+      font-weight: 600;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    }
+
+    .tm-btn-primary:hover {
+      background-color: var(--color-accent-h);
+      border-color: var(--color-accent-h);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(99, 102, 241, 0.45);
+    }
+
+    .tm-badge {
+      display: inline-block;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.3rem 0.85rem;
+      border-radius: 99px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Features ──────────────────────────────────────────────── */
+    .tm-features {
+      background: #fff;
+      padding: 5rem 0;
+    }
+
+    .tm-section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .tm-section-title {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--color-dark);
+    }
+
+    .tm-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      background: var(--color-light);
+      padding: 2rem 1.75rem;
+      height: 100%;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .tm-card:hover {
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.10);
+      transform: translateY(-3px);
+    }
+
+    .tm-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--color-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .tm-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .tm-card p {
+      color: #64748b;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    /* ── Quote ─────────────────────────────────────────────────── */
+    .tm-quote {
+      background: var(--color-light);
+      padding: 5rem 0;
+    }
+
+    .tm-pull-quote {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .tm-pull-quote .quote-mark {
+      font-size: 3.5rem;
+      line-height: 1;
+      color: var(--color-accent);
+      font-family: Georgia, serif;
+      opacity: 0.6;
+    }
+
+    .tm-pull-quote blockquote {
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      font-weight: 600;
+      color: var(--color-dark);
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+      margin: 0.5rem 0 1rem;
+    }
+
+    .tm-pull-quote cite {
+      color: var(--color-muted);
+      font-size: 0.9rem;
+      font-style: normal;
+    }
+
+    /* ── CTA Section ───────────────────────────────────────────── */
+    .tm-cta {
+      background: linear-gradient(135deg, var(--color-accent) 0%, #4f46e5 100%);
+      padding: 5rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tm-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 80% at 80% 50%, rgba(255,255,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .tm-cta h2 {
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.025em;
+    }
+
+    .tm-cta p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.05rem;
+      max-width: 440px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .tm-btn-white {
+      background: #fff;
+      color: var(--color-accent);
+      border: none;
+      font-weight: 700;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .tm-btn-white:hover {
+      background: #f1f5f9;
+      color: var(--color-accent-h);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    .tm-footer {
+      background: var(--color-dark);
+      padding: 1.5rem 0;
+    }
+
+    .tm-footer p {
+      color: var(--color-muted);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ─────────────────────────────────────────────────── -->
+  <nav class="navbar tm-navbar sticky-top py-3">
+    <div class="container">
+      <span class="navbar-brand mb-0">
+        Team<span>Manager</span>
+      </span>
+    </div>
+  </nav>
+
+  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <section class="tm-hero py-5">
+    <!-- Decorative blob -->
+    <svg class="tm-blob" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="#6366f1"
+        d="M430,290Q400,330,360,360Q320,390,275,415Q230,440,180,420Q130,400,95,360Q60,320,50,270Q40,220,60,175Q80,130,120,100Q160,70,210,55Q260,40,305,65Q350,90,390,125Q430,160,450,210Q470,260,430,290Z"/>
+    </svg>
+
+    <div class="container tm-hero-content">
+      <div class="row align-items-center min-vh-100 py-5">
+        <div class="col-lg-7">
+          <div class="tm-badge">Kostenlos starten</div>
+          <h1>
+            Dein Team.<br />
+            Deine Listen.<br />
+            <span class="highlight">Deine Statistiken.</span>
+          </h1>
+          <p class="lead mt-4 mb-5">
+            Koordinatoren erfassen Spielereinsatz und Kennzahlen über alle Listen hinweg —
+            Statistik pro Mitglied auf einen Blick.
+            Einfach, mobil, auf Deutsch.
+          </p>
+          <a href="#" class="btn tm-btn-primary btn-lg">
+            Jetzt kostenlos starten
+            <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ───────────────────────────────────────────────── -->
+  <section class="tm-features" id="funktionen">
+    <div class="container">
+      <div class="text-center mb-5">
+        <p class="tm-section-label">Funktionen</p>
+        <h2 class="tm-section-title">Alles was du brauchst — nichts was du nicht brauchst</h2>
+      </div>
+
+      <div class="row g-4 justify-content-center">
+
+        <!-- Feature 1 -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="tm-card">
+            <div class="tm-card-icon">
+              <i class="bi bi-table"></i>
+            </div>
+            <h3>Flexible Listen</h3>
+            <p>
+              Eigene Spalten für jede Liste, genau so wie du es brauchst.
+              Zahlen, Text, Ja/Nein — du definierst die Struktur.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="tm-card">
+            <div class="tm-card-icon">
+              <i class="bi bi-pencil-square"></i>
+            </div>
+            <h3>Mitglieder tragen selbst ein</h3>
+            <p>
+              Mitglieder pflegen ihre Daten direkt im System — du behältst
+              den Überblick, ohne alles selbst eintragen zu müssen.
+            </p>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="tm-card">
+            <div class="tm-card-icon">
+              <i class="bi bi-bar-chart-line"></i>
+            </div>
+            <h3>Statistik auf einen Blick</h3>
+            <p>
+              Listenübergreifende Auswertung pro Mitglied, filterbar nach
+              Zeitraum. Wer ist dabei? Wer fehlt? Sofort sichtbar.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Quote ──────────────────────────────────────────────────── -->
+  <section class="tm-quote" id="stimmen">
+    <div class="container">
+      <div class="tm-pull-quote">
+        <div class="quote-mark">&ldquo;</div>
+        <blockquote>
+          Endlich weiß ich auf einen Blick, wer wie oft mitgemacht hat.
+        </blockquote>
+        <cite>— Eine Koordinatorin</cite>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ────────────────────────────────────────────────────── -->
+  <section class="tm-cta" id="starten">
+    <div class="container text-center position-relative">
+      <h2 class="mb-3">Bereit loszulegen?</h2>
+      <p class="mb-5">
+        Keine Kreditkarte erforderlich. Keine E-Mail-Adresse nötig.
+        Einfach einrichten und loslegen.
+      </p>
+      <a href="#" class="btn tm-btn-white btn-lg">
+        Jetzt starten
+        <i class="bi bi-arrow-right ms-2"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <footer class="tm-footer">
+    <div class="container text-center">
+      <p>&copy; 2025 Team Manager &middot; Alle Rechte vorbehalten</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmA/A3VVoaOjHDGmH9+Y8gDXDmhZ"
+          crossorigin="anonymous"></script>
+</body>
+</html>
