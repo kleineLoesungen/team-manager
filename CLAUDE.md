@@ -3,9 +3,9 @@
 
 **Team Manager**
 
-Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteams. Trainer können Spielerlisten mit frei definierbaren Spalten anlegen, Spieler tragen ihre eigenen Daten ein, und eine Statistikseite fasst globale Metriken pro Spieler über alle Listen zusammen. Ein einziger Admin verwaltet Teams und Trainer — alles andere regeln die Trainer selbst.
+Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen. Ein einziger Admin verwaltet Teams und Koordinatoren — alles andere regeln die Koordinatoren selbst.
 
-**Core Value:** Trainer können den Spielereinsatz und beliebige Kennzahlen über alle Listen hinweg erfassen und in einer Statistik pro Spieler auf einen Blick auswerten.
+**Core Value:** Koordinatoren können den Spielereinsatz und beliebige Kennzahlen über alle Listen hinweg erfassen und in einer Statistik pro Mitglied auf einen Blick auswerten.
 
 ### Constraints
 
@@ -119,13 +119,109 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+### Roles
+- DB role values: `coordinator` and `member` (not coach/player/moderator)
+- German UI labels: "Koordinator" / "Mitglieder" / "Admin"
+- Du-speech throughout the German UI
+
+### File / Folder Structure
+- Handler files live in `src/{role}/` (e.g. `src/coordinator/list_detail_handler.php`)
+- Templates live in `src/templates/{role}/` mirroring handler paths
+- `src/utils/` holds shared helpers: `csrf.php`, `helpers.php`
+- `src/db/` holds PDO connection (`connection.php`) and visibility helpers (`visibility.php`)
+
+### Routing
+- Single front controller: `public/index.php`
+- Routes dispatch to handler files in `src/{role}/`
+- POST-redirect-GET pattern for all form submissions (error via `?error=` query param)
+
+### Security
+- CSRF token on every POST form — generate with `generate_csrf_token()`, validate with `validate_csrf_token()`
+- `require_coordinator()` / `require_member()` called at top of every protected handler
+- Triple-constraint ownership check on row edits: id + team_id + role
+- Credentials shown via `credential_modal.php` (full-page include with `Cache-Control: no-store`)
+
+### Templates
+- `src/templates/layout.php` — shared login page layout
+- `src/templates/admin/layout.php` — admin layout using `render_admin_page(callable $body)`
+- `src/templates/coordinator/layout.php` — coordinator layout
+- `src/templates/member/layout.php` — member layout
+- Bootstrap 5.3 via CDN (no build step)
+
+### UI Patterns
+- Form switches (`form-switch`) for all boolean inputs (not plain checkboxes)
+- Two-step confirm (Gefahrenzone card + confirmation page) for destructive actions — no JS required
+- Scroll position restored via `sessionStorage` after GET filter forms submit
+
+### Database
+- `set_team_context()` called at session start — sets `app.current_role`, `app.current_user_id`, `app.current_team_id` for RLS
+- EAV pattern: `columns` table (structure) + `cells` table (values); global columns have `list_id IS NULL`
+- Settings stored in `settings` table as key/value pairs (e.g. `app_title`, `default_team_logo`)
+- No migration files in repo — schema is idempotent via `IF NOT EXISTS`; live DB patched per-task then schema updated
+
+### Deployment
+- `deploy.sh` rsync script for Hetzner Shared Hosting
+- `config.php` never overwritten by deploy (contains production secrets)
+- `uploads/` directory holds team logos; `.htaccess` blocks direct HTTP access to files
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 ## Architecture
 
-Architecture not yet mapped. Follow existing patterns found in the codebase.
+### Directory Layout
+
+```
+public/             Webroot — index.php front controller + .htaccess
+src/
+  admin/            Admin handlers (teams, coordinators, settings)
+  auth/             Login, logout, session
+  coordinator/      Coordinator handlers (lists, columns, members, stats, files, logo)
+  member/           Member handlers (lists, stats, files)
+  db/               PDO connection + visibility helpers
+  templates/
+    admin/          Admin HTML templates
+    coordinator/    Coordinator HTML templates
+    member/         Member HTML templates
+    layout.php      Shared login layout
+    login.php       Login page
+  utils/
+    csrf.php        CSRF token generation + validation
+    helpers.php     redirect(), htmle(), require_coordinator(), require_member() etc.
+database/
+  schema.sql        Idempotent schema (all tables)
+  rls_policies.sql  Row-Level Security policies
+docker/             Docker Compose setup for local dev
+landing/            Static product landing page (not part of app)
+uploads/            Logo uploads (HTTP-blocked via .htaccess)
+config.php          App configuration (reads env vars)
+deploy.sh           Hetzner FTP deploy script
+```
+
+### Request Flow
+
+```
+Browser → public/index.php (front controller)
+  → parse URI → dispatch to src/{role}/{feature}_handler.php
+  → handler: authenticate + CSRF check + business logic
+  → render src/templates/{role}/{feature}.php
+  → POST actions → redirect (PRG pattern)
+```
+
+### Key DB Tables
+
+| Table | Purpose |
+|-------|---------|
+| `teams` | Teams with name, active flag, logo path |
+| `users` | Coordinators and members (role = 'coordinator' or 'member') |
+| `settings` | Global key/value app settings (app_title, default_team_logo) |
+| `lists` | Team lists with visibility, type (member/free), date, description |
+| `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
+| `list_global_columns` | Which global columns appear in each list |
+| `cells` | EAV values — one row per (list, column, player) |
+| `files` | Markdown documents (coordinator + member, own table, self-init) |
+| `free_list_rows` | Custom rows for free-type lists (self-init) |
+
+Admin credentials live in `config.php` / environment variables — not in the DB.
 <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
