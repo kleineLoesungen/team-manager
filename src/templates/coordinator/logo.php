@@ -21,6 +21,14 @@
                  style="max-height:96px; max-width:200px; object-fit:contain;">
         </div>
         <?php endif; ?>
+        <?php if (!$current_logo && $default_logo): ?>
+        <div class="mb-4">
+            <p class="fw-semibold mb-1">Standard-Logo (vom Admin)</p>
+            <p class="text-muted small mb-2">Dieses Logo wird angezeigt, solange dein Team kein eigenes Logo hochgeladen hat.</p>
+            <img src="/logo?t=<?= time() ?>" alt="Standard-Logo"
+                 style="max-height:96px; max-width:200px; object-fit:contain;">
+        </div>
+        <?php endif; ?>
         <?php if ($current_logo): ?>
         <form method="POST" action="/coordinator/logo" class="mb-3">
             <?= csrf_field() ?>

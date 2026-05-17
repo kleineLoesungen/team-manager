@@ -72,8 +72,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $success = !empty($_GET['success']);
 $deleted = !empty($_GET['deleted']);
 
+// Fetch admin default logo (shown as read-only when team has no own logo)
+$stmt_default = $pdo->prepare("SELECT value FROM settings WHERE key = 'default_team_logo'");
+$stmt_default->execute();
+$default_logo = $stmt_default->fetchColumn() ?: '';
+
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Team-Logo', 'logo', function() use ($error, $success, $deleted, $current_logo) {
+render_coach_page('Team-Logo', 'logo', function() use ($error, $success, $deleted, $current_logo, $default_logo) {
     require ROOT_PATH . '/src/templates/coordinator/logo.php';
 });
