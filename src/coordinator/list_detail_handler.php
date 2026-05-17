@@ -155,6 +155,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+    } elseif ($action === 'save_description') {
+        $new_description = trim($_POST['description'] ?? '');
+        try {
+            $upd = $pdo->prepare(
+                "UPDATE lists SET description = ?, updated_at = NOW() WHERE id = ? AND team_id = ?"
+            );
+            $upd->execute([
+                $new_description !== '' ? $new_description : null,
+                $list_id,
+                $_SESSION['team_id'],
+            ]);
+            redirect('/coordinator/lists/' . $list_id . '?success=1');
+        } catch (PDOException $e) {
+            error_log('List description save error: ' . $e->getMessage());
+            $post_error = 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.';
+        }
+
     } else {
         // save_cells — works for both member and free lists
         try {
