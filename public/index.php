@@ -194,6 +194,51 @@ match (true) {
     $path === '/member/stats'
         => require ROOT_PATH . '/src/member/stats_handler.php',
 
+    // ── Logo / Favicon ────────────────────────────────────────────────────────
+    $path === '/logo'
+        => (function() {
+            // Determine logo path:
+            // 1. If coordinator/member session: use team logo_path
+            // 2. If no team logo: use admin default_team_logo from settings
+            // 3. If neither: 404
+            $logo_file = null;
+            $pdo = get_db();
+            if (!empty($_SESSION['team_id'])) {
+                $stmt = $pdo->prepare("SELECT logo_path FROM teams WHERE id = ?");
+                $stmt->execute([(int)$_SESSION['team_id']]);
+                $row = $stmt->fetchColumn();
+                if ($row) $logo_file = $row;
+            }
+            if (!$logo_file) {
+                $stmt = $pdo->prepare("SELECT value FROM settings WHERE key = 'default_team_logo'");
+                $stmt->execute();
+                $val = $stmt->fetchColumn();
+                if ($val) $logo_file = $val;
+            }
+            if (!$logo_file) {
+                http_response_code(404);
+                exit;
+            }
+            $abs = ROOT_PATH . '/' . ltrim($logo_file, '/');
+            if (!file_exists($abs) || !is_file($abs)) {
+                http_response_code(404);
+                exit;
+            }
+            $ext  = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+            $mime = match($ext) {
+                'png'  => 'image/png',
+                'jpg', 'jpeg' => 'image/jpeg',
+                'gif'  => 'image/gif',
+                'webp' => 'image/webp',
+                'svg'  => 'image/svg+xml',
+                default => 'application/octet-stream',
+            };
+            header('Content-Type: ' . $mime);
+            header('Cache-Control: public, max-age=3600');
+            readfile($abs);
+            exit;
+        })(),
+
     // ── 404 ────────────────────────────────────────────────────────────
     default => (function() {
         http_response_code(404);

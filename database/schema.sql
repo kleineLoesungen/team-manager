@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    logo_path   VARCHAR(500)         NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS team_manager.settings (
     value TEXT NOT NULL DEFAULT ''
 );
 INSERT INTO team_manager.settings (key, value) VALUES ('app_title', 'Team Manager') ON CONFLICT DO NOTHING;
+INSERT INTO team_manager.settings (key, value) VALUES ('default_team_logo', '') ON CONFLICT DO NOTHING;
 
 -- ── Phase 3: Lists, Columns & Cells ──────────────────────────────────────────
 

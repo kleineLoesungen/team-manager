@@ -4,6 +4,12 @@
     Deny from all
 </FilesMatch>
 
+# Block direct access to uploads directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^uploads/ - [F,L]
+</IfModule>
+
 # Front controller
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f

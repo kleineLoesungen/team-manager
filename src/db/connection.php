@@ -578,6 +578,32 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log('team-manager: migration 009 RLS files skipped — ' . $e->getMessage());
         }
     }
+
+    // Migration 010: team logo support
+    // Add logo_path column to teams table (NULL = no logo)
+    $logo_path_exists = (bool)$pdo->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = '{$schema}' AND table_name = 'teams' AND column_name = 'logo_path'"
+    )->fetchColumn();
+    if (!$logo_path_exists) {
+        try {
+            $pdo->exec(
+                "ALTER TABLE {$schema}.teams
+                 ADD COLUMN IF NOT EXISTS logo_path VARCHAR(500) NULL"
+            );
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 010 ALTER teams.logo_path skipped — ' . $e->getMessage());
+        }
+    }
+    // Add default_team_logo setting (value = relative path from ROOT_PATH)
+    try {
+        $pdo->exec(
+            "INSERT INTO {$schema}.settings (key, value) VALUES ('default_team_logo', '')
+             ON CONFLICT DO NOTHING"
+        );
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 010 settings default_team_logo skipped — ' . $e->getMessage());
+    }
 }
 
 /**
