@@ -110,6 +110,44 @@ Plans:
 
 ---
 
+### Phase 5: Email Notifications
+
+**Goal:** Members can add an email address to their profile. Coordinators can send a notification email from any list or markdown document, with a custom message and a direct link to the content. Before sending, the coordinator sees a review screen showing which members will not be notified due to missing email addresses. Admin can notify all coordinators with a free-form message. Coordinator emails are managed exclusively by the admin.
+
+**Depends on:** Phase 4
+
+**Requirements**: EMAIL-01, EMAIL-02, EMAIL-03, EMAIL-04, EMAIL-05, EMAIL-06, EMAIL-07, EMAIL-08
+
+**Requirement definitions:**
+- EMAIL-01: Member can manage their own email address at /member/profile (optional field, validated)
+- EMAIL-02: Coordinator can send a notification from a list detail page (button on list detail → review → send)
+- EMAIL-03: Coordinator can send a notification from a file detail page (button on file detail → review → send)
+- EMAIL-04: Recipients determined automatically by visibility state (public/protected → members; private → coordinators)
+- EMAIL-05: Review screen shown before send with recipient count, missing-email names, mail preview
+- EMAIL-06: PRG redirect with success banner after send ("Benachrichtigung an N Empfänger gesendet.")
+- EMAIL-07: Admin can notify all coordinators with a free-form subject + message at /admin/notify
+- EMAIL-08: Admin manages coordinator email in coordinator management panel (create form + edit-email page)
+
+**Success Criteria** (what must be TRUE):
+1. Member visits /member/profile and can save or clear their email address
+2. Coordinator sees "Benachrichtigung senden" button on list detail and file detail (disabled if no recipients with email)
+3. Clicking the button opens a review page with visibility context, recipient info, mail preview, and a send form
+4. Coordinator fills in subject + body, clicks "Jetzt senden" — emails are delivered, redirect back with success count
+5. Admin at /admin/notify can send a message (subject + body) to all coordinators with email
+6. Admin can set or update a coordinator's email via /admin/coordinators/{id}/edit-email
+7. Coordinator email field appears on the coordinator create form
+
+**Plans:** 5 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Foundation: DB email column + config MAIL_* constants + email_composer.php utility
+- [ ] 05-02-PLAN.md — Member profile: /member/profile handler + template (EMAIL-01)
+- [ ] 05-03-PLAN.md — Admin coordinator email: create form + edit-email page (EMAIL-08)
+- [ ] 05-04-PLAN.md — Notify handlers: admin notify + coordinator list notify + coordinator file notify (EMAIL-02, EMAIL-03, EMAIL-04, EMAIL-05, EMAIL-06, EMAIL-07)
+- [ ] 05-05-PLAN.md — Wiring: nav updates + notify buttons on detail pages + all routes in index.php
+
+---
+
 ## Progress Table
 
 | Phase | Plans Complete | Status | Completed |
@@ -118,6 +156,7 @@ Plans:
 | 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
 | 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
+| 5. Email Notifications | 0/5 | Planned | |
 
 ---
 
@@ -181,16 +220,6 @@ Plans:
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
-
-### Phase 5: Email Notifications
-
-**Goal:** Members can add an email address to their profile. Coordinators can send a notification email from any list or markdown document, with a custom message and a direct link to the content. Before sending, the coordinator sees a review screen showing which members will not be notified due to missing email addresses.
-**Requirements**: TBD
-**Depends on:** Phase 4
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd:plan-phase 5 to break down)
 
 ---
 
