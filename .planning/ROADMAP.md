@@ -182,6 +182,16 @@ Plans:
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 5: Email Notifications
+
+**Goal:** Members can add an email address to their profile. Coordinators can send a notification email from any list or markdown document, with a custom message and a direct link to the content. Before sending, the coordinator sees a review screen showing which members will not be notified due to missing email addresses.
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 5 to break down)
+
 ---
 
 ### Phase 999.4: Coach List Detail — Bulk Inline Editing (BACKLOG)

@@ -83,6 +83,10 @@ Plan: Not started
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 5 added: Email Notifications — members add email address, coordinator sends mail from list or markdown with custom text and link, pre-send review shows members missing email
+
 ### Architecture Principles
 
 - **Team Isolation**: Every SQL query filters by `team_id`; enforced in PDO layer
