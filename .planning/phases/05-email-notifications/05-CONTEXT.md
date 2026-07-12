@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Mitglieder können eine optionale E-Mail-Adresse in ihrem Profil hinterlegen. Koordinatoren können von einer Listen- oder Markdown-Datei-Seite aus eine Benachrichtigungsmail an alle Mitglieder mit hinterlegter E-Mail-Adresse senden — mit individuellem Text und einem direkten Link zum Inhalt. Eine Review-Seite zeigt vorher, welche Mitglieder keine E-Mail-Adresse haben (und daher nicht benachrichtigt werden) sowie eine Vorschau der Mail.
+Mitglieder können eine optionale E-Mail-Adresse in ihrem Profil hinterlegen. Koordinatoren können von einer Listen- oder Markdown-Datei-Seite aus eine Benachrichtigungsmail senden — mit individuellem Text und einem direkten Link zum Inhalt. Die Empfängergruppe richtet sich nach dem Sichtbarkeits-State: public/protected → alle Mitglieder mit E-Mail; private → nur Koordinatoren mit E-Mail. Eine Review-Seite zeigt vorher, wer die Mail nicht bekommt (fehlende E-Mail-Adresse), und eine Vorschau der Mail.
 
 Zusätzlich: Admin kann eine informationsbasierte Nachricht an alle Koordinatoren senden (kein Listen-/Datei-Bezug). Koordinator-E-Mails werden nur vom Admin verwaltet.
 
@@ -17,11 +17,13 @@ Zusätzlich: Admin kann eine informationsbasierte Nachricht an alle Koordinatore
 
 ### Sende-Flow (Koordinator → Mitglieder)
 - **D-01:** "Benachrichtigung senden"-Button erscheint direkt auf der **Listen-Detail-Seite** (`/coordinator/lists/{id}`) und der **Markdown-Datei-Seite** (`/coordinator/files/{id}`). Kontext (Link zum Inhalt, Titel) wird automatisch aus der aktuellen Seite befüllt. Kein separater "Senden"-Bereich im Menü.
-- **D-02:** Die Mail geht an **alle Mitglieder des Teams mit eingetragener E-Mail-Adresse** — keine individuelle Auswahl. Koordinator kann einzelne Mitglieder nicht abwählen.
+- **D-02:** **Empfänger richten sich nach dem Sichtbarkeits-State der Liste/Datei:**
+  - `public` oder `protected` → Mail geht an alle **Mitglieder** des Teams mit E-Mail-Adresse
+  - `private` → Mail geht nur an **Koordinatoren** des Teams mit E-Mail-Adresse (Mitglieder haben keinen Zugriff auf den Inhalt)
+  - Kein manuelles Abwählen einzelner Personen — der Sichtbarkeits-State bestimmt die Gruppe automatisch.
 - **D-03:** **Review-Seite vor dem Versenden zeigt:**
-  - Liste der Mitglieder **ohne E-Mail-Adresse** (werden nicht benachrichtigt, namentlich aufgeführt)
+  - Die **Empfängergruppe** (Mitglieder oder Koordinatoren — abhängig von D-02) mit Hinweis auf fehlende E-Mail-Adressen (wer nicht erreicht wird, namentlich aufgeführt)
   - **Vorschau der Mail** (Betreff, eigene Nachricht des Koordinators, Link zum Inhalt)
-  - **Sichtbarkeits-Warnung:** Wenn die Liste/Datei `private` oder koordinatorgeschützt ist, erhalten Mitglieder einen Link, den sie nicht öffnen können — Review-Seite soll darauf hinweisen
   - "Jetzt senden"-Button zum finalen Absenden
 - **D-04:** Nach dem Senden: **PRG-Redirect zurück zur Ursprungsseite** (Listen-Detail oder Datei-Detail) mit grünem Erfolgs-Banner: "Benachrichtigung an X Mitglieder gesendet."
 
@@ -32,10 +34,9 @@ Zusätzlich: Admin kann eine informationsbasierte Nachricht an alle Koordinatore
 ### Claude's Discretion
 - **E-Mail-Infrastruktur:** PHP `mail()` oder PHPMailer+SMTP — Claude entscheidet basierend auf Hetzner Shared Hosting-Kompatibilität und Anforderungen. SMTP-Credentials ggf. in `config.php` als ENV-Variablen.
 - **Mitglieder-Profil:** Neue Seite `/member/profile` (oder Inline auf Statistikseite) für Mitglieder, um E-Mail-Adresse zu hinterlegen. E-Mail ist optional und validiert (filter_var FILTER_VALIDATE_EMAIL).
-- **E-Mail-Inhalt:** Format (plain text bevorzugt, einfaches HTML optional), Betreff-Schema (z. B. "[Teamname] Neue Nachricht von [Koordinator]"), Absender/Reply-To aus Config, kein Teamlogo im E-Mail-Body.
-- **Szenario "keine Empfänger":** Wenn kein Mitglied eine E-Mail-Adresse hat, soll der "Benachrichtigung senden"-Button deaktiviert oder mit Hinweis versehen sein.
+- **E-Mail-Inhalt:** **Plain text, kein HTML, keine Formatierung.** Betreff-Schema (z. B. "[Teamname] Neue Nachricht von [Koordinator]"), Absender/Reply-To aus Config, kein Teamlogo im E-Mail-Body.
+- **Szenario "keine Empfänger":** Wenn niemand in der Empfängergruppe eine E-Mail-Adresse hat, soll der "Benachrichtigung senden"-Button deaktiviert oder mit Hinweis versehen sein.
 - **Fehlerbehandlung beim Senden:** Falls `mail()` fehlschlägt (false zurückgibt), Fehler-Banner auf der Review-Seite anzeigen.
-- **Private Liste → Versand-Sperre oder nur Warnung:** Claude entscheidet, ob das Senden aus privaten Listen blockiert oder nur mit Warnung erlaubt wird.
 
 </decisions>
 
@@ -107,8 +108,9 @@ Zusätzlich: Admin kann eine informationsbasierte Nachricht an alle Koordinatore
 <specifics>
 ## Specific Ideas
 
-- Review-Seite zeigt prominent die Mitglieder **ohne** E-Mail (nicht die mit E-Mail) — Fokus auf "wen verpasse ich"
-- Sichtbarkeits-Warnung auf Review-Seite: "Diese Liste ist privat — Mitglieder können den Link nicht öffnen"
+- Review-Seite zeigt die Empfängergruppe (Mitglieder oder Koordinatoren) basierend auf Sichtbarkeit, plus namentlich wer fehlt (keine E-Mail)
+- Sichtbarkeits-Logik: private → nur Koordinatoren, public/protected → alle Mitglieder — kein manuelles Eingreifen nötig
+- E-Mails sind **plain text**, keine HTML-Formatierung
 - Koordinator-E-Mail nur im Admin-Bereich editierbar — Koordinator selbst sieht sie nicht im eigenen Bereich
 
 </specifics>
