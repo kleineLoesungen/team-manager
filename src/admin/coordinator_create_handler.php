@@ -20,12 +20,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $first_name = trim($_POST['first_name'] ?? '');
     $last_name  = trim($_POST['last_name']  ?? '');
     $team_id    = (int)($_POST['team_id'] ?? 0);
+    $email_raw  = trim($_POST['email'] ?? '');
     $selected_team_id = $team_id;
 
     if (empty($first_name) || empty($last_name)) {
         $error = 'Vor- und Nachname sind erforderlich.';
     } elseif ($team_id <= 0) {
         $error = 'Bitte wähle ein Team aus.';
+    } elseif ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Ungültige E-Mail-Adresse.';
+    } elseif ($email_raw !== '' && mb_strlen($email_raw) > 255) {
+        $error = 'E-Mail-Adresse zu lang (max. 255 Zeichen).';
     } else {
         try {
             // Generate unique username — per D-11: initials + 4-digit number
@@ -36,10 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
             $stmt = $pdo->prepare(
-                "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash)
-                 VALUES (?, 'coordinator', ?, ?, ?, ?)"
+                "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash, email)
+                 VALUES (?, 'coordinator', ?, ?, ?, ?, ?)"
             );
-            $stmt->execute([$team_id, $first_name, $last_name, $username, $password_hash]);
+            $stmt->execute([$team_id, $first_name, $last_name, $username, $password_hash,
+                            $email_raw !== '' ? $email_raw : null]);
 
             // Display credential modal — per AUTH-04 (for coaches, same mechanism)
             // NEVER log $plain_password

@@ -5,7 +5,7 @@
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
-<form method="POST" action="/admin/coaches/create">
+<form method="POST" action="/admin/coordinators/create">
     <?= csrf_field() ?>
     <div class="mb-3">
         <label for="first_name" class="form-label fw-semibold small">Vorname</label>
@@ -39,8 +39,23 @@
             <?php endforeach; ?>
         </select>
     </div>
+    <div class="mb-3">
+        <label for="coordinator_email" class="form-label fw-semibold small">
+            E-Mail-Adresse <span class="text-muted small">(optional)</span>
+        </label>
+        <input type="email"
+               id="coordinator_email"
+               name="email"
+               class="form-control min-touch"
+               value="<?= e($_POST['email'] ?? '') ?>"
+               maxlength="255"
+               placeholder="koordinator@email.de">
+        <div class="form-text">
+            Wird für die Koordinatoren-Benachrichtigung genutzt. Nur für den Admin sichtbar.
+        </div>
+    </div>
     <div class="d-flex gap-2">
-        <a href="/admin/coaches" class="btn btn-outline-secondary">Abbrechen</a>
+        <a href="/admin/coordinators" class="btn btn-outline-secondary">Abbrechen</a>
         <button type="submit" class="btn btn-primary">Koordinator hinzufügen</button>
     </div>
 </form>
