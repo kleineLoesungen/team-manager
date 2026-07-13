@@ -70,6 +70,17 @@ match (true) {
     $path === '/admin/settings'
         => require ROOT_PATH . '/src/admin/settings_handler.php',
 
+    // ── Admin: Notify coordinators ─────────────────────────────────────
+    $path === '/admin/notify'
+        => require ROOT_PATH . '/src/admin/notify_coordinators_handler.php',
+
+    // /admin/coordinators/{id}/edit-email — GET+POST: edit coordinator email (Phase 5)
+    (bool)preg_match('#^/admin/coordinators/(\d+)/edit-email$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['coordinator_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/coordinator_edit_email_handler.php';
+        })(),
+
     (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['coordinator_id'] = (int)$matches[1];
@@ -127,6 +138,13 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/list_row_edit_handler.php';
         })(),
 
+    // /coordinator/lists/{id}/notify — GET: review page; POST: send (Phase 5)
+    (bool)preg_match('#^/coordinator/lists/(\d+)/notify$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['list_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/list_notify_handler.php';
+        })(),
+
     // /coordinator/lists/{id} — GET: list detail table (must come AFTER more specific routes)
     (bool)preg_match('#^/coordinator/lists/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
@@ -143,6 +161,13 @@ match (true) {
         => (function() use ($matches) {
             $_REQUEST['file_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/coordinator/file_delete_handler.php';
+        })(),
+
+    // /coordinator/files/{id}/notify — GET: review page; POST: send (Phase 5)
+    (bool)preg_match('#^/coordinator/files/(\d+)/notify$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['file_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/file_notify_handler.php';
         })(),
 
     // /coordinator/files/{id} — GET/POST: file detail+edit (must come AFTER /delete)
@@ -166,6 +191,10 @@ match (true) {
     // ── Coordinator: Logo ──────────────────────────────────────────────
     $path === '/coordinator/logo'
         => require ROOT_PATH . '/src/coordinator/logo_handler.php',
+
+    // ── Member: Profile ───────────────────────────────────────────────────
+    $path === '/member/profile'
+        => require ROOT_PATH . '/src/member/profile_handler.php',
 
     // ── Member: Lists ─────────────────────────────────────────────────
     $path === '/member' || $path === '/member/lists'
