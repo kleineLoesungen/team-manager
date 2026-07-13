@@ -137,13 +137,13 @@ Plans:
 6. Admin can set or update a coordinator's email via /admin/coordinators/{id}/edit-email
 7. Coordinator email field appears on the coordinator create form
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 05-01-PLAN.md — Foundation: DB email column + config MAIL_* constants + email_composer.php utility
 - [x] 05-02-PLAN.md — Member profile: /member/profile handler + template (EMAIL-01)
 - [x] 05-03-PLAN.md — Admin coordinator email: create form + edit-email page (EMAIL-08)
-- [ ] 05-04-PLAN.md — Notify handlers: admin notify + coordinator list notify + coordinator file notify (EMAIL-02, EMAIL-03, EMAIL-04, EMAIL-05, EMAIL-06, EMAIL-07)
+- [x] 05-04-PLAN.md — Notify handlers: admin notify + coordinator list notify + coordinator file notify (EMAIL-02, EMAIL-03, EMAIL-04, EMAIL-05, EMAIL-06, EMAIL-07)
 - [ ] 05-05-PLAN.md — Wiring: nav updates + notify buttons on detail pages + all routes in index.php
 
 ---
@@ -156,7 +156,7 @@ Plans:
 | 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
 | 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
-| 5. Email Notifications | 3/5 | In Progress|  |
+| 5. Email Notifications | 4/5 | In Progress|  |
 
 ---
 
