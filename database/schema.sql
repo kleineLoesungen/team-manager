@@ -24,12 +24,17 @@ CREATE TABLE IF NOT EXISTS team_manager.users (
     last_name     VARCHAR(100) NOT NULL,
     username      VARCHAR(50)  NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    email         VARCHAR(255)     NULL,
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON team_manager.users(username);
 CREATE INDEX IF NOT EXISTS idx_users_team_id  ON team_manager.users(team_id);
+
+-- Migration for existing databases (Phase 5 — email notifications):
+-- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL;
+-- (No DB-level CHECK constraint — application validates via filter_var(FILTER_VALIDATE_EMAIL))
 
 -- ── Settings ──────────────────────────────────────────────────────────────────
 
