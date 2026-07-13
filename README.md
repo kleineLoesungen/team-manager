@@ -64,6 +64,13 @@ Alle Umgebungsvariablen für die Dev-Umgebung stehen in [.env.docker](.env.docke
 | `ADMIN_USERNAME` | Admin-Benutzername | `admin` |
 | `ADMIN_PASSWORD` | Klartextpasswort (wird beim Start gehasht) | `admin123` |
 | `APP_ENV` | Umgebung | `development` |
+| `MAIL_DRIVER` | E-Mail-Versand: `mail` (PHP mail()) oder `smtp` | `mail` |
+| `MAIL_FROM_ADDRESS` | Absenderadresse | `noreply@localhost` |
+| `MAIL_FROM_NAME` | Absendername | `Team Manager` |
+| `MAIL_SMTP_HOST` | SMTP-Host (nur bei `MAIL_DRIVER=smtp`) | — |
+| `MAIL_SMTP_PORT` | SMTP-Port (nur bei `MAIL_DRIVER=smtp`) | `587` |
+| `MAIL_SMTP_USER` | SMTP-Benutzername (nur bei `MAIL_DRIVER=smtp`) | — |
+| `MAIL_SMTP_PASS` | SMTP-Passwort (nur bei `MAIL_DRIVER=smtp`) | — |
 
 ### Datenbankstruktur
 
@@ -119,7 +126,24 @@ define('DB_PASS',   'ihr_db_passwort');
 define('SESSION_TIMEOUT', 8 * 60 * 60);
 define('APP_ENV', 'production');
 define('BASE_URL', '');
+
+define('MAIL_DRIVER',       'mail');          // 'mail' oder 'smtp'
+define('MAIL_FROM_ADDRESS', 'team@ihre-domain.de');
+define('MAIL_FROM_NAME',    'Team Manager');
+// Nur bei MAIL_DRIVER=smtp (Hetzner: Port 587 TLS, Firewall-Freigabe beantragen):
+// define('MAIL_SMTP_HOST', 'smtp.ihre-domain.de');
+// define('MAIL_SMTP_PORT', '587');
+// define('MAIL_SMTP_USER', 'ihr-smtp-benutzer');
+// define('MAIL_SMTP_PASS', 'ihr-smtp-passwort');
 ```
+
+**E-Mail-Spalte einmalig hinzufügen** (einmalig gegen die laufende Datenbank ausführen):
+
+```sql
+ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL;
+```
+
+Bei Docker-Neuinstallation übernimmt dies `database/schema.sql` automatisch.
 
 **3. Dateien hochladen:**
 
