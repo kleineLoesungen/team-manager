@@ -40,6 +40,12 @@ function render_admin_page(string $title, string $active, callable $body): void 
                             <i class="bi bi-gear-fill me-2"></i>Einstellungen
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'notify' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/admin/notify">
+                            <i class="bi bi-envelope me-2"></i>Benachrichtigung
+                        </a>
+                    </li>
                 </ul>
             </nav>
 
@@ -52,6 +58,8 @@ function render_admin_page(string $title, string $active, callable $body): void 
                        href="/admin/coordinators">Koordinatoren</a>
                     <a class="flex-fill text-center py-2 <?= $active === 'settings' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
                        href="/admin/settings">Einstellungen</a>
+                    <a class="flex-fill text-center py-2 <?= $active === 'notify' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
+                       href="/admin/notify">Benachrichtigung</a>
                 </div>
             </div>
 
