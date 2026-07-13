@@ -160,6 +160,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260713-kxn | CSS animations, mobile tab icons, navbar scroll shadow, landing 4th screen for email notification | 2026-07-13 | 19c0abe | [260713-kxn-optimize-mobile-first-design-and-take-mo](.planning/quick/260713-kxn-optimize-mobile-first-design-and-take-mo/) |
 | 260517-mwr | merge description and cell values into single save form on coordinator list detail page | 2026-05-17 | 53f37c4 | [260517-mwr-combine-description-and-list-values-save](.planning/quick/260517-mwr-combine-description-and-list-values-save/) |
 | 260517-fuc | update CLAUDE.md and README.md to reflect current app state (roles, conventions, architecture) | 2026-05-17 | 99d9712 | [260517-fuc-update-all-documentation-to-current-app-](.planning/quick/260517-fuc-update-all-documentation-to-current-app-/) |
 | 260517-fq2 | show admin default logo as read-only on coordinator logo page + navbar logo img | 2026-05-17 | e4cefab | [260517-fq2-show-admin-default-logo-read-only-on-coo](.planning/quick/260517-fq2-show-admin-default-logo-read-only-on-coo/) |
