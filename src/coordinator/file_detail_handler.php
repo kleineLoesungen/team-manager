@@ -16,6 +16,14 @@ if (!$file) {
     redirect('/coordinator/lists');
 }
 
+// Determine notify button state for file notifications
+$notify_target_role = ($file['visibility'] === 'private') ? 'coordinator' : 'member';
+$chk = $pdo->prepare(
+    "SELECT 1 FROM users WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL LIMIT 1"
+);
+$chk->execute([$_SESSION['team_id'], $notify_target_role]);
+$has_notify_recipients = (bool)$chk->fetch();
+
 $error   = '';
 $success = '';
 
@@ -60,13 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-if (!empty($_GET['success'])) {
+if (!empty($_GET['notify_success'])) {
+    $success = e($_GET['notify_success']);
+} elseif (!empty($_GET['success'])) {
     $success = 'Gespeichert.';
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($file['name']), 'lists', function() use ($file, $error, $success) {
+render_coach_page(e($file['name']), 'lists', function() use ($file, $error, $success, $has_notify_recipients) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/file_detail.php';

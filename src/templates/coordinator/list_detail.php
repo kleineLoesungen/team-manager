@@ -30,6 +30,21 @@
         <?php endif; ?>
     </div>
     <div class="d-flex gap-2">
+        <?php if (!$is_free_list): ?>
+        <?php if ($has_notify_recipients): ?>
+        <a href="/coordinator/lists/<?= (int)$list['id'] ?>/notify"
+           class="btn btn-sm btn-outline-primary min-touch">
+            <i class="bi bi-envelope me-1"></i>Benachrichtigung senden
+        </a>
+        <?php else: ?>
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary min-touch"
+                disabled
+                title="Keine gültigen E-Mail-Adressen vorhanden">
+            <i class="bi bi-envelope me-1"></i>Benachrichtigung senden
+        </button>
+        <?php endif; ?>
+        <?php endif; ?>
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>/settings"
            class="btn btn-sm btn-outline-secondary min-touch">
             <i class="bi bi-gear me-1"></i>Einstellungen

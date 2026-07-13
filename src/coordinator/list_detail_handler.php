@@ -32,6 +32,17 @@ if (!isset($list['list_type'])) {
 $is_free_list = ($list['list_type'] === 'free');
 $free_rows    = [];
 
+// Determine notify button state: check if any recipients have email (D-01, D-02)
+$has_notify_recipients = false;
+if (!$is_free_list) {
+    $notify_target_role = ($list['visibility'] === 'private') ? 'coordinator' : 'member';
+    $chk = $pdo->prepare(
+        "SELECT 1 FROM users WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL LIMIT 1"
+    );
+    $chk->execute([$_SESSION['team_id'], $notify_target_role]);
+    $has_notify_recipients = (bool)$chk->fetch();
+}
+
 if ($is_free_list) {
     // Free list: fetch custom rows instead of team members
     $fr_stmt = $pdo->prepare(
@@ -240,11 +251,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $error   = $post_error !== '' ? $post_error : (!empty($_GET['error']) ? e($_GET['error']) : '');
-$success = !empty($_GET['success']) ? 'Gespeichert.' : '';
+$success = !empty($_GET['notify_success'])
+    ? e($_GET['notify_success'])
+    : (!empty($_GET['success']) ? 'Gespeichert.' : '');
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete) {
+render_coach_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/list_detail.php';

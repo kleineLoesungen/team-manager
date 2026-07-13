@@ -5,10 +5,23 @@
 $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
 ?>
 
-<div class="mb-3">
+<div class="mb-3 d-flex gap-2 flex-wrap">
     <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
+    <?php if ($has_notify_recipients): ?>
+    <a href="/coordinator/files/<?= (int)$file['id'] ?>/notify"
+       class="btn btn-sm btn-outline-primary min-touch">
+        <i class="bi bi-envelope me-1"></i>Benachrichtigung senden
+    </a>
+    <?php else: ?>
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary min-touch"
+            disabled
+            title="Keine gültigen E-Mail-Adressen vorhanden">
+        <i class="bi bi-envelope me-1"></i>Benachrichtigung senden
+    </button>
+    <?php endif; ?>
 </div>
 
 <!-- Content editor -->
