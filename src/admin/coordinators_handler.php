@@ -8,7 +8,7 @@ require_admin();
 $pdo = get_db();
 
 $coordinators_stmt = $pdo->query(
-    "SELECT u.id, u.team_id, u.first_name, u.last_name, u.username, u.is_active,
+    "SELECT u.id, u.team_id, u.first_name, u.last_name, u.username, u.is_active, u.email,
             t.name AS team_name
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
@@ -20,17 +20,17 @@ $coordinators = $coordinators_stmt->fetchAll();
 $teams_stmt = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name");
 $teams = $teams_stmt->fetchAll();
 
-$error = !empty($_GET['error']) ? e($_GET['error']) : '';
+$error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
+$success = !empty($_GET['success']) ? e($_GET['success']) : '';
 
 $active_coordinators   = array_filter($coordinators, fn($c) => $c['is_active']);
 $inactive_coordinators = array_filter($coordinators, fn($c) => !$c['is_active']);
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($active_coordinators, $inactive_coordinators, $teams, $error) {
-    if ($error) {
-        echo '<div class="alert alert-danger">' . $error . '</div>';
-    }
+render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($active_coordinators, $inactive_coordinators, $teams, $error, $success) {
+    if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
+    if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <span class="text-muted"><?= count($active_coordinators) ?> aktive Koordinatoren</span>
@@ -55,8 +55,19 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($ac
                     <strong><?= e($coordinator['first_name'] . ' ' . $coordinator['last_name']) ?></strong>
                     <code class="ms-2 text-muted small"><?= e($coordinator['username']) ?></code>
                     <div class="text-muted small"><?= e($coordinator['team_name'] ?? '—') ?></div>
+                    <div class="text-muted small">
+                        <?php if (!empty($coordinator['email'])): ?>
+                            <i class="bi bi-envelope me-1"></i><?= e($coordinator['email']) ?>
+                        <?php else: ?>
+                            <span class="text-warning small"><i class="bi bi-envelope-x me-1"></i>Keine E-Mail</span>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="d-flex gap-2 flex-wrap justify-content-end">
+                    <a href="/admin/coordinators/<?= $coordinator['id'] ?>/edit-email"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-envelope me-1"></i>E-Mail
+                    </a>
                     <form method="POST"
                           action="/admin/coordinators/<?= $coordinator['id'] ?>/deactivate"
                           onsubmit="return confirm('<?= e('Der Koordinator wird deaktiviert und kann sich nicht mehr anmelden.') ?>')">
