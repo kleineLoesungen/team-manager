@@ -50,16 +50,20 @@ function render_admin_page(string $title, string $active, callable $body): void 
             </nav>
 
             <!-- Mobile top tabs -->
-            <div class="d-md-none w-100 border-bottom bg-light">
+            <div class="d-md-none w-100 mobile-tab-bar">
                 <div class="d-flex">
-                    <a class="flex-fill text-center py-2 <?= $active === 'teams' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/admin/teams">Teams</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'coordinators' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/admin/coordinators">Koordinatoren</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'settings' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/admin/settings">Einstellungen</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'notify' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/admin/notify">Benachrichtigung</a>
+                    <a class="mobile-tab-link <?= $active === 'teams' ? 'active' : '' ?>" href="/admin/teams">
+                        <i class="bi bi-people-fill tab-icon"></i><span>Teams</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'coordinators' ? 'active' : '' ?>" href="/admin/coordinators">
+                        <i class="bi bi-person-badge tab-icon"></i><span>Koordinatoren</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'settings' ? 'active' : '' ?>" href="/admin/settings">
+                        <i class="bi bi-gear-fill tab-icon"></i><span>Einstellungen</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'notify' ? 'active' : '' ?>" href="/admin/notify">
+                        <i class="bi bi-envelope tab-icon"></i><span>Benachrichtigung</span>
+                    </a>
                 </div>
             </div>
 

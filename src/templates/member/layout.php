@@ -46,14 +46,17 @@ function render_player_page(string $title, string $active, callable $body): void
             </nav>
 
             <!-- Mobile top tabs -->
-            <div class="d-md-none w-100 border-bottom bg-light">
+            <div class="d-md-none w-100 mobile-tab-bar">
                 <div class="d-flex">
-                    <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/member/lists">Inhalte</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/member/stats">Statistik</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'profile' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/member/profile">Profil</a>
+                    <a class="mobile-tab-link <?= $active === 'lists' ? 'active' : '' ?>" href="/member/lists">
+                        <i class="bi bi-collection tab-icon"></i><span>Inhalte</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/member/stats">
+                        <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'profile' ? 'active' : '' ?>" href="/member/profile">
+                        <i class="bi bi-person-circle tab-icon"></i><span>Profil</span>
+                    </a>
                 </div>
             </div>
 

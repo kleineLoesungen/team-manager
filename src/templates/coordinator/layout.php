@@ -59,18 +59,23 @@ function render_coach_page(string $title, string $active, callable $body): void 
             </nav>
 
             <!-- Mobile top tabs -->
-            <div class="d-md-none w-100 border-bottom bg-light">
+            <div class="d-md-none w-100 mobile-tab-bar">
                 <div class="d-flex">
-                    <a class="flex-fill text-center py-2 <?= $active === 'members' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coordinator/members">Mitglieder</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'lists' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coordinator/lists">Inhalte</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'columns' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coordinator/columns">Spalten</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'stats' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coordinator/stats">Statistik</a>
-                    <a class="flex-fill text-center py-2 <?= $active === 'logo' ? 'border-bottom border-primary text-primary fw-bold' : 'text-dark' ?>"
-                       href="/coordinator/logo">Logo</a>
+                    <a class="mobile-tab-link <?= $active === 'members' ? 'active' : '' ?>" href="/coordinator/members">
+                        <i class="bi bi-people-fill tab-icon"></i><span>Mitglieder</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'lists' ? 'active' : '' ?>" href="/coordinator/lists">
+                        <i class="bi bi-collection tab-icon"></i><span>Inhalte</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'columns' ? 'active' : '' ?>" href="/coordinator/columns">
+                        <i class="bi bi-layout-three-columns tab-icon"></i><span>Spalten</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/coordinator/stats">
+                        <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'logo' ? 'active' : '' ?>" href="/coordinator/logo">
+                        <i class="bi bi-image tab-icon"></i><span>Logo</span>
+                    </a>
                 </div>
             </div>
 

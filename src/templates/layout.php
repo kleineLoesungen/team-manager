@@ -109,13 +109,22 @@ function render_layout_head(string $title = 'Team Manager'): void {
             background-color: var(--brand);
             color: #fff;
         }
-        .btn { border-radius: 0.5rem; }
+        .btn {
+            border-radius: 0.5rem;
+            transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+        }
+        .btn:active { transform: translateY(1px); }
 
         /* Cards */
         .card {
             border-radius: 0.75rem;
             box-shadow: 0 1px 3px rgba(0,0,0,.08);
             border: 1px solid #e9ecef;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,.10);
         }
 
         /* Tables — horizontal borders only */
@@ -139,6 +148,60 @@ function render_layout_head(string $title = 'Team Manager'): void {
         /* Sidebar background */
         .sidebar { background: #fff !important; border-right: 1px solid #e9ecef !important; }
         .bg-light { background-color: #f8f9fa !important; }
+
+        /* Sidebar nav-link transitions */
+        .nav-link { transition: background-color 0.15s ease, color 0.15s ease, padding-left 0.15s ease; }
+        .nav-link:hover:not(.active) { background-color: rgba(0,0,0,.05); padding-left: calc(1rem + 3px); }
+
+        /* Table row hover */
+        .table tbody tr { transition: background-color 0.12s ease; }
+        .table tbody tr:hover td { background-color: rgba(0,0,0,.025); }
+
+        /* Form control transitions */
+        .form-control, .form-select { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+
+        /* Mobile tab bar */
+        .mobile-tab-bar {
+            background: #fff;
+            border-bottom: 1px solid #e9ecef;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .mobile-tab-bar::-webkit-scrollbar { display: none; }
+        .mobile-tab-link {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 10px 14px;
+            font-size: 0.68rem;
+            font-weight: 500;
+            color: #6c757d;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s ease, border-color 0.15s ease;
+            white-space: nowrap;
+        }
+        .mobile-tab-link.active {
+            color: var(--brand);
+            border-bottom-color: var(--brand);
+            font-weight: 700;
+        }
+        .mobile-tab-link .tab-icon { font-size: 1.15rem; }
+
+        /* Entrance animation — card fade-in-up */
+        @media (prefers-reduced-motion: no-preference) {
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(12px); }
+                to   { opacity: 1; transform: translateY(0); }
+            }
+            .card { animation: fadeInUp 0.28s ease both; }
+            .card:nth-child(2) { animation-delay: 0.05s; }
+            .card:nth-child(3) { animation-delay: 0.10s; }
+            .card:nth-child(4) { animation-delay: 0.15s; }
+        }
     </style>
     <link rel="icon" href="/logo">
 </head>
@@ -206,6 +269,17 @@ function render_layout_foot(): void {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
             crossorigin="anonymous"></script>
+    <script>
+    (function(){
+        var nav = document.querySelector('nav.navbar');
+        if (!nav) return;
+        window.addEventListener('scroll', function(){
+            nav.style.boxShadow = window.scrollY > 4
+                ? '0 2px 12px rgba(0,0,0,0.15)'
+                : 'none';
+        }, {passive: true});
+    })();
+    </script>
 </body>
 </html>
     <?php
