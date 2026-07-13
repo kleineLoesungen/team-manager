@@ -9,7 +9,7 @@ $pdo = get_db();
 
 // RLS enforces team isolation — no explicit team_id filter needed, but add it for clarity
 $stmt = $pdo->prepare(
-    "SELECT id, first_name, last_name, username, is_active
+    "SELECT id, first_name, last_name, username, is_active, email
      FROM users
      WHERE role = 'member'
      ORDER BY is_active DESC, first_name, last_name"
@@ -17,11 +17,12 @@ $stmt = $pdo->prepare(
 $stmt->execute();
 $players = $stmt->fetchAll();
 
-$error = !empty($_GET['error']) ? e($_GET['error']) : '';
+$error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
+$success = !empty($_GET['success']) ? e($_GET['success']) : '';
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Mitglieder', 'members', function() use ($players, $error) {
+render_coach_page('Mitglieder', 'members', function() use ($players, $error, $success) {
     if ($error) {
         echo '<div class="alert alert-danger">' . $error . '</div>';
     }

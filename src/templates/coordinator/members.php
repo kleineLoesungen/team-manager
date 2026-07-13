@@ -6,6 +6,9 @@
 $active_players   = array_filter($players, fn($p) => $p['is_active']);
 $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
 ?>
+<?php if ($success): ?>
+<div class="alert alert-success mb-3"><?= $success ?></div>
+<?php endif; ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($active_players) ?> aktive Mitglieder</span>
     <a href="/coordinator/members/create" class="btn btn-primary min-touch">
@@ -31,9 +34,14 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                 <p class="card-text text-muted small mb-2">
                     <code>@<?= e($player['username']) ?></code>
                 </p>
+                <?php if (!empty($player['email'])): ?>
+                <p class="card-text text-muted small mb-2">
+                    <i class="bi bi-envelope me-1"></i><?= e($player['email']) ?>
+                </p>
+                <?php endif; ?>
                 <span class="badge bg-success">Aktiv</span>
             </div>
-            <div class="card-footer bg-transparent d-flex gap-2">
+            <div class="card-footer bg-transparent d-flex gap-2 flex-wrap">
                 <form method="POST" action="/coordinator/members/<?= (int)$player['id'] ?>/reset-password"
                       onsubmit="return confirm('Das Passwort wird zurückgesetzt und einmalig angezeigt.')">
                     <?= csrf_field() ?>
@@ -48,6 +56,10 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                         Deaktivieren
                     </button>
                 </form>
+                <a href="/coordinator/members/<?= (int)$player['id'] ?>/edit-email"
+                   class="btn btn-sm btn-outline-secondary min-touch">
+                    <i class="bi bi-envelope me-1"></i>E-Mail
+                </a>
             </div>
         </div>
     </div>
@@ -72,7 +84,7 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                     </p>
                     <span class="badge bg-secondary">Inaktiv</span>
                 </div>
-                <div class="card-footer bg-transparent">
+                <div class="card-footer bg-transparent d-flex gap-2 flex-wrap">
                     <form method="POST" action="/coordinator/members/<?= (int)$player['id'] ?>/reactivate"
                           onsubmit="return confirm('Mitglied reaktivieren?')">
                         <?= csrf_field() ?>
@@ -80,6 +92,10 @@ $inactive_players = array_filter($players, fn($p) => !$p['is_active']);
                             Reaktivieren
                         </button>
                     </form>
+                    <a href="/coordinator/members/<?= (int)$player['id'] ?>/edit-email"
+                       class="btn btn-sm btn-outline-secondary min-touch">
+                        <i class="bi bi-envelope me-1"></i>E-Mail
+                    </a>
                 </div>
             </div>
         </div>
