@@ -713,8 +713,8 @@
           <p class="tm-screen-caption">Anwesenheit — Mitglieder tragen sich selbst ein</p>
         </div>
 
-        <!-- Screen 3: Rangliste (full width) -->
-        <div class="col-12">
+        <!-- Screen 3: Rangliste -->
+        <div class="col-12 col-lg-6">
           <div class="mock">
             <div class="mock-bar">
               <div class="mock-dot" style="background:#ff5f57"></div>
@@ -751,6 +751,71 @@
             </div>
           </div>
           <p class="tm-screen-caption">Rangliste — listenübergreifende Statistik pro Mitglied, nach Zeitfenstern</p>
+        </div>
+
+        <!-- Screen 4: Email notification compose + preview -->
+        <div class="col-12 col-lg-6">
+          <div class="mock">
+            <div class="mock-bar">
+              <div class="mock-dot" style="background:#ff5f57"></div>
+              <div class="mock-dot" style="background:#febc2e"></div>
+              <div class="mock-dot" style="background:#28c840"></div>
+            </div>
+            <div class="mock-body">
+              <div style="font-weight:800;font-size:14px;margin-bottom:2px;">Benachrichtigung senden</div>
+              <div style="color:#6c757d;font-size:10px;margin-bottom:12px;">Training 18.05.26 · 8 Mitglieder</div>
+
+              <!-- Message compose area -->
+              <div style="margin-bottom:10px;">
+                <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:4px;">Nachricht</div>
+                <div style="background:#fff;border:1px solid #ced4da;border-radius:6px;padding:7px 9px;color:#212529;font-size:10px;line-height:1.5;min-height:36px;">
+                  Hallo Team, das Training am 18.05. findet statt. Bitte bestätigt eure Teilnahme.
+                </div>
+              </div>
+
+              <!-- Link preview -->
+              <div style="margin-bottom:10px;">
+                <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:4px;">Link im Inhalt</div>
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:5px;padding:5px 8px;color:#6366f1;font-size:9.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  🔗 team-manager.example.com/member/lists/42
+                </div>
+              </div>
+
+              <!-- Recipient status -->
+              <div style="margin-bottom:10px;">
+                <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:5px;">Empfänger</div>
+                <div style="display:grid;gap:4px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;">
+                    <span>Tobias B.</span>
+                    <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#10003; E-Mail</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;">
+                    <span>Felix W.</span>
+                    <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#10003; E-Mail</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8;">
+                    <span>Stefan H.</span>
+                    <span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#9888; Fehlt</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;">
+                    <span>Lukas M.</span>
+                    <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#10003; E-Mail</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8;">
+                    <span>Simon L.</span>
+                    <span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#9888; Fehlt</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Send button -->
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                <span style="color:#6c757d;font-size:9.5px;">5 Mitglieder erhalten E-Mail, 2 fehlen</span>
+                <span class="mk-btn" style="background:#6366f1;color:#fff;">Senden</span>
+              </div>
+            </div>
+          </div>
+          <p class="tm-screen-caption">Benachrichtigung — Empfänger-Vorschau mit E-Mail-Status</p>
         </div>
 
       </div>
