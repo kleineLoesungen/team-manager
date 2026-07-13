@@ -140,7 +140,7 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Foundation: DB email column + config MAIL_* constants + email_composer.php utility
+- [x] 05-01-PLAN.md — Foundation: DB email column + config MAIL_* constants + email_composer.php utility
 - [ ] 05-02-PLAN.md — Member profile: /member/profile handler + template (EMAIL-01)
 - [ ] 05-03-PLAN.md — Admin coordinator email: create form + edit-email page (EMAIL-08)
 - [ ] 05-04-PLAN.md — Notify handlers: admin notify + coordinator list notify + coordinator file notify (EMAIL-02, EMAIL-03, EMAIL-04, EMAIL-05, EMAIL-06, EMAIL-07)
@@ -156,7 +156,7 @@ Plans:
 | 2. Team & Player Management | 3/3 | Complete   | 2026-04-29 |
 | 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
-| 5. Email Notifications | 0/5 | Planned | |
+| 5. Email Notifications | 1/5 | In Progress | |
 
 ---
 

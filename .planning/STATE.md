@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-04-30T12:50:53.815Z"
+last_updated: "2026-07-13T04:00:00.000Z"
 progress:
-  total_phases: 9
+  total_phases: 10
   completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 19
+  completed_plans: 15
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-05-17 - Completed quick task 260517-mwr: merge description and cell values into single save form on coordinator list detail page  
+**Last Updated:** 2026-07-13 - Completed 05-01: Email notifications foundation — email column, MAIL_* config, email_composer.php  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -32,8 +32,8 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
+Phase: 05 (email-notifications) — EXECUTING
+Plan: 2 of 5 (05-01 complete)
 
 ## Phase Summary
 
@@ -78,6 +78,9 @@ Plan: Not started
 | Leaderboard carries filter state via hidden inputs | Ensures list_id and date range filters apply consistently to both stats table and leaderboard ranking | 04-02 |
 | Player stats visibility filter on LEFT JOIN condition (not WHERE) | Ensures players with zero cells still appear with 0 values via COALESCE; WHERE would exclude them | 04-03 |
 | No player name column in player stats table | Player always views own row — name label is redundant and consumes mobile screen width | 04-03 |
+| MAIL_DRIVER=mail default, SMTP opt-in via env var | No forced Composer dependency; works on shared hosting without PHPMailer installed | 05-01 |
+| email column is NULL-able in users table | Existing members have no email; 05-02 adds member profile edit to populate it | 05-01 |
+| PHPMailer loaded conditionally only when vendor/ exists | mail() driver path has zero Composer dependency; SMTP is pure opt-in | 05-01 |
 
 ---
 
