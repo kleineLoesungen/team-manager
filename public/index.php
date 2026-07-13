@@ -95,6 +95,13 @@ match (true) {
     $path === '/coordinator/members/create'
         => require ROOT_PATH . '/src/coordinator/member_create_handler.php',
 
+    // /coordinator/members/{id}/edit-email — GET+POST: edit member email
+    (bool)preg_match('#^/coordinator/members/(\d+)/edit-email$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['member_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/member_edit_email_handler.php';
+        })(),
+
     (bool)preg_match('#^/coordinator/members/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['member_id'] = (int)$matches[1];
