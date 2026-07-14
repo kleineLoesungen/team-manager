@@ -604,6 +604,27 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('team-manager: migration 010 settings default_team_logo skipped — ' . $e->getMessage());
     }
+
+    // Migration 011: time_start and time_end on lists (optional per-event times for ICS)
+    $time_start_exists = (bool)$pdo->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = '{$schema}' AND table_name = 'lists' AND column_name = 'time_start'"
+    )->fetchColumn();
+
+    if (!$time_start_exists) {
+        try {
+            $pdo->exec(
+                "ALTER TABLE {$schema}.lists
+                 ADD COLUMN IF NOT EXISTS time_start TIME NULL,
+                 ADD COLUMN IF NOT EXISTS time_end   TIME NULL"
+            );
+            $time_start_exists = true;
+        } catch (PDOException $e) {
+            error_log('team-manager: migration 011 ALTER lists.time_start/time_end skipped — ' . $e->getMessage());
+        }
+    }
+
+    define('DB_HAS_LIST_TIMES', $time_start_exists);
 }
 
 /**

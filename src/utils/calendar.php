@@ -100,3 +100,17 @@ function escapeIcsField(string $value): string
     $value = str_replace(";",    "\\;", $value);  // Semicolon
     return $value;
 }
+
+/**
+ * Fold a single ICS content line to max 75 octets per RFC 5545 §3.1.
+ * Does NOT append the trailing CRLF — caller must add "\r\n".
+ */
+function foldIcsLine(string $line): string
+{
+    $result = '';
+    while (strlen($line) > 75) {          // strlen = byte length for ASCII-safe folding
+        $result .= substr($line, 0, 75) . "\r\n ";
+        $line    = substr($line, 75);
+    }
+    return $result . $line;
+}
