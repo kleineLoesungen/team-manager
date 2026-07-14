@@ -221,6 +221,17 @@ Plans:
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
 
+### Phase 6: Calendar — Lists with Date, Location & ICS Export
+
+**Goal:** Lists gain an optional date and location field. A switchable calendar view (week / month / list) appears at the top of the content page, showing only entries that have a date; undated lists remain in a section below. Coordinators and members each see role-appropriate links in the calendar. A downloadable ICS file is generated per-team so users can subscribe to the calendar in their device's calendar app; the ICS is refreshed whenever list content changes.
+
+**Depends on:** Phase 5
+
+**Requirements**: TBD
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 6 to break down)
+
 ---
 
 ### Phase 999.4: Coach List Detail — Bulk Inline Editing (BACKLOG)
