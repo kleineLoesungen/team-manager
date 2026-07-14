@@ -11,7 +11,7 @@
 - [x] **Phase 3: Lists, Columns & Cells** - Spreadsheet Core, Visibility States, Cell Editing (completed 2026-04-30)
 - [ ] **Phase 4: Statistics & Aggregation** - Per-Player Stats, Filtering, Leaderboards
 - [x] **Phase 5: Email Notifications** - Member email profile, coordinator sends notifications ✓ 2026-07-13
-- [ ] **Phase 6: Calendar — Lists with Date, Location & ICS Export** - Calendar timeline, location field, ICS export
+- [x] **Phase 6: Calendar — Lists with Date, Location & ICS Export** - Calendar timeline, location field, ICS export (completed 2026-07-14)
 
 ## Phase Details
 
@@ -159,7 +159,7 @@ Plans:
 | 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
 | 5. Email Notifications | 5/5 | Complete   | 2026-07-13 |
-| 6. Calendar — ICS Export | 3/4 | In Progress|  |
+| 6. Calendar — ICS Export | 4/4 | Complete   | 2026-07-14 |
 
 ---
 
@@ -232,13 +232,13 @@ Plans:
 
 **Requirements**: CAL-01, CAL-02, CAL-03, CAL-04, CAL-05
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 06-01-PLAN.md — Schema migration (location column) + location field in create form and list settings
 - [x] 06-02-PLAN.md — Calendar utility helpers (week/month boundaries, ICS escaping) + public ICS handler
 - [x] 06-03-PLAN.md — Coordinator calendar view: tab-switcher, timeline, navigation, ICS link
-- [ ] 06-04-PLAN.md — Member calendar view: tab-switcher, timeline (public+protected only), ICS link
+- [x] 06-04-PLAN.md — Member calendar view: tab-switcher, timeline (public+protected only), ICS link
 
 ---
 
