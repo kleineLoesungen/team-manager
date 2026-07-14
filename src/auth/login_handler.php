@@ -6,11 +6,20 @@ declare(strict_types=1);
 
 require_once ROOT_PATH . '/src/templates/layout.php';
 
+// Validate a return_to URL: must be a relative path on this host (no protocol-relative tricks).
+function is_valid_return_to(string $url): bool {
+    return $url !== '' && $url[0] === '/' && (!isset($url[1]) || $url[1] !== '/');
+}
+
 // Redirect already-authenticated users
 if (is_admin()) {
     redirect('/admin');
 }
 if (is_authenticated()) {
+    $return_to = trim($_GET['return_to'] ?? '');
+    if (is_valid_return_to($return_to)) {
+        redirect($return_to);
+    }
     // Role-based redirect for already-authenticated users — per D-02
     if (($_SESSION['role'] ?? '') === 'coordinator') {
         redirect('/coordinator/members');
@@ -41,7 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['is_admin']      = true;
                 $_SESSION['role']          = 'admin';
                 $_SESSION['last_activity'] = time();
-                redirect('/admin');
+                $return_to = trim($_POST['return_to'] ?? '');
+                redirect(is_valid_return_to($return_to) ? $return_to : '/admin');
             }
         }
 
@@ -89,8 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['team_name']     = $team_row ? $team_row['name'] : '';
                         $_SESSION['last_activity'] = time();
 
-                        // Role-based redirect — per D-02
-                        if ($role === 'coordinator') {
+                        // Role-based redirect — per D-02, honour return_to from email link
+                        $return_to = trim($_POST['return_to'] ?? '');
+                        if (is_valid_return_to($return_to)) {
+                            redirect($return_to);
+                        } elseif ($role === 'coordinator') {
                             redirect('/coordinator/members');
                         } else {
                             redirect('/member/lists');

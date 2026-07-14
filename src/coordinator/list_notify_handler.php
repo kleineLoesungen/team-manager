@@ -34,11 +34,10 @@ if (!$list) {
 // Determine recipient group based on visibility (D-02)
 $target_role = ($list['visibility'] === 'private') ? 'coordinator' : 'member';
 
-// Determine content link: members get /member/lists/{id}, coordinators get /coordinator/lists/{id}
-$content_link = (defined('BASE_URL') ? BASE_URL : '') .
-    ($target_role === 'member'
-        ? '/member/lists/' . $list_id
-        : '/coordinator/lists/' . $list_id);
+// Preview link for the review page (uses target_role; per-recipient links computed in send loop)
+$content_link = app_url($target_role === 'member'
+    ? '/member/lists/' . $list_id
+    : '/coordinator/lists/' . $list_id);
 
 // Fetch all recipients in target role (active, with or without email)
 $rec_stmt = $pdo->prepare(
@@ -80,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Re-fetch recipients for actual send (never trust GET-time state)
         $re_stmt = $pdo->prepare(
-            "SELECT first_name, email FROM users
+            "SELECT first_name, email, role FROM users
              WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL"
         );
         $re_stmt->execute([$_SESSION['team_id'], $target_role]);
@@ -90,11 +89,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $failed = 0;
 
         foreach ($send_recipients as $recipient) {
+            $recipient_link = app_url($recipient['role'] === 'member'
+                ? '/member/lists/' . $list_id
+                : '/coordinator/lists/' . $list_id);
             $body = compose_list_notification_body(
                 $recipient['first_name'],
                 $body_raw,
                 $list['name'],
-                $content_link
+                $recipient_link
             );
             if (send_notification_email($recipient['email'], $subject_raw, $body)) {
                 $sent++;

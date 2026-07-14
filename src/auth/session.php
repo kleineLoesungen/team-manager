@@ -53,8 +53,10 @@ function check_session_timeout(): void {
 
     $inactive = $now - $_SESSION['last_activity'];
     if ($inactive > SESSION_TIMEOUT) {
+        $current_uri = $_SERVER['REQUEST_URI'] ?? '';
         session_destroy();
-        redirect('/login?message=' . urlencode('Deine Sitzung ist abgelaufen. Bitte meld dich erneut an.'));
+        redirect('/login?message=' . urlencode('Deine Sitzung ist abgelaufen. Bitte meld dich erneut an.')
+            . ($current_uri !== '' ? '&return_to=' . urlencode($current_uri) : ''));
     }
 
     // Extend window (sliding)
@@ -68,7 +70,7 @@ function check_session_timeout(): void {
 function require_auth(): void {
     check_session_timeout();
     if (empty($_SESSION['user_id']) && empty($_SESSION['is_admin'])) {
-        redirect('/login');
+        redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
     }
 }
 
@@ -80,7 +82,7 @@ function require_auth(): void {
 function require_admin(): void {
     check_session_timeout();
     if (empty($_SESSION['is_admin'])) {
-        redirect('/login');
+        redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
     }
     set_admin_context(get_db());
 }
@@ -92,7 +94,7 @@ function require_admin(): void {
 function require_coordinator(): void {
     check_session_timeout();
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'coordinator') {
-        redirect('/login');
+        redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
     }
     $pdo = get_db();
     reset_rls_context($pdo); // Clear any stale admin context from a prior request on this connection
@@ -106,7 +108,7 @@ function require_coordinator(): void {
 function require_player(): void {
     check_session_timeout();
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'member') {
-        redirect('/login');
+        redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
     }
     $pdo = get_db();
     reset_rls_context($pdo);

@@ -22,6 +22,10 @@
 
             <form method="POST" action="/login" novalidate>
                 <?= csrf_field() ?>
+                <?php $return_to_val = e($_GET['return_to'] ?? $_POST['return_to'] ?? ''); ?>
+                <?php if ($return_to_val !== ''): ?>
+                <input type="hidden" name="return_to" value="<?= $return_to_val ?>">
+                <?php endif; ?>
 
                 <div class="mb-3">
                     <label for="username" class="form-label fw-semibold" style="font-size: 0.875rem;">

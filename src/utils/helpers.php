@@ -18,6 +18,15 @@ function redirect(string $url): never {
 }
 
 /**
+ * Build a fully-qualified app URL (https://{BASE_URL}/{path}).
+ * Falls back to a root-relative path when BASE_URL is not set (local dev).
+ */
+function app_url(string $path = ''): string {
+    $base = defined('BASE_URL') && BASE_URL !== '' ? 'https://' . rtrim((string)BASE_URL, '/') : '';
+    return $base . '/' . ltrim($path, '/');
+}
+
+/**
  * Generate a random password using a safe character set.
  * Avoids visually confusing characters (0/O, 1/l/I).
  * Default length: 12 characters.

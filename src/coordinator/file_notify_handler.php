@@ -21,12 +21,11 @@ if (!$file) {
     redirect('/coordinator/lists');
 }
 
-// Determine recipient role + content link based on visibility (D-02)
+// Determine recipient role + preview link based on visibility (D-02)
 $target_role  = ($file['visibility'] === 'private') ? 'coordinator' : 'member';
-$content_link = (defined('BASE_URL') ? BASE_URL : '') .
-    ($target_role === 'member'
-        ? '/member/files/' . $file_id
-        : '/coordinator/files/' . $file_id);
+$content_link = app_url($target_role === 'member'
+    ? '/member/files/' . $file_id
+    : '/coordinator/files/' . $file_id);
 
 // Fetch all recipients in target role (active, with or without email)
 $rec_stmt = $pdo->prepare(
@@ -67,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Re-fetch recipients for actual send
         $re_stmt = $pdo->prepare(
-            "SELECT first_name, email FROM users
+            "SELECT first_name, email, role FROM users
              WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL"
         );
         $re_stmt->execute([$_SESSION['team_id'], $target_role]);
@@ -77,11 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $failed = 0;
 
         foreach ($send_recipients as $recipient) {
+            $recipient_link = app_url($recipient['role'] === 'member'
+                ? '/member/files/' . $file_id
+                : '/coordinator/files/' . $file_id);
             $body = compose_file_notification_body(
                 $recipient['first_name'],
                 $body_raw,
                 $file['name'],
-                $content_link
+                $recipient_link
             );
             if (send_notification_email($recipient['email'], $subject_raw, $body)) {
                 $sent++;
