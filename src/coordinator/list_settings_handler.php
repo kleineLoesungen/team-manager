@@ -10,7 +10,7 @@ $pdo     = get_db();
 $error   = '';
 
 // Fetch list including show_all_rows, is_hidden, date, and description
-$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description FROM lists WHERE id = ? AND team_id = ?");
+$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -119,6 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
             $new_date = '';
         }
+        $new_location = trim($_POST['location'] ?? '');
+        if (mb_strlen($new_location) > 255) {
+            $new_location = mb_substr($new_location, 0, 255);
+        }
 
         if ($new_name === '') {
             $error = 'Name ist erforderlich.';
@@ -129,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $upd = $pdo->prepare(
-                    "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, updated_at = NOW()
+                    "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, location = ?, updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
                 );
                 $upd->execute([
@@ -138,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $new_show_all_rows,
                     $new_is_hidden,
                     $new_date !== '' ? $new_date : null,
+                    $new_location !== '' ? $new_location : null,
                     $list_id,
                     $_SESSION['team_id'],
                 ]);
@@ -207,6 +212,13 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                     <input type="date" id="list_date" name="date" class="form-control"
                            value="<?= e($list['date'] ?? '') ?>">
                     <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
+                </div>
+                <div class="mb-4">
+                    <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="text" id="list_location" name="location"
+                           class="form-control" maxlength="255"
+                           value="<?= e($list['location'] ?? '') ?>">
+                    <div class="form-text">z. B. Sportplatz Mitte, Turnhalle Schule</div>
                 </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
                 <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
