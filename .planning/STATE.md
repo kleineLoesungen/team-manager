@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-07-14 - Completed quick task 260714-vye: Fix ICS handler RLS context so public/protected lists appear in feed  
+**Last Updated:** 2026-07-14 - Completed quick task 260714-w3y: Enhance ICS feed with URL, DESCRIPTION, optional time_start/time_end on lists  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -165,6 +165,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260714-w3y | Enhance ICS feed: URL + DESCRIPTION + optional time_start/time_end on lists | 2026-07-14 | 52f0d09 | [260714-w3y-enhance-ics-feed-add-url-description-lin](.planning/quick/260714-w3y-enhance-ics-feed-add-url-description-lin/) |
 | 260714-vye | Fix ICS handler: set_team_context so RLS allows public/protected lists in feed | 2026-07-14 | d37b010 | [260714-vye-fix-ics-handler-add-set-team-context-cal](.planning/quick/260714-vye-fix-ics-handler-add-set-team-context-cal/) |
 | 260713-lve | coordinator can set or change member email address | 2026-07-13 | ef606d1 | [260713-lve-coordinator-could-also-set-change-mail-a](.planning/quick/260713-lve-coordinator-could-also-set-change-mail-a/) |
 | 260713-kxn | CSS animations, mobile tab icons, navbar scroll shadow, landing 4th screen for email notification | 2026-07-13 | 19c0abe | [260713-kxn-optimize-mobile-first-design-and-take-mo](.planning/quick/260713-kxn-optimize-mobile-first-design-and-take-mo/) |
