@@ -127,14 +127,14 @@ define('SESSION_TIMEOUT', 8 * 60 * 60);
 define('APP_ENV', 'production');
 define('BASE_URL', '');
 
-define('MAIL_DRIVER',       'mail');          // 'mail' oder 'smtp'
+define('MAIL_DRIVER',       'smtp');          // 'mail' oder 'smtp'
 define('MAIL_FROM_ADDRESS', 'team@ihre-domain.de');
 define('MAIL_FROM_NAME',    'Team Manager');
-// Nur bei MAIL_DRIVER=smtp (Hetzner: Port 587 TLS, Firewall-Freigabe beantragen):
-// define('MAIL_SMTP_HOST', 'smtp.ihre-domain.de');
-// define('MAIL_SMTP_PORT', '587');
-// define('MAIL_SMTP_USER', 'ihr-smtp-benutzer');
-// define('MAIL_SMTP_PASS', 'ihr-smtp-passwort');
+// Nur bei MAIL_DRIVER=smtp:
+define('MAIL_HOST',     'mail.ihre-domain.de');
+define('MAIL_PORT',     587);
+define('MAIL_USERNAME', 'ihr-smtp-benutzer');
+define('MAIL_PASSWORD', 'ihr-smtp-passwort');
 ```
 
 **E-Mail-Spalte einmalig hinzufügen** (einmalig gegen die laufende Datenbank ausführen):

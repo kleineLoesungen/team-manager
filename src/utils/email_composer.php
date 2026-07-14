@@ -3,7 +3,7 @@
 // Provides send_notification_email() and plain-text body composition helpers.
 // Security: strips \r\n from subject/headers (prevents header injection per RESEARCH pitfall 1).
 // Encoding: UTF-8 Content-Type header prevents garbled German umlauts (pitfall 3).
-// Driver: MAIL_DRIVER=mail uses PHP mail(); MAIL_DRIVER=smtp uses PHPMailer (requires vendor/).
+// Driver: MAIL_DRIVER=mail uses PHP mail(); MAIL_DRIVER=smtp uses PHPMailer (bundled in src/lib/phpmailer/).
 
 declare(strict_types=1);
 
@@ -59,16 +59,12 @@ function send_notification_email(string $to, string $subject, string $body): boo
 }
 
 /**
- * Send via PHPMailer SMTP (only if MAIL_DRIVER=smtp and vendor/ is present).
- * Requires: composer require phpmailer/phpmailer:^6.9
+ * Send via PHPMailer SMTP (bundled in src/lib/phpmailer/ — no Composer required).
  */
 function _send_via_phpmailer(string $to, string $subject, string $body): bool {
-    $autoload = defined('ROOT_PATH') ? ROOT_PATH . '/vendor/autoload.php' : __DIR__ . '/../../vendor/autoload.php';
-    if (!file_exists($autoload)) {
-        error_log('[MAIL SMTP] vendor/autoload.php not found. Run: composer require phpmailer/phpmailer:^6.9');
-        return false;
-    }
-    require_once $autoload;
+    require_once __DIR__ . '/../lib/phpmailer/Exception.php';
+    require_once __DIR__ . '/../lib/phpmailer/PHPMailer.php';
+    require_once __DIR__ . '/../lib/phpmailer/SMTP.php';
 
     try {
         $mail = new PHPMailer\PHPMailer\PHPMailer(true);

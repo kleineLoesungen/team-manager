@@ -22,8 +22,8 @@ define('APP_ENV', getenv('APP_ENV') ?: 'production');
 define('BASE_URL', getenv('BASE_URL') ?: '');
 
 // Email configuration (Phase 5 — email notifications)
-// Set MAIL_DRIVER=smtp in .env to use PHPMailer+SMTP (requires composer require phpmailer/phpmailer:^6.9)
-// Set MAIL_DRIVER=mail (default) to use PHP's built-in mail() function
+// Set MAIL_DRIVER=smtp to use PHPMailer+SMTP (bundled in src/lib/phpmailer/ — no Composer needed)
+// Set MAIL_DRIVER=mail to use PHP's built-in mail() function
 define('MAIL_DRIVER',       getenv('MAIL_DRIVER')       ?: 'smtp');
 define('MAIL_HOST',         getenv('MAIL_HOST')         ?: 'mail.your-server.de');
 define('MAIL_PORT',         (int)(getenv('MAIL_PORT')   ?: '587'));
