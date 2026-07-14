@@ -1,6 +1,6 @@
 # Team Manager
 
-Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen.
+Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen. Listen mit Datum, Uhrzeit und Ort erscheinen in einer Kalenderansicht (Woche/Monat/Liste) — inklusive ICS-Export für Gerätekalender.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
 
@@ -85,7 +85,7 @@ Die SQL-Dateien unter `database/` werden beim ersten Start in dieser Reihenfolge
 
 **Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Koordinator/Mitglied-Requests setzen `app.current_team_id`.
 
-**Hinweis zu selbst-initialisierenden Tabellen:** Die Tabellen `files` und `free_list_rows` werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt (via Self-Init in den Handlern), nicht über `schema.sql`. Dasselbe gilt für zusätzliche Spalten (`list_type`, `brand_color`), die per Migration nachgerüstet wurden.
+**Hinweis zu selbst-initialisierenden Tabellen:** Die Tabellen `files` und `free_list_rows` werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt (via Self-Init in den Handlern), nicht über `schema.sql`.
 
 ---
 
@@ -136,14 +136,6 @@ define('MAIL_PORT',     587);
 define('MAIL_USERNAME', 'ihr-smtp-benutzer');
 define('MAIL_PASSWORD', 'ihr-smtp-passwort');
 ```
-
-**E-Mail-Spalte einmalig hinzufügen** (einmalig gegen die laufende Datenbank ausführen):
-
-```sql
-ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL;
-```
-
-Bei Docker-Neuinstallation übernimmt dies `database/schema.sql` automatisch.
 
 **3. Dateien hochladen:**
 
@@ -328,7 +320,8 @@ src/
   auth/             Login, Logout, Session
   coordinator/      Koordinator-Handler (Listen, Spalten, Mitglieder, Statistik, Dateien, Logo)
   member/           Mitglieder-Handler (Listen, Statistik, Dateien)
-  db/               PDO-Verbindung, Sichtbarkeits-Helpers
+  ics_handler.php   Öffentlicher ICS-Feed-Endpunkt (/ics/{team_id}.ics)
+  db/               PDO-Verbindung, Sichtbarkeits-Helpers, Migrationen
   templates/
     admin/          Admin-Templates
     coordinator/    Koordinator-Templates
@@ -336,6 +329,7 @@ src/
     layout.php      Gemeinsames Login-Layout
     login.php       Login-Seite
   utils/
+    calendar.php    Kalender-Hilfsfunktionen (Wochen-/Monatsgrenzen, ICS-Formatierung)
     csrf.php        CSRF-Token-Generierung und -Validierung
     helpers.php     Hilfsfunktionen (redirect, htmle, require_*)
 database/           SQL-Schema und RLS-Richtlinien
