@@ -9,8 +9,9 @@ $list_id = (int)($_REQUEST['list_id'] ?? 0);
 $pdo     = get_db();
 $error   = '';
 
-// Fetch list including show_all_rows, is_hidden, date, and description
-$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location FROM lists WHERE id = ? AND team_id = ?");
+// Fetch list including show_all_rows, is_hidden, date, description, and optional time columns
+$time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ', time_start, time_end' : '';
+$stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -124,6 +125,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_location = mb_substr($new_location, 0, 255);
         }
 
+        $new_time_start = '';
+        $new_time_end   = '';
+        if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) {
+            $raw_ts = trim($_POST['time_start'] ?? '');
+            if (preg_match('/^\d{2}:\d{2}$/', $raw_ts)) {
+                $new_time_start = $raw_ts . ':00';
+            }
+            $raw_te = trim($_POST['time_end'] ?? '');
+            if (preg_match('/^\d{2}:\d{2}$/', $raw_te)) {
+                $new_time_end = $raw_te . ':00';
+            }
+        }
+
         if ($new_name === '') {
             $error = 'Name ist erforderlich.';
         } elseif (mb_strlen($new_name) > 100) {
@@ -132,20 +146,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Ungültiger Sichtbarkeits-Status.';
         } else {
             try {
-                $upd = $pdo->prepare(
-                    "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?, date = ?, location = ?, updated_at = NOW()
-                     WHERE id = ? AND team_id = ?"
-                );
-                $upd->execute([
-                    $new_name,
-                    $new_visibility,
-                    $new_show_all_rows,
-                    $new_is_hidden,
-                    $new_date !== '' ? $new_date : null,
-                    $new_location !== '' ? $new_location : null,
-                    $list_id,
-                    $_SESSION['team_id'],
-                ]);
+                if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) {
+                    $upd = $pdo->prepare(
+                        "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?,
+                                date = ?, location = ?, time_start = ?, time_end = ?, updated_at = NOW()
+                         WHERE id = ? AND team_id = ?"
+                    );
+                    $upd->execute([
+                        $new_name, $new_visibility, $new_show_all_rows, $new_is_hidden,
+                        $new_date !== '' ? $new_date : null,
+                        $new_location !== '' ? $new_location : null,
+                        $new_time_start !== '' ? $new_time_start : null,
+                        $new_time_end   !== '' ? $new_time_end   : null,
+                        $list_id, $_SESSION['team_id'],
+                    ]);
+                } else {
+                    $upd = $pdo->prepare(
+                        "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?,
+                                date = ?, location = ?, updated_at = NOW()
+                         WHERE id = ? AND team_id = ?"
+                    );
+                    $upd->execute([
+                        $new_name, $new_visibility, $new_show_all_rows, $new_is_hidden,
+                        $new_date !== '' ? $new_date : null,
+                        $new_location !== '' ? $new_location : null,
+                        $list_id, $_SESSION['team_id'],
+                    ]);
+                }
                 redirect('/coordinator/lists/' . $list_id . '?success=1');
             } catch (PDOException $e) {
                 error_log('List settings error: ' . $e->getMessage());
@@ -213,6 +240,25 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                            value="<?= e($list['date'] ?? '') ?>">
                     <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
                 </div>
+                <?php if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES): ?>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Uhrzeit <span class="text-muted fw-normal">(optional)</span></label>
+                    <div class="d-flex align-items-center gap-2">
+                        <div>
+                            <label for="list_time_start" class="form-label small text-muted mb-1">Beginn</label>
+                            <input type="time" id="list_time_start" name="time_start" class="form-control"
+                                   value="<?= e(isset($list['time_start']) ? substr((string)$list['time_start'], 0, 5) : '') ?>">
+                        </div>
+                        <div class="pt-3 text-muted">–</div>
+                        <div>
+                            <label for="list_time_end" class="form-label small text-muted mb-1">Ende</label>
+                            <input type="time" id="list_time_end" name="time_end" class="form-control"
+                                   value="<?= e(isset($list['time_end']) ? substr((string)$list['time_end'], 0, 5) : '') ?>">
+                        </div>
+                    </div>
+                    <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
+                </div>
+                <?php endif; ?>
                 <div class="mb-4">
                     <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
                     <input type="text" id="list_location" name="location"

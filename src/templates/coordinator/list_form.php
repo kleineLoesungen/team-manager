@@ -27,6 +27,27 @@
                 <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
             </div>
 
+            <!-- Section: Start and end time (optional) — shown when date is set -->
+            <?php if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES): ?>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Uhrzeit <span class="text-muted fw-normal">(optional)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <div>
+                        <label for="list_time_start" class="form-label small text-muted mb-1">Beginn</label>
+                        <input type="time" id="list_time_start" name="time_start" class="form-control"
+                               value="">
+                    </div>
+                    <div class="pt-3 text-muted">–</div>
+                    <div>
+                        <label for="list_time_end" class="form-label small text-muted mb-1">Ende</label>
+                        <input type="time" id="list_time_end" name="time_end" class="form-control"
+                               value="">
+                    </div>
+                </div>
+                <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
+            </div>
+            <?php endif; ?>
+
             <!-- Section: Location (optional) — per D-15, D-16 -->
             <div class="mb-4">
                 <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
