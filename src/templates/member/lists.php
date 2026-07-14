@@ -49,15 +49,6 @@ $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&
      CALENDAR VIEW (D-08: public + protected only; D-04, D-05)
      ════════════════════════════════════════════════════════════════════════════ -->
 
-<!-- ICS info box (D-14) -->
-<?php if (!empty($ics_url)): ?>
-<div class="alert alert-info py-2 mb-3 small">
-    <strong>In Kalender-App abonnieren:</strong>
-    Kopiere den Link um die Termine in deiner Kalender-App zu abonnieren.<br>
-    <code class="user-select-all"><?= e($ics_url) ?></code>
-</div>
-<?php endif; ?>
-
 <!-- Week/Month toggle (D-02) -->
 <div class="btn-group btn-group-sm mb-3">
     <a href="<?= $cal_url('week', 0) ?>"
@@ -120,6 +111,11 @@ $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&
                         <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
                     </div>
                     <?php endif; ?>
+                    <?php if (!empty($item['time_start'])): ?>
+                    <div class="small text-muted mt-1">
+                        <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <span class="badge <?= $badge_class($item['visibility']) ?> flex-shrink-0">
                     <?= $badge_label($item['visibility']) ?>
@@ -162,6 +158,15 @@ $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&
         </div>
     </div>
     <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<!-- ICS info box (D-14) — bottom of calendar tab -->
+<?php if (!empty($ics_url)): ?>
+<div class="alert alert-info py-2 mt-4 small">
+    <strong>In Kalender-App abonnieren:</strong>
+    Kopiere den Link um die Termine in deiner Kalender-App zu abonnieren.<br>
+    <code class="user-select-all"><?= e($ics_url) ?></code>
 </div>
 <?php endif; ?>
 
