@@ -42,6 +42,13 @@ Trainer können den Spielereinsatz und beliebige Kennzahlen über alle Listen hi
 - [x] Boolean-Globalspalten: Anzahl der true-Werte (z. B. 12 Spiele absolviert)
 - [x] Zahlen-Globalspalten: Gesamtsumme (z. B. 15 Tore gesamt)
 
+### Validated (Phase 6 — Calendar with ICS Export, 2026-07-14)
+
+- [x] Listen können ein optionales Datum und einen optionalen Ort haben
+- [x] Kalender-Tab zeigt Listen gruppiert nach Tag (Woche/Monat umschaltbar, Navigation vor/zurück)
+- [x] Öffentlicher ICS-Feed pro Team (RFC 5545, kein Auth, abonnierbar in Kalender-Apps)
+- [x] Listen ohne Datum erscheinen separat im "Ohne Datum"-Bereich
+
 ### Remaining
 
 - [ ] Zugangsdaten sind nicht vom Benutzer selbst editierbar
@@ -99,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-13 after Phase 5: Email Notifications complete*
+*Last updated: 2026-07-14 after Phase 6: Calendar with ICS Export complete*
