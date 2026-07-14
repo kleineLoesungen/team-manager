@@ -67,10 +67,10 @@ Alle Umgebungsvariablen für die Dev-Umgebung stehen in [.env.docker](.env.docke
 | `MAIL_DRIVER` | E-Mail-Versand: `mail` (PHP mail()) oder `smtp` | `mail` |
 | `MAIL_FROM_ADDRESS` | Absenderadresse | `noreply@localhost` |
 | `MAIL_FROM_NAME` | Absendername | `Team Manager` |
-| `MAIL_SMTP_HOST` | SMTP-Host (nur bei `MAIL_DRIVER=smtp`) | — |
-| `MAIL_SMTP_PORT` | SMTP-Port (nur bei `MAIL_DRIVER=smtp`) | `587` |
-| `MAIL_SMTP_USER` | SMTP-Benutzername (nur bei `MAIL_DRIVER=smtp`) | — |
-| `MAIL_SMTP_PASS` | SMTP-Passwort (nur bei `MAIL_DRIVER=smtp`) | — |
+| `MAIL_HOST` | SMTP-Host (nur bei `MAIL_DRIVER=smtp`) | — |
+| `MAIL_PORT` | SMTP-Port (nur bei `MAIL_DRIVER=smtp`) | `587` |
+| `MAIL_USERNAME` | SMTP-Benutzername (nur bei `MAIL_DRIVER=smtp`) | — |
+| `MAIL_PASSWORD` | SMTP-Passwort (nur bei `MAIL_DRIVER=smtp`) | — |
 
 ### Datenbankstruktur
 
