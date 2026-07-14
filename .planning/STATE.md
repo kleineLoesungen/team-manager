@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-07-13 - Completed quick task 260713-lve: coordinator can set/change member email address  
+**Last Updated:** 2026-07-14 - Completed quick task 260714-vye: Fix ICS handler RLS context so public/protected lists appear in feed  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -165,6 +165,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260714-vye | Fix ICS handler: set_team_context so RLS allows public/protected lists in feed | 2026-07-14 | d37b010 | [260714-vye-fix-ics-handler-add-set-team-context-cal](.planning/quick/260714-vye-fix-ics-handler-add-set-team-context-cal/) |
 | 260713-lve | coordinator can set or change member email address | 2026-07-13 | ef606d1 | [260713-lve-coordinator-could-also-set-change-mail-a](.planning/quick/260713-lve-coordinator-could-also-set-change-mail-a/) |
 | 260713-kxn | CSS animations, mobile tab icons, navbar scroll shadow, landing 4th screen for email notification | 2026-07-13 | 19c0abe | [260713-kxn-optimize-mobile-first-design-and-take-mo](.planning/quick/260713-kxn-optimize-mobile-first-design-and-take-mo/) |
 | 260517-mwr | merge description and cell values into single save form on coordinator list detail page | 2026-05-17 | 53f37c4 | [260517-mwr-combine-description-and-list-values-save](.planning/quick/260517-mwr-combine-description-and-list-values-save/) |
