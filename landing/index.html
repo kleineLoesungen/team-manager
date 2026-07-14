@@ -364,16 +364,16 @@
     .mock-body { padding: 14px 16px; background: #f8f9fa; }
 
     /* App-specific mini styles */
-    .mk-btn   { display:inline-block;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:600;border:none;cursor:default; }
-    .mk-btn-r { background:#7a1a1a;color:#fff; }
+    .mk-btn   { display:inline-block;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;border:none;cursor:default; }
+    .mk-btn-r { background:#2563eb;color:#fff; }
     .mk-btn-o { background:#fff;color:#495057;border:1px solid #ced4da; }
     .mk-pub   { display:inline-block;background:#198754;color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px; }
     .mk-prot  { display:inline-block;background:#e4a800;color:#000;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px; }
-    .mk-card  { background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:10px 12px; }
-    .mk-card-hd   { display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:4px; }
-    .mk-card-name { font-weight:700;font-size:11px;line-height:1.3;flex:1; }
-    .mk-card-date { color:#6c757d;font-size:10px;margin-bottom:7px; }
-    .mk-card-btns { display:flex;gap:5px; }
+    .mk-card  { background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden; }
+    .mk-card-hd   { display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 10px;background:rgba(0,0,0,.03);border-bottom:1px solid rgba(0,0,0,.10); }
+    .mk-card-name { font-weight:600;font-size:11px;line-height:1.3;flex:1; }
+    .mk-card-date { color:#6c757d;font-size:10px;padding:5px 10px; }
+    .mk-card-btns { display:flex;gap:5px;padding:7px 10px;border-top:1px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03); }
     .mk-table { width:100%;border-collapse:collapse; }
     .mk-table th { padding:4px 8px;text-align:left;font-weight:700;font-size:10.5px;border-bottom:2px solid #dee2e6;white-space:nowrap; }
     .mk-table td { padding:4px 8px;border-bottom:1px solid #f0f0f0;font-size:10.5px;white-space:nowrap; }
@@ -701,7 +701,6 @@
                 </div>
                 <div class="mk-card">
                   <div class="mk-card-hd"><span class="mk-card-name"><i class="bi bi-table"></i> Waschliste</span><span class="mk-prot">Geschützt</span></div>
-                  <div class="mk-card-date">&nbsp;</div>
                   <div class="mk-card-btns"><span class="mk-btn mk-btn-r">Öffnen</span><span class="mk-btn mk-btn-o">Einstellungen</span></div>
                 </div>
               </div>
@@ -804,7 +803,7 @@
               <!-- Link preview -->
               <div style="margin-bottom:10px;">
                 <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:4px;">Link im Inhalt</div>
-                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:5px;padding:5px 8px;color:#6366f1;font-size:9.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:5px;padding:5px 8px;color:#2563eb;font-size:9.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                   🔗 team-manager.example.com/member/lists/42
                 </div>
               </div>
@@ -839,7 +838,7 @@
               <!-- Send button -->
               <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                 <span style="color:#6c757d;font-size:9.5px;">5 Mitglieder erhalten E-Mail, 2 fehlen</span>
-                <span class="mk-btn" style="background:#6366f1;color:#fff;">Senden</span>
+                <span class="mk-btn" style="background:#2563eb;color:#fff;">Senden</span>
               </div>
             </div>
           </div>
@@ -859,7 +858,7 @@
                 <div style="font-weight:800;font-size:14px;">Inhalte · Kalender</div>
                 <div style="display:flex;gap:4px;">
                   <span class="mk-btn mk-btn-o">← </span>
-                  <span class="mk-btn" style="background:#6366f1;color:#fff;">Woche</span>
+                  <span class="mk-btn" style="background:#2563eb;color:#fff;">Woche</span>
                   <span class="mk-btn mk-btn-o">Monat</span>
                   <span class="mk-btn mk-btn-o"> →</span>
                 </div>
@@ -869,51 +868,42 @@
               </div>
 
               <!-- Day group: Monday -->
-              <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:5px;">Montag, 14. Juli</div>
-              <div style="display:flex;align-items:flex-start;gap:8px;background:#fff;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;margin-bottom:8px;">
-                <span class="mk-pub" style="flex-shrink:0;margin-top:1px;">Öffentlich</span>
-                <div style="flex:1;">
-                  <div style="font-weight:700;font-size:11px;">Training</div>
-                  <div style="color:#6c757d;font-size:9.5px;margin-top:2px;">
-                    <i class="bi bi-clock" style="margin-right:3px;"></i>18:00 – 20:00
-                    &nbsp;·&nbsp;
-                    <i class="bi bi-geo-alt" style="margin-right:3px;"></i>Haupthalle
-                  </div>
+              <div style="font-size:10px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6;padding-bottom:3px;margin-bottom:5px;">Montag, 14. Juli</div>
+              <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+                  <span style="font-weight:600;font-size:11px;flex:1;"><i class="bi bi-table me-1" style="color:#6c757d;"></i>Training</span>
+                  <span class="mk-pub">Öffentlich</span>
                 </div>
+                <div style="color:#6c757d;font-size:9.5px;margin-top:3px;"><i class="bi bi-geo-alt me-1"></i>Haupthalle</div>
+                <div style="color:#6c757d;font-size:9.5px;margin-top:2px;"><i class="bi bi-clock me-1"></i>18:00 – 20:00</div>
               </div>
 
               <!-- Day group: Wednesday -->
-              <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:5px;">Mittwoch, 16. Juli</div>
-              <div style="display:flex;align-items:flex-start;gap:8px;background:#fff;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;margin-bottom:8px;">
-                <span class="mk-prot" style="flex-shrink:0;margin-top:1px;">Geschützt</span>
-                <div style="flex:1;">
-                  <div style="font-weight:700;font-size:11px;">Spielbericht 16.07.</div>
-                  <div style="color:#6c757d;font-size:9.5px;margin-top:2px;">
-                    <i class="bi bi-clock" style="margin-right:3px;"></i>15:00 – 17:30
-                    &nbsp;·&nbsp;
-                    <i class="bi bi-geo-alt" style="margin-right:3px;"></i>Auswärts · FC Nordstadt
-                  </div>
+              <div style="font-size:10px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6;padding-bottom:3px;margin-bottom:5px;">Mittwoch, 16. Juli</div>
+              <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+                  <span style="font-weight:600;font-size:11px;flex:1;"><i class="bi bi-table me-1" style="color:#6c757d;"></i>Spielbericht 16.07.</span>
+                  <span class="mk-prot">Geschützt</span>
                 </div>
+                <div style="color:#6c757d;font-size:9.5px;margin-top:3px;"><i class="bi bi-geo-alt me-1"></i>Auswärts · FC Nordstadt</div>
+                <div style="color:#6c757d;font-size:9.5px;margin-top:2px;"><i class="bi bi-clock me-1"></i>15:00 – 17:30</div>
               </div>
 
               <!-- Day group: Saturday -->
-              <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:5px;">Samstag, 19. Juli</div>
-              <div style="display:flex;align-items:flex-start;gap:8px;background:#fff;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;margin-bottom:10px;">
-                <span class="mk-pub" style="flex-shrink:0;margin-top:1px;">Öffentlich</span>
-                <div style="flex:1;">
-                  <div style="font-weight:700;font-size:11px;">Training</div>
-                  <div style="color:#6c757d;font-size:9.5px;margin-top:2px;">
-                    <i class="bi bi-clock" style="margin-right:3px;"></i>10:00 – 12:00
-                    &nbsp;·&nbsp;
-                    <i class="bi bi-geo-alt" style="margin-right:3px;"></i>Trainingsplatz Nord
-                  </div>
+              <div style="font-size:10px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6;padding-bottom:3px;margin-bottom:5px;">Samstag, 19. Juli</div>
+              <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+                  <span style="font-weight:600;font-size:11px;flex:1;"><i class="bi bi-table me-1" style="color:#6c757d;"></i>Training</span>
+                  <span class="mk-pub">Öffentlich</span>
                 </div>
+                <div style="color:#6c757d;font-size:9.5px;margin-top:3px;"><i class="bi bi-geo-alt me-1"></i>Trainingsplatz Nord</div>
+                <div style="color:#6c757d;font-size:9.5px;margin-top:2px;"><i class="bi bi-clock me-1"></i>10:00 – 12:00</div>
               </div>
 
               <!-- ICS hint -->
-              <div style="background:#f0f0ff;border:1px solid #c7d2fe;border-radius:6px;padding:7px 10px;display:flex;align-items:center;gap:8px;">
-                <i class="bi bi-calendar-check" style="color:#6366f1;font-size:13px;flex-shrink:0;"></i>
-                <span style="font-size:9.5px;color:#4338ca;font-weight:500;">Alle Termine im Kalender abonnieren (ICS-Link)</span>
+              <div style="background:#cff4fc;border:1px solid #b6effb;border-radius:6px;padding:7px 10px;">
+                <strong style="font-size:9.5px;color:#055160;">In Kalender-App abonnieren:</strong>
+                <span style="font-size:9.5px;color:#055160;"> ICS-Link kopieren und in Apple Kalender, Google oder Outlook einfügen.</span>
               </div>
             </div>
           </div>
