@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-07-14T20:23:31.349Z"
+last_updated: "2026-07-14T20:26:47.546Z"
 progress:
   total_phases: 11
   completed_phases: 5
   total_plans: 23
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State: Team Manager
@@ -33,7 +33,7 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ## Current Position
 
 Phase: 06 (calendar-lists-with-date-location-ics-export) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Phase Summary
 
@@ -157,6 +157,7 @@ Plan: 2 of 4
 | Phase 05 P05 | 5 | 3 tasks | 7 files |
 | Phase 05 P05 | 5 | 3 tasks | 7 files |
 | Phase 06 P01 | 1 | 2 tasks | 4 files |
+| Phase 06 P02 | 85 | 2 tasks | 3 files |
 
 ### Quick Tasks Completed
 

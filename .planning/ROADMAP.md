@@ -159,7 +159,7 @@ Plans:
 | 3. Lists, Columns & Cells | 4/5 | Complete    | 2026-04-30 |
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
 | 5. Email Notifications | 5/5 | Complete   | 2026-07-13 |
-| 6. Calendar — ICS Export | 1/4 | In Progress|  |
+| 6. Calendar — ICS Export | 2/4 | In Progress|  |
 
 ---
 
@@ -232,11 +232,11 @@ Plans:
 
 **Requirements**: CAL-01, CAL-02, CAL-03, CAL-04, CAL-05
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 - [x] 06-01-PLAN.md — Schema migration (location column) + location field in create form and list settings
-- [ ] 06-02-PLAN.md — Calendar utility helpers (week/month boundaries, ICS escaping) + public ICS handler
+- [x] 06-02-PLAN.md — Calendar utility helpers (week/month boundaries, ICS escaping) + public ICS handler
 - [ ] 06-03-PLAN.md — Coordinator calendar view: tab-switcher, timeline, navigation, ICS link
 - [ ] 06-04-PLAN.md — Member calendar view: tab-switcher, timeline (public+protected only), ICS link
 
