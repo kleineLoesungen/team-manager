@@ -5,12 +5,13 @@
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-1">
-    <a href="/member/lists" class="text-muted small">
+    <a id="back-to-lists" href="/member/lists" class="text-muted small">
         <i class="bi bi-arrow-left me-1"></i>Alle Listen
     </a>
     <?php if (!empty($list['date'])): ?>
-    <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?></span>
+    <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
     <?php endif; ?>
+    <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
 </div>
 <?php if (!empty($list['description'])): ?>
 <p class="text-muted small mb-3"><?= e($list['description']) ?></p>

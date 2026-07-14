@@ -20,7 +20,8 @@ if (!can_view_list($list_id)) {
 
 // Fetch list metadata (include list_type if available)
 $list_type_col = (defined('DB_HAS_LIST_TYPE') && DB_HAS_LIST_TYPE) ? ", list_type" : "";
-$list_stmt = $pdo->prepare("SELECT id, name, visibility, date, description{$list_type_col} FROM lists WHERE id = ?");
+$list_time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ", time_start, time_end" : "";
+$list_stmt = $pdo->prepare("SELECT id, name, visibility, date, description{$list_type_col}{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 

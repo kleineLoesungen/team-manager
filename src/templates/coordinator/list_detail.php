@@ -26,7 +26,7 @@
         ?>
         <span class="badge <?= $badge_class ?> me-2"><?= $badge_label ?></span>
         <?php if (!empty($list['date'])): ?>
-        <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?></span>
+        <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
         <?php endif; ?>
     </div>
     <div class="d-flex gap-2">
@@ -483,7 +483,13 @@ $show_full_form = $is_free_list
 <?php endif; // is_free_list ?>
 
 <div class="mt-3">
-    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a id="back-to-lists" href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
+<script>
+(function() {
+    var saved = sessionStorage.getItem('coordinator_lists_url');
+    if (saved) document.getElementById('back-to-lists').href = saved;
+})();
+</script>

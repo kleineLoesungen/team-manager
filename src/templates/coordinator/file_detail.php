@@ -6,9 +6,10 @@ $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
 ?>
 
 <div class="mb-3 d-flex gap-2 flex-wrap">
-    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a id="back-to-lists" href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
+    <script>(function(){var s=sessionStorage.getItem('coordinator_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
     <?php if ($has_notify_recipients): ?>
     <a href="/coordinator/files/<?= (int)$file['id'] ?>/notify"
        class="btn btn-sm btn-outline-primary min-touch">

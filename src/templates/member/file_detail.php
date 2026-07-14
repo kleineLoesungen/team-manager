@@ -4,9 +4,10 @@
 ?>
 
 <div class="mb-3">
-    <a href="/member/lists" class="btn btn-sm btn-outline-secondary">
+    <a id="back-to-lists" href="/member/lists" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
+    <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
 </div>
 
 <div class="card shadow-sm mb-4">

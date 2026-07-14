@@ -321,3 +321,4 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <?php endif; // empty($items) ?>
 
 <?php endif; // $showCalendar / list view ?>
+<script>sessionStorage.setItem('coordinator_lists_url', location.href);</script>

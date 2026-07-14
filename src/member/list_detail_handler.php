@@ -19,7 +19,8 @@ if (!can_view_list($list_id)) {
 }
 
 // Fetch list metadata including show_all_rows
-$list_stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, date, description FROM lists WHERE id = ?");
+$list_time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ", time_start, time_end" : "";
+$list_stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, date, description{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
