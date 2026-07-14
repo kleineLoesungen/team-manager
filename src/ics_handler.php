@@ -17,6 +17,9 @@ if ($team_id <= 0) {
 
 $pdo = get_db();
 
+// Set RLS context so public/protected lists are visible without auth (D-10)
+set_team_context($pdo, $team_id);
+
 // Verify team exists and is active
 $team_stmt = $pdo->prepare(
     "SELECT id FROM teams WHERE id = ? AND is_active = TRUE"
