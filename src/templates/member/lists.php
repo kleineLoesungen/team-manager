@@ -194,6 +194,11 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
         <div class="card-body py-2 px-3">
             <small class="text-muted">
                 <i class="bi bi-calendar3 me-1"></i><?= (new DateTime($item['date']))->format('d.m.Y') ?>
+                <?php if (!empty($item['time_start'])): ?>
+                <span class="ms-2 text-muted small">
+                    <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?>
+                </span>
+                <?php endif; ?>
             </small>
             <?php if (!empty($item['location'])): ?>
             <small class="text-muted ms-3">
