@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-07-14 - Completed quick task 260714-wkp: Move ICS hint to bottom of calendar tab; add time range in timeline cards  
+**Last Updated:** 2026-07-14 - Completed quick task 260714-wus: Show time range in list detail pages; persist last calendar view via sessionStorage back links  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -165,6 +165,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260714-wus | Show time range in list detail pages; persist last calendar view via sessionStorage back links | 2026-07-14 | 22673f0 | — |
 | 260714-wkp | Move ICS hint to bottom of calendar tab; add time range in timeline cards | 2026-07-14 | 542e156 | [260714-wkp-move-ics-calendar-hint-to-bottom-of-cale](.planning/quick/260714-wkp-move-ics-calendar-hint-to-bottom-of-cale/) |
 | 260714-w3y | Enhance ICS feed: URL + DESCRIPTION + optional time_start/time_end on lists | 2026-07-14 | 52f0d09 | [260714-w3y-enhance-ics-feed-add-url-description-lin](.planning/quick/260714-w3y-enhance-ics-feed-add-url-description-lin/) |
 | 260714-vye | Fix ICS handler: set_team_context so RLS allows public/protected lists in feed | 2026-07-14 | d37b010 | [260714-vye-fix-ics-handler-add-set-team-context-cal](.planning/quick/260714-vye-fix-ics-handler-add-set-team-context-cal/) |
