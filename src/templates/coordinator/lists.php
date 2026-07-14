@@ -227,7 +227,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
                 <i class="bi bi-calendar3 me-1"></i><?= (new DateTime($item['date']))->format('d.m.Y') ?>
                 <?php if (!empty($item['time_start'])): ?>
                 <span class="ms-2 text-muted small">
-                    <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?>
+                    <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
                 </span>
                 <?php endif; ?>
             </small>

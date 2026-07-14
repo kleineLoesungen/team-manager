@@ -7,7 +7,7 @@ require_member();
 
 $pdo = get_db();
 
-$time_col = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? 'time_start' : 'NULL AS time_start';
+$time_col = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? 'time_start, time_end' : 'NULL AS time_start, NULL AS time_end';
 $stmt = $pdo->prepare(
     "SELECT id, name, visibility, is_hidden, date, location, {$time_col}, created_at,
             'list' AS type
