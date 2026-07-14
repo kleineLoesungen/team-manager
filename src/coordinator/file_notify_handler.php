@@ -27,12 +27,12 @@ $content_link = app_url($target_role === 'member'
     ? '/member/files/' . $file_id
     : '/coordinator/files/' . $file_id);
 
-// Fetch all recipients in target role (active, with or without email)
+// Fetch all recipients in target role (active users in an active team, with or without email)
 $rec_stmt = $pdo->prepare(
-    "SELECT id, first_name, last_name, email
-     FROM users
-     WHERE team_id = ? AND role = ? AND is_active = TRUE
-     ORDER BY first_name, last_name"
+    "SELECT u.id, u.first_name, u.last_name, u.email
+     FROM users u JOIN teams t ON t.id = u.team_id
+     WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND t.is_active = TRUE
+     ORDER BY u.first_name, u.last_name"
 );
 $rec_stmt->execute([$_SESSION['team_id'], $target_role]);
 $all_recipients = $rec_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -66,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Re-fetch recipients for actual send
         $re_stmt = $pdo->prepare(
-            "SELECT first_name, email, role FROM users
-             WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL"
+            "SELECT u.first_name, u.email, u.role FROM users u JOIN teams t ON t.id = u.team_id
+             WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND t.is_active = TRUE AND u.email IS NOT NULL"
         );
         $re_stmt->execute([$_SESSION['team_id'], $target_role]);
         $send_recipients = $re_stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -11,12 +11,12 @@ require_once ROOT_PATH . '/src/utils/email_composer.php';
 
 $pdo = get_db();
 
-// Fetch all active coordinators (cross-team; no team_id filter for admin)
+// Fetch all active coordinators whose team is also active (cross-team; no team_id filter for admin)
 $stmt = $pdo->query(
-    "SELECT id, first_name, last_name, email
-     FROM users
-     WHERE role = 'coordinator' AND is_active = TRUE
-     ORDER BY first_name, last_name"
+    "SELECT u.id, u.first_name, u.last_name, u.email
+     FROM users u JOIN teams t ON t.id = u.team_id
+     WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
+     ORDER BY u.first_name, u.last_name"
 );
 $all_coordinators = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Re-fetch recipients (never trust GET state for actual send)
         $re_stmt = $pdo->query(
-            "SELECT email FROM users
-             WHERE role = 'coordinator' AND is_active = TRUE AND email IS NOT NULL"
+            "SELECT u.email FROM users u JOIN teams t ON t.id = u.team_id
+             WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE AND u.email IS NOT NULL"
         );
         $recipients = $re_stmt->fetchAll(PDO::FETCH_COLUMN);
 
