@@ -80,7 +80,7 @@ if ($showCalendar) {
     // ICS URL for member's team (D-11, D-14)
     $scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics';
+    $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics?role=member';
 }
 
 require ROOT_PATH . '/src/templates/member/layout.php';

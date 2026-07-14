@@ -81,7 +81,7 @@ if ($showCalendar) {
     // Build ICS URL for coordinator's team (D-11, D-14)
     $scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics';
+    $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics?role=coordinator';
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';

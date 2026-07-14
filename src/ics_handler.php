@@ -76,7 +76,8 @@ $out .= "METHOD:PUBLISH\r\n";
 foreach ($lists as $list) {
     // UID: stable per-list-per-team identifier for calendar app deduplication
     $uid      = md5((string)$team_id . '-' . (string)$list['id']) . '@team-manager.local';
-    $list_url = $base_url . '/coordinator/lists/' . (int)$list['id'];
+    $role     = (($_REQUEST['role'] ?? '') === 'member') ? 'member' : 'coordinator';
+    $list_url = $base_url . '/' . $role . '/lists/' . (int)$list['id'];
 
     // DTSTART / DTEND — use datetime when time_start is available, otherwise all-day
     $has_time = !empty($list['time_start']) && defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES;
