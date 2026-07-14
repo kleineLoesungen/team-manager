@@ -27,6 +27,15 @@
                 <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
             </div>
 
+            <!-- Section: Location (optional) — per D-15, D-16 -->
+            <div class="mb-4">
+                <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
+                <input type="text" id="list_location" name="location"
+                       class="form-control" maxlength="255"
+                       placeholder="z. B. Sportplatz Mitte, Turnhalle">
+                <div class="form-text">z. B. Sportplatz Mitte, Turnhalle Schule</div>
+            </div>
+
             <!-- Section: Description (optional) -->
             <div class="mb-4">
                 <label for="list_desc" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>

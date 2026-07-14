@@ -35,6 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         $date = '';
     }
+    $location = trim($_POST['location'] ?? '');
+    if (mb_strlen($location) > 255) {
+        $location = mb_substr($location, 0, 255);
+    }
 
     if (empty($name)) {
         $error = 'Name ist erforderlich.';
@@ -46,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (defined('DB_HAS_LIST_TYPE') && DB_HAS_LIST_TYPE) {
                 $stmt = $pdo->prepare(
-                    "INSERT INTO lists (team_id, name, visibility, list_type, show_all_rows, date, description)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)
+                    "INSERT INTO lists (team_id, name, visibility, list_type, show_all_rows, date, description, location)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                      RETURNING id"
                 );
                 $stmt->execute([
@@ -58,11 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $show_all_rows,
                     $date !== '' ? $date : null,
                     $description !== '' ? $description : null,
+                    $location !== '' ? $location : null,
                 ]);
             } else {
                 $stmt = $pdo->prepare(
-                    "INSERT INTO lists (team_id, name, visibility, show_all_rows, date, description)
-                     VALUES (?, ?, ?, ?, ?, ?)
+                    "INSERT INTO lists (team_id, name, visibility, show_all_rows, date, description, location)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)
                      RETURNING id"
                 );
                 $stmt->execute([
@@ -72,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $show_all_rows,
                     $date !== '' ? $date : null,
                     $description !== '' ? $description : null,
+                    $location !== '' ? $location : null,
                 ]);
             }
             $list_id = (int)$stmt->fetchColumn();

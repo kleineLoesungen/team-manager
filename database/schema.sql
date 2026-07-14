@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS team_manager.lists (
     is_hidden     BOOLEAN      NOT NULL DEFAULT FALSE,
     description   TEXT                     NULL,
     date          DATE                     NULL,
+    location      VARCHAR(255)             NULL,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS team_manager.lists (
 -- ALTER TABLE lists ADD COLUMN IF NOT EXISTS is_hidden     BOOLEAN NOT NULL DEFAULT FALSE;
 -- ALTER TABLE lists ADD COLUMN IF NOT EXISTS description TEXT NULL;
 -- ALTER TABLE lists ADD COLUMN IF NOT EXISTS date DATE NULL;
+-- ALTER TABLE lists ADD COLUMN IF NOT EXISTS location VARCHAR(255) NULL;
 CREATE INDEX IF NOT EXISTS idx_lists_team_id    ON team_manager.lists(team_id);
 CREATE INDEX IF NOT EXISTS idx_lists_visibility ON team_manager.lists(visibility);
 
