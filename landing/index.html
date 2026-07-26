@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Manager – Dein Team. Deine Listen. Deine Statistiken.</title>
+  <title>Team Manager – Teamkoordination ohne Chaos</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%236366f1'/><rect x='5' y='7' width='22' height='5' rx='2.5' fill='white'/><rect x='13' y='7' width='6' height='19' rx='2.5' fill='white'/></svg>" />
 
   <!-- Bootstrap 5.3 -->
@@ -23,7 +23,6 @@
         rel="stylesheet" />
 
   <style>
-    /* ── Custom Properties ─────────────────────────────────────── */
     :root {
       --color-dark:    #0f172a;
       --color-dark-2:  #1e293b;
@@ -35,345 +34,113 @@
       --radius-card:   12px;
     }
 
-    /* ── Base ──────────────────────────────────────────────────── */
-    html {
-      scroll-behavior: smooth;
-      font-family: 'Inter', system-ui, sans-serif;
-    }
+    html { scroll-behavior: smooth; font-family: 'Inter', system-ui, sans-serif; }
+    body { background-color: var(--color-light); color: var(--color-dark); -webkit-font-smoothing: antialiased; }
 
-    body {
-      background-color: var(--color-light);
-      color: var(--color-dark);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── Navbar ────────────────────────────────────────────────── */
+    /* Navbar */
     .tm-navbar {
       background-color: rgba(15, 23, 42, 0.96);
       backdrop-filter: blur(8px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
+    .tm-navbar .navbar-brand { font-weight: 700; font-size: 1.15rem; color: #fff; letter-spacing: -0.01em; }
+    .tm-navbar .navbar-brand span { color: var(--color-accent); }
 
-    .tm-navbar .navbar-brand {
-      font-weight: 700;
-      font-size: 1.15rem;
-      color: #fff;
-      letter-spacing: -0.01em;
-    }
-
-    .tm-navbar .navbar-brand span {
-      color: var(--color-accent);
-    }
-
-    /* ── Hero ──────────────────────────────────────────────────── */
+    /* Hero */
     .tm-hero {
       min-height: 100vh;
       background: linear-gradient(135deg, var(--color-dark) 0%, #1a1060 60%, var(--color-dark-2) 100%);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
+      position: relative; overflow: hidden; display: flex; align-items: center;
     }
-
     .tm-hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
+      content: ''; position: absolute; inset: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 70% 30%, rgba(99, 102, 241, 0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 40% at 20% 80%, rgba(99, 102, 241, 0.10) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 60% at 70% 30%, rgba(99,102,241,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 20% 80%, rgba(99,102,241,0.10) 0%, transparent 60%);
       pointer-events: none;
     }
-
-    /* Decorative SVG blob */
     .tm-blob {
-      position: absolute;
-      right: -80px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 520px;
-      max-width: 55vw;
-      opacity: 0.07;
-      pointer-events: none;
+      position: absolute; right: -80px; top: 50%; transform: translateY(-50%);
+      width: 520px; max-width: 55vw; opacity: 0.07; pointer-events: none;
     }
-
-    .tm-hero-content {
-      position: relative;
-      z-index: 1;
-    }
-
-    .tm-hero h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      color: #fff;
-      letter-spacing: -0.03em;
-    }
-
-    .tm-hero h1 .highlight {
-      color: var(--color-accent);
-    }
-
-    .tm-hero p.lead {
-      color: var(--color-muted);
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      max-width: 540px;
-      line-height: 1.7;
-    }
-
+    .tm-hero-content { position: relative; z-index: 1; }
+    .tm-hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.1; color: #fff; letter-spacing: -0.03em; }
+    .tm-hero h1 .highlight { color: var(--color-accent); }
+    .tm-hero p.lead { color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); max-width: 520px; line-height: 1.7; }
     .tm-btn-primary {
-      background-color: var(--color-accent);
-      border-color: var(--color-accent);
-      color: #fff;
-      font-weight: 600;
-      padding: 0.75rem 1.75rem;
-      border-radius: 8px;
+      background-color: var(--color-accent); border-color: var(--color-accent); color: #fff;
+      font-weight: 600; padding: 0.75rem 1.75rem; border-radius: 8px;
       transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 16px rgba(99,102,241,0.35);
     }
-
     .tm-btn-primary:hover {
-      background-color: var(--color-accent-h);
-      border-color: var(--color-accent-h);
-      color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(99, 102, 241, 0.45);
+      background-color: var(--color-accent-h); border-color: var(--color-accent-h); color: #fff;
+      transform: translateY(-1px); box-shadow: 0 6px 22px rgba(99,102,241,0.45);
     }
-
     .tm-badge {
-      display: inline-block;
-      background: rgba(99, 102, 241, 0.15);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.3rem 0.85rem;
-      border-radius: 99px;
-      margin-bottom: 1.5rem;
+      display: inline-block; background: rgba(99,102,241,0.15); color: #a5b4fc;
+      border: 1px solid rgba(99,102,241,0.3); font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em; padding: 0.3rem 0.85rem; border-radius: 99px;
     }
 
-    /* ── Features ──────────────────────────────────────────────── */
-    .tm-features {
-      background: #fff;
-      padding: 5rem 0;
+    /* Pain points strip */
+    .tm-pain { background: #fff; border-bottom: 1px solid var(--color-border); padding: 3rem 0; }
+    .tm-pain-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1.25rem 0; border-bottom: 1px solid var(--color-border); }
+    .tm-pain-item:last-child { border-bottom: none; }
+    .tm-pain-icon {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: 8px;
+      background: #fef2f2; color: #dc2626;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
     }
+    .tm-pain-item h4 { font-size: 0.95rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.25rem; }
+    .tm-pain-item p { font-size: 0.88rem; color: #64748b; line-height: 1.6; margin: 0; }
 
-    .tm-section-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-accent);
-      margin-bottom: 0.75rem;
-    }
+    /* Section labels */
+    .tm-section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-accent); margin-bottom: 0.75rem; }
+    .tm-section-title { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 800; letter-spacing: -0.025em; color: var(--color-dark); }
 
-    .tm-section-title {
-      font-size: clamp(1.5rem, 3vw, 2.25rem);
-      font-weight: 800;
-      letter-spacing: -0.025em;
-      color: var(--color-dark);
-    }
-
+    /* Features */
+    .tm-features { background: #fff; padding: 5rem 0; }
     .tm-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-card);
-      background: var(--color-light);
-      padding: 2rem 1.75rem;
-      height: 100%;
-      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
-      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      border: 1px solid var(--color-border); border-radius: var(--radius-card);
+      background: var(--color-light); padding: 1.75rem; height: 100%;
+      box-shadow: 0 1px 4px rgba(15,23,42,0.06); transition: box-shadow 0.2s ease, transform 0.2s ease;
     }
-
-    .tm-card:hover {
-      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.10);
-      transform: translateY(-3px);
-    }
-
+    .tm-card:hover { box-shadow: 0 8px 28px rgba(15,23,42,0.10); transform: translateY(-3px); }
     .tm-card-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--color-accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 1.25rem;
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(99,102,241,0.1); color: var(--color-accent);
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 1.1rem;
+    }
+    .tm-card.featured { border-color: var(--color-accent); background: rgba(99,102,241,0.03); }
+    .tm-card.featured .tm-card-icon { background: rgba(99,102,241,0.15); }
+    .tm-card h3 { font-size: 1rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.4rem; }
+    .tm-card p { color: #64748b; font-size: 0.92rem; line-height: 1.65; margin: 0; }
+    .tm-new-badge {
+      display: inline-block; background: var(--color-accent); color: #fff;
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 0.15rem 0.55rem; border-radius: 4px; margin-left: 0.4rem; vertical-align: middle;
     }
 
-    .tm-card h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--color-dark);
-      margin-bottom: 0.5rem;
-    }
-
-    .tm-card p {
-      color: #64748b;
-      font-size: 0.95rem;
-      line-height: 1.65;
-      margin: 0;
-    }
-
-    /* ── CTA Section ───────────────────────────────────────────── */
-    .tm-cta {
-      background: linear-gradient(135deg, var(--color-accent) 0%, #4f46e5 100%);
-      padding: 5rem 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .tm-cta::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 80% at 80% 50%, rgba(255,255,255,0.07) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .tm-cta h2 {
-      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.025em;
-    }
-
-    .tm-cta p {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1.05rem;
-      max-width: 440px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    .tm-deploy-card {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
-      padding: 1.5rem;
-      text-align: left;
-    }
-
-    .tm-deploy-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      color: #fff;
-      margin-bottom: 0.85rem;
-    }
-
-    .tm-deploy-card h4 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 0.4rem;
-    }
-
-    .tm-deploy-card p {
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.65);
-      margin: 0;
-      max-width: none;
-      line-height: 1.55;
-    }
-
-    .tm-btn-white {
-      background: #fff;
-      color: var(--color-accent);
-      border: none;
-      font-weight: 700;
-      padding: 0.8rem 2rem;
-      border-radius: 8px;
-      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    .tm-btn-white:hover {
-      background: #f1f5f9;
-      color: var(--color-accent-h);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
-    }
-
-    /* ── Footer ────────────────────────────────────────────────── */
-    .tm-footer {
-      background: var(--color-dark);
-      padding: 1.5rem 0;
-    }
-
-    .tm-footer p {
-      color: var(--color-muted);
-      font-size: 0.85rem;
-      margin: 0;
-    }
-
-    .tm-footer a {
-      color: var(--color-muted);
-      text-decoration: none;
-    }
-
-    .tm-footer a:hover {
-      color: #fff;
-    }
-
-    /* ── Screens ──────────────────────────────────────────────── */
-    .tm-screens {
-      background: linear-gradient(180deg, #0c1222 0%, #0f0e2e 100%);
-      padding: 5rem 0;
-    }
+    /* Screens */
+    .tm-screens { background: linear-gradient(180deg, #0c1222 0%, #0f0e2e 100%); padding: 5rem 0; }
     .tm-screens .tm-section-label { color: #a5b4fc; }
     .tm-screens .tm-section-title { color: #fff; }
-    .tm-screen-caption {
-      color: rgba(255,255,255,0.45);
-      font-size: 0.78rem;
-      margin-top: 0.65rem;
-      text-align: center;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
+    .tm-screen-caption { color: rgba(255,255,255,0.45); font-size: 0.78rem; margin-top: 0.65rem; text-align: center; font-weight: 500; letter-spacing: 0.02em; }
 
     /* Mock browser chrome */
-    .mock {
-      background: #fff;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 11px;
-      line-height: 1.4;
-      color: #212529;
-      user-select: none;
-    }
-    .mock-bar {
-      background: #f1f3f5;
-      padding: 7px 12px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      border-bottom: 1px solid #dee2e6;
-    }
+    .mock { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.5); font-family: 'Inter', system-ui, sans-serif; font-size: 11px; line-height: 1.4; color: #212529; user-select: none; }
+    .mock-bar { background: #f1f3f5; padding: 7px 12px; display: flex; align-items: center; gap: 5px; border-bottom: 1px solid #dee2e6; }
     .mock-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .mock-body { padding: 14px 16px; background: #f8f9fa; }
 
-    /* App-specific mini styles */
     .mk-btn   { display:inline-block;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;border:none;cursor:default; }
     .mk-btn-r { background:#2563eb;color:#fff; }
     .mk-btn-o { background:#fff;color:#495057;border:1px solid #ced4da; }
     .mk-pub   { display:inline-block;background:#198754;color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px; }
-    .mk-prot  { display:inline-block;background:#e4a800;color:#000;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px; }
-    .mk-card  { background:#fff;border:1px solid #dee2e6;border-radius:8px;overflow:hidden; }
-    .mk-card-hd   { display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 10px;background:rgba(0,0,0,.03);border-bottom:1px solid rgba(0,0,0,.10); }
-    .mk-card-name { font-weight:600;font-size:11px;line-height:1.3;flex:1; }
-    .mk-card-date { color:#6c757d;font-size:10px;padding:5px 10px; }
-    .mk-card-btns { display:flex;gap:5px;padding:7px 10px;border-top:1px solid rgba(0,0,0,.10);background:rgba(0,0,0,.03); }
+    .mk-done  { display:inline-block;background:#6b7280;color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px; }
+    .mk-live  { display:inline-block;background:#dc2626;color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
     .mk-table { width:100%;border-collapse:collapse; }
     .mk-table th { padding:4px 8px;text-align:left;font-weight:700;font-size:10.5px;border-bottom:2px solid #dee2e6;white-space:nowrap; }
     .mk-table td { padding:4px 8px;border-bottom:1px solid #f0f0f0;font-size:10.5px;white-space:nowrap; }
@@ -385,53 +152,23 @@
     .mk-pct { color:#94a3b8;font-size:9.5px; }
     .mk-toggle { display:inline-block;width:34px;height:20px;background:#0d6efd;border-radius:10px;position:relative;vertical-align:middle; }
     .mk-toggle::after { content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;right:3px;box-shadow:0 1px 3px rgba(0,0,0,0.25); }
+    .mk-ticker-msg { background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:7px; }
+    .mk-ticker-msg:last-child { margin-bottom:0; }
+    .mk-ticker-tag { display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;margin-right:5px; }
 
-    /* ── Examples ─────────────────────────────────────────────── */
-    .tm-examples {
-      background: #fff;
-      padding: 5rem 0;
-      border-top: 1px solid var(--color-border);
-    }
+    /* CTA */
+    .tm-cta { background: linear-gradient(135deg, var(--color-accent) 0%, #4f46e5 100%); padding: 4rem 0; position: relative; overflow: hidden; }
+    .tm-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 80% at 80% 50%, rgba(255,255,255,0.07) 0%, transparent 70%); pointer-events: none; }
+    .tm-cta h2 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); font-weight: 800; color: #fff; letter-spacing: -0.025em; }
+    .tm-cta p { color: rgba(255,255,255,0.8); font-size: 1.05rem; max-width: 440px; margin: 0 auto; line-height: 1.6; }
+    .tm-btn-white { background: #fff; color: var(--color-accent); border: none; font-weight: 700; padding: 0.8rem 2rem; border-radius: 8px; transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .tm-btn-white:hover { background: #f1f5f9; color: var(--color-accent-h); transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,0,0,0.2); }
 
-    .tm-example-item {
-      display: flex;
-      gap: 1.25rem;
-      align-items: flex-start;
-      padding: 1.5rem 0;
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .tm-example-item:last-child {
-      border-bottom: none;
-    }
-
-    .tm-example-num {
-      flex-shrink: 0;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--color-accent);
-      font-size: 0.8rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tm-example-item h4 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--color-dark);
-      margin-bottom: 0.35rem;
-    }
-
-    .tm-example-item p {
-      font-size: 0.92rem;
-      color: #64748b;
-      line-height: 1.6;
-      margin: 0;
-    }
+    /* Footer */
+    .tm-footer { background: var(--color-dark); padding: 1.5rem 0; }
+    .tm-footer p { color: var(--color-muted); font-size: 0.85rem; margin: 0; }
+    .tm-footer a { color: var(--color-muted); text-decoration: none; }
+    .tm-footer a:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -452,27 +189,25 @@
     </div>
   </nav>
 
-  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <!-- Hero -->
   <section class="tm-hero py-5">
-    <!-- Decorative blob -->
     <svg class="tm-blob" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path fill="#6366f1"
         d="M430,290Q400,330,360,360Q320,390,275,415Q230,440,180,420Q130,400,95,360Q60,320,50,270Q40,220,60,175Q80,130,120,100Q160,70,210,55Q260,40,305,65Q350,90,390,125Q430,160,450,210Q470,260,430,290Z"/>
     </svg>
-
     <div class="container tm-hero-content">
       <div class="row align-items-center min-vh-100 py-5">
         <div class="col-lg-7">
           <div class="tm-badge mb-4">Open Source · Kostenlos</div>
           <h1>
-            Dein Team.<br />
-            Deine Listen.<br />
-            <span class="highlight">Deine Statistiken.</span>
+            Wer spielt wann?<br />
+            <span class="highlight">Endlich eine Antwort.</span>
           </h1>
           <p class="lead mt-4 mb-5">
-            Koordinatoren erfassen Spielereinsatz und Kennzahlen über alle Listen hinweg —
-            Statistik pro Mitglied auf einen Blick. Termine in der Kalenderansicht,
-            ICS-Export für den Gerätekalender. Einfach, mobil, auf Deutsch.
+            Viele Mitglieder, viele Spiele, viele Fragen — und die Antworten stecken in
+            WhatsApp-Chats, Excel-Tabellen und im Kopf des Koordinators.
+            Team Manager bringt alles an einem Ort zusammen:
+            Anwesenheit, Statistik, Dokumente und Live-Ticker für laufende Spiele.
           </p>
           <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener"
              class="btn tm-btn-primary btn-lg">
@@ -484,195 +219,110 @@
     </div>
   </section>
 
-  <!-- ── Features ───────────────────────────────────────────────── -->
+  <!-- Pain Points -->
+  <section class="tm-pain">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+          <p class="tm-section-label text-center mb-4">Das kennt jeder Koordinator</p>
+          <div class="tm-pain-item">
+            <div class="tm-pain-icon"><i class="bi bi-chat-dots"></i></div>
+            <div>
+              <h4>„Bin ich dabei?" — im falschen Chat gefragt</h4>
+              <p>Anwesenheiten werden per Nachricht gesammelt, vergessen und nie zusammengezählt. Am Ende weiß niemand wirklich, wer wie oft dabei war.</p>
+            </div>
+          </div>
+          <div class="tm-pain-item">
+            <div class="tm-pain-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+            <div>
+              <h4>Die Excel-Tabelle, die niemand aktuell hält</h4>
+              <p>Spieleinsätze, Tore, Vorlagen — alles manuell eingetragen, falls überhaupt. Mitglieder sehen ihre eigenen Zahlen nie.</p>
+            </div>
+          </div>
+          <div class="tm-pain-item">
+            <div class="tm-pain-icon"><i class="bi bi-broadcast"></i></div>
+            <div>
+              <h4>Familie und Fans erfahren den Spielstand per Telefon</h4>
+              <p>Beim Auswärtsspiel gibt es keinen offiziellen Kanal. Wer nicht dabei ist, ruft an — mitten im Spiel.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
   <section class="tm-features" id="funktionen">
     <div class="container">
       <div class="text-center mb-5">
         <p class="tm-section-label">Funktionen</p>
         <h2 class="tm-section-title">Alles was du brauchst — nichts was du nicht brauchst</h2>
       </div>
-
       <div class="row g-4 justify-content-center">
-
-        <!-- Feature 1 -->
         <div class="col-12 col-md-6">
           <div class="tm-card">
-            <div class="tm-card-icon">
-              <i class="bi bi-table"></i>
-            </div>
+            <div class="tm-card-icon"><i class="bi bi-table"></i></div>
             <h3>Flexible Listen</h3>
-            <p>
-              Eigene Spalten für jede Liste — Zahlen, Text, Ja/Nein.
-              Mitglieder tragen ihre Daten selbst ein, du behältst den Überblick.
-            </p>
+            <p>Eigene Spalten für jede Liste — Zahlen, Text, Ja/Nein. Mitglieder tragen ihre Daten selbst ein, du behältst den Überblick.</p>
           </div>
         </div>
-
-        <!-- Feature 2 -->
         <div class="col-12 col-md-6">
           <div class="tm-card">
-            <div class="tm-card-icon">
-              <i class="bi bi-file-earmark-text"></i>
-            </div>
-            <h3>Listen &amp; Markdowns</h3>
-            <p>
-              Neben strukturierten Listen auch Markdown-Dokumente teilen —
-              Spielanalysen, Berichte, Ankündigungen, alles an einem Ort.
-            </p>
-          </div>
-        </div>
-
-        <!-- Feature 3 -->
-        <div class="col-12 col-md-6">
-          <div class="tm-card">
-            <div class="tm-card-icon">
-              <i class="bi bi-bar-chart-line"></i>
-            </div>
+            <div class="tm-card-icon"><i class="bi bi-bar-chart-line"></i></div>
             <h3>Globale Statistik</h3>
-            <p>
-              Listenübergreifende Auswertung pro Mitglied, filterbar nach
-              Zeitraum. Wer ist wie oft dabei? Sofort sichtbar.
-            </p>
+            <p>Listenübergreifende Auswertung pro Mitglied, filterbar nach Zeitraum. Wer ist wie oft dabei? Sofort sichtbar.</p>
           </div>
         </div>
-
-        <!-- Feature 4 -->
         <div class="col-12 col-md-6">
-          <div class="tm-card">
-            <div class="tm-card-icon">
-              <i class="bi bi-shield-check"></i>
-            </div>
-            <h3>Mehrere Teams, ein Admin</h3>
-            <p>
-              Der Admin definiert Teams, weist Koordinatoren zu und legt
-              Mitglieder an — alles zentral. Jedes Team arbeitet unabhängig.
-            </p>
+          <div class="tm-card featured">
+            <div class="tm-card-icon"><i class="bi bi-broadcast-pin"></i></div>
+            <h3>Live-Ticker <span class="tm-new-badge">Neu</span></h3>
+            <p>Echtzeit-Updates direkt vom Spielfeld — Tore, Karten, Auswechslungen. Öffentlich abrufbar ohne Login, auch für Familie und Fans.</p>
           </div>
         </div>
-
-        <!-- Feature 5 -->
         <div class="col-12 col-md-6">
           <div class="tm-card">
-            <div class="tm-card-icon">
-              <i class="bi bi-envelope"></i>
-            </div>
-            <h3>E-Mail-Benachrichtigungen</h3>
-            <p>
-              Koordinatoren benachrichtigen Mitglieder direkt aus einer Liste
-              oder einem Dokument heraus — mit eigenem Text und Link zum Inhalt.
-              Wer keine E-Mail-Adresse hinterlegt hat, wird vorab angezeigt.
-            </p>
+            <div class="tm-card-icon"><i class="bi bi-file-earmark-text"></i></div>
+            <h3>Markdown-Dokumente</h3>
+            <p>Spielanalysen, Ankündigungen, taktische Hinweise — direkt im Team geteilt, ohne externes Tool. Listen und Dokumente Seite an Seite.</p>
           </div>
         </div>
-
-        <!-- Feature 6 -->
         <div class="col-12 col-md-6">
           <div class="tm-card">
-            <div class="tm-card-icon">
-              <i class="bi bi-calendar3"></i>
-            </div>
+            <div class="tm-card-icon"><i class="bi bi-calendar3"></i></div>
             <h3>Kalender &amp; ICS-Export</h3>
-            <p>
-              Datierte Listen erscheinen in einer Wochen- oder Monatsansicht.
-              Ort und Uhrzeit direkt an der Liste hinterlegen.
-              Per ICS-Link alle Termine in Apple Kalender, Google oder Outlook abonnieren.
-            </p>
+            <p>Datierte Listen in der Wochenansicht. Ort und Uhrzeit direkt hinterlegen. Alle Termine per ICS in Apple Kalender, Google oder Outlook abonnieren.</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="tm-card">
+            <div class="tm-card-icon"><i class="bi bi-envelope"></i></div>
+            <h3>E-Mail-Benachrichtigungen</h3>
+            <p>Koordinatoren schicken mit einem Klick eine Benachrichtigung an alle Mitglieder — direkt aus einer Liste oder einem Dokument heraus, mit Link zum Inhalt.</p>
           </div>
         </div>
 
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Examples ─────────────────────────────────────────────────── -->
-  <section class="tm-examples" id="beispiele">
-    <div class="container">
-      <div class="text-center mb-5">
-        <p class="tm-section-label">Beispiele</p>
-        <h2 class="tm-section-title">Was Teams damit machen</h2>
-      </div>
-
-      <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-
-          <div class="tm-example-item">
-            <div class="tm-example-num">1</div>
-            <div>
-              <h4>Trainingsbeteiligung mit globaler Statistik</h4>
-              <p>
-                Für jede Trainingseinheit eine Liste — wer war dabei, wer nicht.
-                Die globale Statistik zeigt automatisch die Anwesenheitsquote
-                jedes Mitglieds über den gesamten Zeitraum.
-              </p>
-            </div>
+        <div class="col-12 col-md-6">
+          <div class="tm-card">
+            <div class="tm-card-icon"><i class="bi bi-shield-check"></i></div>
+            <h3>Mehrere Teams, ein Admin</h3>
+            <p>Der Admin verwaltet Teams und Koordinatoren zentral. Jedes Team arbeitet unabhängig — Daten bleiben sauber getrennt.</p>
           </div>
-
-          <div class="tm-example-item">
-            <div class="tm-example-num">2</div>
-            <div>
-              <h4>Spieltagsbericht mit Teilnahme, Toren, Vorlagen &amp; Notiz</h4>
-              <p>
-                Pro Spieltag eine Liste mit den Spalten: dabei (Ja/Nein), Tore,
-                Vorlagen, Beschreibung. Mitglieder tragen sich selbst ein —
-                der Koordinator sieht die Summen listenübergreifend in der Statistik.
-              </p>
-            </div>
-          </div>
-
-          <div class="tm-example-item">
-            <div class="tm-example-num">3</div>
-            <div>
-              <h4>Markdown-Dokumente neben Listen</h4>
-              <p>
-                Spielanalysen, taktische Hinweise oder Saisonberichte als
-                Markdown-Datei — direkt im Team verfügbar, ohne externes Tool.
-                Listen und Dokumente leben Seite an Seite.
-              </p>
-            </div>
-          </div>
-
-          <div class="tm-example-item">
-            <div class="tm-example-num">4</div>
-            <div>
-              <h4>Spieltagsankündigung per E-Mail</h4>
-              <p>
-                Spielbericht erstellt, Aufstellung klar — jetzt alle informieren.
-                Mit einem Klick auf "Benachrichtigung senden" schickt der Koordinator
-                eine E-Mail an alle Mitglieder mit direktem Link zur Liste.
-                Wer noch keine E-Mail hinterlegt hat, wird im Vorschau-Bildschirm angezeigt.
-              </p>
-            </div>
-          </div>
-
-          <div class="tm-example-item">
-            <div class="tm-example-num">5</div>
-            <div>
-              <h4>Terminübersicht im Gerätekalender</h4>
-              <p>
-                Trainings- und Spieltage mit Uhrzeit und Ort anlegen — die Kalenderansicht
-                zeigt die aktuelle Woche oder den Monat auf einen Blick. Mitglieder abonnieren
-                den ICS-Feed einmalig in ihrem Kalender (iPhone, Google, Outlook) und
-                sehen alle neuen Termine automatisch.
-              </p>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Screens ───────────────────────────────────────────────── -->
+  <!-- Screens -->
   <section class="tm-screens" id="einblicke">
     <div class="container">
       <div class="text-center mb-5">
         <p class="tm-section-label">Einblicke</p>
         <h2 class="tm-section-title">So sieht es aus</h2>
       </div>
-
       <div class="row g-4">
 
-        <!-- Screen 1: Inhalte overview -->
+        <!-- Screen 1: Public Ticker (matches ticker_detail.php real UI) -->
         <div class="col-12 col-lg-6">
           <div class="mock">
             <div class="mock-bar">
@@ -680,36 +330,47 @@
               <div class="mock-dot" style="background:#febc2e"></div>
               <div class="mock-dot" style="background:#28c840"></div>
             </div>
-            <div class="mock-body">
-              <div style="font-weight:800;font-size:14px;margin-bottom:2px;">Inhalte</div>
-              <div style="color:#6c757d;font-size:10px;margin-bottom:12px;">28 Einträge</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div class="mk-card">
-                  <div class="mk-card-hd"><span class="mk-card-name"><i class="bi bi-table"></i> Training 18.05.26</span><span class="mk-pub">Öffentlich</span></div>
-                  <div class="mk-card-date">18.05.2026</div>
-                  <div class="mk-card-btns"><span class="mk-btn mk-btn-r">Öffnen</span><span class="mk-btn mk-btn-o">Einstellungen</span></div>
+            <!-- bg-light body, matches real template -->
+            <div style="background:#f8f9fa;padding:12px 14px;font-family:'Inter',system-ui,sans-serif;font-size:11px;color:#212529;">
+              <!-- back link -->
+              <div style="font-size:9.5px;color:#6c757d;margin-bottom:10px;">← Alle Ticker</div>
+              <!-- header -->
+              <div style="margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                  <span style="font-weight:600;font-size:13px;">SV Frickenfelden – FC Nordstadt</span>
+                  <span style="background:#198754;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;">Aktiv</span>
                 </div>
-                <div class="mk-card">
-                  <div class="mk-card-hd"><span class="mk-card-name"><i class="bi bi-table"></i> Spielbericht 12.05.26</span><span class="mk-prot">Geschützt</span></div>
-                  <div class="mk-card-date">12.05.2026</div>
-                  <div class="mk-card-btns"><span class="mk-btn mk-btn-r">Öffnen</span><span class="mk-btn mk-btn-o">Einstellungen</span></div>
-                </div>
-                <div class="mk-card">
-                  <div class="mk-card-hd"><span class="mk-card-name"><i class="bi bi-file-earmark-text"></i> Trainingszeiten</span></div>
-                  <div class="mk-card-date">01.03.2026</div>
-                  <div class="mk-card-btns"><span class="mk-btn mk-btn-r">Öffnen</span></div>
-                </div>
-                <div class="mk-card">
-                  <div class="mk-card-hd"><span class="mk-card-name"><i class="bi bi-table"></i> Waschliste</span><span class="mk-prot">Geschützt</span></div>
-                  <div class="mk-card-btns"><span class="mk-btn mk-btn-r">Öffnen</span><span class="mk-btn mk-btn-o">Einstellungen</span></div>
-                </div>
+                <div style="font-size:9.5px;color:#6c757d;">Wird automatisch aktualisiert…</div>
               </div>
+              <!-- messages — cards matching card mb-2 shadow-sm, card-body py-2 px-3 -->
+              <div style="background:#fff;border:1px solid rgba(0,0,0,.125);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.075);padding:6px 10px;margin-bottom:6px;">
+                <div><strong>67'</strong> <span style="background:#198754;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;">Tor</span></div>
+                <div style="margin-top:3px;font-size:10.5px;">Tobias B. trifft nach Ecke zum 2:1!</div>
+              </div>
+              <div style="background:#fff;border:1px solid rgba(0,0,0,.125);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.075);padding:6px 10px;margin-bottom:6px;">
+                <div><strong>58'</strong> <span style="background:#ffc107;color:#000;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;">Auswechslung</span></div>
+                <div style="margin-top:3px;font-size:10.5px;">Lukas M. raus, Felix W. rein</div>
+              </div>
+              <div style="background:#fff;border:1px solid rgba(0,0,0,.125);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.075);padding:6px 10px;margin-bottom:6px;">
+                <div><strong>47'</strong> <span style="background:#dc3545;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;">Karte</span></div>
+                <div style="margin-top:3px;font-size:10.5px;">Gelbe Karte für Stefan H.</div>
+              </div>
+              <div style="background:#fff;border:1px solid rgba(0,0,0,.125);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.075);padding:6px 10px;margin-bottom:6px;">
+                <div><strong>45'</strong> <span style="background:#6c757d;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;">Halbzeit</span></div>
+                <div style="margin-top:3px;font-size:10.5px;">Halbzeitstand: 1:1</div>
+              </div>
+              <div style="background:#fff;border:1px solid rgba(0,0,0,.125);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.075);padding:6px 10px;margin-bottom:10px;">
+                <div><strong>01'</strong> <span style="background:#6c757d;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:3px;">Anstoß</span></div>
+                <div style="margin-top:3px;font-size:10.5px;">Das Spiel läuft!</div>
+              </div>
+              <!-- footer link -->
+              <div style="text-align:center;font-size:9px;color:#6c757d;">Anmelden · Team Manager</div>
             </div>
           </div>
-          <p class="tm-screen-caption">Übersicht — Listen &amp; Markdown-Dateien nebeneinander</p>
+          <p class="tm-screen-caption">Live-Ticker — öffentlich, kein Login, Echtzeit-Updates</p>
         </div>
 
-        <!-- Screen 2: Training list with toggles -->
+        <!-- Screen 2: Training list -->
         <div class="col-12 col-lg-6">
           <div class="mock">
             <div class="mock-bar">
@@ -718,31 +379,31 @@
               <div class="mock-dot" style="background:#28c840"></div>
             </div>
             <div class="mock-body">
-              <div style="font-weight:800;font-size:14px;margin-bottom:5px;">Training 18.05.26</div>
-              <div style="margin-bottom:12px;"><span class="mk-pub">Öffentlich</span><span style="color:#6c757d;font-size:10px;margin-left:8px;">18.05.2026</span></div>
+              <div style="font-weight:800;font-size:14px;margin-bottom:5px;">Training 18.07.26</div>
+              <div style="margin-bottom:12px;"><span class="mk-pub">Öffentlich</span><span style="color:#6c757d;font-size:10px;margin-left:8px;">18.07.2026</span></div>
               <table class="mk-table">
                 <thead>
-                  <tr><th style="width:100%">Mitglied</th><th>Training</th></tr>
+                  <tr><th style="width:100%">Mitglied</th><th>Training</th><th>Tore</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td>Tobias B.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Felix W.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Stefan H.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Lukas M.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Simon L.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Jan P.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Markus R.</td><td><span class="mk-toggle"></span></td></tr>
-                  <tr><td>Moritz T.</td><td><span class="mk-toggle"></span></td></tr>
+                  <tr><td>Tobias B.</td><td><span class="mk-toggle"></span></td><td class="r">2</td></tr>
+                  <tr><td>Felix W.</td><td><span class="mk-toggle"></span></td><td class="r">1</td></tr>
+                  <tr><td>Stefan H.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
+                  <tr><td>Lukas M.</td><td><span class="mk-toggle"></span></td><td class="r">1</td></tr>
+                  <tr><td>Simon L.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
+                  <tr><td>Jan P.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
+                  <tr><td>Markus R.</td><td><span class="mk-toggle"></span></td><td class="r">3</td></tr>
+                  <tr><td>Moritz T.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <p class="tm-screen-caption">Anwesenheit — Mitglieder tragen sich selbst ein</p>
+          <p class="tm-screen-caption">Listen — Mitglieder tragen ihre Daten selbst ein</p>
         </div>
 
         <!-- Screen 3: Rangliste -->
-        <div class="col-12 col-lg-6">
-          <div class="mock">
+        <div class="col-12">
+          <div class="mock" style="max-width:680px;margin:0 auto;">
             <div class="mock-bar">
               <div class="mock-dot" style="background:#ff5f57"></div>
               <div class="mock-dot" style="background:#febc2e"></div>
@@ -771,8 +432,6 @@
                   <tr><td>Stefan H.</td><td class="r"><span class="mk-num">27</span> <span class="mk-pct">(84%)</span></td><td class="r">5 <span class="mk-pct">(100%)</span></td><td class="r">3 <span class="mk-pct">(75%)</span></td><td class="r">4 <span class="mk-pct">(100%)</span></td></tr>
                   <tr><td>Lukas M.</td><td class="r"><span class="mk-num">26</span> <span class="mk-pct">(81%)</span></td><td class="r">3 <span class="mk-pct">(60%)</span></td><td class="r">3 <span class="mk-pct">(75%)</span></td><td class="r">4 <span class="mk-pct">(100%)</span></td></tr>
                   <tr><td>Simon L.</td><td class="r"><span class="mk-num">22</span> <span class="mk-pct">(69%)</span></td><td class="r">3 <span class="mk-pct">(60%)</span></td><td class="r">3 <span class="mk-pct">(75%)</span></td><td class="r">3 <span class="mk-pct">(75%)</span></td></tr>
-                  <tr><td>Jan P.</td><td class="r"><span class="mk-num">21</span> <span class="mk-pct">(66%)</span></td><td class="r">4 <span class="mk-pct">(80%)</span></td><td class="r">3 <span class="mk-pct">(75%)</span></td><td class="r">2 <span class="mk-pct">(50%)</span></td></tr>
-                  <tr><td>Moritz T.</td><td class="r"><span class="mk-num">19</span> <span class="mk-pct">(59%)</span></td><td class="r">1 <span class="mk-pct">(20%)</span></td><td class="r">2 <span class="mk-pct">(50%)</span></td><td class="r">3 <span class="mk-pct">(75%)</span></td></tr>
                 </tbody>
               </table>
             </div>
@@ -780,205 +439,39 @@
           <p class="tm-screen-caption">Rangliste — listenübergreifende Statistik pro Mitglied, nach Zeitfenstern</p>
         </div>
 
-        <!-- Screen 4: Email notification compose + preview -->
-        <div class="col-12 col-lg-6">
-          <div class="mock">
-            <div class="mock-bar">
-              <div class="mock-dot" style="background:#ff5f57"></div>
-              <div class="mock-dot" style="background:#febc2e"></div>
-              <div class="mock-dot" style="background:#28c840"></div>
-            </div>
-            <div class="mock-body">
-              <div style="font-weight:800;font-size:14px;margin-bottom:2px;">Benachrichtigung senden</div>
-              <div style="color:#6c757d;font-size:10px;margin-bottom:12px;">Training 18.05.26 · 8 Mitglieder</div>
-
-              <!-- Message compose area -->
-              <div style="margin-bottom:10px;">
-                <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:4px;">Nachricht</div>
-                <div style="background:#fff;border:1px solid #ced4da;border-radius:6px;padding:7px 9px;color:#212529;font-size:10px;line-height:1.5;min-height:36px;">
-                  Hallo Team, das Training am 18.05. findet statt. Bitte bestätigt eure Teilnahme.
-                </div>
-              </div>
-
-              <!-- Link preview -->
-              <div style="margin-bottom:10px;">
-                <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:4px;">Link im Inhalt</div>
-                <div style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:5px;padding:5px 8px;color:#2563eb;font-size:9.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                  🔗 team-manager.example.com/member/lists/42
-                </div>
-              </div>
-
-              <!-- Recipient status -->
-              <div style="margin-bottom:10px;">
-                <div style="font-size:10px;font-weight:700;color:#495057;margin-bottom:5px;">Empfänger</div>
-                <div style="display:grid;gap:4px;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;">
-                    <span>Tobias B.</span>
-                    <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#10003; E-Mail</span>
-                  </div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;">
-                    <span>Felix W.</span>
-                    <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#10003; E-Mail</span>
-                  </div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8;">
-                    <span>Stefan H.</span>
-                    <span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#9888; Fehlt</span>
-                  </div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;">
-                    <span>Lukas M.</span>
-                    <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#10003; E-Mail</span>
-                  </div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#94a3b8;">
-                    <span>Simon L.</span>
-                    <span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;">&#9888; Fehlt</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Send button -->
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-                <span style="color:#6c757d;font-size:9.5px;">5 Mitglieder erhalten E-Mail, 2 fehlen</span>
-                <span class="mk-btn" style="background:#2563eb;color:#fff;">Senden</span>
-              </div>
-            </div>
-          </div>
-          <p class="tm-screen-caption">Benachrichtigung — Empfänger-Vorschau mit E-Mail-Status</p>
-        </div>
-
-        <!-- Screen 5: Calendar week view -->
-        <div class="col-12">
-          <div class="mock" style="max-width:680px;margin:0 auto;">
-            <div class="mock-bar">
-              <div class="mock-dot" style="background:#ff5f57"></div>
-              <div class="mock-dot" style="background:#febc2e"></div>
-              <div class="mock-dot" style="background:#28c840"></div>
-            </div>
-            <div class="mock-body">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <div style="font-weight:800;font-size:14px;">Inhalte · Kalender</div>
-                <div style="display:flex;gap:4px;">
-                  <span class="mk-btn mk-btn-o">← </span>
-                  <span class="mk-btn" style="background:#2563eb;color:#fff;">Woche</span>
-                  <span class="mk-btn mk-btn-o">Monat</span>
-                  <span class="mk-btn mk-btn-o"> →</span>
-                </div>
-              </div>
-              <div style="color:#6c757d;font-size:10px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #dee2e6;">
-                KW 29 · 14.–20. Juli 2026
-              </div>
-
-              <!-- Day group: Monday -->
-              <div style="font-size:10px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6;padding-bottom:3px;margin-bottom:5px;">Montag, 14. Juli</div>
-              <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
-                  <span style="font-weight:600;font-size:11px;flex:1;"><i class="bi bi-table me-1" style="color:#6c757d;"></i>Training</span>
-                  <span class="mk-pub">Öffentlich</span>
-                </div>
-                <div style="color:#6c757d;font-size:9.5px;margin-top:3px;"><i class="bi bi-geo-alt me-1"></i>Haupthalle</div>
-                <div style="color:#6c757d;font-size:9.5px;margin-top:2px;"><i class="bi bi-clock me-1"></i>18:00 – 20:00</div>
-              </div>
-
-              <!-- Day group: Wednesday -->
-              <div style="font-size:10px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6;padding-bottom:3px;margin-bottom:5px;">Mittwoch, 16. Juli</div>
-              <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
-                  <span style="font-weight:600;font-size:11px;flex:1;"><i class="bi bi-table me-1" style="color:#6c757d;"></i>Spielbericht 16.07.</span>
-                  <span class="mk-prot">Geschützt</span>
-                </div>
-                <div style="color:#6c757d;font-size:9.5px;margin-top:3px;"><i class="bi bi-geo-alt me-1"></i>Auswärts · FC Nordstadt</div>
-                <div style="color:#6c757d;font-size:9.5px;margin-top:2px;"><i class="bi bi-clock me-1"></i>15:00 – 17:30</div>
-              </div>
-
-              <!-- Day group: Saturday -->
-              <div style="font-size:10px;font-weight:700;color:#6c757d;border-bottom:1px solid #dee2e6;padding-bottom:3px;margin-bottom:5px;">Samstag, 19. Juli</div>
-              <div style="background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;margin-bottom:10px;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
-                  <span style="font-weight:600;font-size:11px;flex:1;"><i class="bi bi-table me-1" style="color:#6c757d;"></i>Training</span>
-                  <span class="mk-pub">Öffentlich</span>
-                </div>
-                <div style="color:#6c757d;font-size:9.5px;margin-top:3px;"><i class="bi bi-geo-alt me-1"></i>Trainingsplatz Nord</div>
-                <div style="color:#6c757d;font-size:9.5px;margin-top:2px;"><i class="bi bi-clock me-1"></i>10:00 – 12:00</div>
-              </div>
-
-              <!-- ICS hint -->
-              <div style="background:#cff4fc;border:1px solid #b6effb;border-radius:6px;padding:7px 10px;">
-                <strong style="font-size:9.5px;color:#055160;">In Kalender-App abonnieren:</strong>
-                <span style="font-size:9.5px;color:#055160;"> ICS-Link kopieren und in Apple Kalender, Google oder Outlook einfügen.</span>
-              </div>
-            </div>
-          </div>
-          <p class="tm-screen-caption">Kalender — Wochenansicht mit Uhrzeit, Ort und ICS-Abo</p>
-        </div>
-
       </div>
     </div>
   </section>
 
-<!-- ── CTA ────────────────────────────────────────────────────── -->
+  <!-- CTA -->
   <section class="tm-cta" id="starten">
-    <div class="container position-relative">
-      <div class="text-center mb-5">
-        <h2 class="mb-3">Bereit loszulegen?</h2>
-        <p style="color:rgba(255,255,255,0.75);font-size:1.05rem;max-width:480px;margin:0 auto;">
-          Wähle die Variante, die zu deiner Infrastruktur passt.
-        </p>
-      </div>
-
-      <div class="row g-3 mb-5">
-
-        <div class="col-12 col-md-4">
-          <div class="tm-deploy-card">
-            <div class="tm-deploy-icon"><i class="bi bi-server"></i></div>
-            <h4>Webserver mit PHP</h4>
-            <p>PHP 8.3+ und eine externe PostgreSQL-Datenbank — ideal für Shared Hosting (z.&thinsp;B. Hetzner). Dateien per FTP hochladen, fertig.</p>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="tm-deploy-card">
-            <div class="tm-deploy-icon"><i class="bi bi-box"></i></div>
-            <h4>Docker (App + DB)</h4>
-            <p>Vollständig containerisiert via Docker Compose. App und PostgreSQL laufen gemeinsam — ein Befehl, alles läuft.</p>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <div class="tm-deploy-card">
-            <div class="tm-deploy-icon"><i class="bi bi-boxes"></i></div>
-            <h4>Docker + externe DB</h4>
-            <p>Nur die App als Container, PostgreSQL extern (z.&thinsp;B. verwalteter Datenbankdienst). Flexibel für bestehende Infrastruktur.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="text-center">
-        <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener"
-           class="btn tm-btn-white btn-lg">
-          <i class="bi bi-github me-2"></i>
-          Auf GitHub ansehen
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Help ──────────────────────────────────────────────────── -->
-  <section style="background: var(--color-light); padding: 4rem 0; border-top: 1px solid var(--color-border);" id="hilfe">
-    <div class="container text-center">
-      <p class="tm-section-label">Hilfe &amp; Support</p>
-      <h2 class="tm-section-title mb-3">Fragen oder Unterstützung?</h2>
-      <p style="color: #64748b; font-size: 1rem; max-width: 460px; margin: 0 auto 2rem; line-height: 1.7;">
-        Für Einrichtung, Fragen oder individuelle Anpassungen stehe ich gerne zur Verfügung.
-      </p>
-      <a href="https://www.se-wi.com" target="_blank" rel="noopener"
-         class="btn tm-btn-primary">
-        se-wi.com
-        <i class="bi bi-arrow-up-right ms-2"></i>
+    <div class="container position-relative text-center">
+      <h2 class="mb-3">Bereit loszulegen?</h2>
+      <p class="mb-4">PHP 8.3+ und PostgreSQL — als Shared Hosting, Docker oder Docker + externe DB. Dateien hochladen, fertig.</p>
+      <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener"
+         class="btn tm-btn-white btn-lg">
+        <i class="bi bi-github me-2"></i>
+        Auf GitHub ansehen
       </a>
     </div>
   </section>
 
-  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <!-- Help -->
+  <section style="background: var(--color-light); padding: 3rem 0; border-top: 1px solid var(--color-border);">
+    <div class="container text-center">
+      <p class="tm-section-label">Hilfe &amp; Support</p>
+      <h2 class="tm-section-title mb-3">Fragen oder Unterstützung?</h2>
+      <p style="color: #64748b; font-size: 1rem; max-width: 420px; margin: 0 auto 2rem; line-height: 1.7;">
+        Für Einrichtung, Fragen oder individuelle Anpassungen stehe ich gerne zur Verfügung.
+      </p>
+      <a href="https://www.se-wi.com" target="_blank" rel="noopener"
+         class="btn tm-btn-primary">
+        se-wi.com <i class="bi bi-arrow-up-right ms-2"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
   <footer class="tm-footer">
     <div class="container text-center">
       <p>
@@ -990,9 +483,8 @@
     </div>
   </footer>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmA/A3VVoaOjHDGmH9+Y8gDXDmhZ"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
           crossorigin="anonymous"></script>
 </body>
 </html>
