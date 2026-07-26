@@ -161,7 +161,7 @@ Plans:
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
 | 5. Email Notifications | 5/5 | Complete   | 2026-07-13 |
 | 6. Calendar — ICS Export | 4/4 | Complete   | 2026-07-14 |
-| 7. Live-Ticker | 3/5 | In Progress|  |
+| 7. Live-Ticker | 4/5 | In Progress|  |
 
 ---
 
@@ -250,13 +250,13 @@ Plans:
 
 **Requirements**: TICKER-01 (Ticker CRUD), TICKER-02 (Nachrichten posten), TICKER-03 (Autorisierung — Koordinator + freigegebene Mitglieder), TICKER-04 (öffentlich ohne Login lesbar), TICKER-05 (Auto-Reload + Hinweis), TICKER-06 (öffentliche Übersichtsseite + Login-Seite-Link)
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 - [x] 07-01-PLAN.md — DB schema: 4 ticker tables (tickers, ticker_tags, ticker_messages, ticker_members) + RLS policies
 - [x] 07-02-PLAN.md — Settings page: rename columns→settings handler + ticker-tags CRUD section
 - [x] 07-03-PLAN.md — Coordinator ticker CRUD + message posting/editing/deleting + close + two-step delete
-- [ ] 07-04-PLAN.md — Member ticker (freigabe-gated posting) + public ticker views (no auth, auto-reload)
+- [x] 07-04-PLAN.md — Member ticker (freigabe-gated posting) + public ticker views (no auth, auto-reload)
 - [ ] 07-05-PLAN.md — Routing + nav wiring: all routes in index.php + coordinator/member nav + login page link
 
 ---
