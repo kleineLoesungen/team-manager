@@ -61,15 +61,13 @@
                     Anmelden
                 </button>
             </form>
+
+            <hr class="my-3">
+
+            <a href="/ticker" class="btn btn-outline-secondary w-100 min-touch">
+                <i class="bi bi-megaphone me-2"></i>Live-Ticker anzeigen
+            </a>
+            <p class="text-muted text-center mb-0 mt-2" style="font-size: 0.75rem;">Verfolge Live-Events ohne Anmeldung</p>
         </div>
     </div><!-- /card -->
-
-    <!-- Public ticker access (TICKER-06) -->
-    <div class="mt-3 text-center">
-        <p class="text-muted small mb-1">Öffentliche Ticker</p>
-        <a href="/ticker" class="text-muted small">
-            <i class="bi bi-megaphone me-1"></i>Ticker-Übersicht anzeigen
-        </a>
-        <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.25rem;">Verfolge Live-Events ohne Anmeldung</p>
-    </div>
 </div><!-- /outer d-flex -->

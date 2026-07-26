@@ -1,9 +1,10 @@
 <?php
-// src/templates/coordinator/ticker_form.php — create ticker form
-// Variables: $members (array), $form_values (array with keys: name, description, freigabe_members)
+// src/templates/coordinator/ticker_form.php — create/edit ticker form
+// Variables: $members (array), $form_values (array), $form_action (string, optional)
 $freigabe_ids = $form_values['freigabe_members'] ?? [];
+$form_action  = $form_action ?? '/coordinator/ticker/new';
 ?>
-<form method="POST" action="/coordinator/ticker/new">
+<form method="POST" action="<?= e($form_action) ?>">
     <?= csrf_field() ?>
 
     <div class="mb-3">
@@ -13,6 +14,22 @@ $freigabe_ids = $form_values['freigabe_members'] ?? [];
                value="<?= e($form_values['name'] ?? '') ?>"
                placeholder='z.B. "Finale 2026"'>
         <div class="form-text">Erforderlich. Max. 255 Zeichen.</div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-7">
+            <label for="ticker_event_date" class="form-label">Datum</label>
+            <input type="date" id="ticker_event_date" name="event_date" class="form-control"
+                   value="<?= e($form_values['event_date'] ?? date('Y-m-d')) ?>">
+        </div>
+        <div class="col-5">
+            <label for="ticker_start_time" class="form-label">Startzeit</label>
+            <input type="time" id="ticker_start_time" name="start_time" class="form-control"
+                   value="<?= e($form_values['start_time'] ?? '') ?>">
+        </div>
+        <div class="col-12">
+            <div class="form-text mt-0">Optional. Wird öffentlich angezeigt.</div>
+        </div>
     </div>
 
     <div class="mb-4">
@@ -46,6 +63,6 @@ $freigabe_ids = $form_values['freigabe_members'] ?? [];
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">Speichern</button>
-        <a href="/coordinator/ticker" class="btn btn-outline-secondary">Abbrechen</a>
+        <a href="<?= isset($cancel_url) ? e($cancel_url) : '/coordinator/ticker' ?>" class="btn btn-outline-secondary">Abbrechen</a>
     </div>
 </form>

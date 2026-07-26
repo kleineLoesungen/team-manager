@@ -164,32 +164,30 @@ function render_layout_head(string $title = 'Team Manager'): void {
         .mobile-tab-bar {
             background: #fff;
             border-bottom: 1px solid #e9ecef;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
         }
-        .mobile-tab-bar::-webkit-scrollbar { display: none; }
+        .mobile-tab-bar > .d-flex {
+            width: 100%;
+        }
         .mobile-tab-link {
-            flex-shrink: 0;
+            flex: 1 1 0;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 3px;
-            padding: 10px 14px;
-            font-size: 0.68rem;
-            font-weight: 500;
+            justify-content: center;
+            padding: 10px 4px;
             color: #6c757d;
             text-decoration: none;
             border-bottom: 2px solid transparent;
             transition: color 0.15s ease, border-color 0.15s ease;
-            white-space: nowrap;
         }
         .mobile-tab-link.active {
             color: var(--brand);
             border-bottom-color: var(--brand);
-            font-weight: 700;
         }
-        .mobile-tab-link .tab-icon { font-size: 1.15rem; }
+        .mobile-tab-link .tab-icon { font-size: 1.35rem; }
+        /* Hide text labels — icon-only on mobile */
+        .mobile-tab-link span:not(.tab-icon) { display: none; }
 
         /* Entrance animation — card fade-in-up */
         @media (prefers-reduced-motion: no-preference) {

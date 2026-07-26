@@ -217,11 +217,25 @@ match (true) {
     $path === '/coordinator/ticker/new'
         => require ROOT_PATH . '/src/coordinator/ticker_create_handler.php',
 
+    // /coordinator/ticker/{id}/edit — GET/POST: edit ticker metadata
+    (bool)preg_match('#^/coordinator/ticker/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/ticker_edit_handler.php';
+        })(),
+
     // /coordinator/ticker/{id}/close — POST: close ticker
     (bool)preg_match('#^/coordinator/ticker/(\d+)/close$#', $path, $matches)
         => (function() use ($matches): void {
             $_REQUEST['ticker_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/coordinator/ticker_close_handler.php';
+        })(),
+
+    // /coordinator/ticker/{id}/reopen — POST: reopen closed ticker
+    (bool)preg_match('#^/coordinator/ticker/(\d+)/reopen$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/ticker_reopen_handler.php';
         })(),
 
     // /coordinator/ticker/{id}/delete — GET (confirm) / POST (delete)

@@ -2,25 +2,29 @@
 // src/templates/coordinator/ticker_detail.php
 // Variables: $ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id
 ?>
-<div class="d-flex justify-content-between align-items-start mb-3">
-    <div>
-        <h4 class="fw-semibold mb-1"><?= e($ticker['name']) ?></h4>
-        <?php if ($ticker['description']): ?>
-        <p class="text-muted small mb-0"><?= e($ticker['description']) ?></p>
-        <?php endif; ?>
-    </div>
-    <div class="d-flex gap-2 ms-3 flex-shrink-0">
-        <?php if ($ticker['status'] === 'active'): ?>
-        <span class="badge bg-success align-self-center">Aktiv</span>
-        <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/close" class="d-inline">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-sm btn-outline-warning">Schließen</button>
-        </form>
-        <?php else: ?>
-        <span class="badge bg-secondary align-self-center">Geschlossen</span>
-        <?php endif; ?>
-        <a href="/coordinator/ticker/<?= (int)$ticker['id'] ?>/delete" class="btn btn-sm btn-outline-danger">Löschen</a>
-    </div>
+<?php if ($ticker['description']): ?>
+<p class="text-muted small mb-2"><?= e($ticker['description']) ?></p>
+<?php endif; ?>
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <?php if ($ticker['status'] === 'active'): ?>
+    <span class="badge bg-success">Aktiv</span>
+    <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/close" class="d-inline">
+        <?= csrf_field() ?>
+        <button type="submit" class="btn btn-sm btn-outline-warning"
+                onclick="return confirm('Ticker wirklich schließen? Er kann danach wieder geöffnet werden.')">
+            Schließen
+        </button>
+    </form>
+    <?php else: ?>
+    <span class="badge bg-secondary">Geschlossen</span>
+    <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/reopen" class="d-inline">
+        <?= csrf_field() ?>
+        <button type="submit" class="btn btn-sm btn-outline-success">Wieder öffnen</button>
+    </form>
+    <?php endif; ?>
+    <a href="/coordinator/ticker/<?= (int)$ticker['id'] ?>/edit" class="btn btn-sm btn-outline-secondary">Bearbeiten</a>
+    <a href="/coordinator/ticker/<?= (int)$ticker['id'] ?>/delete" class="btn btn-sm btn-outline-danger">Löschen</a>
 </div>
 
 <?php if (!empty($freigabe_members)): ?>

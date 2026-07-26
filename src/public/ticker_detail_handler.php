@@ -46,7 +46,7 @@ $stmt = $pdo->prepare(
      FROM ticker_messages m
      LEFT JOIN ticker_tags t ON m.tag_id = t.id
      WHERE m.ticker_id = ?
-     ORDER BY m.created_at DESC
+     ORDER BY m.timestamp::time DESC, m.created_at DESC
      LIMIT 100"
 );
 $stmt->execute([$ticker_id]);

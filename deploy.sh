@@ -34,7 +34,7 @@ mirror --reverse \
     --exclude='deploy.sh' \
     --exclude='README.md' \
     --exclude='landing/' \
-    --exclude='public/' \
+    --exclude='^public/' \
     . public_html/team-manager/
 
 # Upload public/index.php and public/.htaccess to the webroot root

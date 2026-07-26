@@ -755,6 +755,8 @@ function db_init_schema(PDO $pdo, string $s): void {
         name        VARCHAR(255) NOT NULL,
         description TEXT,
         status      VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+        event_date  DATE NULL,
+        start_time  TIME NULL,
         created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -989,7 +991,8 @@ function db_init_rls(PDO $pdo, string $s): void {
         error_log('db_init_rls: FORCE RLS tickers skipped (non-fatal) — ' . $e->getMessage());
     }
     $pdo->exec("CREATE POLICY tickers_select ON {$s}.tickers FOR SELECT USING (
-        team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        current_setting('app.is_admin', true) = 'true'
+        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
     )");
     $pdo->exec("CREATE POLICY tickers_insert ON {$s}.tickers FOR INSERT WITH CHECK (
         current_setting('app.current_role', true) = 'coordinator'

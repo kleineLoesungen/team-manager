@@ -4,43 +4,48 @@
 
 declare(strict_types=1);
 
-// Default to team 1; override via ?team=N for multi-team setups
-$team_id = (int)($_GET['team'] ?? 1);
-
-if ($team_id <= 0) {
-    http_response_code(404);
-    exit;
-}
-
 $pdo = get_db();
 
-// Set RLS context for team isolation (no role — public access)
-set_team_context($pdo, $team_id);
+// Admin bypass lets us query all teams + tickers without a team context
+set_admin_context($pdo);
 
-// Verify team exists and is active
-$stmt = $pdo->prepare("SELECT id, name FROM teams WHERE id = ? AND is_active = TRUE");
-$stmt->execute([$team_id]);
-$team = $stmt->fetch(PDO::FETCH_ASSOC);
+// Fetch all active teams
+$teams_rows = $pdo->query(
+    "SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name"
+)->fetchAll(PDO::FETCH_ASSOC);
 
-if (!$team) {
+if (empty($teams_rows)) {
     http_response_code(404);
     exit;
 }
 
-// Fetch tickers: active first, then closed (TICKER-06)
-$stmt = $pdo->prepare(
-    "SELECT id, name, description, status, created_at,
-            (SELECT COUNT(*) FROM ticker_messages WHERE ticker_id = tickers.id) AS message_count
-     FROM tickers
-     WHERE team_id = ?
-     ORDER BY (status = 'active') DESC, created_at DESC"
-);
-$stmt->execute([$team_id]);
-$tickers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// For each team fetch their tickers (active first, then closed)
+$teams_with_tickers = [];
+foreach ($teams_rows as $team) {
+    set_team_context($pdo, (int)$team['id']);
+    $stmt = $pdo->prepare(
+        "SELECT id, name, description, status, event_date, start_time, created_at,
+                (SELECT COUNT(*) FROM ticker_messages WHERE ticker_id = tickers.id) AS message_count
+         FROM tickers
+         WHERE team_id = ?
+         ORDER BY (status = 'active') DESC, COALESCE(event_date, created_at::date) DESC, COALESCE(start_time, '00:00') DESC, created_at DESC"
+    );
+    $stmt->execute([(int)$team['id']]);
+    $teams_with_tickers[] = [
+        'team' => $team,
+        'tickers' => $stmt->fetchAll(PDO::FETCH_ASSOC),
+    ];
+}
 
+// Filter out teams with no tickers
+$teams_with_tickers = array_values(array_filter(
+    $teams_with_tickers,
+    fn($t) => !empty($t['tickers'])
+));
+
+set_admin_context($pdo);
 $app_title = 'Team Manager';
-$stmt = $pdo->prepare("SELECT value FROM settings WHERE key = 'app_title'");
-$stmt->execute();
+$stmt = $pdo->query("SELECT value FROM settings WHERE key = 'app_title' LIMIT 1");
 $val = $stmt->fetchColumn();
 if ($val) $app_title = $val;
 

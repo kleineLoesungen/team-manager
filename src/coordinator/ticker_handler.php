@@ -8,10 +8,11 @@ require_coordinator();
 $pdo = get_db();
 
 $stmt = $pdo->prepare(
-    "SELECT id, name, description, status, created_at
+    "SELECT id, name, description, status, event_date, start_time, created_at,
+            (SELECT COUNT(*) FROM ticker_messages WHERE ticker_id = tickers.id) AS message_count
      FROM tickers
      WHERE team_id = ?
-     ORDER BY (status = 'active') DESC, created_at DESC"
+     ORDER BY (status = 'active') DESC, COALESCE(event_date, created_at::date) DESC, created_at DESC"
 );
 $stmt->execute([$_SESSION['team_id']]);
 $tickers = $stmt->fetchAll(PDO::FETCH_ASSOC);
