@@ -1,7 +1,8 @@
 ---
 phase: 07
 slug: live-ticker
-status: draft
+status: approved
+reviewed_at: 2026-07-26
 shadcn_initialized: false
 preset: none
 created: 2026-07-26
