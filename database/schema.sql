@@ -120,3 +120,49 @@ CREATE TABLE IF NOT EXISTS team_manager.cells (
 CREATE INDEX IF NOT EXISTS idx_cells_list_id    ON team_manager.cells(list_id);
 CREATE INDEX IF NOT EXISTS idx_cells_column_id  ON team_manager.cells(column_id);
 CREATE INDEX IF NOT EXISTS idx_cells_player_id  ON team_manager.cells(player_id);
+
+-- ── Phase 7: Live-Ticker ─────────────────────────────────────────────────────
+
+-- Ticker-Tags — team-wide configurable tags for messages
+CREATE TABLE IF NOT EXISTS team_manager.ticker_tags (
+    id         SERIAL PRIMARY KEY,
+    team_id    INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    label      VARCHAR(50) NOT NULL,
+    color      VARCHAR(20) NOT NULL DEFAULT 'secondary',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ticker_tags_team ON team_manager.ticker_tags(team_id);
+
+-- Tickers — one ticker per event (tournament, game, etc.)
+CREATE TABLE IF NOT EXISTS team_manager.tickers (
+    id          SERIAL PRIMARY KEY,
+    team_id     INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    name        VARCHAR(255) NOT NULL,
+    description TEXT,
+    status      VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_tickers_team_status ON team_manager.tickers(team_id, status);
+
+-- Ticker-Messages — short messages posted to a ticker
+CREATE TABLE IF NOT EXISTS team_manager.ticker_messages (
+    id         SERIAL PRIMARY KEY,
+    ticker_id  INTEGER NOT NULL REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
+    tag_id     INTEGER REFERENCES team_manager.ticker_tags(id) ON DELETE SET NULL,
+    message    VARCHAR(280) NOT NULL,
+    timestamp  VARCHAR(5) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ticker_messages_ticker_created ON team_manager.ticker_messages(ticker_id, created_at DESC);
+
+-- Ticker-Members — join table: which members may post to which ticker
+CREATE TABLE IF NOT EXISTS team_manager.ticker_members (
+    ticker_id INTEGER NOT NULL REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
+    user_id   INTEGER NOT NULL REFERENCES team_manager.users(id) ON DELETE CASCADE,
+    team_id   INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    PRIMARY KEY (ticker_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON team_manager.ticker_members(user_id, team_id);

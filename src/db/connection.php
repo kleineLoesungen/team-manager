@@ -737,6 +737,47 @@ function db_init_schema(PDO $pdo, string $s): void {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_flr_list_id ON {$s}.free_list_rows(list_id)");
+
+    // ── Phase 7: Live-Ticker tables ─────────────────────────────────────
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_tags (
+        id         SERIAL PRIMARY KEY,
+        team_id    INTEGER NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
+        label      VARCHAR(50) NOT NULL,
+        color      VARCHAR(20) NOT NULL DEFAULT 'secondary',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_tags_team ON {$s}.ticker_tags(team_id)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.tickers (
+        id          SERIAL PRIMARY KEY,
+        team_id     INTEGER NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
+        name        VARCHAR(255) NOT NULL,
+        description TEXT,
+        status      VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_tickers_team_status ON {$s}.tickers(team_id, status)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_messages (
+        id         SERIAL PRIMARY KEY,
+        ticker_id  INTEGER NOT NULL REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
+        tag_id     INTEGER REFERENCES {$s}.ticker_tags(id) ON DELETE SET NULL,
+        message    VARCHAR(280) NOT NULL,
+        timestamp  VARCHAR(5) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_messages_ticker_created ON {$s}.ticker_messages(ticker_id, created_at DESC)");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_members (
+        ticker_id INTEGER NOT NULL REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
+        user_id   INTEGER NOT NULL REFERENCES {$s}.users(id)   ON DELETE CASCADE,
+        team_id   INTEGER NOT NULL REFERENCES {$s}.teams(id)   ON DELETE CASCADE,
+        PRIMARY KEY (ticker_id, user_id)
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON {$s}.ticker_members(user_id, team_id)");
 }
 
 /**
