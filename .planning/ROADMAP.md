@@ -12,6 +12,7 @@
 - [ ] **Phase 4: Statistics & Aggregation** - Per-Player Stats, Filtering, Leaderboards
 - [x] **Phase 5: Email Notifications** - Member email profile, coordinator sends notifications ✓ 2026-07-13
 - [x] **Phase 6: Calendar — Lists with Date, Location & ICS Export** - Calendar timeline, location field, ICS export (completed 2026-07-14)
+- [ ] **Phase 7: Live-Ticker** - Public event ticker, message posting, auto-reload, member freigabe
 
 ## Phase Details
 
@@ -160,6 +161,7 @@ Plans:
 | 4. Statistics & Aggregation | 2/3 | In Progress|  |
 | 5. Email Notifications | 5/5 | Complete   | 2026-07-13 |
 | 6. Calendar — ICS Export | 4/4 | Complete   | 2026-07-14 |
+| 7. Live-Ticker | 0/5 | Planned | |
 
 ---
 
@@ -248,10 +250,14 @@ Plans:
 
 **Requirements**: TICKER-01 (Ticker CRUD), TICKER-02 (Nachrichten posten), TICKER-03 (Autorisierung — Koordinator + freigegebene Mitglieder), TICKER-04 (öffentlich ohne Login lesbar), TICKER-05 (Auto-Reload + Hinweis), TICKER-06 (öffentliche Übersichtsseite + Login-Seite-Link)
 
-**Plans:** 0/0 plans complete
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD — run `/gsd:plan-phase 7` to break down
+- [ ] 07-01-PLAN.md — DB schema: 4 ticker tables (tickers, ticker_tags, ticker_messages, ticker_members) + RLS policies
+- [ ] 07-02-PLAN.md — Settings page: rename columns→settings handler + ticker-tags CRUD section
+- [ ] 07-03-PLAN.md — Coordinator ticker CRUD + message posting/editing/deleting + close + two-step delete
+- [ ] 07-04-PLAN.md — Member ticker (freigabe-gated posting) + public ticker views (no auth, auto-reload)
+- [ ] 07-05-PLAN.md — Routing + nav wiring: all routes in index.php + coordinator/member nav + login page link
 
 ---
 
