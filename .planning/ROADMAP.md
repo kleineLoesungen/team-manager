@@ -240,6 +240,19 @@ Plans:
 - [x] 06-03-PLAN.md — Coordinator calendar view: tab-switcher, timeline, navigation, ICS link
 - [x] 06-04-PLAN.md — Member calendar view: tab-switcher, timeline (public+protected only), ICS link
 
+### Phase 7: Live-Ticker — Öffentlicher Event-Ticker mit Kurznachrichten
+
+**Goal:** Koordinatoren legen einen Live-Ticker für ein Event (Turnier, Spiel, Veranstaltung) an. Koordinatoren und ausgewählte Mitglieder können Kurznachrichten mit automatisch gesetztem (editierbarem) Timestamp posten. Der Ticker ist ohne Login öffentlich lesbar und lädt sich alle 5 Sekunden automatisch neu. Aktive und abgeschlossene Ticker sind auf der Login-Seite verlinkt und auf einer öffentlichen Übersichtsseite aufgelistet. Nur der Koordinator kann Ticker erstellen, schließen und löschen.
+
+**Depends on:** Phase 6
+
+**Requirements**: TICKER-01 (Ticker CRUD), TICKER-02 (Nachrichten posten), TICKER-03 (Autorisierung — Koordinator + freigegebene Mitglieder), TICKER-04 (öffentlich ohne Login lesbar), TICKER-05 (Auto-Reload + Hinweis), TICKER-06 (öffentliche Übersichtsseite + Login-Seite-Link)
+
+**Plans:** 0/0 plans complete
+
+Plans:
+- [ ] TBD — run `/gsd:plan-phase 7` to break down
+
 ---
 
 ### Phase 999.4: Coach List Detail — Bulk Inline Editing (BACKLOG)

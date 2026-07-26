@@ -89,6 +89,7 @@ Plan: Not started
 ### Roadmap Evolution
 
 - Phase 5 added: Email Notifications — members add email address, coordinator sends mail from list or markdown with custom text and link, pre-send review shows members missing email
+- Phase 7 added: Live-Ticker — öffentlicher Event-Ticker mit Kurznachrichten; Koordinator + freigegebene Mitglieder posten; Auto-Reload alle 5 Sekunden; ohne Login lesbar; öffentliche Übersichtsseite + Link auf Login-Seite
 - Phase 6 added: Calendar — optional date + location on lists, switchable calendar view (week/month/list), undated lists below calendar, role-aware links per recipient, ICS file for device calendar subscription
 
 ### Architecture Principles
