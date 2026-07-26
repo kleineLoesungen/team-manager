@@ -244,3 +244,98 @@ CREATE POLICY cells_ownership_update ON cells
             )
         )
     );
+
+-- ── Phase 7: Live-Ticker RLS ─────────────────────────────────────────────────
+
+-- ticker_tags: coordinator can manage; anyone with team context can SELECT (for post forms)
+ALTER TABLE team_manager.ticker_tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_tags FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY ticker_tags_select ON team_manager.ticker_tags FOR SELECT USING (
+    team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY ticker_tags_insert ON team_manager.ticker_tags FOR INSERT WITH CHECK (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY ticker_tags_update ON team_manager.ticker_tags FOR UPDATE USING (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY ticker_tags_delete ON team_manager.ticker_tags FOR DELETE USING (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+
+-- tickers: coordinator can manage; anyone with team context can SELECT (public endpoint)
+ALTER TABLE team_manager.tickers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.tickers FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY tickers_select ON team_manager.tickers FOR SELECT USING (
+    team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY tickers_insert ON team_manager.tickers FOR INSERT WITH CHECK (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY tickers_update ON team_manager.tickers FOR UPDATE USING (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY tickers_delete ON team_manager.tickers FOR DELETE USING (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+
+-- ticker_messages: anyone with team context can SELECT; coordinator + member can write (PHP enforces freigabe)
+ALTER TABLE team_manager.ticker_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_messages FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY ticker_messages_select ON team_manager.ticker_messages FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_messages.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+);
+CREATE POLICY ticker_messages_insert ON team_manager.ticker_messages FOR INSERT WITH CHECK (
+    current_setting('app.current_role', true) IN ('coordinator', 'member')
+    AND EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_messages.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+);
+CREATE POLICY ticker_messages_update ON team_manager.ticker_messages FOR UPDATE USING (
+    current_setting('app.current_role', true) IN ('coordinator', 'member')
+    AND EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_messages.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+);
+CREATE POLICY ticker_messages_delete ON team_manager.ticker_messages FOR DELETE USING (
+    current_setting('app.current_role', true) IN ('coordinator', 'member')
+    AND EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_messages.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+);
+
+-- ticker_members: coordinator can manage; coordinator + freigegeben member can SELECT
+ALTER TABLE team_manager.ticker_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_members FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY ticker_members_select ON team_manager.ticker_members FOR SELECT USING (
+    team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    AND current_setting('app.current_role', true) IN ('coordinator', 'member')
+);
+CREATE POLICY ticker_members_insert ON team_manager.ticker_members FOR INSERT WITH CHECK (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY ticker_members_delete ON team_manager.ticker_members FOR DELETE USING (
+    current_setting('app.current_role', true) = 'coordinator'
+    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);

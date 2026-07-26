@@ -958,6 +958,108 @@ function db_init_rls(PDO $pdo, string $s): void {
                         WHERE lists.id = free_list_rows.list_id
                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
     )");
+
+    // ── Phase 7: Live-Ticker RLS ─────────────────────────────────────────
+    $pdo->exec("ALTER TABLE {$s}.ticker_tags ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_tags FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_tags skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_tags_select ON {$s}.ticker_tags FOR SELECT USING (
+        team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY ticker_tags_insert ON {$s}.ticker_tags FOR INSERT WITH CHECK (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY ticker_tags_update ON {$s}.ticker_tags FOR UPDATE USING (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY ticker_tags_delete ON {$s}.ticker_tags FOR DELETE USING (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.tickers ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.tickers FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS tickers skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY tickers_select ON {$s}.tickers FOR SELECT USING (
+        team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY tickers_insert ON {$s}.tickers FOR INSERT WITH CHECK (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY tickers_update ON {$s}.tickers FOR UPDATE USING (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY tickers_delete ON {$s}.tickers FOR DELETE USING (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_messages ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_messages FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_messages skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_messages_select ON {$s}.ticker_messages FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_messages.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    )");
+    $pdo->exec("CREATE POLICY ticker_messages_insert ON {$s}.ticker_messages FOR INSERT WITH CHECK (
+        current_setting('app.current_role', true) IN ('coordinator', 'member')
+        AND EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_messages.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    )");
+    $pdo->exec("CREATE POLICY ticker_messages_update ON {$s}.ticker_messages FOR UPDATE USING (
+        current_setting('app.current_role', true) IN ('coordinator', 'member')
+        AND EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_messages.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    )");
+    $pdo->exec("CREATE POLICY ticker_messages_delete ON {$s}.ticker_messages FOR DELETE USING (
+        current_setting('app.current_role', true) IN ('coordinator', 'member')
+        AND EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_messages.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_members ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_members FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_members skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_members_select ON {$s}.ticker_members FOR SELECT USING (
+        team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND current_setting('app.current_role', true) IN ('coordinator', 'member')
+    )");
+    $pdo->exec("CREATE POLICY ticker_members_insert ON {$s}.ticker_members FOR INSERT WITH CHECK (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY ticker_members_delete ON {$s}.ticker_members FOR DELETE USING (
+        current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
 }
 
 /**
