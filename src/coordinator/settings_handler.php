@@ -79,7 +79,7 @@ $success = !empty($_GET['success']) ? match($_GET['success']) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Einstellungen', 'columns', function() use ($columns, $ticker_tags, $error, $success) {
+render_coach_page('Einstellungen', 'settings', function() use ($columns, $ticker_tags, $error, $success) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/settings.php';

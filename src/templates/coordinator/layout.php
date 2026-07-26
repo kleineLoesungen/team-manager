@@ -12,7 +12,7 @@ require_once dirname(__DIR__) . '/layout.php';
 /**
  * Render a full coordinator page.
  * @param string $title   Page title (German)
- * @param string $active  Active nav item — 'members', 'lists', 'columns', or 'stats'
+ * @param string $active  Active nav item — 'members', 'lists', 'settings', 'stats', 'logo', 'ticker'
  * @param callable $body  Function that outputs the main content HTML
  */
 function render_coach_page(string $title, string $active, callable $body): void {
@@ -38,9 +38,15 @@ function render_coach_page(string $title, string $active, callable $body): void 
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $active === 'columns' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/columns">
-                            <i class="bi bi-layout-three-columns me-2"></i>Spalten
+                        <a class="nav-link <?= $active === 'ticker' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coordinator/ticker">
+                            <i class="bi bi-megaphone me-2"></i>Ticker
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'settings' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coordinator/settings">
+                            <i class="bi bi-gear me-2"></i>Einstellungen
                         </a>
                     </li>
                     <li class="nav-item">
@@ -67,8 +73,11 @@ function render_coach_page(string $title, string $active, callable $body): void 
                     <a class="mobile-tab-link <?= $active === 'lists' ? 'active' : '' ?>" href="/coordinator/lists">
                         <i class="bi bi-collection tab-icon"></i><span>Inhalte</span>
                     </a>
-                    <a class="mobile-tab-link <?= $active === 'columns' ? 'active' : '' ?>" href="/coordinator/columns">
-                        <i class="bi bi-layout-three-columns tab-icon"></i><span>Spalten</span>
+                    <a class="mobile-tab-link <?= $active === 'ticker' ? 'active' : '' ?>" href="/coordinator/ticker">
+                        <i class="bi bi-megaphone tab-icon"></i><span>Ticker</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'settings' ? 'active' : '' ?>" href="/coordinator/settings">
+                        <i class="bi bi-gear tab-icon"></i><span>Einstellungen</span>
                     </a>
                     <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/coordinator/stats">
                         <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>

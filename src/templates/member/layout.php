@@ -11,7 +11,7 @@ require_once dirname(__DIR__) . '/layout.php';
 /**
  * Render a full player page.
  * @param string $title   Page title (German)
- * @param string $active  Active nav item — 'lists' or 'stats'
+ * @param string $active  Active nav item — 'lists', 'stats', 'profile', 'ticker'
  * @param callable $body  Function that outputs the main content HTML
  */
 function render_player_page(string $title, string $active, callable $body): void {
@@ -28,6 +28,12 @@ function render_player_page(string $title, string $active, callable $body): void
                         <a class="nav-link <?= $active === 'lists' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/member/lists">
                             <i class="bi bi-collection me-2"></i>Inhalte
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'ticker' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/member/ticker">
+                            <i class="bi bi-megaphone me-2"></i>Ticker
                         </a>
                     </li>
                     <li class="nav-item">
@@ -50,6 +56,9 @@ function render_player_page(string $title, string $active, callable $body): void
                 <div class="d-flex">
                     <a class="mobile-tab-link <?= $active === 'lists' ? 'active' : '' ?>" href="/member/lists">
                         <i class="bi bi-collection tab-icon"></i><span>Inhalte</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'ticker' ? 'active' : '' ?>" href="/member/ticker">
+                        <i class="bi bi-megaphone tab-icon"></i><span>Ticker</span>
                     </a>
                     <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/member/stats">
                         <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
