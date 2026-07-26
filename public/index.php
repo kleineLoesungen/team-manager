@@ -184,9 +184,20 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/file_detail_handler.php';
         })(),
 
-    // ── Coordinator: Columns (global) ──────────────────────────────────
+    // ── Coordinator: Settings (Einstellungen) — replaces /coordinator/columns ──
+    $path === '/coordinator/settings'
+        => require ROOT_PATH . '/src/coordinator/settings_handler.php',
+
+    // Backward compatibility: redirect /coordinator/columns to /coordinator/settings
     $path === '/coordinator/columns'
-        => require ROOT_PATH . '/src/coordinator/columns_handler.php',
+        => (function() {
+            header('Location: /coordinator/settings', true, 301);
+            exit;
+        })(),
+
+    // Column create action — new URL under settings; old URL kept as alias
+    $path === '/coordinator/settings/columns/create'
+        => require ROOT_PATH . '/src/coordinator/columns_create_handler.php',
 
     $path === '/coordinator/columns/create'
         => require ROOT_PATH . '/src/coordinator/columns_create_handler.php',
@@ -198,6 +209,34 @@ match (true) {
     // ── Coordinator: Logo ──────────────────────────────────────────────
     $path === '/coordinator/logo'
         => require ROOT_PATH . '/src/coordinator/logo_handler.php',
+
+    // ── Coordinator: Ticker ────────────────────────────────────────────────────
+    $path === '/coordinator/ticker'
+        => require ROOT_PATH . '/src/coordinator/ticker_handler.php',
+
+    $path === '/coordinator/ticker/new'
+        => require ROOT_PATH . '/src/coordinator/ticker_create_handler.php',
+
+    // /coordinator/ticker/{id}/close — POST: close ticker
+    (bool)preg_match('#^/coordinator/ticker/(\d+)/close$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/ticker_close_handler.php';
+        })(),
+
+    // /coordinator/ticker/{id}/delete — GET (confirm) / POST (delete)
+    (bool)preg_match('#^/coordinator/ticker/(\d+)/delete$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/ticker_delete_handler.php';
+        })(),
+
+    // /coordinator/ticker/{id} — GET/POST: detail + message CRUD (AFTER more specific routes above)
+    (bool)preg_match('#^/coordinator/ticker/(\d+)$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/ticker_detail_handler.php';
+        })(),
 
     // ── Member: Profile ───────────────────────────────────────────────────
     $path === '/member/profile'
@@ -233,6 +272,17 @@ match (true) {
     // ── Member: Statistics ────────────────────────────────────────────
     $path === '/member/stats'
         => require ROOT_PATH . '/src/member/stats_handler.php',
+
+    // ── Member: Ticker ─────────────────────────────────────────────────────────
+    $path === '/member/ticker'
+        => require ROOT_PATH . '/src/member/ticker_handler.php',
+
+    // /member/ticker/{id} — GET/POST: ticker feed + post form for freigegeben members
+    (bool)preg_match('#^/member/ticker/(\d+)$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/member/ticker_detail_handler.php';
+        })(),
 
     // ── Logo / Favicon ────────────────────────────────────────────────────────
     $path === '/logo'
@@ -285,6 +335,17 @@ match (true) {
         => (function() use ($matches): void {
             $_REQUEST['team_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/ics_handler.php';
+        })(),
+
+    // ── Public: Ticker (no auth) ─────────────────────────────────────────────
+    $path === '/ticker'
+        => require ROOT_PATH . '/src/public/ticker_handler.php',
+
+    // /ticker/{id} — GET: public ticker detail feed
+    (bool)preg_match('#^/ticker/(\d+)$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/public/ticker_detail_handler.php';
         })(),
 
     // ── 404 ────────────────────────────────────────────────────────────
