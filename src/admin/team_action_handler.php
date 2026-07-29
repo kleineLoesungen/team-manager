@@ -49,6 +49,13 @@ if ($action === 'edit') {
     $stmt->execute([$team_id]);
     redirect('/admin/teams');
 
+} elseif ($action === 'delete') {
+    // users.team_id is ON DELETE SET NULL, so delete users explicitly first.
+    // All other team data (lists, columns, cells, tickers, etc.) cascades from teams.
+    $pdo->prepare("DELETE FROM users WHERE team_id = ?")->execute([$team_id]);
+    $pdo->prepare("DELETE FROM teams WHERE id = ?")->execute([$team_id]);
+    redirect('/admin/teams');
+
 } else {
     redirect('/admin/teams');
 }
