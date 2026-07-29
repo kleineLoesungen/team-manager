@@ -147,6 +147,14 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
                                         <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
                                     </button>
                                 </form>
+                                <form method="POST"
+                                      action="/admin/teams/<?= $team['id'] ?>/delete"
+                                      onsubmit="return confirm('<?= e('Team „' . $team['name'] . '" endgültig löschen? Alle Mitglieder, Listen, Ticker und sonstige Daten werden unwiderruflich gelöscht.') ?>')">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash me-1"></i>Endgültig löschen
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
