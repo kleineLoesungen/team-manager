@@ -133,27 +133,23 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php foreach ($messages as $msg): ?>
 <div class="card mb-2">
     <div class="card-body py-2 px-3">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <strong><?= e($msg['timestamp']) ?></strong>
-                <?php if ($msg['tag_id']): ?>
-                <span class="badge bg-<?= e($msg['tag_color'] ?? 'secondary') ?> ms-1">
-                    <?= e($msg['tag_label'] ?? '') ?>
-                </span>
-                <?php endif; ?>
-                <p class="mb-0 mt-1"><?= e($msg['message']) ?></p>
-            </div>
-            <div class="d-flex gap-1 ms-3 flex-shrink-0">
-                <a href="/coordinator/ticker/<?= (int)$ticker_id ?>?edit_message_id=<?= (int)$msg['id'] ?>"
-                   class="btn btn-outline-secondary btn-sm">Bearbeiten</a>
-                <form method="POST" action="/coordinator/ticker/<?= (int)$ticker_id ?>" class="d-inline">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="action" value="delete_message">
-                    <input type="hidden" name="message_id" value="<?= (int)$msg['id'] ?>">
-                    <button type="submit" class="btn btn-outline-danger btn-sm"
-                            onclick="return confirm('Nachricht löschen?')">Löschen</button>
-                </form>
-            </div>
+        <strong><?= e($msg['timestamp']) ?></strong>
+        <?php if ($msg['tag_id']): ?>
+        <span class="badge bg-<?= e($msg['tag_color'] ?? 'secondary') ?> ms-1">
+            <?= e($msg['tag_label'] ?? '') ?>
+        </span>
+        <?php endif; ?>
+        <p class="mb-1 mt-1"><?= e($msg['message']) ?></p>
+        <div class="d-flex gap-1">
+            <a href="/coordinator/ticker/<?= (int)$ticker_id ?>?edit_message_id=<?= (int)$msg['id'] ?>"
+               class="btn btn-outline-secondary btn-sm">Bearbeiten</a>
+            <form method="POST" action="/coordinator/ticker/<?= (int)$ticker_id ?>" class="d-inline">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="delete_message">
+                <input type="hidden" name="message_id" value="<?= (int)$msg['id'] ?>">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('Nachricht löschen?')">Löschen</button>
+            </form>
         </div>
     </div>
 </div>
