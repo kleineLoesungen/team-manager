@@ -40,14 +40,18 @@ header('Pragma: no-cache');
                     <code id="cred-password"><?= e($credential_password) ?></code>
                 </div>
             </div>
-            <div class="modal-footer justify-content-between">
+            <div class="modal-footer d-flex align-items-center justify-content-between gap-2 flex-wrap">
                 <small id="timer-text" class="text-muted">
                     Dieses Fenster schließt sich automatisch in 60 Sekunden.
                 </small>
-                <button type="button" class="btn btn-outline-secondary"
-                        onclick="closeCredentialModal()">
-                    Schließen
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary min-touch"
+                            onclick="copyAll(this)">Alles kopieren</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            onclick="closeCredentialModal()">
+                        Schließen
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -77,7 +81,40 @@ function copyToClipboard(text, btn) {
         navigator.clipboard.writeText(text).then(() => {
             btn.textContent = 'Kopiert!';
             setTimeout(() => { btn.textContent = 'Kopieren'; }, 2000);
-        });
+        }).catch(() => { clipboardFallback(text, btn, 'Kopieren'); });
+    } else {
+        clipboardFallback(text, btn, 'Kopieren');
     }
+}
+
+function copyAll(btn) {
+    var username = document.getElementById('cred-username').textContent.trim();
+    var password = document.getElementById('cred-password').textContent.trim();
+    var text = 'Benutzername: ' + username + '\nPasswort: ' + password;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = 'Kopiert!';
+            setTimeout(() => { btn.textContent = 'Alles kopieren'; }, 2000);
+        }).catch(() => { clipboardFallback(text, btn, 'Alles kopieren'); });
+    } else {
+        clipboardFallback(text, btn, 'Alles kopieren');
+    }
+}
+
+function clipboardFallback(text, btn, originalLabel) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+        document.execCommand('copy');
+        btn.textContent = 'Kopiert!';
+        setTimeout(() => { btn.textContent = originalLabel; }, 2000);
+    } catch (e) {
+        prompt('Bitte manuell kopieren:', text);
+    }
+    document.body.removeChild(ta);
 }
 </script>
