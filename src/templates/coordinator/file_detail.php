@@ -3,6 +3,12 @@
 // Variables: $file (array)
 
 $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
+$_share_url  = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http')
+             . '://' . $_SERVER['HTTP_HOST']
+             . strtok($_SERVER['REQUEST_URI'], '?');
+$_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
+             . ($file['name'] ?? '')
+             . ' - ' . $_share_url;
 ?>
 
 <div class="mb-3 d-flex gap-2 flex-wrap">
@@ -10,6 +16,12 @@ $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
     <script>(function(){var s=sessionStorage.getItem('coordinator_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary min-touch"
+            data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
+            onclick="shareItem(this)">
+        <i class="bi bi-share me-1"></i>Teilen
+    </button>
     <?php if ($has_notify_recipients): ?>
     <a href="/coordinator/files/<?= (int)$file['id'] ?>/notify"
        class="btn btn-sm btn-outline-primary min-touch">
@@ -142,6 +154,25 @@ $date_val = $file['date'] ? (new DateTime($file['date']))->format('Y-m-d') : '';
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+function shareItem(btn) {
+    var text = btn.getAttribute('data-share');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = 'Kopiert!';
+            setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000);
+        }).catch(function(){ shareFallback(text, btn); });
+    } else { shareFallback(text, btn); }
+}
+function shareFallback(text, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); btn.textContent = 'Kopiert!';
+          setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000); }
+    catch(e) { prompt('Link kopieren:', text); }
+    document.body.removeChild(ta);
+}
+
 function renderPreview() {
     var editor = document.getElementById('content-editor');
     if (editor) {

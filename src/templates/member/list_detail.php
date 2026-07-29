@@ -3,6 +3,14 @@
 // Variables: $list (with visibility + show_all_rows), $columns, $players, $cells, $current_user_id
 // edit button only shown for public lists + own row; protected = read-only
 ?>
+<?php
+$_share_url  = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http')
+             . '://' . $_SERVER['HTTP_HOST']
+             . strtok($_SERVER['REQUEST_URI'], '?');
+$_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
+             . ($list['name'] ?? '')
+             . ' - ' . $_share_url;
+?>
 
 <div class="d-flex justify-content-between align-items-center mb-1">
     <a id="back-to-lists" href="/member/lists" class="text-muted small">
@@ -12,6 +20,12 @@
     <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
     <?php endif; ?>
     <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary min-touch"
+            data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
+            onclick="shareItem(this)">
+        <i class="bi bi-share me-1"></i>Teilen
+    </button>
 </div>
 <?php if (!empty($list['description'])): ?>
 <p class="text-muted small mb-3"><?= e($list['description']) ?></p>
@@ -123,3 +137,24 @@
 </div>
 
 <?php endif; ?>
+
+<script>
+function shareItem(btn) {
+    var text = btn.getAttribute('data-share');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = 'Kopiert!';
+            setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000);
+        }).catch(function(){ shareFallback(text, btn); });
+    } else { shareFallback(text, btn); }
+}
+function shareFallback(text, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); btn.textContent = 'Kopiert!';
+          setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000); }
+    catch(e) { prompt('Link kopieren:', text); }
+    document.body.removeChild(ta);
+}
+</script>

@@ -7,6 +7,14 @@
 // Variables: $list, $columns, $players, $cells (map [row_id][column_id] => value)
 //            $is_free_list (bool), $free_rows (array), $confirm_delete (array|null)
 ?>
+<?php
+$_share_url  = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http')
+             . '://' . $_SERVER['HTTP_HOST']
+             . strtok($_SERVER['REQUEST_URI'], '?');
+$_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
+             . ($list['name'] ?? '')
+             . ' - ' . $_share_url;
+?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -30,6 +38,12 @@
         <?php endif; ?>
     </div>
     <div class="d-flex gap-2">
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary min-touch"
+                data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
+                onclick="shareItem(this)">
+            <i class="bi bi-share me-1"></i>Teilen
+        </button>
         <?php if (!$is_free_list): ?>
         <?php if ($has_notify_recipients): ?>
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>/notify"
@@ -492,4 +506,23 @@ $show_full_form = $is_free_list
     var saved = sessionStorage.getItem('coordinator_lists_url');
     if (saved) document.getElementById('back-to-lists').href = saved;
 })();
+
+function shareItem(btn) {
+    var text = btn.getAttribute('data-share');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = 'Kopiert!';
+            setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000);
+        }).catch(function(){ shareFallback(text, btn); });
+    } else { shareFallback(text, btn); }
+}
+function shareFallback(text, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); btn.textContent = 'Kopiert!';
+          setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000); }
+    catch(e) { prompt('Link kopieren:', text); }
+    document.body.removeChild(ta);
+}
 </script>

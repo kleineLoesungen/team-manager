@@ -2,12 +2,26 @@
 // src/templates/member/file_detail.php — member file view (+ edit if public)
 // Variables: $file (array)
 ?>
+<?php
+$_share_url  = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http')
+             . '://' . $_SERVER['HTTP_HOST']
+             . strtok($_SERVER['REQUEST_URI'], '?');
+$_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
+             . ($file['name'] ?? '')
+             . ' - ' . $_share_url;
+?>
 
-<div class="mb-3">
+<div class="mb-3 d-flex gap-2 flex-wrap">
     <a id="back-to-lists" href="/member/lists" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
     <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
+    <button type="button"
+            class="btn btn-sm btn-outline-secondary min-touch"
+            data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
+            onclick="shareItem(this)">
+        <i class="bi bi-share me-1"></i>Teilen
+    </button>
 </div>
 
 <div class="card shadow-sm mb-4">
@@ -68,6 +82,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+function shareItem(btn) {
+    var text = btn.getAttribute('data-share');
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            btn.textContent = 'Kopiert!';
+            setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000);
+        }).catch(function(){ shareFallback(text, btn); });
+    } else { shareFallback(text, btn); }
+}
+function shareFallback(text, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); btn.textContent = 'Kopiert!';
+          setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000); }
+    catch(e) { prompt('Link kopieren:', text); }
+    document.body.removeChild(ta);
+}
+
 <?php if ($file['visibility'] === 'public'): ?>
 document.addEventListener('DOMContentLoaded', function() {
     var editor = document.getElementById('content-editor');
