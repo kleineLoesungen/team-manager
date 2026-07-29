@@ -73,7 +73,7 @@
 <script>
     setTimeout(() => {
         location.reload();
-    }, 5000);
+    }, 30000);
 </script>
 <?php endif; ?>
 </body>
