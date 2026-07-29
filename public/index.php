@@ -50,8 +50,8 @@ match (true) {
     $path === '/admin/teams/create'
         => require ROOT_PATH . '/src/admin/team_create_handler.php',
 
-    // Match /admin/teams/{id}/edit, /admin/teams/{id}/deactivate, /admin/teams/{id}/reactivate
-    (bool)preg_match('#^/admin/teams/(\d+)/(edit|deactivate|reactivate)$#', $path, $matches)
+    // Match /admin/teams/{id}/edit, /admin/teams/{id}/deactivate, /admin/teams/{id}/reactivate, /admin/teams/{id}/delete
+    (bool)preg_match('#^/admin/teams/(\d+)/(edit|deactivate|reactivate|delete)$#', $path, $matches)
         => (function() use ($matches, $method) {
             $team_id = (int)$matches[1];
             $action  = $matches[2];
