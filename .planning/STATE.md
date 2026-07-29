@@ -170,6 +170,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260729-ijq | Share button for list/doc and one-click copy of user credentials | 2026-07-29 | 78b2e16 | [260729-ijq-share-button-for-list-doc-and-one-click-](.planning/quick/260729-ijq-share-button-for-list-doc-and-one-click-/) |
 | 260714-wus | Show time range in list detail pages; persist last calendar view via sessionStorage back links | 2026-07-14 | 22673f0 | — |
 | 260714-wkp | Move ICS hint to bottom of calendar tab; add time range in timeline cards | 2026-07-14 | 542e156 | [260714-wkp-move-ics-calendar-hint-to-bottom-of-cale](.planning/quick/260714-wkp-move-ics-calendar-hint-to-bottom-of-cale/) |
 | 260714-w3y | Enhance ICS feed: URL + DESCRIPTION + optional time_start/time_end on lists | 2026-07-14 | 52f0d09 | [260714-w3y-enhance-ics-feed-add-url-description-lin](.planning/quick/260714-w3y-enhance-ics-feed-add-url-description-lin/) |
