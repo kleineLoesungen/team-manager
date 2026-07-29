@@ -20,23 +20,11 @@ header('Pragma: no-cache');
                     Notiere diese Daten. Das Fenster schließt sich automatisch.
                 </p>
                 <div class="credential-block mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="fw-semibold text-muted">Benutzername</small>
-                        <button class="btn btn-sm btn-outline-secondary"
-                                onclick="copyToClipboard('<?= e($credential_username) ?>', this)">
-                            Kopieren
-                        </button>
-                    </div>
+                    <small class="fw-semibold text-muted d-block mb-1">Benutzername</small>
                     <code id="cred-username"><?= e($credential_username) ?></code>
                 </div>
                 <div class="credential-block">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="fw-semibold text-muted">Passwort</small>
-                        <button class="btn btn-sm btn-outline-secondary"
-                                onclick="copyToClipboard('<?= e($credential_password) ?>', this)">
-                            Kopieren
-                        </button>
-                    </div>
+                    <small class="fw-semibold text-muted d-block mb-1">Passwort</small>
                     <code id="cred-password"><?= e($credential_password) ?></code>
                 </div>
             </div>
@@ -45,12 +33,10 @@ header('Pragma: no-cache');
                     Dieses Fenster schließt sich automatisch in 60 Sekunden.
                 </small>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary min-touch"
+                    <button type="button" class="btn btn-outline-primary min-touch d-inline-flex align-items-center justify-content-center"
                             onclick="copyAll(this)">Alles kopieren</button>
-                    <button type="button" class="btn btn-outline-secondary"
-                            onclick="closeCredentialModal()">
-                        Schließen
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+                            onclick="closeCredentialModal()">Schließen</button>
                 </div>
             </div>
         </div>
@@ -74,17 +60,6 @@ const interval = setInterval(() => {
 function closeCredentialModal() {
     clearInterval(interval);
     window.location.href = REDIRECT_URL;
-}
-
-function copyToClipboard(text, btn) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            btn.textContent = 'Kopiert!';
-            setTimeout(() => { btn.textContent = 'Kopieren'; }, 2000);
-        }).catch(() => { clipboardFallback(text, btn, 'Kopieren'); });
-    } else {
-        clipboardFallback(text, btn, 'Kopieren');
-    }
 }
 
 function copyAll(btn) {
