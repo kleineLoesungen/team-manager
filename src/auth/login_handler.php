@@ -77,6 +77,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         session_regenerate_id(true); // Prevent session fixation
 
+                        // Map legacy role values in case DB migrations haven't fully run
+                        $role = $user['role'];
+                        if ($role === 'coach')     $role = 'coordinator';
+                        if ($role === 'moderator') $role = 'coordinator';
+                        if ($role === 'player')    $role = 'member';
+                        if ($role === 'mitglied')  $role = 'member';
+
+                        // For coordinators: check active team memberships (multi-team flow)
+                        if ($role === 'coordinator') {
+                            set_admin_context($pdo);
+                            $ct_stmt = $pdo->prepare(
+                                "SELECT ct.team_id, t.name AS team_name
+                                 FROM coordinator_teams ct
+                                 JOIN teams t ON t.id = ct.team_id
+                                 WHERE ct.user_id = ? AND ct.left_at IS NULL AND t.is_active = TRUE
+                                 ORDER BY ct.joined_at DESC"
+                            );
+                            $ct_stmt->execute([$user['id']]);
+                            $active_teams = $ct_stmt->fetchAll();
+                            reset_rls_context($pdo);
+
+                            if (count($active_teams) > 1) {
+                                // Multi-team: store pending state, redirect to picker
+                                $_SESSION['user_id']           = $user['id'];
+                                $_SESSION['role']              = 'coordinator';
+                                $_SESSION['display_name']      = $user['first_name'] . ' ' . $user['last_name'];
+                                $_SESSION['last_activity']     = time();
+                                $_SESSION['pending_team_pick'] = true;
+                                $_SESSION['available_teams']   = array_map(fn($t) => [
+                                    'team_id'   => (int)$t['team_id'],
+                                    'team_name' => $t['team_name'],
+                                ], $active_teams);
+                                redirect('/coordinator/select-team');
+                            }
+                            // Single team or no coordinator_teams entry: fall through to existing setup
+                        }
+
                         // Set RLS context before any further queries
                         set_team_context($pdo, (int)$user['team_id']);
 
@@ -84,13 +121,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $team_stmt = $pdo->prepare("SELECT name FROM teams WHERE id = ?");
                         $team_stmt->execute([$user['team_id']]);
                         $team_row = $team_stmt->fetch();
-
-                        // Map legacy role values in case DB migrations haven't fully run
-                        $role = $user['role'];
-                        if ($role === 'coach')     $role = 'coordinator';
-                        if ($role === 'moderator') $role = 'coordinator';
-                        if ($role === 'player')    $role = 'member';
-                        if ($role === 'mitglied')  $role = 'member';
 
                         $_SESSION['user_id']       = $user['id'];
                         $_SESSION['team_id']       = $user['team_id'];

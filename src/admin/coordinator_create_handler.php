@@ -42,10 +42,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = $pdo->prepare(
                 "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash, email)
-                 VALUES (?, 'coordinator', ?, ?, ?, ?, ?)"
+                 VALUES (?, 'coordinator', ?, ?, ?, ?, ?)
+                 RETURNING id"
             );
             $stmt->execute([$team_id, $first_name, $last_name, $username, $password_hash,
                             $email_raw !== '' ? $email_raw : null]);
+            $new_user_id = (int)$stmt->fetchColumn();
+
+            // Phase 8: also record in coordinator_teams (keeps multi-team history)
+            $ct_stmt = $pdo->prepare(
+                "INSERT INTO coordinator_teams (user_id, team_id, joined_at)
+                 VALUES (?, ?, NOW())"
+            );
+            $ct_stmt->execute([$new_user_id, $team_id]);
 
             // Display credential modal — per AUTH-04 (for coaches, same mechanism)
             // NEVER log $plain_password
