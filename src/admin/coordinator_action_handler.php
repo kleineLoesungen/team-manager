@@ -70,6 +70,31 @@ if ($action === 'reset-password') {
     $stmt->execute([$coordinator_id]);
     redirect('/admin/coordinators');
 
+} elseif ($action === 'add-team') {
+    $new_team_id = (int)($_POST['team_id'] ?? 0);
+
+    if ($new_team_id <= 0) {
+        redirect('/admin/coordinators?error=' . urlencode('Kein Team ausgewählt.'));
+    }
+
+    // Verify team exists and is active
+    $team_check = $pdo->prepare("SELECT id FROM teams WHERE id = ? AND is_active = TRUE");
+    $team_check->execute([$new_team_id]);
+    if (!$team_check->fetch()) {
+        redirect('/admin/coordinators?error=' . urlencode('Team nicht gefunden oder inaktiv.'));
+    }
+
+    try {
+        $pdo->prepare(
+            "INSERT INTO coordinator_teams (user_id, team_id, joined_at) VALUES (?, ?, NOW())"
+        )->execute([$coordinator_id, $new_team_id]);
+        redirect('/admin/coordinators');
+    } catch (PDOException $e) {
+        error_log('Coordinator add-team error: ' . $e->getMessage());
+        // Unique constraint: coordinator is already on this team
+        redirect('/admin/coordinators?error=' . urlencode('Koordinator ist bereits in diesem Team.'));
+    }
+
 } else {
     redirect('/admin/coordinators');
 }

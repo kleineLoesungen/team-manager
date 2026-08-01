@@ -88,6 +88,20 @@ match (true) {
             require ROOT_PATH . '/src/admin/club_action_handler.php';
         })(),
 
+    // ── Admin: Players ────────────────────────────────────────────────────
+    $path === '/admin/players'
+        => require ROOT_PATH . '/src/admin/players_handler.php',
+
+    $path === '/admin/players/create'
+        => require ROOT_PATH . '/src/admin/player_create_handler.php',
+
+    (bool)preg_match('#^/admin/players/(\d+)/(edit|assign-team|link-user)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            $_REQUEST['action']    = $matches[2];
+            require ROOT_PATH . '/src/admin/player_action_handler.php';
+        })(),
+
     // /admin/coordinators/{id}/edit-email — GET+POST: edit coordinator email (Phase 5)
     (bool)preg_match('#^/admin/coordinators/(\d+)/edit-email$#', $path, $matches)
         => (function() use ($matches) {
@@ -95,7 +109,7 @@ match (true) {
             require ROOT_PATH . '/src/admin/coordinator_edit_email_handler.php';
         })(),
 
-    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
+    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password|add-team)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['coordinator_id'] = (int)$matches[1];
             $_REQUEST['action']         = $matches[2];
