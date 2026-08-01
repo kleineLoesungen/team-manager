@@ -37,6 +37,24 @@ function render_admin_page(string $title, string $active, callable $body): void 
                             <i class="bi bi-person-badge me-2"></i>Koordinatoren
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'clubs' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/admin/clubs">
+                            <i class="bi bi-building me-2"></i>Klubs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'players' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/admin/players">
+                            <i class="bi bi-person-vcard me-2"></i>Spieler
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <?= $active === 'attributes' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/admin/attributes">
+                            <i class="bi bi-tags me-2"></i>Attribut-Gruppen
+                        </a>
+                    </li>
                     <li class="nav-item px-3 pt-3 pb-1">
                         <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">System</span>
                     </li>
@@ -63,6 +81,15 @@ function render_admin_page(string $title, string $active, callable $body): void 
                     </a>
                     <a class="mobile-tab-link <?= $active === 'coordinators' ? 'active' : '' ?>" href="/admin/coordinators">
                         <i class="bi bi-person-badge tab-icon"></i><span>Koordinatoren</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'clubs' ? 'active' : '' ?>" href="/admin/clubs">
+                        <i class="bi bi-building tab-icon"></i><span>Klubs</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'players' ? 'active' : '' ?>" href="/admin/players">
+                        <i class="bi bi-person-vcard tab-icon"></i><span>Spieler</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'attributes' ? 'active' : '' ?>" href="/admin/attributes">
+                        <i class="bi bi-tags tab-icon"></i><span>Attribute</span>
                     </a>
                     <div style="width:1px;background:var(--bs-border-color);margin:6px 0;flex-shrink:0;"></div>
                     <a class="mobile-tab-link <?= $active === 'settings' ? 'active' : '' ?>" href="/admin/settings">
