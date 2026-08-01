@@ -279,11 +279,11 @@ Plans:
 - CLUB-08: Member sees own player profile (visible attributes, cross-team stats when player_id linked)
 - CLUB-09: All schema changes are safe idempotent migrations (CREATE TABLE IF NOT EXISTS, ALTER TABLE ADD COLUMN IF NOT EXISTS)
 
-**Plans:** 1/7 plans executed
+**Plans:** 2/7 plans executed
 
 Plans:
 - [x] 08-01-PLAN.md — DB foundation: Migration 012 (7 new tables, RLS, coordinator_teams backfill) + team deletion bug fix
-- [ ] 08-02-PLAN.md — Multi-team auth flow: coordinator_teams login query, team picker, require_coordinator guard
+- [x] 08-02-PLAN.md — Multi-team auth flow: coordinator_teams login query, team picker, require_coordinator guard
 - [ ] 08-03-PLAN.md — Admin clubs CRUD: list, create, edit, deactivate, reactivate
 - [ ] 08-04-PLAN.md — Admin players CRUD: list with filter, create, edit, assign team, link user, add coordinator to second team
 - [ ] 08-05-PLAN.md — Admin player attributes EAV: groups + attributes with visibility flags
