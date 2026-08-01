@@ -92,6 +92,10 @@ function require_admin(): void {
  * Checks $_SESSION['role'] === 'coordinator', sets RLS team context, redirects on failure.
  */
 function require_coordinator(): void {
+    // Guard: multi-team coordinator must complete team selection before accessing coordinator pages
+    if (!empty($_SESSION['pending_team_pick'])) {
+        redirect('/coordinator/select-team');
+    }
     check_session_timeout();
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'coordinator') {
         redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
