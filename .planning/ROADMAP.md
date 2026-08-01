@@ -13,6 +13,7 @@
 - [x] **Phase 5: Email Notifications** - Member email profile, coordinator sends notifications ✓ 2026-07-13
 - [x] **Phase 6: Calendar — Lists with Date, Location & ICS Export** - Calendar timeline, location field, ICS export (completed 2026-07-14)
 - [x] **Phase 7: Live-Ticker** - Public event ticker, message posting, auto-reload, member freigabe (completed 2026-07-26)
+- [ ] **Phase 8: Player & Club Management** - Clubs, multi-team coordinators, extended player profiles, additional admins, safe migration
 
 ## Phase Details
 
@@ -258,6 +259,36 @@ Plans:
 - [x] 07-03-PLAN.md — Coordinator ticker CRUD + message posting/editing/deleting + close + two-step delete
 - [x] 07-04-PLAN.md — Member ticker (freigabe-gated posting) + public ticker views (no auth, auto-reload)
 - [x] 07-05-PLAN.md — Routing + nav wiring: all routes in index.php + coordinator/member nav + login page link
+
+### Phase 8: Player & Club Management
+
+**Goal:** Introduce a permanent player identity layer (players) separate from users. Players belong to clubs. Coordinators gain multi-team support via coordinator_teams. Player profiles get dynamic admin-defined attribute groups (EAV). Club-wide statistics span all team memberships. All schema changes are safe idempotent migrations.
+
+**Depends on:** Phase 7
+
+**Requirements**: CLUB-01, CLUB-02, CLUB-03, CLUB-04, CLUB-05, CLUB-06, CLUB-07, CLUB-08, CLUB-09
+
+**Requirement definitions:**
+- CLUB-01: Admin creates and manages clubs (create, edit name, deactivate, reactivate)
+- CLUB-02: Players as permanent roster records (create, edit, assign to club)
+- CLUB-03: Players assigned to teams via team_memberships with join/leave history
+- CLUB-04: Multi-team coordinators tracked in coordinator_teams; existing coordinators backfilled
+- CLUB-05: Multi-team login flow: team picker after login, users.team_id updated on selection
+- CLUB-06: Player attribute EAV: admin-defined groups and attributes with visible_to_player/editable_by_player flags
+- CLUB-07: Coordinator sees players on their team and views full player profiles with attributes
+- CLUB-08: Member sees own player profile (visible attributes, cross-team stats when player_id linked)
+- CLUB-09: All schema changes are safe idempotent migrations (CREATE TABLE IF NOT EXISTS, ALTER TABLE ADD COLUMN IF NOT EXISTS)
+
+**Plans:** 7 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — DB foundation: Migration 012 (7 new tables, RLS, coordinator_teams backfill) + team deletion bug fix
+- [ ] 08-02-PLAN.md — Multi-team auth flow: coordinator_teams login query, team picker, require_coordinator guard
+- [ ] 08-03-PLAN.md — Admin clubs CRUD: list, create, edit, deactivate, reactivate
+- [ ] 08-04-PLAN.md — Admin players CRUD: list with filter, create, edit, assign team, link user, add coordinator to second team
+- [ ] 08-05-PLAN.md — Admin player attributes EAV: groups + attributes with visibility flags
+- [ ] 08-06-PLAN.md — Coordinator player views: team-scoped list, player profile, attribute editing, cross-team stats
+- [ ] 08-07-PLAN.md — Member player profile: visible attributes and cross-team stats when player_id linked
 
 ---
 
