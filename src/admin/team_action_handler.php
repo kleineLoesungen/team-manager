@@ -50,9 +50,18 @@ if ($action === 'edit') {
     redirect('/admin/teams');
 
 } elseif ($action === 'delete') {
-    // users.team_id is ON DELETE SET NULL, so delete users explicitly first.
-    // All other team data (lists, columns, cells, tickers, etc.) cascades from teams.
-    $pdo->prepare("DELETE FROM users WHERE team_id = ?")->execute([$team_id]);
+    // Only delete users who belong EXCLUSIVELY to this team.
+    // Multi-team coordinators (with other active coordinator_teams rows) are preserved.
+    // coordinator_teams rows for this team cascade-delete with the team (ON DELETE CASCADE).
+    $pdo->prepare(
+        "DELETE FROM users WHERE team_id = ?
+         AND NOT EXISTS (
+             SELECT 1 FROM coordinator_teams
+             WHERE coordinator_teams.user_id = users.id
+               AND coordinator_teams.team_id != ?
+               AND coordinator_teams.left_at IS NULL
+         )"
+    )->execute([$team_id, $team_id]);
     $pdo->prepare("DELETE FROM teams WHERE id = ?")->execute([$team_id]);
     redirect('/admin/teams');
 
