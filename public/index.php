@@ -74,6 +74,20 @@ match (true) {
     $path === '/admin/notify'
         => require ROOT_PATH . '/src/admin/notify_coordinators_handler.php',
 
+    // ── Admin: Clubs ────────────────────────────────────────────────────
+    $path === '/admin/clubs'
+        => require ROOT_PATH . '/src/admin/clubs_handler.php',
+
+    $path === '/admin/clubs/create'
+        => require ROOT_PATH . '/src/admin/club_create_handler.php',
+
+    (bool)preg_match('#^/admin/clubs/(\d+)/(edit|deactivate|reactivate)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['club_id'] = (int)$matches[1];
+            $_REQUEST['action']  = $matches[2];
+            require ROOT_PATH . '/src/admin/club_action_handler.php';
+        })(),
+
     // /admin/coordinators/{id}/edit-email — GET+POST: edit coordinator email (Phase 5)
     (bool)preg_match('#^/admin/coordinators/(\d+)/edit-email$#', $path, $matches)
         => (function() use ($matches) {
