@@ -166,3 +166,91 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_members (
     PRIMARY KEY (ticker_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON team_manager.ticker_members(user_id, team_id);
+
+-- ── Phase 8: Player & Club Management ─────────────────────────────────────────
+
+-- Clubs — permanent home of players, independent of team assignments
+CREATE TABLE IF NOT EXISTS team_manager.clubs (
+    id         SERIAL PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Player attribute groups — admin-defined groupings for dynamic player attributes (e.g. "Kontakt", "Spielerprofil")
+CREATE TABLE IF NOT EXISTS team_manager.player_attribute_groups (
+    id         SERIAL PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Players — permanent identity layer, separate from users accounts
+-- A player may or may not have a linked users account (users.player_id is the FK)
+CREATE TABLE IF NOT EXISTS team_manager.players (
+    id           SERIAL PRIMARY KEY,
+    club_id      INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL,
+    first_name   VARCHAR(100) NOT NULL,
+    last_name    VARCHAR(100) NOT NULL,
+    description  TEXT NULL,
+    phone        VARCHAR(50) NULL,
+    contact_name VARCHAR(100) NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_players_club ON team_manager.players(club_id);
+
+-- Team-memberships — tracks which team a player is on (with full history)
+-- left_at IS NULL means currently active; partial unique index enforces one active membership per player
+CREATE TABLE IF NOT EXISTS team_manager.team_memberships (
+    id        SERIAL PRIMARY KEY,
+    player_id INTEGER NOT NULL REFERENCES team_manager.players(id) ON DELETE CASCADE,
+    team_id   INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    left_at   TIMESTAMPTZ NULL
+);
+CREATE INDEX IF NOT EXISTS idx_tm_player ON team_manager.team_memberships(player_id);
+CREATE INDEX IF NOT EXISTS idx_tm_team ON team_manager.team_memberships(team_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tm_active ON team_manager.team_memberships(player_id) WHERE left_at IS NULL;
+
+-- Coordinator-teams — multi-team coordinator membership (replaces single users.team_id conceptually)
+-- users.team_id is KEPT and synced to active session team to preserve existing RLS pattern
+-- left_at IS NULL means currently active; partial unique index enforces one active entry per (user, team) pair
+CREATE TABLE IF NOT EXISTS team_manager.coordinator_teams (
+    id        SERIAL PRIMARY KEY,
+    user_id   INTEGER NOT NULL REFERENCES team_manager.users(id) ON DELETE CASCADE,
+    team_id   INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    left_at   TIMESTAMPTZ NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ct_user ON team_manager.coordinator_teams(user_id);
+CREATE INDEX IF NOT EXISTS idx_ct_team ON team_manager.coordinator_teams(team_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ct_active ON team_manager.coordinator_teams(user_id, team_id) WHERE left_at IS NULL;
+
+-- Player-attributes — EAV attribute definitions within groups
+-- visible_to_player: member can see this value; editable_by_player: member can edit it
+CREATE TABLE IF NOT EXISTS team_manager.player_attributes (
+    id                 SERIAL PRIMARY KEY,
+    group_id           INTEGER NOT NULL REFERENCES team_manager.player_attribute_groups(id) ON DELETE CASCADE,
+    name               VARCHAR(100) NOT NULL,
+    visible_to_player  BOOLEAN NOT NULL DEFAULT TRUE,
+    editable_by_player BOOLEAN NOT NULL DEFAULT FALSE,
+    sort_order         INTEGER NOT NULL DEFAULT 0,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_pa_group ON team_manager.player_attributes(group_id);
+
+-- Player-attribute-values — EAV values (player_id × attribute_id → TEXT value)
+-- ON CONFLICT (player_id, attribute_id) DO UPDATE for upsert pattern
+CREATE TABLE IF NOT EXISTS team_manager.player_attribute_values (
+    id           SERIAL PRIMARY KEY,
+    player_id    INTEGER NOT NULL REFERENCES team_manager.players(id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL REFERENCES team_manager.player_attributes(id) ON DELETE CASCADE,
+    value        TEXT NOT NULL DEFAULT '',
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (player_id, attribute_id)
+);
+CREATE INDEX IF NOT EXISTS idx_pav_player ON team_manager.player_attribute_values(player_id);
+
+-- Migration for existing databases (Phase 8 — player & club management):
+-- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS player_id INTEGER REFERENCES team_manager.players(id) ON DELETE SET NULL;
+-- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS phone VARCHAR(50) NULL;
