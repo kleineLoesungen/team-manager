@@ -116,6 +116,33 @@ match (true) {
             require ROOT_PATH . '/src/admin/coordinator_action_handler.php';
         })(),
 
+    // ── Admin: Player Attributes ─────────────────────────────────────────
+    $path === '/admin/attributes'
+        => require ROOT_PATH . '/src/admin/attributes_handler.php',
+
+    (bool)preg_match('#^/admin/attributes/groups/(create|(\d+)/(edit|delete))$#', $path, $matches)
+        => (function() use ($path, $matches) {
+            if ($matches[1] === 'create') {
+                $_REQUEST['action']   = 'create';
+            } else {
+                $_REQUEST['group_id'] = (int)$matches[2];
+                $_REQUEST['action']   = $matches[3];
+            }
+            require ROOT_PATH . '/src/admin/attribute_group_action_handler.php';
+        })(),
+
+    (bool)preg_match('#^/admin/attributes/(\d+)/attributes/(create|(\d+)/(edit|delete))$#', $path, $matches)
+        => (function() use ($path, $matches) {
+            $_REQUEST['group_id'] = (int)$matches[1];
+            if ($matches[2] === 'create') {
+                $_REQUEST['action'] = 'create';
+            } else {
+                $_REQUEST['attr_id'] = (int)$matches[3];
+                $_REQUEST['action']  = $matches[4];
+            }
+            require ROOT_PATH . '/src/admin/attribute_action_handler.php';
+        })(),
+
     // ── Coordinator: Members ───────────────────────────────────────────
     $path === '/coordinator' || $path === '/coordinator/members'
         => require ROOT_PATH . '/src/coordinator/members_handler.php',
