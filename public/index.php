@@ -210,6 +210,13 @@ match (true) {
     $path === '/coordinator/logo'
         => require ROOT_PATH . '/src/coordinator/logo_handler.php',
 
+    // ── Coordinator: Team Selection ──────────────────────────────────────
+    $path === '/coordinator/select-team'
+        => require ROOT_PATH . '/src/coordinator/select_team_handler.php',
+
+    $path === '/coordinator/switch-team'
+        => require ROOT_PATH . '/src/coordinator/select_team_handler.php',
+
     // ── Coordinator: Ticker ────────────────────────────────────────────────────
     $path === '/coordinator/ticker'
         => require ROOT_PATH . '/src/coordinator/ticker_handler.php',
