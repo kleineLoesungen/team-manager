@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-07-26T15:02:52.614Z"
+last_updated: "2026-08-01T09:54:45.970Z"
 progress:
-  total_phases: 12
+  total_phases: 13
   completed_phases: 7
-  total_plans: 28
-  completed_plans: 28
+  total_plans: 35
+  completed_plans: 29
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-07-14 - Completed quick task 260714-wus: Show time range in list detail pages; persist last calendar view via sessionStorage back links  
+**Last Updated:** 2026-08-01 - Completed 08-01-PLAN.md: Migration 012 — 7 Phase 8 tables, coordinator_teams backfill, RLS, schema.sql update, team deletion fix  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -32,8 +32,8 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
+Phase: 08 (player-club-management) — EXECUTING
+Plan: 2 of 7
 
 ## Phase Summary
 
@@ -166,6 +166,7 @@ Plan: Not started
 | Phase 07 P03 | 5 | 2 tasks | 9 files |
 | Phase 07 P04 | 3 | 2 tasks | 8 files |
 | Phase 07 P05 | 2 | 2 tasks | 5 files |
+| Phase 08-player-club-management P01 | 41 | 3 tasks | 3 files |
 
 ### Quick Tasks Completed
 
