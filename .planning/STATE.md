@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-08-02T05:08:41.216Z"
+last_updated: "2026-08-02T06:33:52.076Z"
 progress:
   total_phases: 13
   completed_phases: 7
   total_plans: 35
-  completed_plans: 33
+  completed_plans: 34
 ---
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-08-01 - Completed 08-04-PLAN.md: Players Admin CRUD — list/create/edit/assign-team/link-user + coordinator add-team action  
+**Last Updated:** 2026-08-02 - Completed 08-06-PLAN.md: Coordinator player views, profile, attribute edit, and coordinator directory  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -33,7 +33,7 @@ Trainer erfassen den Spielereinsatz und Kennzahlen über alle Listen hinweg — 
 ## Current Position
 
 Phase: 08 (player-club-management) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 
 ## Phase Summary
 
@@ -171,6 +171,7 @@ Plan: 6 of 7
 | Phase 08 P03 | 22 | 3 tasks | 7 files |
 | Phase 08 P04 | 1898 | 2 tasks | 7 files |
 | Phase 08 P05 | 454 | 2 tasks | 5 files |
+| Phase 08 P06 | 70 | 3 tasks | 9 files |
 
 ### Quick Tasks Completed
 
