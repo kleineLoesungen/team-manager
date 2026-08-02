@@ -13,7 +13,7 @@
 - [x] **Phase 5: Email Notifications** - Member email profile, coordinator sends notifications ✓ 2026-07-13
 - [x] **Phase 6: Calendar — Lists with Date, Location & ICS Export** - Calendar timeline, location field, ICS export (completed 2026-07-14)
 - [x] **Phase 7: Live-Ticker** - Public event ticker, message posting, auto-reload, member freigabe (completed 2026-07-26)
-- [ ] **Phase 8: Player & Club Management** - Clubs, multi-team coordinators, extended player profiles, additional admins, safe migration
+- [x] **Phase 8: Player & Club Management** - Clubs, multi-team coordinators, extended player profiles, additional admins, safe migration (completed 2026-08-02)
 
 ## Phase Details
 
@@ -279,7 +279,7 @@ Plans:
 - CLUB-08: Member sees own player profile (visible attributes, cross-team stats when player_id linked)
 - CLUB-09: All schema changes are safe idempotent migrations (CREATE TABLE IF NOT EXISTS, ALTER TABLE ADD COLUMN IF NOT EXISTS)
 
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans complete
 
 Plans:
 - [x] 08-01-PLAN.md — DB foundation: Migration 012 (7 new tables, RLS, coordinator_teams backfill) + team deletion bug fix
@@ -288,7 +288,7 @@ Plans:
 - [x] 08-04-PLAN.md — Admin players CRUD: list with filter, create, edit, assign team, link user, add coordinator to second team
 - [x] 08-05-PLAN.md — Admin player attributes EAV: groups + attributes with visibility flags
 - [x] 08-06-PLAN.md — Coordinator player views: team-scoped list, player profile, attribute editing, cross-team stats
-- [ ] 08-07-PLAN.md — Member player profile: visible attributes and cross-team stats when player_id linked
+- [x] 08-07-PLAN.md — Member player profile: visible attributes and cross-team stats when player_id linked
 
 ---
 
