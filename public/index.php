@@ -339,6 +339,10 @@ match (true) {
     $path === '/member/profile'
         => require ROOT_PATH . '/src/member/profile_handler.php',
 
+    // ── Member: Player Profile ────────────────────────────────────────────
+    $path === '/member/player-profile'
+        => require ROOT_PATH . '/src/member/player_profile_handler.php',
+
     // ── Member: Lists ─────────────────────────────────────────────────
     $path === '/member' || $path === '/member/lists'
         => require ROOT_PATH . '/src/member/lists_handler.php',
