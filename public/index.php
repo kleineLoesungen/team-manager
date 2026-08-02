@@ -282,6 +282,10 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/player_profile_handler.php';
         })(),
 
+    // ── Coordinator: Coordinators directory ───────────────────────────────────
+    $path === '/coordinator/coordinators'
+        => require ROOT_PATH . '/src/coordinator/coordinators_handler.php',
+
     // ── Coordinator: Team Selection ──────────────────────────────────────
     $path === '/coordinator/select-team'
         => require ROOT_PATH . '/src/coordinator/select_team_handler.php',

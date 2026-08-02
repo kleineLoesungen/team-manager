@@ -41,6 +41,12 @@ function render_coach_page(string $title, string $active, callable $body): void 
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?= $active === 'coordinators' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coordinator/coordinators">
+                            <i class="bi bi-person-badge me-2"></i>Koordinatoren
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/coordinator/stats">
                             <i class="bi bi-graph-up me-2"></i>Statistik
@@ -87,6 +93,9 @@ function render_coach_page(string $title, string $active, callable $body): void 
                     </a>
                     <a class="mobile-tab-link <?= $active === 'players' ? 'active' : '' ?>" href="/coordinator/players">
                         <i class="bi bi-person-vcard tab-icon"></i><span>Spieler</span>
+                    </a>
+                    <a class="mobile-tab-link <?= $active === 'coordinators' ? 'active' : '' ?>" href="/coordinator/coordinators">
+                        <i class="bi bi-person-badge tab-icon"></i><span>Koordinatoren</span>
                     </a>
                     <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/coordinator/stats">
                         <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
