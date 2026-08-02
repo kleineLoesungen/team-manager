@@ -265,6 +265,23 @@ match (true) {
     $path === '/coordinator/logo'
         => require ROOT_PATH . '/src/coordinator/logo_handler.php',
 
+    // ── Coordinator: Players ──────────────────────────────────────────────────
+    $path === '/coordinator/players'
+        => require ROOT_PATH . '/src/coordinator/players_handler.php',
+
+    // /coordinator/players/{id}/attributes/save — must come BEFORE the /{id} catch-all
+    (bool)preg_match('#^/coordinator/players/(\d+)/attributes/save$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/player_attribute_edit_handler.php';
+        })(),
+
+    (bool)preg_match('#^/coordinator/players/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/player_profile_handler.php';
+        })(),
+
     // ── Coordinator: Team Selection ──────────────────────────────────────
     $path === '/coordinator/select-team'
         => require ROOT_PATH . '/src/coordinator/select_team_handler.php',
