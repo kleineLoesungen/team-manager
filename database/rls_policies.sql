@@ -35,6 +35,13 @@ CREATE POLICY team_isolation_users_update ON users
         OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
     );
 
+-- DELETE: only admin can delete users (coordinator hard-delete requires deactivated + is_admin guard)
+CREATE POLICY team_isolation_users_delete ON users
+    FOR DELETE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+    );
+
 -- Teams table: no RLS needed (admin manages all teams; coaches read their own via team_id FK)
 
 -- ── Phase 3: Lists, Columns & Cells — Visibility RLS ────────────────────────

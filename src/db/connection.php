@@ -959,6 +959,22 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log('team-manager: migration 012 RLS player_attribute_values skipped — ' . $e->getMessage());
         }
     }
+
+    // Migration 013: users_delete RLS policy (missing from initial schema — blocked coordinator delete)
+    try {
+        $policy_exists = (bool)$pdo->query(
+            "SELECT 1 FROM pg_policies
+             WHERE schemaname = '{$schema}' AND tablename = 'users' AND policyname = 'team_isolation_users_delete'"
+        )->fetchColumn();
+        if (!$policy_exists) {
+            $pdo->exec("CREATE POLICY team_isolation_users_delete ON {$schema}.users FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+            )");
+            error_log('team-manager: migration 013 team_isolation_users_delete policy created');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 013 skipped — ' . $e->getMessage());
+    }
 }
 
 /**
