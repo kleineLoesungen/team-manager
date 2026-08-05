@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/coordinator_edit_email.php
-// Variables: $coordinator (array with id, first_name, last_name, email), $error (string), $success (string)
+// Variables: $coordinator (array with id, first_name, last_name, email, phone), $error (string), $success (string)
 ?>
 
 <div class="mb-3">
@@ -38,6 +38,18 @@
                 <div class="form-text">
                     Wird für die Koordinatoren-Benachrichtigung genutzt. Nur für den Admin sichtbar.
                 </div>
+            </div>
+            <div class="mb-3">
+                <label for="coordinator_phone" class="form-label">
+                    Telefonnummer <span class="text-muted small">(optional)</span>
+                </label>
+                <input type="tel"
+                       id="coordinator_phone"
+                       name="phone"
+                       class="form-control min-touch"
+                       value="<?= e($coordinator['phone'] ?? '') ?>"
+                       maxlength="50"
+                       placeholder="+49 123 456789">
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>

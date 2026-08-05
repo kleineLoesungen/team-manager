@@ -8,7 +8,7 @@ require_admin();
 $pdo = get_db();
 
 $coordinators_stmt = $pdo->query(
-    "SELECT u.id, u.team_id, u.first_name, u.last_name, u.username, u.is_active, u.email,
+    "SELECT u.id, u.team_id, u.first_name, u.last_name, u.username, u.is_active, u.email, u.phone,
             t.name AS team_name
      FROM users u
      LEFT JOIN teams t ON t.id = u.team_id
@@ -62,11 +62,16 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($ac
                             <span class="text-warning small"><i class="bi bi-envelope-x me-1"></i>Keine E-Mail</span>
                         <?php endif; ?>
                     </div>
+                    <?php if (!empty($coordinator['phone'])): ?>
+                    <div class="text-muted small">
+                        <i class="bi bi-telephone me-1"></i><?= e($coordinator['phone']) ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <div class="d-flex gap-2 flex-wrap justify-content-end">
                     <a href="/admin/coordinators/<?= $coordinator['id'] ?>/edit-email"
                        class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-envelope me-1"></i>E-Mail
+                        <i class="bi bi-pencil me-1"></i>Bearbeiten
                     </a>
                     <form method="POST"
                           action="/admin/coordinators/<?= $coordinator['id'] ?>/deactivate"
