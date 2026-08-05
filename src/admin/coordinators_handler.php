@@ -20,6 +20,19 @@ $coordinators = $coordinators_stmt->fetchAll();
 $teams_stmt = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name");
 $teams = $teams_stmt->fetchAll();
 
+// Fetch all active coordinator_teams rows so we can show and manage team assignments
+$ct_stmt = $pdo->query(
+    "SELECT ct.user_id, ct.team_id, t.name AS team_name
+     FROM coordinator_teams ct
+     JOIN teams t ON t.id = ct.team_id
+     WHERE ct.left_at IS NULL AND t.is_active = TRUE
+     ORDER BY ct.joined_at ASC"
+);
+$coordinator_teams_map = [];
+foreach ($ct_stmt->fetchAll() as $row) {
+    $coordinator_teams_map[$row['user_id']][] = $row;
+}
+
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 $success = !empty($_GET['success']) ? e($_GET['success']) : '';
 
@@ -28,7 +41,7 @@ $inactive_coordinators = array_filter($coordinators, fn($c) => !$c['is_active'])
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($active_coordinators, $inactive_coordinators, $teams, $error, $success) {
+render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($active_coordinators, $inactive_coordinators, $teams, $coordinator_teams_map, $error, $success) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     ?>
@@ -49,12 +62,47 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($ac
     <?php if (!empty($active_coordinators)): ?>
     <div class="list-group">
         <?php foreach ($active_coordinators as $coordinator): ?>
+        <?php
+            $my_teams        = $coordinator_teams_map[$coordinator['id']] ?? [];
+            $assigned_ids    = array_column($my_teams, 'team_id');
+            $available_teams = array_filter($teams, fn($t) => !in_array($t['id'], $assigned_ids));
+        ?>
         <div class="list-group-item">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <strong><?= e($coordinator['first_name'] . ' ' . $coordinator['last_name']) ?></strong>
-                    <code class="ms-2 text-muted small"><?= e($coordinator['username']) ?></code>
-                    <div class="text-muted small"><?= e($coordinator['team_name'] ?? '—') ?></div>
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div class="flex-grow-1 min-w-0">
+                    <div class="mb-1">
+                        <strong><?= e($coordinator['first_name'] . ' ' . $coordinator['last_name']) ?></strong>
+                        <code class="ms-2 text-muted small"><?= e($coordinator['username']) ?></code>
+                    </div>
+                    <!-- Team badges + add/remove -->
+                    <div class="d-flex flex-wrap gap-1 align-items-center mb-1">
+                        <?php foreach ($my_teams as $ct): ?>
+                        <form method="POST" action="/admin/coordinators/<?= (int)$coordinator['id'] ?>/remove-team" class="d-inline m-0">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="team_id" value="<?= (int)$ct['team_id'] ?>">
+                            <button type="submit"
+                                    class="btn btn-sm badge bg-primary-subtle text-primary-emphasis border border-primary-subtle py-1 px-2 d-inline-flex align-items-center gap-1"
+                                    onclick="return confirm('<?= e('Koordinator aus Team ' . $ct['team_name'] . ' entfernen?') ?>')">
+                                <?= e($ct['team_name']) ?><i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                        <?php endforeach; ?>
+                        <?php if (!empty($available_teams)): ?>
+                        <form method="POST" action="/admin/coordinators/<?= (int)$coordinator['id'] ?>/add-team" class="d-flex align-items-center gap-1 m-0">
+                            <?= csrf_field() ?>
+                            <select name="team_id" class="form-select form-select-sm" style="max-width:140px">
+                                <?php foreach ($available_teams as $t): ?>
+                                <option value="<?= (int)$t['id'] ?>"><?= e($t['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Team hinzufügen">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </form>
+                        <?php elseif (empty($my_teams)): ?>
+                        <span class="text-muted small">Kein Team</span>
+                        <?php endif; ?>
+                    </div>
                     <div class="text-muted small">
                         <?php if (!empty($coordinator['email'])): ?>
                             <i class="bi bi-envelope me-1"></i><?= e($coordinator['email']) ?>

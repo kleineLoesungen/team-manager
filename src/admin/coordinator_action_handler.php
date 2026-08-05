@@ -95,6 +95,17 @@ if ($action === 'reset-password') {
         redirect('/admin/coordinators?error=' . urlencode('Koordinator ist bereits in diesem Team.'));
     }
 
+} elseif ($action === 'remove-team') {
+    $team_id_to_remove = (int)($_POST['team_id'] ?? 0);
+    if ($team_id_to_remove <= 0) redirect('/admin/coordinators');
+
+    $pdo->prepare(
+        "UPDATE coordinator_teams SET left_at = NOW()
+         WHERE user_id = ? AND team_id = ? AND left_at IS NULL"
+    )->execute([$coordinator_id, $team_id_to_remove]);
+
+    redirect('/admin/coordinators');
+
 } else {
     redirect('/admin/coordinators');
 }

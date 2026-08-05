@@ -109,7 +109,7 @@ match (true) {
             require ROOT_PATH . '/src/admin/coordinator_edit_email_handler.php';
         })(),
 
-    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password|add-team)$#', $path, $matches)
+    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password|add-team|remove-team)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['coordinator_id'] = (int)$matches[1];
             $_REQUEST['action']         = $matches[2];
