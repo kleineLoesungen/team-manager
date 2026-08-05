@@ -2,14 +2,7 @@
 // src/templates/coordinator/player_profile.php — Player profile for coordinator
 declare(strict_types=1);
 
-// Determine active membership from history
-$active_membership = null;
-foreach ($history as $h) {
-    if ($h['left_at'] === null) {
-        $active_membership = $h;
-        break;
-    }
-}
+$active_teams = array_filter($history, fn($h) => $h['is_active'] && $h['team_active']);
 ?>
 <div class="mb-3">
     <a href="/coordinator/players" class="btn btn-sm btn-outline-secondary">
@@ -28,11 +21,13 @@ foreach ($history as $h) {
             <i class="bi bi-building me-1"></i><?= e($player['club_name']) ?>
         </div>
         <?php endif; ?>
-        <?php if ($active_membership): ?>
-        <div class="text-muted small mb-2">
-            <i class="bi bi-people me-1"></i>
-            <strong><?= e($active_membership['team_name']) ?></strong>
-            (seit <?= e(date('d.m.Y', strtotime($active_membership['joined_at']))) ?>)
+        <?php if (!empty($active_teams)): ?>
+        <div class="mb-2 d-flex flex-wrap gap-1">
+            <?php foreach ($active_teams as $h): ?>
+            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+                <i class="bi bi-people me-1"></i><?= e($h['team_name']) ?>
+            </span>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
         <?php if (!empty($player['phone'])): ?>
