@@ -95,6 +95,20 @@ if ($action === 'reset-password') {
         redirect('/admin/coordinators?error=' . urlencode('Koordinator ist bereits in diesem Team.'));
     }
 
+} elseif ($action === 'delete') {
+    // Safety guard: only allow deleting deactivated coordinators
+    $check = $pdo->prepare("SELECT id FROM users WHERE id = ? AND role = 'coordinator' AND is_active = FALSE");
+    $check->execute([$coordinator_id]);
+    if (!$check->fetch()) {
+        redirect('/admin/coordinators?error=' . urlencode('Nur deaktivierte Koordinatoren können gelöscht werden.'));
+    }
+
+    // Cascade deletes: coordinator_teams rows are removed via ON DELETE CASCADE
+    $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'coordinator' AND is_active = FALSE")
+        ->execute([$coordinator_id]);
+
+    redirect('/admin/coordinators?success=' . urlencode('Koordinator wurde gelöscht.'));
+
 } elseif ($action === 'remove-team') {
     $team_id_to_remove = (int)($_POST['team_id'] ?? 0);
     if ($team_id_to_remove <= 0) redirect('/admin/coordinators');

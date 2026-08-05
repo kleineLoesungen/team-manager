@@ -165,6 +165,7 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($ac
                             <span class="badge bg-secondary ms-1">Deaktiviert</span>
                             <div class="text-muted small"><?= e($coordinator['team_name'] ?? '—') ?></div>
                         </div>
+                        <div class="d-flex gap-2">
                         <form method="POST"
                               action="/admin/coordinators/<?= $coordinator['id'] ?>/reactivate"
                               onsubmit="return confirm('<?= e('Der Koordinator wird reaktiviert und kann sich wieder anmelden.') ?>')">
@@ -173,6 +174,15 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use ($ac
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
                             </button>
                         </form>
+                        <form method="POST"
+                              action="/admin/coordinators/<?= $coordinator['id'] ?>/delete"
+                              onsubmit="return confirm('<?= e('Koordinator ' . $coordinator['first_name'] . ' ' . $coordinator['last_name'] . ' endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.') ?>')">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash me-1"></i>Löschen
+                            </button>
+                        </form>
+                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
