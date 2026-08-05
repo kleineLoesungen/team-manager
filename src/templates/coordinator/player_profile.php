@@ -63,44 +63,21 @@ $active_teams = array_filter(
     <div class="card-header fw-semibold">Benutzerkonten</div>
     <div class="card-body">
 
-        <!-- My team: editable -->
+        <!-- My team: read-only display -->
         <div class="mb-3">
             <div class="small fw-medium text-muted mb-2">Mein Team</div>
             <?php if (!empty($my_linked)): ?>
-            <div class="d-flex flex-wrap gap-2 mb-2">
+            <div class="d-flex flex-wrap gap-2">
                 <?php foreach ($my_linked as $u): ?>
-                <form method="POST" action="/coordinator/players/<?= (int)$player_id ?>/unlink-user" class="m-0">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="user_id" value="<?= (int)$u['user_id'] ?>">
-                    <button type="submit"
-                            class="btn btn-sm badge border py-1 px-2 d-inline-flex align-items-center gap-1
-                                   <?= $u['user_active'] ? 'bg-success-subtle text-success-emphasis border-success-subtle' : 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle' ?>"
-                            onclick="return confirm('<?= e('Account ' . $u['username'] . ' vom Spieler trennen?') ?>')">
-                        <i class="bi bi-person me-1"></i><?= e($u['username']) ?>
-                        <?= $u['user_active'] ? '' : '<span class="opacity-75">(inaktiv)</span>' ?>
-                        <i class="bi bi-x"></i>
-                    </button>
-                </form>
+                <span class="badge border py-1 px-2 d-inline-flex align-items-center gap-1
+                             <?= $u['user_active'] ? 'bg-success-subtle text-success-emphasis border-success-subtle' : 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle' ?>">
+                    <i class="bi bi-person me-1"></i><?= e($u['username']) ?>
+                    <?= $u['user_active'] ? '' : '<span class="opacity-75">(inaktiv)</span>' ?>
+                </span>
                 <?php endforeach; ?>
             </div>
             <?php else: ?>
-            <p class="text-muted small mb-2">Kein Account aus meinem Team verknüpft.</p>
-            <?php endif; ?>
-
-            <?php if (!empty($unlinked_my_members)): ?>
-            <form method="POST" action="/coordinator/players/<?= (int)$player_id ?>/link-user"
-                  class="d-flex align-items-center gap-2">
-                <?= csrf_field() ?>
-                <select name="user_id" class="form-select form-select-sm" style="max-width:220px">
-                    <option value="">Account verknüpfen …</option>
-                    <?php foreach ($unlinked_my_members as $m): ?>
-                    <option value="<?= (int)$m['id'] ?>"><?= e($m['username']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-link-45deg"></i>
-                </button>
-            </form>
+            <p class="text-muted small mb-0">Kein Account aus meinem Team verknüpft.</p>
             <?php endif; ?>
         </div>
 
@@ -132,12 +109,7 @@ $active_teams = array_filter(
 <?php if (!empty($attr_groups)): ?>
 <form method="POST" action="/coordinator/players/<?= (int)$player_id ?>/attributes/save">
     <?= csrf_field() ?>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="h6 fw-semibold mb-0">Attribute</h3>
-        <button type="submit" class="btn btn-sm btn-primary">
-            <i class="bi bi-check-lg me-1"></i>Attribute speichern
-        </button>
-    </div>
+    <h3 class="h6 fw-semibold mb-3">Attribute</h3>
     <?php foreach ($attr_groups as $group_name => $group): ?>
     <div class="card mb-3">
         <div class="card-header fw-semibold"><?= e($group_name) ?></div>
@@ -178,104 +150,133 @@ $active_teams = array_filter(
 </div>
 <?php endif; ?>
 
-<!-- Statistics per team -->
-<?php if (!empty($team_stats)): ?>
-<h3 class="h6 fw-semibold mb-3">Statistiken</h3>
-<?php foreach ($team_stats as $tid => $ts): ?>
-<?php if (empty($ts['cols'])): continue; endif; ?>
-<div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold"><?= e($ts['team_name']) ?></span>
-        <?php if (!$ts['team_active']): ?>
-        <span class="badge bg-secondary">Inaktiv</span>
-        <?php endif; ?>
+<!-- Cross-team stats (column switcher + sum row) -->
+<?php
+$col_names = array_values(array_unique(array_column($cross_stats, 'col_name')));
+$col_agg   = [];
+foreach ($cross_stats as $stat) {
+    $cn = $stat['col_name'];
+    if (!isset($col_agg[$cn])) {
+        $col_agg[$cn] = ['type' => $stat['data_type'], 'total' => 0, 'true_count' => 0, 'sum' => 0.0];
+    }
+    $col_agg[$cn]['total']++;
+    if ($stat['data_type'] === 'boolean') {
+        if (in_array($stat['value'], ['1', 'true'], true)) $col_agg[$cn]['true_count']++;
+    } else {
+        if ($stat['value'] !== '') $col_agg[$cn]['sum'] += (float)$stat['value'];
+    }
+}
+?>
+<div class="card mb-4">
+    <div class="card-header fw-semibold">Statistiken</div>
+    <?php if (empty($cross_stats)): ?>
+    <div class="card-body">
+        <p class="text-muted mb-0">
+            <?= empty($my_linked) ? 'Kein Benutzeraccount verknüpft — keine Statistiken verfügbar.' : 'Noch keine Einsatzdaten vorhanden.' ?>
+        </p>
+    </div>
+    <?php else: ?>
+    <div class="card-body pb-0">
+        <div class="d-flex flex-wrap gap-2">
+            <?php foreach ($col_names as $i => $cn): ?>
+            <button type="button"
+                    class="btn btn-sm <?= $i === 0 ? 'btn-primary' : 'btn-outline-secondary' ?> js-col-switch"
+                    data-col="<?= e($cn) ?>">
+                <?= e($cn) ?>
+            </button>
+            <?php endforeach; ?>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-sm mb-0">
             <thead class="table-light">
                 <tr>
-                    <?php foreach ($ts['cols'] as $col): ?>
-                    <th class="text-end text-nowrap">
-                        <?= e($col['name']) ?>
-                        <small class="text-muted fw-normal d-block">
-                            <?= $col['data_type'] === 'number' ? 'Summe' : 'Anzahl' ?>
-                        </small>
-                    </th>
-                    <?php endforeach; ?>
+                    <th>Team</th>
+                    <th>Datum</th>
+                    <th>Wert</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <?php foreach ($ts['cols'] as $col): ?>
-                    <?php $cid = (int)$col['id']; $val = $ts['totals'][$cid] ?? 0; ?>
-                    <td class="text-end fw-semibold">
-                        <?= $col['data_type'] === 'number' ? ($val == (int)$val ? (int)$val : number_format((float)$val, 2, ',', '.')) : (int)$val ?>
+                <?php foreach ($cross_stats as $stat): ?>
+                <tr data-col="<?= e($stat['col_name']) ?>">
+                    <td><?= e($stat['team_name']) ?></td>
+                    <td><?= $stat['date'] ? e(date('d.m.Y', strtotime($stat['date']))) : '<span class="text-muted">—</span>' ?></td>
+                    <td>
+                        <?php if ($stat['data_type'] === 'boolean'): ?>
+                        <?= in_array($stat['value'], ['1', 'true'], true)
+                            ? '<i class="bi bi-check-circle-fill text-success"></i>'
+                            : '<i class="bi bi-x-circle text-muted"></i>' ?>
+                        <?php else: ?>
+                        <?= e($stat['value']) ?>
+                        <?php endif; ?>
                     </td>
-                    <?php endforeach; ?>
                 </tr>
+                <?php endforeach; ?>
             </tbody>
+            <?php if (!empty($col_agg)): ?>
+            <tfoot>
+                <?php foreach ($col_agg as $cn => $agg): ?>
+                <tr data-col="<?= e($cn) ?>" class="table-secondary fw-semibold">
+                    <td colspan="2" class="text-muted small">Gesamt</td>
+                    <td>
+                        <?php if ($agg['type'] === 'boolean'): ?>
+                        <?php $pct = $agg['total'] > 0 ? round($agg['true_count'] / $agg['total'] * 100) : 0; ?>
+                        <?= $agg['true_count'] ?> / <?= $agg['total'] ?> <span class="text-muted">(<?= $pct ?>%)</span>
+                        <?php else: ?>
+                        <?= $agg['sum'] == (int)$agg['sum'] ? (int)$agg['sum'] : number_format($agg['sum'], 2, ',', '.') ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tfoot>
+            <?php endif; ?>
         </table>
     </div>
-
-    <!-- Per-list detail (collapsible, current team only) -->
-    <?php if ($ts['is_my_team'] && !empty($ts['lists'])): ?>
-    <div class="card-footer p-0 border-top-0">
-        <button class="btn btn-sm btn-link text-muted px-3 py-2 w-100 text-start"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#list-detail-<?= (int)$tid ?>">
-            <i class="bi bi-chevron-down me-1"></i>Listendetails anzeigen
-        </button>
-        <div class="collapse" id="list-detail-<?= (int)$tid ?>">
-            <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Liste</th>
-                            <th>Datum</th>
-                            <?php foreach ($ts['cols'] as $col): ?>
-                            <th class="text-end text-nowrap"><?= e($col['name']) ?></th>
-                            <?php endforeach; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($ts['lists'] as $list): ?>
-                        <?php $lid = (int)$list['id']; $has_data = isset($ts['cells'][$lid]); ?>
-                        <?php if (!$has_data): continue; endif; ?>
-                        <tr>
-                            <td class="text-nowrap"><?= e($list['name']) ?></td>
-                            <td class="text-nowrap text-muted small">
-                                <?= $list['date'] ? e(date('d.m.Y', strtotime($list['date']))) : '—' ?>
-                            </td>
-                            <?php foreach ($ts['cols'] as $col): ?>
-                            <?php $cid = (int)$col['id']; $v = $ts['cells'][$lid][$cid] ?? null; ?>
-                            <td class="text-end">
-                                <?php if ($v === null): ?>
-                                <span class="text-muted">—</span>
-                                <?php elseif ($col['data_type'] === 'boolean'): ?>
-                                <?= in_array($v, ['1','true'], true)
-                                    ? '<i class="bi bi-check-circle-fill text-success"></i>'
-                                    : '<i class="bi bi-circle text-muted"></i>' ?>
-                                <?php else: ?>
-                                <?= e($v) ?>
-                                <?php endif; ?>
-                            </td>
-                            <?php endforeach; ?>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <script>
+    (function () {
+        var btns = document.querySelectorAll('.js-col-switch');
+        var rows = document.querySelectorAll('tr[data-col]');
+        function activate(col) {
+            btns.forEach(function (b) {
+                var active = b.dataset.col === col;
+                b.classList.toggle('btn-primary', active);
+                b.classList.toggle('btn-outline-secondary', !active);
+            });
+            rows.forEach(function (r) {
+                r.style.display = r.dataset.col === col ? '' : 'none';
+            });
+        }
+        if (btns.length > 0) activate(btns[0].dataset.col);
+        btns.forEach(function (b) {
+            b.addEventListener('click', function () { activate(this.dataset.col); });
+        });
+    }());
+    </script>
     <?php endif; ?>
 </div>
-<?php endforeach; ?>
-<?php elseif (empty($my_linked)): ?>
-<div class="card mb-4">
-    <div class="card-header fw-semibold">Statistiken</div>
+
+<?php if (!empty($my_linked)): ?>
+<div class="card border-danger mb-4">
+    <div class="card-header text-danger fw-semibold">Gefahrenzone</div>
     <div class="card-body">
-        <p class="text-muted mb-0">Kein Benutzeraccount verknüpft — keine Statistiken verfügbar.</p>
+        <?php foreach ($my_linked as $u): ?>
+        <form method="POST"
+              action="/coordinator/players/<?= (int)$player_id ?>/unlink-user"
+              class="mb-2 last-mb-0">
+            <?= csrf_field() ?>
+            <input type="hidden" name="user_id" value="<?= (int)$u['user_id'] ?>">
+            <div class="d-flex justify-content-between align-items-center gap-3">
+                <div class="small">
+                    Verknüpfung mit <strong><?= e($u['username']) ?></strong> aufheben
+                </div>
+                <button type="submit"
+                        class="btn btn-sm btn-outline-danger flex-shrink-0"
+                        onclick="return confirm('<?= e('Verknüpfung mit ' . $u['username'] . ' wirklich aufheben?') ?>')">
+                    <i class="bi bi-unlink me-1"></i>Trennen
+                </button>
+            </div>
+        </form>
+        <?php endforeach; ?>
     </div>
 </div>
 <?php endif; ?>

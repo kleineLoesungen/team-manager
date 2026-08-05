@@ -10,10 +10,18 @@ $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 
 // ── Filter parameters (STAT-02) ───────────────────────────────────────────────
-$filter_list_id          = isset($_GET['list_id'])   && $_GET['list_id']   !== '' ? (int)$_GET['list_id']   : null;
-$filter_date_from        = isset($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from']       : null;
-$filter_date_to          = isset($_GET['date_to'])   && $_GET['date_to']   !== '' ? $_GET['date_to']         : null;
-$filter_include_undated  = !empty($_GET['include_undated']);
+$filter_list_id         = isset($_GET['list_id']) && $_GET['list_id'] !== '' ? (int)$_GET['list_id'] : null;
+$filter_include_undated = !empty($_GET['include_undated']);
+
+// Default date range: today and one year back — applied only on a fresh load (no submitted params).
+// If the user explicitly submits empty date fields, null = "no filter" (all time).
+$_today        = date('Y-m-d');
+$_default_from = date('Y-m-d', strtotime('-1 year'));
+
+$filter_date_from = !isset($_GET['date_from']) ? $_default_from
+                  : ($_GET['date_from'] !== ''  ? $_GET['date_from'] : null);
+$filter_date_to   = !isset($_GET['date_to'])   ? $_today
+                  : ($_GET['date_to']   !== ''  ? $_GET['date_to']   : null);
 
 // ── Fetch available lists for filter dropdown ─────────────────────────────────
 $lists_stmt = $pdo->prepare(

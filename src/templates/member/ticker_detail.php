@@ -3,17 +3,14 @@
 // Variables: $ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id
 ?>
 <div class="mb-3">
-    <h4 class="fw-semibold mb-1"><?= e($ticker['name']) ?></h4>
     <?php if ($ticker['description']): ?>
-    <p class="text-muted small mb-0"><?= e($ticker['description']) ?></p>
+    <p class="text-muted small mb-1"><?= e($ticker['description']) ?></p>
     <?php endif; ?>
-    <div class="mt-1">
-        <?php if ($ticker['status'] === 'active'): ?>
-            <span class="badge bg-success">Aktiv</span>
-        <?php else: ?>
-            <span class="badge bg-secondary">Geschlossen</span>
-        <?php endif; ?>
-    </div>
+    <?php if ($ticker['status'] === 'active'): ?>
+    <span class="badge bg-success">Aktiv</span>
+    <?php else: ?>
+    <span class="badge bg-secondary">Geschlossen</span>
+    <?php endif; ?>
 </div>
 
 <?php if ($ticker['status'] === 'closed'): ?>

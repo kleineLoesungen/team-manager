@@ -32,11 +32,11 @@ if (!empty($global_columns)) {
             c.name      AS column_name,
             c.data_type,
 
-            -- Gesamt: all public/protected cells (dated and undated)
+            -- Gesamt: all public/protected cells up to today (dated ≤ today or undated)
             COALESCE(
                 CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN cells.id IS NOT NULL THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.id IS NOT NULL AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN cells.id IS NOT NULL AND (lists.date IS NULL OR lists.date <= CURRENT_DATE) THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.id IS NOT NULL AND (lists.date IS NULL OR lists.date <= CURRENT_DATE) AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
                 END, 0
             ) AS sum_all,
 
@@ -111,6 +111,7 @@ if (!empty($global_columns)) {
             AND c.team_id = :team_id AND c.list_id IS NULL AND c.is_active = TRUE
         WHERE l.team_id = :team_id2
           AND l.visibility IN ('public', 'protected')
+          AND (l.date IS NULL OR l.date <= CURRENT_DATE)
         ORDER BY l.date DESC NULLS LAST, l.name
     ");
     $lists_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
@@ -122,6 +123,7 @@ if (!empty($global_columns)) {
         FROM cells ce
         JOIN lists l ON l.id = ce.list_id
             AND l.team_id = :team_id AND l.visibility IN ('public', 'protected')
+            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
         JOIN columns c ON c.id = ce.column_id
             AND c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
         WHERE ce.player_id = :player_id
@@ -138,6 +140,7 @@ if (!empty($global_columns)) {
         JOIN list_global_columns lgc ON lgc.column_id = c.id
         JOIN lists l ON l.id = lgc.list_id
             AND l.team_id = :team_id AND l.visibility IN ('public', 'protected')
+            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
         WHERE c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
         GROUP BY c.id
     ");

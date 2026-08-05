@@ -998,6 +998,85 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('team-manager: migration 014 skipped — ' . $e->getMessage());
     }
+
+    // Migration 015: fix player_attribute_values RLS policies
+    // The old pav_select referenced team_memberships (now empty — membership moved to users.player_id).
+    // All three policies were in one try/catch, so a failure on pav_select silently skipped pav_insert/pav_update.
+    // Fix: separate try/catch per policy; pav_select now uses users.player_id.
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.player_attribute_values");
+        $pdo->exec("CREATE POLICY pav_select ON {$schema}.player_attribute_values FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (
+                current_setting('app.current_role', true) = 'coordinator'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = player_attribute_values.player_id
+                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                      AND u.role = 'member'
+                )
+            )
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = player_attribute_values.player_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.player_attributes pa
+                    WHERE pa.id = player_attribute_values.attribute_id
+                      AND pa.visible_to_player = TRUE
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 015 pav_select skipped — ' . $e->getMessage());
+    }
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS pav_insert ON {$schema}.player_attribute_values");
+        $pdo->exec("CREATE POLICY pav_insert ON {$schema}.player_attribute_values FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = player_attribute_values.player_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.player_attributes pa
+                    WHERE pa.id = player_attribute_values.attribute_id
+                      AND pa.editable_by_player = TRUE
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 015 pav_insert skipped — ' . $e->getMessage());
+    }
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS pav_update ON {$schema}.player_attribute_values");
+        $pdo->exec("CREATE POLICY pav_update ON {$schema}.player_attribute_values FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = player_attribute_values.player_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.player_attributes pa
+                    WHERE pa.id = player_attribute_values.attribute_id
+                      AND pa.editable_by_player = TRUE
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 015 pav_update skipped — ' . $e->getMessage());
+    }
 }
 
 /**

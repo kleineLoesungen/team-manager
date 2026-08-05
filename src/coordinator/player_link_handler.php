@@ -18,17 +18,21 @@ if ($player_id <= 0) redirect('/coordinator/players');
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
-$back    = '/coordinator/players/' . $player_id;
 
-// Verify player is accessible via this team
-$check = $pdo->prepare(
-    "SELECT p.id FROM players p
-     WHERE p.id = ? AND EXISTS (
-         SELECT 1 FROM users u WHERE u.player_id = p.id AND u.team_id = ? AND u.role = 'member'
-     )"
-);
-$check->execute([$player_id, $team_id]);
+// Allow caller to request redirect back to the list instead of the profile
+$_back_raw = $_POST['_back'] ?? '';
+$back = (str_starts_with($_back_raw, '/coordinator/players') && !str_contains($_back_raw, '//'))
+    ? $_back_raw
+    : '/coordinator/players/' . $player_id;
+
+// Use admin context to verify the player exists — coordinators can manage links for any player,
+// including ones not yet linked to their team.
+set_admin_context($pdo);
+$check = $pdo->prepare("SELECT id FROM players WHERE id = ?");
+$check->execute([$player_id]);
 if (!$check->fetch()) redirect('/coordinator/players');
+reset_rls_context($pdo);
+set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
 
 if ($action === 'link-user') {
     $user_id = (int)($_POST['user_id'] ?? 0);
@@ -42,6 +46,15 @@ if ($action === 'link-user') {
     $u->execute([$user_id, $team_id]);
     if (!$u->fetch()) {
         redirect($back . '?error=' . urlencode('Mitglied nicht gefunden oder bereits verknüpft.'));
+    }
+
+    // Enforce one-to-one: player may have at most one user per team
+    $dup = $pdo->prepare(
+        "SELECT id FROM users WHERE player_id = ? AND team_id = ? AND role = 'member'"
+    );
+    $dup->execute([$player_id, $team_id]);
+    if ($dup->fetch()) {
+        redirect($back . '?error=' . urlencode('Dieser Spieler ist in deinem Team bereits mit einem Account verknüpft.'));
     }
 
     $pdo->prepare("UPDATE users SET player_id = ? WHERE id = ? AND team_id = ? AND role = 'member'")

@@ -63,13 +63,23 @@ if ($action === 'edit') {
         redirect('/admin/players?error=' . urlencode('Kein Account ausgewählt.'));
     }
 
-    // Verify the user is an unlinked active member
+    // Verify the user is an unlinked active member and get their team
     $user_check = $pdo->prepare(
-        "SELECT id FROM users WHERE id = ? AND role = 'member' AND player_id IS NULL"
+        "SELECT id, team_id FROM users WHERE id = ? AND role = 'member' AND player_id IS NULL"
     );
     $user_check->execute([$user_id]);
-    if (!$user_check->fetch()) {
+    $target_user = $user_check->fetch();
+    if (!$target_user) {
         redirect('/admin/players?error=' . urlencode('Account nicht gefunden oder bereits mit einem Spieler verknüpft.'));
+    }
+
+    // Enforce one-to-one: player may have at most one user per team
+    $dup = $pdo->prepare(
+        "SELECT id FROM users WHERE player_id = ? AND team_id = ? AND role = 'member'"
+    );
+    $dup->execute([$player_id, (int)$target_user['team_id']]);
+    if ($dup->fetch()) {
+        redirect('/admin/players?error=' . urlencode('Dieser Spieler ist in diesem Team bereits mit einem Account verknüpft.'));
     }
 
     $pdo->prepare("UPDATE users SET player_id = ? WHERE id = ? AND role = 'member'")

@@ -104,6 +104,24 @@ declare(strict_types=1);
 <?php endif; ?>
 
 <!-- Cross-team stats -->
+<?php
+$col_names = array_values(array_unique(array_column($cross_stats, 'col_name')));
+
+// Per-column aggregates for the summary row
+$col_agg = [];
+foreach ($cross_stats as $stat) {
+    $cn = $stat['col_name'];
+    if (!isset($col_agg[$cn])) {
+        $col_agg[$cn] = ['type' => $stat['data_type'], 'total' => 0, 'true_count' => 0, 'sum' => 0.0];
+    }
+    $col_agg[$cn]['total']++;
+    if ($stat['data_type'] === 'boolean') {
+        if (in_array($stat['value'], ['1', 'true'], true)) $col_agg[$cn]['true_count']++;
+    } else {
+        if ($stat['value'] !== '') $col_agg[$cn]['sum'] += (float)$stat['value'];
+    }
+}
+?>
 <div class="card mb-4">
     <div class="card-header fw-semibold">Vergangene Einsätze</div>
     <?php if (empty($cross_stats)): ?>
@@ -111,22 +129,31 @@ declare(strict_types=1);
         <p class="text-muted mb-0">Noch keine Einsatzdaten vorhanden.</p>
     </div>
     <?php else: ?>
+    <div class="card-body pb-0">
+        <div class="d-flex flex-wrap gap-2">
+            <?php foreach ($col_names as $i => $cn): ?>
+            <button type="button"
+                    class="btn btn-sm <?= $i === 0 ? 'btn-primary' : 'btn-outline-secondary' ?> js-col-switch"
+                    data-col="<?= e($cn) ?>">
+                <?= e($cn) ?>
+            </button>
+            <?php endforeach; ?>
+        </div>
+    </div>
     <div class="table-responsive">
         <table class="table table-sm mb-0">
             <thead class="table-light">
                 <tr>
                     <th>Team</th>
                     <th>Datum</th>
-                    <th>Spalte</th>
                     <th>Wert</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($cross_stats as $stat): ?>
-                <tr>
+                <tr data-col="<?= e($stat['col_name']) ?>">
                     <td><?= e($stat['team_name']) ?></td>
                     <td><?= $stat['date'] ? e(date('d.m.Y', strtotime($stat['date']))) : '<span class="text-muted">—</span>' ?></td>
-                    <td><?= e($stat['col_name']) ?></td>
                     <td>
                         <?php if ($stat['data_type'] === 'boolean'): ?>
                         <?= in_array($stat['value'], ['1', 'true'], true)
@@ -139,8 +166,48 @@ declare(strict_types=1);
                 </tr>
                 <?php endforeach; ?>
             </tbody>
+            <?php if (!empty($col_agg)): ?>
+            <tfoot>
+                <?php foreach ($col_agg as $cn => $agg): ?>
+                <tr data-col="<?= e($cn) ?>" class="table-secondary fw-semibold">
+                    <td colspan="2" class="text-muted small">Gesamt</td>
+                    <td>
+                        <?php if ($agg['type'] === 'boolean'): ?>
+                        <?php $pct = $agg['total'] > 0 ? round($agg['true_count'] / $agg['total'] * 100) : 0; ?>
+                        <?= $agg['true_count'] ?> / <?= $agg['total'] ?> <span class="text-muted">(<?= $pct ?>%)</span>
+                        <?php else: ?>
+                        <?= $agg['sum'] == (int)$agg['sum'] ? (int)$agg['sum'] : number_format($agg['sum'], 2, ',', '.') ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tfoot>
+            <?php endif; ?>
         </table>
     </div>
+    <script>
+    (function () {
+        var btns = document.querySelectorAll('.js-col-switch');
+        var rows = document.querySelectorAll('tr[data-col]');
+
+        function activate(col) {
+            btns.forEach(function (b) {
+                var active = b.dataset.col === col;
+                b.classList.toggle('btn-primary', active);
+                b.classList.toggle('btn-outline-secondary', !active);
+            });
+            rows.forEach(function (r) {
+                r.style.display = r.dataset.col === col ? '' : 'none';
+            });
+        }
+
+        if (btns.length > 0) activate(btns[0].dataset.col);
+
+        btns.forEach(function (b) {
+            b.addEventListener('click', function () { activate(this.dataset.col); });
+        });
+    }());
+    </script>
     <?php endif; ?>
 </div>
 

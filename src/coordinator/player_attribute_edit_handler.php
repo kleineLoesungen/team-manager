@@ -11,16 +11,16 @@ require_csrf();
 $player_id = (int)($_REQUEST['player_id'] ?? 0);
 if ($player_id <= 0) redirect('/coordinator/players');
 
-$pdo = get_db();
+$pdo     = get_db();
+$team_id = (int)$_SESSION['team_id'];
 
-// Verify player is accessible on coordinator's team via a member user account
-$check = $pdo->prepare(
-    "SELECT p.id FROM players p
-     JOIN users u ON u.player_id = p.id
-     WHERE p.id = ? AND u.team_id = ? AND u.role = 'member'"
-);
-$check->execute([$player_id, (int)$_SESSION['team_id']]);
+// Use admin context to verify the player exists — coordinator can edit attributes for any player.
+set_admin_context($pdo);
+$check = $pdo->prepare("SELECT id FROM players WHERE id = ?");
+$check->execute([$player_id]);
 if (!$check->fetch()) redirect('/coordinator/players');
+reset_rls_context($pdo);
+set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
 
 // Save all submitted attribute values (coordinator can set any attribute)
 $values = $_POST['values'] ?? [];  // array: attribute_id => value string

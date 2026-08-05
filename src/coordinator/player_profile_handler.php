@@ -12,23 +12,19 @@ $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 $user_id = (int)$_SESSION['user_id'];
 
-// Fetch player — authorised only if a member user on my team links to it
+// Admin context for the player fetch — players_select RLS only shows already-linked players,
+// but coordinators must be able to view any player to link it.
+set_admin_context($pdo);
+
 $p_stmt = $pdo->prepare(
     "SELECT p.*, c.name AS club_name
      FROM players p
      LEFT JOIN clubs c ON c.id = p.club_id
-     WHERE p.id = ?
-       AND EXISTS (
-           SELECT 1 FROM users u
-           WHERE u.player_id = p.id AND u.team_id = ? AND u.role = 'member'
-       )"
+     WHERE p.id = ?"
 );
-$p_stmt->execute([$player_id, $team_id]);
+$p_stmt->execute([$player_id]);
 $player = $p_stmt->fetch();
 if (!$player) redirect('/coordinator/players');
-
-// ── Cross-team data — requires admin context ──────────────────────────────────
-set_admin_context($pdo);
 
 // All linked user accounts (every team)
 $al_stmt = $pdo->prepare(
@@ -42,80 +38,27 @@ $al_stmt = $pdo->prepare(
 $al_stmt->execute([$player_id]);
 $all_linked = $al_stmt->fetchAll();
 
-// Per-team column stats
-$team_stats = [];
-foreach ($all_linked as $u) {
-    $tid = (int)$u['team_id'];
-    $uid = (int)$u['user_id'];
-    if (isset($team_stats[$tid])) continue; // only first user per team
-
-    $cols_stmt = $pdo->prepare(
-        "SELECT id, name, data_type, sort_order FROM columns
-         WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
-         ORDER BY sort_order, id"
+// Cross-team stats: flat list for column-switcher view (≤ today only)
+$all_user_ids = array_column($all_linked, 'user_id');
+$cross_stats  = [];
+if (!empty($all_user_ids)) {
+    $placeholders = implode(',', array_fill(0, count($all_user_ids), '?'));
+    $cs_stmt = $pdo->prepare(
+        "SELECT c.name AS col_name, c.data_type, t.name AS team_name, l.date, ce.value
+         FROM cells ce
+         JOIN lists l ON l.id = ce.list_id
+         JOIN teams t ON t.id = l.team_id
+         JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL
+         WHERE ce.player_id IN ($placeholders)
+           AND (l.date IS NULL OR l.date <= CURRENT_DATE)
+         ORDER BY l.date DESC"
     );
-    $cols_stmt->execute([$tid]);
-    $cols = $cols_stmt->fetchAll();
-
-    $cells = [];
-    $lists = [];
-    if (!empty($cols)) {
-        $l_stmt = $pdo->prepare(
-            "SELECT DISTINCT l.id, l.name, l.date
-             FROM lists l
-             JOIN list_global_columns lgc ON lgc.list_id = l.id
-             JOIN columns c ON c.id = lgc.column_id
-                  AND c.team_id = ? AND c.list_id IS NULL AND c.is_active = TRUE
-             WHERE l.team_id = ?
-             ORDER BY l.date DESC NULLS LAST, l.name ASC"
-        );
-        $l_stmt->execute([$tid, $tid]);
-        $lists = $l_stmt->fetchAll();
-
-        $c_stmt = $pdo->prepare(
-            "SELECT ce.list_id, ce.column_id, ce.value
-             FROM cells ce
-             JOIN lists l ON l.id = ce.list_id AND l.team_id = ?
-             WHERE ce.player_id = ?"
-        );
-        $c_stmt->execute([$tid, $uid]);
-        foreach ($c_stmt->fetchAll() as $cell) {
-            $cells[(int)$cell['list_id']][(int)$cell['column_id']] = $cell['value'];
-        }
-    }
-
-    $totals = [];
-    foreach ($cols as $col) {
-        $cid = (int)$col['id'];
-        if ($col['data_type'] === 'number') {
-            $sum = 0.0;
-            foreach ($cells as $lc) {
-                if (isset($lc[$cid]) && $lc[$cid] !== '') $sum += (float)$lc[$cid];
-            }
-            $totals[$cid] = $sum;
-        } else {
-            $cnt = 0;
-            foreach ($cells as $lc) {
-                if (isset($lc[$cid]) && in_array($lc[$cid], ['1', 'true'], true)) $cnt++;
-            }
-            $totals[$cid] = $cnt;
-        }
-    }
-
-    $team_stats[$tid] = [
-        'team_name'   => $u['team_name'],
-        'team_active' => (bool)$u['team_active'],
-        'is_my_team'  => $tid === $team_id,
-        'cols'        => $cols,
-        'lists'       => $lists,
-        'cells'       => $cells,
-        'totals'      => $totals,
-    ];
+    $cs_stmt->execute($all_user_ids);
+    $cross_stats = $cs_stmt->fetchAll();
 }
 
 reset_rls_context($pdo);
 set_team_context($pdo, $team_id, 'coordinator', $user_id);
-// ─────────────────────────────────────────────────────────────────────────────
 
 $my_linked    = array_values(array_filter($all_linked, fn($u) => (int)$u['team_id'] === $team_id));
 $other_linked = array_values(array_filter($all_linked, fn($u) => (int)$u['team_id'] !== $team_id));
@@ -153,15 +96,12 @@ foreach ($attr_stmt->fetchAll() as $row) {
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 $success = !empty($_GET['success']) ? e($_GET['success']) : '';
 
-// Put my team first in team_stats display order
-uksort($team_stats, fn($a, $b) => ($b === $team_id) <=> ($a === $team_id));
-
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Spielerprofil', 'players', function() use (
     $player, $player_id,
     $my_linked, $other_linked, $unlinked_my_members,
-    $attr_groups, $team_stats,
+    $attr_groups, $cross_stats,
     $error, $success
 ) {
     require ROOT_PATH . '/src/templates/coordinator/player_profile.php';

@@ -54,6 +54,6 @@ if (!empty($_GET['success'])) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Mein Profil', 'profile', function() use ($current_email, $error, $success) {
+render_player_page('Team-Profil', 'profile', function() use ($current_email, $error, $success) {
     require ROOT_PATH . '/src/templates/member/profile.php';
 });

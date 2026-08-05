@@ -89,6 +89,7 @@ if ($player_id) {
          JOIN teams t ON t.id = l.team_id
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL
          WHERE ce.player_id IN ($placeholders)
+           AND (l.date IS NULL OR l.date <= CURRENT_DATE)
          ORDER BY l.date DESC"
     );
     $stats_stmt->execute($all_user_ids);
@@ -101,6 +102,6 @@ if ($player_id) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Mein Profil', 'player_profile', function() use ($player, $player_id, $attr_groups, $cross_stats, $history) {
+render_player_page('Spielerprofil', 'player_profile', function() use ($player, $player_id, $attr_groups, $cross_stats, $history) {
     require ROOT_PATH . '/src/templates/member/player_profile.php';
 });
