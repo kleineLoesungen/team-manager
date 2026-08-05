@@ -283,6 +283,14 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/player_attribute_edit_handler.php';
         })(),
 
+    // /coordinator/players/{id}/link-user|unlink-user — must come BEFORE the /{id} catch-all
+    (bool)preg_match('#^/coordinator/players/(\d+)/(link-user|unlink-user)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            $_REQUEST['action']    = $matches[2];
+            require ROOT_PATH . '/src/coordinator/player_link_handler.php';
+        })(),
+
     (bool)preg_match('#^/coordinator/players/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['player_id'] = (int)$matches[1];
