@@ -6,6 +6,8 @@ declare(strict_types=1);
 require_admin();
 $pdo = get_db();
 
+require ROOT_PATH . '/src/templates/admin/layout.php';
+
 $filter_club_id = (int)($_GET['club_id'] ?? 0);
 $filter_team_id = (int)($_GET['team_id'] ?? 0);
 

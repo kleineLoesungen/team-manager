@@ -6,6 +6,8 @@ declare(strict_types=1);
 require_admin();
 $pdo = get_db();
 
+require ROOT_PATH . '/src/templates/admin/layout.php';
+
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $teams = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $error = '';
