@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/players.php — Admin player list
-// Variables: $players, $clubs, $teams, $linked_users_map, $unlinked_members,
+// Variables: $players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
 //            $search, $filter_club_id, $filter_team_id
 ?>
 <?php if (!empty($_GET['error'])): ?>
@@ -59,6 +59,12 @@
     </div>
     <?php endif; ?>
 </form>
+
+<?php if ($has_unlinked): ?>
+<script type="application/json" id="unlinked-by-team-data">
+<?= json_encode($unlinked_by_team, JSON_HEX_TAG | JSON_HEX_AMP) ?>
+</script>
+<?php endif; ?>
 
 <?php if (empty($players)): ?>
 <div class="alert alert-info">
@@ -120,21 +126,24 @@
             <?php endif; ?>
         </div>
 
-        <!-- Add link form -->
-        <?php if (!empty($unlinked_members)): ?>
+        <!-- Add link: team → user two-step -->
+        <?php if ($has_unlinked): ?>
         <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/link-user"
-              class="d-flex align-items-center gap-2 mb-2">
+              class="d-flex align-items-center gap-2 mb-2 js-link-form">
             <?= csrf_field() ?>
-            <select name="user_id" class="form-select form-select-sm" style="max-width:240px">
-                <option value="">— Account verknüpfen —</option>
-                <?php foreach ($unlinked_members as $m): ?>
-                <option value="<?= (int)$m['id'] ?>">
-                    <?= e($m['username']) ?> — <?= e($m['last_name'] . ', ' . $m['first_name']) ?>
-                    <?= !empty($m['team_name']) ? '(' . e($m['team_name']) . ($m['team_active'] ? '' : ' – inaktiv') . ')' : '' ?>
+            <select class="form-select form-select-sm js-team-pick" style="max-width:150px">
+                <option value="">Team …</option>
+                <?php foreach ($unlinked_by_team as $tid => $tdata): ?>
+                <option value="<?= (int)$tid ?>">
+                    <?= e($tdata['team_name']) ?><?= $tdata['team_active'] ? '' : ' (inaktiv)' ?>
                 </option>
                 <?php endforeach; ?>
             </select>
-            <button type="submit" class="btn btn-sm btn-outline-primary">
+            <select name="user_id" class="form-select form-select-sm js-user-pick"
+                    style="max-width:180px" disabled>
+                <option value="">Mitglied …</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary" disabled>
                 <i class="bi bi-link-45deg"></i>
             </button>
         </form>
@@ -194,4 +203,39 @@
     </div>
     <?php endforeach; ?>
 </div>
+<?php endif; ?>
+
+<?php if ($has_unlinked): ?>
+<script>
+(function () {
+    var data = JSON.parse(document.getElementById('unlinked-by-team-data').textContent);
+
+    document.querySelectorAll('.js-link-form').forEach(function (form) {
+        var teamSel = form.querySelector('.js-team-pick');
+        var userSel = form.querySelector('.js-user-pick');
+        var btn     = form.querySelector('button[type="submit"]');
+
+        teamSel.addEventListener('change', function () {
+            var tid = this.value;
+            userSel.innerHTML = '<option value="">Mitglied …</option>';
+            userSel.disabled  = true;
+            btn.disabled      = true;
+
+            if (tid && data[tid]) {
+                data[tid].members.forEach(function (m) {
+                    var opt       = document.createElement('option');
+                    opt.value     = m.id;
+                    opt.textContent = m.username + ' — ' + m.last_name + ', ' + m.first_name;
+                    userSel.appendChild(opt);
+                });
+                userSel.disabled = false;
+            }
+        });
+
+        userSel.addEventListener('change', function () {
+            btn.disabled = this.value === '';
+        });
+    });
+}());
+</script>
 <?php endif; ?>

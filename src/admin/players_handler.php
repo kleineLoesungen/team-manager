@@ -59,21 +59,40 @@ if (!empty($players)) {
     }
 }
 
-// Unlinked member users for the "add link" dropdown
-$unlinked_members = $pdo->query(
+// Unlinked active member users grouped by team — for the two-step team→user link UI
+$unlinked_rows = $pdo->query(
     "SELECT u.id, u.username, u.first_name, u.last_name,
-            t.name AS team_name, t.is_active AS team_active
+            t.id AS team_id, t.name AS team_name, t.is_active AS team_active
      FROM users u
-     LEFT JOIN teams t ON t.id = u.team_id
+     JOIN teams t ON t.id = u.team_id
      WHERE u.role = 'member' AND u.player_id IS NULL AND u.is_active = TRUE
-     ORDER BY t.name ASC, u.last_name ASC, u.first_name ASC"
+     ORDER BY t.is_active DESC, t.name ASC, u.last_name ASC, u.first_name ASC"
 )->fetchAll();
+
+$unlinked_by_team = [];
+foreach ($unlinked_rows as $m) {
+    $tid = (int)$m['team_id'];
+    if (!isset($unlinked_by_team[$tid])) {
+        $unlinked_by_team[$tid] = [
+            'team_name'   => $m['team_name'],
+            'team_active' => (bool)$m['team_active'],
+            'members'     => [],
+        ];
+    }
+    $unlinked_by_team[$tid]['members'][] = [
+        'id'         => (int)$m['id'],
+        'username'   => $m['username'],
+        'first_name' => $m['first_name'],
+        'last_name'  => $m['last_name'],
+    ];
+}
+$has_unlinked = !empty($unlinked_by_team);
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $teams = $pdo->query("SELECT id, name FROM teams ORDER BY is_active DESC, name ASC")->fetchAll();
 
 render_admin_page('Spieler', 'players', function() use (
-    $players, $clubs, $teams, $linked_users_map, $unlinked_members,
+    $players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
     $search, $filter_club_id, $filter_team_id
 ) {
     require ROOT_PATH . '/src/templates/admin/players.php';
