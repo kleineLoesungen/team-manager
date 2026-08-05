@@ -803,10 +803,10 @@ function maybe_migrate_db(PDO $pdo): void {
             $pdo->exec("CREATE POLICY players_select ON {$schema}.players FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR EXISTS (
-                    SELECT 1 FROM {$schema}.team_memberships tm
-                    WHERE tm.player_id = players.id
-                      AND tm.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-                      AND tm.left_at IS NULL
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = players.id
+                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                      AND u.role = 'member'
                 )
                 OR EXISTS (
                     SELECT 1 FROM {$schema}.users u

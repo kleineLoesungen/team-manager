@@ -10,24 +10,30 @@ if ($player_id <= 0) redirect('/coordinator/players');
 
 $pdo = get_db();
 
-// Fetch player (RLS: players_select allows coordinator to see players on their team)
+// Fetch player — verify it's accessible via a member user account on the coordinator's team
 $p_stmt = $pdo->prepare(
     "SELECT p.*, c.name AS club_name
      FROM players p
      LEFT JOIN clubs c ON c.id = p.club_id
-     WHERE p.id = ?"
+     WHERE p.id = ?
+       AND EXISTS (
+           SELECT 1 FROM users u
+           WHERE u.player_id = p.id
+             AND u.team_id = ?
+             AND u.role = 'member'
+       )"
 );
-$p_stmt->execute([$player_id]);
+$p_stmt->execute([$player_id, (int)$_SESSION['team_id']]);
 $player = $p_stmt->fetch();
 if (!$player) redirect('/coordinator/players');
 
-// Team membership history (all, ordered newest first)
+// Team accounts: all user accounts linked to this player (shows which teams they're part of)
 $hist_stmt = $pdo->prepare(
-    "SELECT t.name AS team_name, tm.joined_at, tm.left_at
-     FROM team_memberships tm
-     JOIN teams t ON t.id = tm.team_id
-     WHERE tm.player_id = ?
-     ORDER BY tm.joined_at DESC"
+    "SELECT t.name AS team_name, u.username, u.is_active, t.is_active AS team_active
+     FROM users u
+     JOIN teams t ON t.id = u.team_id
+     WHERE u.player_id = ?
+     ORDER BY t.name ASC"
 );
 $hist_stmt->execute([$player_id]);
 $history = $hist_stmt->fetchAll();
@@ -56,25 +62,27 @@ foreach ($raw_attrs as $row) {
     $attr_groups[$gname]['attrs'][] = $row;
 }
 
-// Find linked user account
-$u_stmt = $pdo->prepare("SELECT id FROM users WHERE player_id = ? LIMIT 1");
+// Find ALL user accounts linked to this player (one per team is the expected pattern)
+$u_stmt = $pdo->prepare("SELECT id FROM users WHERE player_id = ?");
 $u_stmt->execute([$player_id]);
-$linked_user_id = $u_stmt->fetchColumn();
+$linked_user_ids = array_column($u_stmt->fetchAll(), 'id');
+$linked_user_id  = $linked_user_ids[0] ?? false; // for template badge
 
-// Cross-team stats (admin context bypass — Pattern 4 from RESEARCH.md)
+// Cross-team stats: aggregate cells across ALL linked user accounts
 $cross_stats = [];
-if ($linked_user_id) {
+if (!empty($linked_user_ids)) {
     set_admin_context($pdo);
+    $placeholders = implode(',', array_fill(0, count($linked_user_ids), '?'));
     $stats_stmt = $pdo->prepare(
         "SELECT c.name AS col_name, c.data_type, t.name AS team_name, l.date, ce.value
          FROM cells ce
          JOIN lists l ON l.id = ce.list_id
          JOIN teams t ON t.id = l.team_id
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL
-         WHERE ce.player_id = :user_id
+         WHERE ce.player_id IN ($placeholders)
          ORDER BY l.date DESC"
     );
-    $stats_stmt->execute([':user_id' => $linked_user_id]);
+    $stats_stmt->execute($linked_user_ids);
     $cross_stats = $stats_stmt->fetchAll();
     // CRITICAL: reset admin context immediately, before any other query
     reset_rls_context($pdo);

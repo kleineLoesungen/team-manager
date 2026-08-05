@@ -114,19 +114,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             // Single team or no coordinator_teams entry: fall through to existing setup
                         }
 
+                        // Block users whose primary team is inactive
+                        if (!empty($user['team_id'])) {
+                            $team_check = $pdo->prepare("SELECT name, is_active FROM teams WHERE id = ?");
+                            $team_check->execute([$user['team_id']]);
+                            $team_row = $team_check->fetch();
+                            if (!$team_row || !$team_row['is_active']) {
+                                $error = 'Dein Team ist deaktiviert. Bitte wende dich an den Admin.';
+                                // Skip session setup — fall through to error display
+                                goto login_done;
+                            }
+                        } else {
+                            $team_row = null;
+                        }
+
                         // Set RLS context before any further queries
                         set_team_context($pdo, (int)$user['team_id']);
-
-                        // Fetch team name for display in navbar
-                        $team_stmt = $pdo->prepare("SELECT name FROM teams WHERE id = ?");
-                        $team_stmt->execute([$user['team_id']]);
-                        $team_row = $team_stmt->fetch();
 
                         $_SESSION['user_id']       = $user['id'];
                         $_SESSION['team_id']       = $user['team_id'];
                         $_SESSION['role']          = $role;
                         $_SESSION['display_name']  = $user['first_name'] . ' ' . $user['last_name'];
-                        $_SESSION['team_name']     = $team_row ? $team_row['name'] : '';
+                        $_SESSION['team_name']     = $team_row['name'] ?? '';
                         $_SESSION['last_activity'] = time();
 
                         // Role-based redirect — per D-02, honour return_to from email link
@@ -143,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Deliberately vague — do not reveal which field failed
                     $error = 'Benutzername oder Passwort falsch. Versuch es erneut.';
                 }
+                login_done:
             } catch (PDOException $e) {
                 // Log without credentials, per Pitfall 2
                 error_log('Login DB error: ' . $e->getMessage());

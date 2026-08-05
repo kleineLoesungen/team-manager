@@ -67,12 +67,12 @@ foreach ($history as $h) {
 </div>
 <?php endif; ?>
 
-<!-- Team membership history -->
+<!-- Team accounts -->
 <div class="card mb-4">
     <div class="card-header fw-semibold">Teamzugehörigkeit</div>
     <?php if (empty($history)): ?>
     <div class="card-body">
-        <p class="text-muted mb-0">Keine Teamzugehörigkeit erfasst.</p>
+        <p class="text-muted mb-0">Kein Benutzeraccount in einem Team verknüpft.</p>
     </div>
     <?php else: ?>
     <div class="table-responsive">
@@ -80,20 +80,22 @@ foreach ($history as $h) {
             <thead class="table-light">
                 <tr>
                     <th>Team</th>
-                    <th>Beitritt</th>
-                    <th>Abgang</th>
+                    <th>Benutzername</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($history as $h): ?>
                 <tr>
                     <td><?= e($h['team_name']) ?></td>
-                    <td><?= e(date('d.m.Y', strtotime($h['joined_at']))) ?></td>
+                    <td><code class="small"><?= e($h['username']) ?></code></td>
                     <td>
-                        <?php if ($h['left_at'] === null): ?>
-                        <span class="badge bg-success">Aktuell</span>
+                        <?php if ($h['team_active'] && $h['is_active']): ?>
+                        <span class="badge bg-success">Aktiv</span>
+                        <?php elseif (!$h['team_active']): ?>
+                        <span class="badge bg-secondary">Team inaktiv</span>
                         <?php else: ?>
-                        <?= e(date('d.m.Y', strtotime($h['left_at']))) ?>
+                        <span class="badge bg-warning text-dark">Konto inaktiv</span>
                         <?php endif; ?>
                     </td>
                 </tr>

@@ -13,11 +13,11 @@ if ($player_id <= 0) redirect('/coordinator/players');
 
 $pdo = get_db();
 
-// Verify player is on coordinator's team (defense-in-depth beyond RLS)
+// Verify player is accessible on coordinator's team via a member user account
 $check = $pdo->prepare(
     "SELECT p.id FROM players p
-     JOIN team_memberships tm ON tm.player_id = p.id
-     WHERE p.id = ? AND tm.left_at IS NULL AND tm.team_id = ?"
+     JOIN users u ON u.player_id = p.id
+     WHERE p.id = ? AND u.team_id = ? AND u.role = 'member'"
 );
 $check->execute([$player_id, (int)$_SESSION['team_id']]);
 if (!$check->fetch()) redirect('/coordinator/players');

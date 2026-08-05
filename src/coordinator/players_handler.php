@@ -7,19 +7,18 @@ require_coordinator();
 
 $pdo = get_db();
 
-// RLS already set by require_coordinator() — team context active.
-// Query players on current team via team_memberships (left_at IS NULL = active membership).
-// NOTE: do NOT add team_id to players table directly (Anti-Pattern from RESEARCH.md).
+// Players are not assigned to teams directly — they belong to clubs.
+// The link is: member user account on this team → users.player_id → player.
+// A player may be linked to multiple user accounts across teams.
 $stmt = $pdo->prepare(
-    "SELECT p.id, p.first_name, p.last_name, p.phone, p.contact_name,
+    "SELECT DISTINCT p.id, p.first_name, p.last_name, p.phone, p.contact_name,
             c.name AS club_name,
             u.id AS linked_user_id, u.username AS linked_username, u.is_active AS user_active
-     FROM players p
+     FROM users u
+     JOIN players p ON p.id = u.player_id
      LEFT JOIN clubs c ON c.id = p.club_id
-     LEFT JOIN team_memberships tm ON tm.player_id = p.id AND tm.left_at IS NULL
-                AND tm.team_id = ?
-     LEFT JOIN users u ON u.player_id = p.id
-     WHERE tm.player_id IS NOT NULL
+     WHERE u.team_id = ?
+       AND u.role = 'member'
      ORDER BY p.last_name ASC, p.first_name ASC"
 );
 $stmt->execute([(int)$_SESSION['team_id']]);

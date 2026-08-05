@@ -36,13 +36,13 @@ if ($player_id) {
     $p_stmt->execute([$player_id]);
     $player = $p_stmt->fetch();
 
-    // Team membership history (all teams, newest first)
+    // Team accounts: all user accounts linked to this player
     $hist_stmt = $pdo->prepare(
-        "SELECT t.name AS team_name, tm.joined_at, tm.left_at
-         FROM team_memberships tm
-         JOIN teams t ON t.id = tm.team_id
-         WHERE tm.player_id = ?
-         ORDER BY tm.joined_at DESC"
+        "SELECT t.name AS team_name, u.username, u.is_active, t.is_active AS team_active
+         FROM users u
+         JOIN teams t ON t.id = u.team_id
+         WHERE u.player_id = ?
+         ORDER BY t.name ASC"
     );
     $hist_stmt->execute([$player_id]);
     $history = $hist_stmt->fetchAll();
@@ -71,18 +71,27 @@ if ($player_id) {
         $attr_groups[$gname]['attrs'][] = $row;
     }
 
-    // Cross-team stats: use this member's own user_id (member IS the linked user)
-    // set_admin_context is already active from above — reuse it for the stats query
+    // Cross-team stats: aggregate cells across ALL user accounts linked to this player
+    $all_user_ids = array_column($history, 'username'); // already fetched above
+    // Re-query user IDs since history has usernames not IDs
+    $uid_stmt = $pdo->prepare("SELECT id FROM users WHERE player_id = ?");
+    $uid_stmt->execute([$player_id]);
+    $all_user_ids = array_column($uid_stmt->fetchAll(), 'id');
+    // Ensure current user is included even if query returned 0 rows
+    if (!in_array((int)$_SESSION['user_id'], $all_user_ids)) {
+        $all_user_ids[] = (int)$_SESSION['user_id'];
+    }
+    $placeholders = implode(',', array_fill(0, count($all_user_ids), '?'));
     $stats_stmt = $pdo->prepare(
         "SELECT c.name AS col_name, c.data_type, t.name AS team_name, l.date, ce.value
          FROM cells ce
          JOIN lists l ON l.id = ce.list_id
          JOIN teams t ON t.id = l.team_id
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL
-         WHERE ce.player_id = :user_id
+         WHERE ce.player_id IN ($placeholders)
          ORDER BY l.date DESC"
     );
-    $stats_stmt->execute([':user_id' => (int)$_SESSION['user_id']]);
+    $stats_stmt->execute($all_user_ids);
     $cross_stats = $stats_stmt->fetchAll();
 
     // CRITICAL: reset admin context immediately, restore member team context
