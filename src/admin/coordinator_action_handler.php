@@ -72,28 +72,45 @@ if ($action === 'reset-password') {
 
 } elseif ($action === 'add-team') {
     $new_team_id = (int)($_POST['team_id'] ?? 0);
+    $settings_url = '/admin/coordinators/' . $coordinator_id . '/settings';
 
     if ($new_team_id <= 0) {
-        redirect('/admin/coordinators?error=' . urlencode('Kein Team ausgewählt.'));
+        redirect($settings_url . '?error=' . urlencode('Kein Team ausgewählt.'));
     }
 
-    // Verify team exists and is active
     $team_check = $pdo->prepare("SELECT id FROM teams WHERE id = ? AND is_active = TRUE");
     $team_check->execute([$new_team_id]);
     if (!$team_check->fetch()) {
-        redirect('/admin/coordinators?error=' . urlencode('Team nicht gefunden oder inaktiv.'));
+        redirect($settings_url . '?error=' . urlencode('Team nicht gefunden oder inaktiv.'));
     }
 
     try {
         $pdo->prepare(
             "INSERT INTO coordinator_teams (user_id, team_id, joined_at) VALUES (?, ?, NOW())"
         )->execute([$coordinator_id, $new_team_id]);
-        redirect('/admin/coordinators');
+        redirect($settings_url);
     } catch (PDOException $e) {
         error_log('Coordinator add-team error: ' . $e->getMessage());
-        // Unique constraint: coordinator is already on this team
-        redirect('/admin/coordinators?error=' . urlencode('Koordinator ist bereits in diesem Team.'));
+        redirect($settings_url . '?error=' . urlencode('Koordinator ist bereits in diesem Team.'));
     }
+
+} elseif ($action === 'set-club') {
+    $club_id      = (int)($_POST['club_id'] ?? 0);
+    $settings_url = '/admin/coordinators/' . $coordinator_id . '/settings';
+
+    if ($club_id > 0) {
+        $club_check = $pdo->prepare("SELECT id FROM clubs WHERE id = ? AND is_active = TRUE");
+        $club_check->execute([$club_id]);
+        if (!$club_check->fetch()) {
+            redirect($settings_url . '?error=' . urlencode('Verein nicht gefunden oder inaktiv.'));
+        }
+        $pdo->prepare("UPDATE users SET club_id = ? WHERE id = ? AND role = 'coordinator'")
+            ->execute([$club_id, $coordinator_id]);
+    } else {
+        $pdo->prepare("UPDATE users SET club_id = NULL WHERE id = ? AND role = 'coordinator'")
+            ->execute([$coordinator_id]);
+    }
+    redirect($settings_url . '?success=' . urlencode('Verein gespeichert.'));
 
 } elseif ($action === 'delete') {
     // Safety guard: only allow deleting deactivated coordinators
@@ -111,14 +128,15 @@ if ($action === 'reset-password') {
 
 } elseif ($action === 'remove-team') {
     $team_id_to_remove = (int)($_POST['team_id'] ?? 0);
-    if ($team_id_to_remove <= 0) redirect('/admin/coordinators');
+    $settings_url      = '/admin/coordinators/' . $coordinator_id . '/settings';
+    if ($team_id_to_remove <= 0) redirect($settings_url);
 
     $pdo->prepare(
         "UPDATE coordinator_teams SET left_at = NOW()
          WHERE user_id = ? AND team_id = ? AND left_at IS NULL"
     )->execute([$coordinator_id, $team_id_to_remove]);
 
-    redirect('/admin/coordinators');
+    redirect($settings_url);
 
 } else {
     redirect('/admin/coordinators');

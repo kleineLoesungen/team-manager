@@ -975,6 +975,29 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('team-manager: migration 013 skipped — ' . $e->getMessage());
     }
+
+    // Migration 014: club_id on users (coordinator ↔ club relation, one club per coordinator)
+    try {
+        $col_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema = '{$schema}' AND table_name = 'users' AND column_name = 'club_id'"
+        )->fetchColumn();
+        if (!$col_exists) {
+            $clubs_exist = (bool)$pdo->query(
+                "SELECT 1 FROM information_schema.tables
+                 WHERE table_schema = '{$schema}' AND table_name = 'clubs'"
+            )->fetchColumn();
+            if ($clubs_exist) {
+                $pdo->exec(
+                    "ALTER TABLE {$schema}.users
+                     ADD COLUMN IF NOT EXISTS club_id INTEGER REFERENCES {$schema}.clubs(id) ON DELETE SET NULL"
+                );
+                error_log('team-manager: migration 014 users.club_id column added');
+            }
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 014 skipped — ' . $e->getMessage());
+    }
 }
 
 /**

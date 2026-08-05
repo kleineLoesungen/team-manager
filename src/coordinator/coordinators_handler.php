@@ -12,11 +12,13 @@ $pdo = get_db();
 set_admin_context($pdo);
 $stmt = $pdo->prepare(
     "SELECT u.id, u.first_name, u.last_name, u.phone, u.email,
+            cl.name AS club_name,
             t.id AS team_id, t.name AS team_name
      FROM coordinator_teams ct_mine
      JOIN coordinator_teams ct_others ON ct_others.team_id = ct_mine.team_id
           AND ct_others.left_at IS NULL
      JOIN users u ON u.id = ct_others.user_id AND u.is_active = TRUE
+     LEFT JOIN clubs cl ON cl.id = u.club_id
      JOIN teams t ON t.id = ct_mine.team_id AND t.is_active = TRUE
      WHERE ct_mine.user_id = ? AND ct_mine.left_at IS NULL
      ORDER BY t.name ASC, u.last_name ASC, u.first_name ASC"
