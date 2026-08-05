@@ -10,20 +10,17 @@ $pdo = get_db();
 // Show all coordinators across all teams the current coordinator belongs to,
 // grouped by team. Requires admin context to cross team boundaries.
 set_admin_context($pdo);
-$stmt = $pdo->prepare(
+$stmt = $pdo->query(
     "SELECT u.id, u.first_name, u.last_name, u.phone, u.email,
             cl.name AS club_name,
             t.id AS team_id, t.name AS team_name
-     FROM coordinator_teams ct_mine
-     JOIN coordinator_teams ct_others ON ct_others.team_id = ct_mine.team_id
-          AND ct_others.left_at IS NULL
-     JOIN users u ON u.id = ct_others.user_id AND u.is_active = TRUE
+     FROM coordinator_teams ct
+     JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
      LEFT JOIN clubs cl ON cl.id = u.club_id
-     JOIN teams t ON t.id = ct_mine.team_id AND t.is_active = TRUE
-     WHERE ct_mine.user_id = ? AND ct_mine.left_at IS NULL
+     JOIN teams t ON t.id = ct.team_id AND t.is_active = TRUE
+     WHERE ct.left_at IS NULL
      ORDER BY t.name ASC, u.last_name ASC, u.first_name ASC"
 );
-$stmt->execute([(int)$_SESSION['user_id']]);
 $rows = $stmt->fetchAll();
 reset_rls_context($pdo);
 set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
