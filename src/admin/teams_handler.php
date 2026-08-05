@@ -11,10 +11,13 @@ $pdo = get_db();
 $teams_stmt = $pdo->query("SELECT id, name, is_active, created_at FROM teams ORDER BY created_at DESC");
 $teams = $teams_stmt->fetchAll();
 
-// Fetch all coaches grouped by team_id
+// Fetch coordinators per team via coordinator_teams (supports multi-team assignments)
 $coaches_stmt = $pdo->query(
-    "SELECT id, team_id, first_name, last_name, username, is_active
-     FROM users WHERE role = 'coordinator' ORDER BY first_name, last_name"
+    "SELECT u.id, ct.team_id, u.first_name, u.last_name, u.username, u.is_active
+     FROM coordinator_teams ct
+     JOIN users u ON u.id = ct.user_id
+     WHERE ct.left_at IS NULL
+     ORDER BY u.first_name, u.last_name"
 );
 $coaches_by_team = [];
 foreach ($coaches_stmt->fetchAll() as $coach) {
