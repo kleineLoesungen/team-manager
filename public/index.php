@@ -95,7 +95,7 @@ match (true) {
     $path === '/admin/players/create'
         => require ROOT_PATH . '/src/admin/player_create_handler.php',
 
-    (bool)preg_match('#^/admin/players/(\d+)/(edit|assign-team|link-user)$#', $path, $matches)
+    (bool)preg_match('#^/admin/players/(\d+)/(edit|link-user|unlink-user)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['player_id'] = (int)$matches[1];
             $_REQUEST['action']    = $matches[2];
