@@ -274,7 +274,7 @@ match (true) {
 
     // ── Coordinator: Players ──────────────────────────────────────────────────
     $path === '/coordinator/players'
-        => require ROOT_PATH . '/src/coordinator/players_handler.php',
+        => (function() { header('Location: /coordinator/members', true, 301); exit; })(),
 
     // /coordinator/players/{id}/attributes/save — must come BEFORE the /{id} catch-all
     (bool)preg_match('#^/coordinator/players/(\d+)/attributes/save$#', $path, $matches)

@@ -739,7 +739,7 @@ function maybe_migrate_db(PDO $pdo): void {
 
     // RLS for all new tables (drop-and-recreate for idempotency — runs for both fresh and existing installs)
     if ($clubs_exists) {
-        foreach (['clubs', 'player_attribute_groups', 'players', 'team_memberships',
+        foreach (['clubs', 'player_attribute_groups', 'players',
                   'coordinator_teams', 'player_attributes', 'player_attribute_values'] as $tbl) {
             try {
                 $pdo->exec("ALTER TABLE {$schema}.{$tbl} ENABLE ROW LEVEL SECURITY");
@@ -1077,6 +1077,41 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('team-manager: migration 015 pav_update skipped — ' . $e->getMessage());
     }
+
+    // Migration 016: fix players_select RLS (remove stale team_memberships ref), drop team_memberships.
+    // team_memberships was designed to track player-team history but was never populated after the
+    // model switched to users.player_id. The stale subquery made players invisible to coordinators
+    // under normal RLS, forcing set_admin_context() workarounds everywhere. Now uses users.player_id.
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.players");
+        $pdo->exec("CREATE POLICY players_select ON {$schema}.players FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (
+                current_setting('app.current_role', true) = 'coordinator'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = players.id
+                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                      AND u.role = 'member'
+                )
+            )
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = players.id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 016 players_select skipped — ' . $e->getMessage());
+    }
+    try {
+        $pdo->exec("DROP TABLE IF EXISTS {$schema}.team_memberships CASCADE");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 016 drop team_memberships skipped — ' . $e->getMessage());
+    }
 }
 
 /**
@@ -1259,17 +1294,6 @@ function db_init_schema(PDO $pdo, string $s): void {
         created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_players_club ON {$s}.players(club_id)");
-
-    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.team_memberships (
-        id        SERIAL PRIMARY KEY,
-        player_id INTEGER NOT NULL REFERENCES {$s}.players(id) ON DELETE CASCADE,
-        team_id   INTEGER NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
-        joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        left_at   TIMESTAMPTZ NULL
-    )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_tm_player ON {$s}.team_memberships(player_id)");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_tm_team ON {$s}.team_memberships(team_id)");
-    $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_tm_active ON {$s}.team_memberships(player_id) WHERE left_at IS NULL");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.coordinator_teams (
         id        SERIAL PRIMARY KEY,
@@ -1635,39 +1659,28 @@ function db_init_rls(PDO $pdo, string $s): void {
     }
     $pdo->exec("CREATE POLICY players_select ON {$s}.players FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
-        OR EXISTS (
-            SELECT 1 FROM {$s}.team_memberships tm
-            WHERE tm.player_id = players.id
-              AND tm.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-              AND tm.left_at IS NULL
+        OR (
+            current_setting('app.current_role', true) = 'coordinator'
+            AND EXISTS (
+                SELECT 1 FROM {$s}.users u
+                WHERE u.player_id = players.id
+                  AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                  AND u.role = 'member'
+            )
         )
-        OR EXISTS (
-            SELECT 1 FROM {$s}.users u
-            WHERE u.player_id = players.id
-              AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        OR (
+            current_setting('app.current_role', true) = 'member'
+            AND EXISTS (
+                SELECT 1 FROM {$s}.users u
+                WHERE u.player_id = players.id
+                  AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            )
         )
     )");
     $pdo->exec("CREATE POLICY players_insert ON {$s}.players FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
     )");
     $pdo->exec("CREATE POLICY players_update ON {$s}.players FOR UPDATE USING (
-        current_setting('app.is_admin', true) = 'true'
-    )");
-
-    $pdo->exec("ALTER TABLE {$s}.team_memberships ENABLE ROW LEVEL SECURITY");
-    try {
-        $pdo->exec("ALTER TABLE {$s}.team_memberships FORCE ROW LEVEL SECURITY");
-    } catch (PDOException $e) {
-        error_log('db_init_rls: FORCE RLS team_memberships skipped (non-fatal) — ' . $e->getMessage());
-    }
-    $pdo->exec("CREATE POLICY tm_select ON {$s}.team_memberships FOR SELECT USING (
-        current_setting('app.is_admin', true) = 'true'
-        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-    )");
-    $pdo->exec("CREATE POLICY tm_insert ON {$s}.team_memberships FOR INSERT WITH CHECK (
-        current_setting('app.is_admin', true) = 'true'
-    )");
-    $pdo->exec("CREATE POLICY tm_update ON {$s}.team_memberships FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
 
@@ -1723,10 +1736,10 @@ function db_init_rls(PDO $pdo, string $s): void {
         OR (
             current_setting('app.current_role', true) = 'coordinator'
             AND EXISTS (
-                SELECT 1 FROM {$s}.team_memberships tm
-                WHERE tm.player_id = player_attribute_values.player_id
-                  AND tm.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-                  AND tm.left_at IS NULL
+                SELECT 1 FROM {$s}.users u
+                WHERE u.player_id = player_attribute_values.player_id
+                  AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                  AND u.role = 'member'
             )
         )
         OR (

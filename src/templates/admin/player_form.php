@@ -34,18 +34,6 @@
     </div>
 
     <div class="mb-3">
-        <label for="team_id" class="form-label fw-semibold">Team <span class="text-muted fw-normal">(optional)</span></label>
-        <select id="team_id" name="team_id" class="form-select">
-            <option value="0">Kein Team</option>
-            <?php foreach ($teams as $t): ?>
-            <option value="<?= (int)$t['id'] ?>" <?= (int)$form['team_id'] === (int)$t['id'] ? 'selected' : '' ?>>
-                <?= e($t['name']) ?>
-            </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-
-    <div class="mb-3">
         <label for="phone" class="form-label fw-semibold">Telefon <span class="text-muted fw-normal">(optional)</span></label>
         <input type="text" id="phone" name="phone" class="form-control"
                value="<?= e($form['phone']) ?>" maxlength="50">

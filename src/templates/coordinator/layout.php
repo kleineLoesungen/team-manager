@@ -31,13 +31,7 @@ function render_coach_page(string $title, string $active, callable $body): void 
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'members' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/coordinator/members">
-                            <i class="bi bi-people-fill me-2"></i>Mitglieder
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'players' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/players">
-                            <i class="bi bi-person-vcard me-2"></i>Spieler
+                            <i class="bi bi-person-vcard me-2"></i>Mitglieder
                         </a>
                     </li>
                     <li class="nav-item">
@@ -89,10 +83,7 @@ function render_coach_page(string $title, string $active, callable $body): void 
             <div class="d-md-none w-100 mobile-tab-bar">
                 <div class="d-flex">
                     <a class="mobile-tab-link <?= $active === 'members' ? 'active' : '' ?>" href="/coordinator/members">
-                        <i class="bi bi-people-fill tab-icon"></i><span>Mitglieder</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'players' ? 'active' : '' ?>" href="/coordinator/players">
-                        <i class="bi bi-person-vcard tab-icon"></i><span>Spieler</span>
+                        <i class="bi bi-person-vcard tab-icon"></i><span>Mitglieder</span>
                     </a>
                     <a class="mobile-tab-link <?= $active === 'coordinators' ? 'active' : '' ?>" href="/coordinator/coordinators">
                         <i class="bi bi-person-badge tab-icon"></i><span>Koordinatoren</span>

@@ -9,9 +9,8 @@ $pdo = get_db();
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
-$teams = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $error = '';
-$form  = ['first_name' => '', 'last_name' => '', 'club_id' => 0, 'team_id' => 0,
+$form  = ['first_name' => '', 'last_name' => '', 'club_id' => 0,
            'phone' => '', 'contact_name' => '', 'description' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -19,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form['first_name']   = trim($_POST['first_name'] ?? '');
     $form['last_name']    = trim($_POST['last_name'] ?? '');
     $form['club_id']      = (int)($_POST['club_id'] ?? 0);
-    $form['team_id']      = (int)($_POST['team_id'] ?? 0);
     $form['phone']        = trim($_POST['phone'] ?? '');
     $form['contact_name'] = trim($_POST['contact_name'] ?? '');
     $form['description']  = trim($_POST['description'] ?? '');
@@ -41,10 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $form['description'] !== '' ? $form['description'] : null,
             ]);
             $player_id = (int)$stmt->fetchColumn();
-            if ($form['team_id'] > 0) {
-                $pdo->prepare("INSERT INTO team_memberships (player_id, team_id) VALUES (?, ?)")
-                    ->execute([$player_id, $form['team_id']]);
-            }
             redirect('/admin/players');
         } catch (PDOException $e) {
             error_log('Player create error: ' . $e->getMessage());
@@ -53,6 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_admin_page('Spieler hinzufügen', 'players', function() use ($clubs, $teams, $error, $form) {
+render_admin_page('Spieler hinzufügen', 'players', function() use ($clubs, $error, $form) {
     require ROOT_PATH . '/src/templates/admin/player_form.php';
 });

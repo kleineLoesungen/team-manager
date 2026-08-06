@@ -199,19 +199,6 @@ CREATE TABLE IF NOT EXISTS team_manager.players (
 );
 CREATE INDEX IF NOT EXISTS idx_players_club ON team_manager.players(club_id);
 
--- Team-memberships — tracks which team a player is on (with full history)
--- left_at IS NULL means currently active; partial unique index enforces one active membership per player
-CREATE TABLE IF NOT EXISTS team_manager.team_memberships (
-    id        SERIAL PRIMARY KEY,
-    player_id INTEGER NOT NULL REFERENCES team_manager.players(id) ON DELETE CASCADE,
-    team_id   INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
-    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    left_at   TIMESTAMPTZ NULL
-);
-CREATE INDEX IF NOT EXISTS idx_tm_player ON team_manager.team_memberships(player_id);
-CREATE INDEX IF NOT EXISTS idx_tm_team ON team_manager.team_memberships(team_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_tm_active ON team_manager.team_memberships(player_id) WHERE left_at IS NULL;
-
 -- Coordinator-teams — multi-team coordinator membership (replaces single users.team_id conceptually)
 -- users.team_id is KEPT and synced to active session team to preserve existing RLS pattern
 -- left_at IS NULL means currently active; partial unique index enforces one active entry per (user, team) pair
