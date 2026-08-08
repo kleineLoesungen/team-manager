@@ -25,7 +25,7 @@ $rows = $stmt->fetchAll();
 reset_rls_context($pdo);
 set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
 
-// Group by team
+// Group by team, then sort groups by name
 $teams_map = [];
 foreach ($rows as $row) {
     $tid = $row['team_id'];
@@ -34,6 +34,7 @@ foreach ($rows as $row) {
     }
     $teams_map[$tid]['coordinators'][] = $row;
 }
+uasort($teams_map, fn($a, $b) => strcmp($a['team_name'], $b['team_name']));
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
