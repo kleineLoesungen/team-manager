@@ -10,32 +10,37 @@ require ROOT_PATH . '/src/templates/admin/layout.php';
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $error = '';
-$form  = ['first_name' => '', 'last_name' => '', 'club_id' => 0,
-           'phone' => '', 'contact_name' => '', 'description' => ''];
+$form  = ['first_name' => '', 'last_name' => '', 'club_id' => 0, 'email' => '',
+           'phone' => '', 'contact_name' => '', 'contact_phone' => '', 'description' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
-    $form['first_name']   = trim($_POST['first_name'] ?? '');
-    $form['last_name']    = trim($_POST['last_name'] ?? '');
-    $form['club_id']      = (int)($_POST['club_id'] ?? 0);
-    $form['phone']        = trim($_POST['phone'] ?? '');
-    $form['contact_name'] = trim($_POST['contact_name'] ?? '');
-    $form['description']  = trim($_POST['description'] ?? '');
+    $form['first_name']    = trim($_POST['first_name']    ?? '');
+    $form['last_name']     = trim($_POST['last_name']     ?? '');
+    $form['club_id']       = (int)($_POST['club_id']      ?? 0);
+    $form['email']         = trim($_POST['email']         ?? '');
+    $form['phone']         = trim($_POST['phone']         ?? '');
+    $form['contact_name']  = trim($_POST['contact_name']  ?? '');
+    $form['contact_phone'] = trim($_POST['contact_phone'] ?? '');
+    $form['description']   = trim($_POST['description']   ?? '');
 
     if (empty($form['first_name']) || empty($form['last_name'])) {
         $error = 'Vor- und Nachname sind erforderlich.';
-    } elseif ($form['club_id'] <= 0) {
-        $error = 'Bitte wähle einen Klub aus.';
+    } elseif ($form['email'] !== '' && !filter_var($form['email'], FILTER_VALIDATE_EMAIL)) {
+        $error = 'Ungültige E-Mail-Adresse.';
     } else {
         try {
             $stmt = $pdo->prepare(
-                "INSERT INTO players (club_id, first_name, last_name, phone, contact_name, description)
-                 VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
+                "INSERT INTO players (club_id, first_name, last_name, email, phone, contact_name, contact_phone, description)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
             );
             $stmt->execute([
-                $form['club_id'], $form['first_name'], $form['last_name'],
+                $form['club_id'] > 0 ? $form['club_id'] : null,
+                $form['first_name'], $form['last_name'],
+                $form['email'] !== '' ? $form['email'] : null,
                 $form['phone'] !== '' ? $form['phone'] : null,
                 $form['contact_name'] !== '' ? $form['contact_name'] : null,
+                $form['contact_phone'] !== '' ? $form['contact_phone'] : null,
                 $form['description'] !== '' ? $form['description'] : null,
             ]);
             $player_id = (int)$stmt->fetchColumn();

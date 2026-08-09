@@ -1,18 +1,25 @@
 <?php
-// src/templates/member/profile.php — Full player data edit page
-// Variables (via use()): $player (array|null), $clubs (array), $attr_groups (array), $error (string), $success (bool)
+// src/templates/member/confirm_profile.php
+// Variables (via use()): $player (array|null), $clubs (array), $error (string), $is_first_confirm (bool)
 ?>
+
+<?php if ($is_first_confirm): ?>
+<div class="alert alert-info d-flex gap-2 mb-4">
+    <i class="bi bi-shield-check flex-shrink-0 fs-5"></i>
+    <div>
+        <strong>Willkommen!</strong> Bitte überprüfe und bestätige deine Daten, bevor du fortfährst.
+        Deine Bestätigung ist nach §&nbsp;6 DSGVO für die Verarbeitung personenbezogener Daten
+        durch den Verein erforderlich.
+    </div>
+</div>
+<?php endif; ?>
 
 <?php if ($error): ?>
 <div class="alert alert-danger mb-3"><?= e($error) ?></div>
 <?php endif; ?>
 
-<?php if ($success): ?>
-<div class="alert alert-success mb-3">Deine Daten wurden gespeichert.</div>
-<?php endif; ?>
-
 <?php if ($player): ?>
-<form method="POST" action="/member/profile" novalidate>
+<form method="POST" action="/member/confirm-profile" novalidate>
     <?= csrf_field() ?>
 
     <div class="card mb-4">
@@ -88,64 +95,54 @@
             <span class="fw-semibold">Weitere Informationen <span class="text-muted fw-normal small">(optional)</span></span>
         </div>
         <div class="card-body">
-            <label for="description" class="form-label">Anmerkungen</label>
-            <textarea id="description" name="description" class="form-control" rows="3"
-                      placeholder="Allergien, Besonderheiten …"><?= e($player['description'] ?? '') ?></textarea>
+            <div class="mb-0">
+                <label for="description" class="form-label">Anmerkungen</label>
+                <textarea id="description" name="description" class="form-control" rows="3"
+                          placeholder="Allergien, Besonderheiten …"><?= e($player['description'] ?? '') ?></textarea>
+            </div>
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary min-touch">
-        <i class="bi bi-floppy me-2"></i>Änderungen speichern
-    </button>
-</form>
-
-<?php $has_editable = false;
-foreach ($attr_groups as $g) {
-    foreach ($g['attrs'] as $a) { if ($a['editable_by_player']) { $has_editable = true; break 2; } }
-}
-?>
-
-<?php if (!empty($attr_groups)): ?>
-<?= $has_editable ? '<form method="POST" action="/member/profile/attributes/save">' : '' ?>
-<?= $has_editable ? csrf_field() : '' ?>
-
-<h3 class="h6 fw-semibold mt-4 mb-3">Meine Attribute</h3>
-<?php foreach ($attr_groups as $gname => $group): ?>
-<div class="card mb-3">
-    <div class="card-header fw-semibold"><?= e($gname) ?></div>
-    <div class="card-body">
-        <?php foreach ($group['attrs'] as $attr): ?>
-        <div class="mb-3">
-            <label class="form-label fw-medium mb-1"><?= e($attr['attr_name']) ?></label>
-            <?php if ($attr['editable_by_player']): ?>
-            <input type="text" class="form-control"
-                   name="values[<?= (int)$attr['attr_id'] ?>]"
-                   value="<?= e($attr['value']) ?>">
-            <?php else: ?>
-            <p class="form-control-plaintext py-0 mb-0 <?= $attr['value'] !== '' ? '' : 'text-muted' ?>">
-                <?= $attr['value'] !== '' ? e($attr['value']) : '—' ?>
+    <?php if ($is_first_confirm): ?>
+    <div class="card border-primary mb-4">
+        <div class="card-body d-flex gap-2">
+            <i class="bi bi-info-circle-fill text-primary flex-shrink-0 fs-5 mt-1"></i>
+            <p class="mb-0 small">
+                Nach §&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b DSGVO ist die Verarbeitung deiner Daten zur
+                Erfüllung des Mitgliedschaftsverhältnisses zulässig. Du kannst deine Angaben jederzeit
+                unter <strong>Mein Profil</strong> einsehen und ändern. Eine Abmeldung ist beim
+                Koordinator deines Teams möglich.
             </p>
-            <?php endif; ?>
         </div>
-        <?php endforeach; ?>
     </div>
-</div>
-<?php endforeach; ?>
 
-<?php if ($has_editable): ?>
-<button type="submit" class="btn btn-primary min-touch">
-    <i class="bi bi-floppy me-2"></i>Attribute speichern
-</button>
+    <button type="submit" class="btn btn-primary w-100 min-touch">
+        <i class="bi bi-check-circle me-2"></i>Daten bestätigen &amp; fortfahren
+    </button>
+    <?php else: ?>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary min-touch">
+            <i class="bi bi-floppy me-2"></i>Änderungen speichern
+        </button>
+        <a href="/member/lists" class="btn btn-outline-secondary min-touch">Abbrechen</a>
+    </div>
+    <?php endif; ?>
 </form>
-<?php endif; ?>
-<?php endif; ?>
-
 <?php else: ?>
-<div class="card">
+<!-- No linked player — just stamp confirmation so member can proceed -->
+<div class="card mb-4">
     <div class="card-body text-center py-5">
         <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
         <p class="mb-1">Dein Konto ist noch keinem Spielerprofil zugeordnet.</p>
-        <p class="text-muted small">Bitte wende dich an deinen Koordinator.</p>
+        <p class="text-muted small mb-4">
+            Bitte wende dich an deinen Koordinator, um dein Spielerprofil zu verknüpfen.
+        </p>
+        <form method="POST" action="/member/confirm-profile">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-outline-primary min-touch">
+                Trotzdem fortfahren
+            </button>
+        </form>
     </div>
 </div>
 <?php endif; ?>

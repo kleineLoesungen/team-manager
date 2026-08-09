@@ -12,7 +12,7 @@ $error   = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 // Team-scoped player list: only players linked to a member user on this team
 $stmt = $pdo->prepare(
-    "SELECT p.id, p.first_name, p.last_name, p.phone, p.contact_name,
+    "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone,
             c.name AS club_name,
             u.id AS linked_user_id, u.username AS linked_username, u.is_active AS user_active
      FROM users u

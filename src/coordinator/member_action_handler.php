@@ -24,6 +24,12 @@ if ($member_id <= 0 || !in_array($action, ['reset-password', 'deactivate', 'reac
 $pdo      = get_db();
 $team_id  = (int)$_SESSION['team_id'];
 
+// Optional caller-supplied return URL — must be a relative path (no protocol-relative tricks)
+$back_raw = trim($_POST['_back'] ?? '');
+$back_url = ($back_raw !== '' && $back_raw[0] === '/' && (!isset($back_raw[1]) || $back_raw[1] !== '/'))
+    ? $back_raw
+    : '/coordinator/members';
+
 // Ownership check: member must belong to this coordinator's team AND be role='member'
 // Prevents acting on members from other teams even if team_id RLS is bypassed.
 $check = $pdo->prepare(
@@ -57,7 +63,7 @@ try {
             // Show credential modal — per D-08 (reuse admin pattern)
             $credential_username = $member['username'];
             $credential_password = $plain_password;
-            $redirect_url        = '/coordinator/members';
+            $redirect_url        = $back_url;
 
             render_layout_head('Neue Anmeldedaten');
             render_navbar();
@@ -70,14 +76,14 @@ try {
                 "UPDATE users SET is_active = FALSE WHERE id = ? AND team_id = ? AND role = 'member'"
             );
             $stmt->execute([$member_id, $team_id]);
-            redirect('/coordinator/members');
+            redirect($back_url);
 
         case 'reactivate':
             $stmt = $pdo->prepare(
                 "UPDATE users SET is_active = TRUE WHERE id = ? AND team_id = ? AND role = 'member'"
             );
             $stmt->execute([$member_id, $team_id]);
-            redirect('/coordinator/members');
+            redirect($back_url);
     }
 
 } catch (PDOException $e) {

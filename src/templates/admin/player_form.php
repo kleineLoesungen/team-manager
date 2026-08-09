@@ -22,9 +22,16 @@
     </div>
 
     <div class="mb-3">
-        <label for="club_id" class="form-label fw-semibold">Klub <span class="text-danger">*</span></label>
-        <select id="club_id" name="club_id" class="form-select" required>
-            <option value="0">Klub wählen …</option>
+        <label for="email" class="form-label fw-semibold">E-Mail <span class="text-muted fw-normal">(optional)</span></label>
+        <input type="email" id="email" name="email" class="form-control"
+               value="<?= e($form['email'] ?? '') ?>" maxlength="255"
+               placeholder="spieler@beispiel.de">
+    </div>
+
+    <div class="mb-3">
+        <label for="club_id" class="form-label fw-semibold">Klub <span class="text-muted fw-normal">(optional)</span></label>
+        <select id="club_id" name="club_id" class="form-select">
+            <option value="0">— kein Klub —</option>
             <?php foreach ($clubs as $c): ?>
             <option value="<?= (int)$c['id'] ?>" <?= (int)$form['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
                 <?= e($c['name']) ?>
@@ -44,6 +51,13 @@
         <input type="text" id="contact_name" name="contact_name" class="form-control"
                value="<?= e($form['contact_name']) ?>" maxlength="100"
                placeholder="z.B. Name eines Erziehungsberechtigten">
+    </div>
+
+    <div class="mb-3">
+        <label for="contact_phone" class="form-label fw-semibold">Kontakttelefon <span class="text-muted fw-normal">(optional)</span></label>
+        <input type="text" id="contact_phone" name="contact_phone" class="form-control"
+               value="<?= e($form['contact_phone']) ?>" maxlength="50"
+               placeholder="+49 …">
     </div>
 
     <div class="mb-4">

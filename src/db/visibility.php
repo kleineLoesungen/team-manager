@@ -51,7 +51,10 @@ function can_view_list(int $list_id): bool {
     }
 
     if ($role === 'member') {
-        return in_array($list['visibility'], ['public', 'protected'], true);
+        // Unconfirmed members (confirmed_at IS NULL) may only access public lists
+        $confirmed = !empty($_SESSION['confirmed_at']);
+        $allowed   = $confirmed ? ['public', 'protected'] : ['public'];
+        return in_array($list['visibility'], $allowed, true);
     }
 
     return false;

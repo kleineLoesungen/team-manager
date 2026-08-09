@@ -37,7 +37,7 @@ $ct_stmt->execute([$coordinator_id]);
 $assigned_teams = $ct_stmt->fetchAll();
 $assigned_ids   = array_column($assigned_teams, 'team_id');
 
-$all_teams       = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name")->fetchAll();
+$all_teams       = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY sort_order ASC, name ASC")->fetchAll();
 $available_teams = array_filter($all_teams, fn($t) => !in_array($t['id'], $assigned_ids));
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();

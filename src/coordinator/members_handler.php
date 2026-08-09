@@ -15,6 +15,7 @@ $success = !empty($_GET['success']) ? e($_GET['success']) : '';
 // All team members with optional player link (RLS scopes to team via app.current_team_id)
 $stmt = $pdo->prepare(
     "SELECT u.id, u.first_name, u.last_name, u.username, u.is_active, u.email,
+            u.confirmed_at,
             p.id AS player_id, p.first_name AS player_first, p.last_name AS player_last,
             c.name AS club_name
      FROM users u

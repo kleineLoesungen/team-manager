@@ -30,7 +30,14 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
     <div class="list-group-item px-3 py-3">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div class="flex-grow-1 min-w-0">
-                <div class="fw-semibold"><?= e($m['last_name'] . ', ' . $m['first_name']) ?></div>
+                <div class="fw-semibold">
+                    <?= e($m['last_name'] . ', ' . $m['first_name']) ?>
+                    <?php if (empty($m['confirmed_at'])): ?>
+                    <span class="badge bg-warning text-dark ms-1" title="Hat Profil noch nicht bestätigt">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Nicht bestätigt
+                    </span>
+                    <?php endif; ?>
+                </div>
                 <div class="text-muted small"><code>@<?= e($m['username']) ?></code>
                     <?php if (!empty($m['email'])): ?>
                     &nbsp;·&nbsp;<i class="bi bi-envelope"></i> <?= e($m['email']) ?>
@@ -38,13 +45,12 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                 </div>
                 <?php if ($m['player_id']): ?>
                 <div class="mt-1">
-                    <a href="/coordinator/players/<?= (int)$m['player_id'] ?>"
-                       class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle text-decoration-none">
+                    <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
                         <i class="bi bi-person-vcard me-1"></i><?= e($m['player_last'] . ', ' . $m['player_first']) ?>
                         <?php if (!empty($m['club_name'])): ?>
                         <span class="opacity-75 fw-normal"> · <?= e($m['club_name']) ?></span>
                         <?php endif; ?>
-                    </a>
+                    </span>
                 </div>
                 <?php elseif (!empty($linkable_players)): ?>
                 <div class="mt-1">
@@ -84,10 +90,17 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                     <i class="bi bi-key me-1"></i>Passwort
                 </button>
             </form>
+            <?php if ($m['player_id']): ?>
+            <a href="/coordinator/players/<?= (int)$m['player_id'] ?>"
+               class="btn btn-sm btn-outline-secondary min-touch">
+                <i class="bi bi-pencil me-1"></i>Profil
+            </a>
+            <?php else: ?>
             <a href="/coordinator/members/<?= (int)$m['id'] ?>/edit-email"
                class="btn btn-sm btn-outline-secondary min-touch">
                 <i class="bi bi-envelope me-1"></i>E-Mail
             </a>
+            <?php endif; ?>
             <form method="POST" action="/coordinator/members/<?= (int)$m['id'] ?>/deactivate"
                   onsubmit="return confirm('Mitglied deaktivieren?')">
                 <?= csrf_field() ?>

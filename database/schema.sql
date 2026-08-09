@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order  INTEGER NOT NULL DEFAULT 0,
     logo_path   VARCHAR(500)         NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS team_manager.users (
     password_hash VARCHAR(255) NOT NULL,
     email         VARCHAR(255)     NULL,
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    confirmed_at  TIMESTAMPTZ          NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -187,14 +189,17 @@ CREATE TABLE IF NOT EXISTS team_manager.player_attribute_groups (
 
 -- Players — permanent identity layer, separate from users accounts
 -- A player may or may not have a linked users account (users.player_id is the FK)
+-- email: shared across all teams (single profile); confirmed_at on users tracks GDPR consent
 CREATE TABLE IF NOT EXISTS team_manager.players (
     id           SERIAL PRIMARY KEY,
     club_id      INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL,
     first_name   VARCHAR(100) NOT NULL,
     last_name    VARCHAR(100) NOT NULL,
+    email        VARCHAR(255) NULL,
     description  TEXT NULL,
     phone        VARCHAR(50) NULL,
-    contact_name VARCHAR(100) NULL,
+    contact_name  VARCHAR(100) NULL,
+    contact_phone VARCHAR(50)  NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_players_club ON team_manager.players(club_id);

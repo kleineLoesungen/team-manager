@@ -659,8 +659,9 @@ function maybe_migrate_db(PDO $pdo): void {
                 last_name    VARCHAR(100) NOT NULL,
                 description  TEXT NULL,
                 phone        VARCHAR(50) NULL,
-                contact_name VARCHAR(100) NULL,
-                created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                contact_name  VARCHAR(100) NULL,
+                contact_phone VARCHAR(50)  NULL,
+                created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )");
             $pdo->exec("CREATE INDEX IF NOT EXISTS idx_players_club ON {$schema}.players(club_id)");
 
@@ -896,15 +897,7 @@ function maybe_migrate_db(PDO $pdo): void {
             $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.player_attribute_values");
             $pdo->exec("CREATE POLICY pav_select ON {$schema}.player_attribute_values FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
-                OR (
-                    current_setting('app.current_role', true) = 'coordinator'
-                    AND EXISTS (
-                        SELECT 1 FROM {$schema}.team_memberships tm
-                        WHERE tm.player_id = player_attribute_values.player_id
-                          AND tm.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-                          AND tm.left_at IS NULL
-                    )
-                )
+                OR current_setting('app.current_role', true) = 'coordinator'
                 OR (
                     current_setting('app.current_role', true) = 'member'
                     AND EXISTS (
@@ -1112,6 +1105,71 @@ function maybe_migrate_db(PDO $pdo): void {
     } catch (PDOException $e) {
         error_log('team-manager: migration 016 drop team_memberships skipped — ' . $e->getMessage());
     }
+
+    // Migration 017: players.email + users.confirmed_at (GDPR first-login confirmation).
+    // Email moves from users to players (single profile across teams).
+    // confirmed_at tracks when a user first confirmed their data; NULL = not yet confirmed.
+    try {
+        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 017 players.email skipped — ' . $e->getMessage());
+    }
+    try {
+        $pdo->exec("ALTER TABLE {$schema}.users ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ NULL");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 017 users.confirmed_at skipped — ' . $e->getMessage());
+    }
+    // Backfill: copy member emails to their linked player record (one-time)
+    try {
+        $pdo->exec("UPDATE {$schema}.players p
+                    SET email = u.email
+                    FROM {$schema}.users u
+                    WHERE u.player_id = p.id
+                      AND u.email IS NOT NULL
+                      AND p.email IS NULL");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 017 email backfill skipped — ' . $e->getMessage());
+    }
+
+    // Migration 018: players.contact_phone — phone number of the emergency contact person
+    try {
+        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50) NULL");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 018 players.contact_phone skipped — ' . $e->getMessage());
+    }
+
+    // Migration 020: teams.sort_order — custom ordering for team lists
+    try {
+        $pdo->exec("ALTER TABLE {$schema}.teams ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 020 teams.sort_order skipped — ' . $e->getMessage());
+    }
+
+    // Migration 019: widen pav_select coordinator arm — old policy restricted reads to players
+    // that have a member account on the coordinator's current team, causing a write-succeeds/
+    // read-fails inconsistency for cross-team or unlinked players. Now matches pav_insert/pav_update.
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.player_attribute_values");
+        $pdo->exec("CREATE POLICY pav_select ON {$schema}.player_attribute_values FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = player_attribute_values.player_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.player_attributes pa
+                    WHERE pa.id = player_attribute_values.attribute_id
+                      AND pa.visible_to_player = TRUE
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 019 pav_select skipped — ' . $e->getMessage());
+    }
 }
 
 /**
@@ -1126,6 +1184,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         id         SERIAL PRIMARY KEY,
         name       VARCHAR(100) NOT NULL,
         is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+        sort_order INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
@@ -1138,6 +1197,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         username      VARCHAR(50) NOT NULL UNIQUE,
         password_hash VARCHAR(255) NOT NULL,
         is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+        confirmed_at  TIMESTAMPTZ NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
@@ -1288,10 +1348,12 @@ function db_init_schema(PDO $pdo, string $s): void {
         club_id      INTEGER REFERENCES {$s}.clubs(id) ON DELETE SET NULL,
         first_name   VARCHAR(100) NOT NULL,
         last_name    VARCHAR(100) NOT NULL,
+        email        VARCHAR(255) NULL,
         description  TEXT NULL,
         phone        VARCHAR(50) NULL,
-        contact_name VARCHAR(100) NULL,
-        created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        contact_name  VARCHAR(100) NULL,
+        contact_phone VARCHAR(50)  NULL,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_players_club ON {$s}.players(club_id)");
 

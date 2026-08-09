@@ -8,7 +8,7 @@ require_admin(); // Per D-08: every admin page checks is_admin
 $pdo = get_db();
 
 // Fetch all teams
-$teams_stmt = $pdo->query("SELECT id, name, is_active, created_at FROM teams ORDER BY created_at DESC");
+$teams_stmt = $pdo->query("SELECT id, name, is_active, sort_order, created_at FROM teams ORDER BY sort_order ASC, name ASC");
 $teams = $teams_stmt->fetchAll();
 
 // Fetch coordinators per team via coordinator_teams (supports multi-team assignments)

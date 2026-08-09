@@ -30,25 +30,33 @@ if (!$player) {
 }
 
 if ($action === 'edit') {
-    $first_name   = trim($_POST['first_name'] ?? '');
-    $last_name    = trim($_POST['last_name'] ?? '');
-    $club_id      = (int)($_POST['club_id'] ?? 0);
-    $phone        = trim($_POST['phone'] ?? '');
-    $contact_name = trim($_POST['contact_name'] ?? '');
-    $description  = trim($_POST['description'] ?? '');
+    $first_name   = trim($_POST['first_name']   ?? '');
+    $last_name    = trim($_POST['last_name']    ?? '');
+    $club_id      = (int)($_POST['club_id']     ?? 0);
+    $email_raw    = trim($_POST['email']        ?? '');
+    $phone        = trim($_POST['phone']        ?? '');
+    $contact_name  = trim($_POST['contact_name']  ?? '');
+    $contact_phone = trim($_POST['contact_phone'] ?? '');
+    $description   = trim($_POST['description']   ?? '');
 
-    if (empty($first_name) || empty($last_name) || $club_id <= 0) {
-        redirect('/admin/players?error=' . urlencode('Vor- und Nachname sowie Klub sind erforderlich.'));
+    if (empty($first_name) || empty($last_name)) {
+        redirect('/admin/players?error=' . urlencode('Vor- und Nachname sind erforderlich.'));
+    }
+    if ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
+        redirect('/admin/players?error=' . urlencode('Ungültige E-Mail-Adresse.'));
     }
 
     $pdo->prepare(
-        "UPDATE players SET club_id = ?, first_name = ?, last_name = ?,
-                            phone = ?, contact_name = ?, description = ?
+        "UPDATE players SET club_id = ?, first_name = ?, last_name = ?, email = ?,
+                            phone = ?, contact_name = ?, contact_phone = ?, description = ?
          WHERE id = ?"
     )->execute([
-        $club_id, $first_name, $last_name,
+        $club_id > 0 ? $club_id : null,
+        $first_name, $last_name,
+        $email_raw !== '' ? $email_raw : null,
         $phone !== '' ? $phone : null,
         $contact_name !== '' ? $contact_name : null,
+        $contact_phone !== '' ? $contact_phone : null,
         $description !== '' ? $description : null,
         $player_id,
     ]);

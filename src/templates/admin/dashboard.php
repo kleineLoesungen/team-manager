@@ -28,7 +28,12 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h2 class="h5 fw-semibold mb-1"><?= e($team['name']) ?></h2>
+                        <h2 class="h5 fw-semibold mb-1">
+                            <?php if ($team['sort_order'] !== 0): ?>
+                            <span class="text-muted fw-normal me-1" style="font-size:.85em"><?= (int)$team['sort_order'] ?>.</span>
+                            <?php endif; ?>
+                            <?= e($team['name']) ?>
+                        </h2>
                         <p class="text-muted small mb-0">
                             <?php
                             $count = count($coaches_by_team[$team['id']] ?? []);
@@ -82,16 +87,31 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
                     <form method="POST" action="/admin/teams/<?= $team['id'] ?>/edit">
                         <?= csrf_field() ?>
                         <div class="modal-body">
-                            <label for="team_name_<?= $team['id'] ?>" class="form-label fw-semibold small">
-                                Teamname
-                            </label>
-                            <input type="text"
-                                   class="form-control min-touch"
-                                   id="team_name_<?= $team['id'] ?>"
-                                   name="team_name"
-                                   value="<?= e($team['name']) ?>"
-                                   required
-                                   maxlength="100">
+                            <div class="mb-3">
+                                <label for="team_name_<?= $team['id'] ?>" class="form-label fw-semibold small">
+                                    Teamname
+                                </label>
+                                <input type="text"
+                                       class="form-control min-touch"
+                                       id="team_name_<?= $team['id'] ?>"
+                                       name="team_name"
+                                       value="<?= e($team['name']) ?>"
+                                       required
+                                       maxlength="100">
+                            </div>
+                            <div>
+                                <label for="sort_order_<?= $team['id'] ?>" class="form-label fw-semibold small">
+                                    Sortiernummer
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="sort_order_<?= $team['id'] ?>"
+                                       name="sort_order"
+                                       value="<?= (int)$team['sort_order'] ?>"
+                                       min="0"
+                                       step="1">
+                                <div class="form-text">Niedrigere Zahl = weiter oben. 0 = keine Sortierung.</div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">

@@ -88,8 +88,24 @@
                     <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>
                 </span>
                 <?php endif; ?>
+                <?php if (!empty($p['email'])): ?>
+                <div class="text-muted small mt-1"><i class="bi bi-envelope me-1"></i><?= e($p['email']) ?></div>
+                <?php endif; ?>
                 <?php if (!empty($p['phone'])): ?>
-                <div class="text-muted small mt-1"><?= e($p['phone']) ?></div>
+                <div class="text-muted small"><i class="bi bi-telephone me-1"></i><?= e($p['phone']) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>
+                <div class="text-muted small">
+                    <i class="bi bi-person-lines-fill me-1"></i>
+                    Kontakt: <?= e($p['contact_name'] ?? '') ?>
+                    <?php if (!empty($p['contact_phone'])): ?>
+                    <?php if (!empty($p['contact_name'])): ?>, <?php endif; ?>
+                    <?= e($p['contact_phone']) ?>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($p['description'])): ?>
+                <div class="text-muted small fst-italic mt-1"><?= e($p['description']) ?></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -166,16 +182,19 @@
                             <?= csrf_field() ?>
                             <div class="row g-2 mb-2">
                                 <div class="col-6">
+                                    <label class="form-label form-label-sm fw-medium mb-1">Vorname <span class="text-danger">*</span></label>
                                     <input type="text" name="first_name" class="form-control form-control-sm"
-                                           value="<?= e($p['first_name']) ?>" placeholder="Vorname" required>
+                                           value="<?= e($p['first_name']) ?>" required>
                                 </div>
                                 <div class="col-6">
+                                    <label class="form-label form-label-sm fw-medium mb-1">Nachname <span class="text-danger">*</span></label>
                                     <input type="text" name="last_name" class="form-control form-control-sm"
-                                           value="<?= e($p['last_name']) ?>" placeholder="Nachname" required>
+                                           value="<?= e($p['last_name']) ?>" required>
                                 </div>
                                 <div class="col-12">
-                                    <select name="club_id" class="form-select form-select-sm" required>
-                                        <option value="0">Klub wählen …</option>
+                                    <label class="form-label form-label-sm fw-medium mb-1">Klub</label>
+                                    <select name="club_id" class="form-select form-select-sm">
+                                        <option value="0">— kein Klub —</option>
                                         <?php foreach ($clubs as $c): ?>
                                         <option value="<?= (int)$c['id'] ?>"
                                             <?= (int)$p['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
@@ -184,13 +203,30 @@
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-12">
+                                    <label class="form-label form-label-sm fw-medium mb-1">E-Mail</label>
+                                    <input type="email" name="email" class="form-control form-control-sm"
+                                           value="<?= e($p['email'] ?? '') ?>" placeholder="optional">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label form-label-sm fw-medium mb-1">Telefon</label>
                                     <input type="text" name="phone" class="form-control form-control-sm"
-                                           value="<?= e($p['phone'] ?? '') ?>" placeholder="Telefon (optional)">
+                                           value="<?= e($p['phone'] ?? '') ?>" placeholder="optional">
                                 </div>
                                 <div class="col-6">
+                                    <label class="form-label form-label-sm fw-medium mb-1">Kontaktname</label>
                                     <input type="text" name="contact_name" class="form-control form-control-sm"
-                                           value="<?= e($p['contact_name'] ?? '') ?>" placeholder="Kontaktname (opt.)">
+                                           value="<?= e($p['contact_name'] ?? '') ?>" placeholder="optional">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label form-label-sm fw-medium mb-1">Kontakttelefon</label>
+                                    <input type="text" name="contact_phone" class="form-control form-control-sm"
+                                           value="<?= e($p['contact_phone'] ?? '') ?>" placeholder="optional">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label form-label-sm fw-medium mb-1">Anmerkungen</label>
+                                    <textarea name="description" class="form-control form-control-sm" rows="2"
+                                              placeholder="optional"><?= e($p['description'] ?? '') ?></textarea>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-sm btn-primary">Speichern</button>

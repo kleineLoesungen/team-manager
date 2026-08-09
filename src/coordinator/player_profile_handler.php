@@ -1,19 +1,58 @@
 <?php
-// src/coordinator/player_profile_handler.php — GET /coordinator/players/{id}
+// src/coordinator/player_profile_handler.php — GET+POST /coordinator/players/{id}
 
 declare(strict_types=1);
 
 require_coordinator();
 
 $player_id = (int)($_REQUEST['player_id'] ?? 0);
-if ($player_id <= 0) redirect('/coordinator/players');
+if ($player_id <= 0) redirect('/coordinator/members');
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 $user_id = (int)$_SESSION['user_id'];
 
-// Admin context for the player fetch — players_select RLS only shows already-linked players,
-// but coordinators must be able to view any player to link it.
+// Handle POST: edit player data
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+
+    $first_name   = trim($_POST['first_name']   ?? '');
+    $last_name    = trim($_POST['last_name']    ?? '');
+    $email_raw    = trim($_POST['email']        ?? '');
+    $phone        = trim($_POST['phone']        ?? '');
+    $contact_name  = trim($_POST['contact_name']  ?? '');
+    $contact_phone = trim($_POST['contact_phone'] ?? '');
+    $description   = trim($_POST['description']   ?? '');
+    $club_id       = (int)($_POST['club_id']      ?? 0);
+
+    if (empty($first_name) || empty($last_name)) {
+        redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Vor- und Nachname sind erforderlich.'));
+    }
+    if ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
+        redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Ungültige E-Mail-Adresse.'));
+    }
+
+    set_admin_context($pdo);
+    $pdo->prepare(
+        "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
+          contact_name=?, contact_phone=?, description=?, club_id=? WHERE id=?"
+    )->execute([
+        $first_name, $last_name,
+        $email_raw !== '' ? $email_raw : null,
+        $phone !== '' ? $phone : null,
+        $contact_name !== '' ? $contact_name : null,
+        $contact_phone !== '' ? $contact_phone : null,
+        $description !== '' ? $description : null,
+        $club_id > 0 ? $club_id : null,
+        $player_id,
+    ]);
+    reset_rls_context($pdo);
+    set_team_context($pdo, $team_id, 'coordinator', $user_id);
+
+    redirect('/coordinator/players/' . $player_id . '?success=1');
+}
+
+// Admin context for player fetch — coordinator can view any player
 set_admin_context($pdo);
 
 $p_stmt = $pdo->prepare(
@@ -24,7 +63,7 @@ $p_stmt = $pdo->prepare(
 );
 $p_stmt->execute([$player_id]);
 $player = $p_stmt->fetch();
-if (!$player) redirect('/coordinator/players');
+if (!$player) redirect('/coordinator/members');
 
 // All linked user accounts (every team)
 $al_stmt = $pdo->prepare(
@@ -56,6 +95,8 @@ if (!empty($all_user_ids)) {
     $cs_stmt->execute($all_user_ids);
     $cross_stats = $cs_stmt->fetchAll();
 }
+
+$clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
 reset_rls_context($pdo);
 set_team_context($pdo, $team_id, 'coordinator', $user_id);
@@ -94,12 +135,12 @@ foreach ($attr_stmt->fetchAll() as $row) {
 }
 
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
-$success = !empty($_GET['success']) ? e($_GET['success']) : '';
+$success = !empty($_GET['success']);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Spielerprofil', 'players', function() use (
-    $player, $player_id,
+render_coach_page('Spielerprofil', 'members', function() use (
+    $player, $player_id, $clubs,
     $my_linked, $other_linked, $unlinked_my_members,
     $attr_groups, $cross_stats,
     $error, $success

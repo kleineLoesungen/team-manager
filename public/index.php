@@ -301,6 +301,10 @@ match (true) {
     $path === '/coordinator/coordinators'
         => require ROOT_PATH . '/src/coordinator/coordinators_handler.php',
 
+    // ── Coordinator: Profile ──────────────────────────────────────────────
+    $path === '/coordinator/profile' || $path === '/coordinator/confirm-profile'
+        => require ROOT_PATH . '/src/coordinator/profile_handler.php',
+
     // ── Coordinator: Team Selection ──────────────────────────────────────
     $path === '/coordinator/select-team'
         => require ROOT_PATH . '/src/coordinator/select_team_handler.php',
@@ -350,9 +354,16 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/ticker_detail_handler.php';
         })(),
 
+    // ── Member: Confirm Profile (GDPR first-login) ───────────────────────
+    $path === '/member/confirm-profile'
+        => require ROOT_PATH . '/src/member/confirm_profile_handler.php',
+
     // ── Member: Profile ───────────────────────────────────────────────────
     $path === '/member/profile'
         => require ROOT_PATH . '/src/member/profile_handler.php',
+
+    $path === '/member/profile/attributes/save'
+        => require ROOT_PATH . '/src/member/profile_attributes_handler.php',
 
     // ── Member: Player Profile ────────────────────────────────────────────
     $path === '/member/player-profile'

@@ -65,6 +65,12 @@ function render_coach_page(string $title, string $active, callable $body): void 
                         <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">Verwaltung</span>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?= $active === 'profile' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
+                           href="/coordinator/profile">
+                            <i class="bi bi-person-circle me-2"></i>Mein Profil
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?= $active === 'settings' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/coordinator/settings">
                             <i class="bi bi-gear me-2"></i>Einstellungen
@@ -99,6 +105,9 @@ function render_coach_page(string $title, string $active, callable $body): void 
                         <i class="bi bi-megaphone tab-icon"></i><span>Ticker</span>
                     </a>
                     <div style="width:1px;background:var(--bs-border-color);margin:6px 0;flex-shrink:0;"></div>
+                    <a class="mobile-tab-link <?= $active === 'profile' ? 'active' : '' ?>" href="/coordinator/profile">
+                        <i class="bi bi-person-circle tab-icon"></i><span>Profil</span>
+                    </a>
                     <a class="mobile-tab-link <?= $active === 'settings' ? 'active' : '' ?>" href="/coordinator/settings">
                         <i class="bi bi-gear tab-icon"></i><span>Einstellungen</span>
                     </a>

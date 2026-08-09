@@ -45,13 +45,13 @@ function render_player_page(string $title, string $active, callable $body): void
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'profile' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/member/profile">
-                            <i class="bi bi-person-circle me-2"></i>Team-Profil
+                            <i class="bi bi-person-circle me-2"></i>Mein Profil
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $active === 'player_profile' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
                            href="/member/player-profile">
-                            <i class="bi bi-person-badge me-2"></i>Spielerprofil
+                            <i class="bi bi-clock-history me-2"></i>Verlauf
                         </a>
                     </li>
                 </ul>
@@ -70,10 +70,10 @@ function render_player_page(string $title, string $active, callable $body): void
                         <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
                     </a>
                     <a class="mobile-tab-link <?= $active === 'profile' ? 'active' : '' ?>" href="/member/profile">
-                        <i class="bi bi-person-circle tab-icon"></i><span>Team-Profil</span>
+                        <i class="bi bi-person-circle tab-icon"></i><span>Mein Profil</span>
                     </a>
                     <a class="mobile-tab-link <?= $active === 'player_profile' ? 'active' : '' ?>" href="/member/player-profile">
-                        <i class="bi bi-person-badge tab-icon"></i><span>Spielerprofil</span>
+                        <i class="bi bi-clock-history tab-icon"></i><span>Verlauf</span>
                     </a>
                 </div>
             </div>

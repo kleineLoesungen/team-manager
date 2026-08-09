@@ -13,19 +13,19 @@ set_admin_context($pdo);
 $stmt = $pdo->query(
     "SELECT u.id, u.first_name, u.last_name, u.phone, u.email,
             cl.name AS club_name,
-            t.id AS team_id, t.name AS team_name
+            t.id AS team_id, t.name AS team_name, t.sort_order AS team_sort_order
      FROM coordinator_teams ct
      JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
      LEFT JOIN clubs cl ON cl.id = u.club_id
      JOIN teams t ON t.id = ct.team_id AND t.is_active = TRUE
      WHERE ct.left_at IS NULL
-     ORDER BY t.name ASC, u.last_name ASC, u.first_name ASC"
+     ORDER BY t.sort_order ASC, t.name ASC, u.last_name ASC, u.first_name ASC"
 );
 $rows = $stmt->fetchAll();
 reset_rls_context($pdo);
 set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
 
-// Group by team, then sort groups by name
+// Group by team — ORDER BY in query already guarantees sort_order
 $teams_map = [];
 foreach ($rows as $row) {
     $tid = $row['team_id'];
@@ -34,7 +34,6 @@ foreach ($rows as $row) {
     }
     $teams_map[$tid]['coordinators'][] = $row;
 }
-uasort($teams_map, fn($a, $b) => strcmp($a['team_name'], $b['team_name']));
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 

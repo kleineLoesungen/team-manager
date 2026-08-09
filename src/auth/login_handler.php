@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // RLS blocks unauthenticated reads — temporarily bypass for credential lookup
                 set_admin_context($pdo);
                 $stmt = $pdo->prepare(
-                    "SELECT id, team_id, role, first_name, last_name, is_active, password_hash
+                    "SELECT id, team_id, role, first_name, last_name, is_active, password_hash, confirmed_at
                      FROM users WHERE username = ?"
                 );
                 $stmt->execute([$username]);
@@ -136,7 +136,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['role']          = $role;
                         $_SESSION['display_name']  = $user['first_name'] . ' ' . $user['last_name'];
                         $_SESSION['team_name']     = $team_row['name'] ?? '';
+                        $_SESSION['confirmed_at']  = $user['confirmed_at'];
                         $_SESSION['last_activity'] = time();
+
+                        // First login: redirect to profile confirmation (GDPR)
+                        if ($user['confirmed_at'] === null) {
+                            redirect($role === 'coordinator'
+                                ? '/coordinator/confirm-profile'
+                                : '/member/confirm-profile');
+                        }
 
                         // Role-based redirect — per D-02, honour return_to from email link
                         $return_to = trim($_POST['return_to'] ?? '');

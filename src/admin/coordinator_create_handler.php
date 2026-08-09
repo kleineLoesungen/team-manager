@@ -6,7 +6,7 @@ declare(strict_types=1);
 require_admin();
 
 $pdo = get_db();
-$teams_stmt = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name");
+$teams_stmt = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY sort_order ASC, name ASC");
 $teams = $teams_stmt->fetchAll();
 
 $error = '';

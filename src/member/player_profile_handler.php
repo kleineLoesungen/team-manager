@@ -102,6 +102,6 @@ if ($player_id) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Spielerprofil', 'player_profile', function() use ($player, $player_id, $attr_groups, $cross_stats, $history) {
+render_player_page('Mein Verlauf', 'player_profile', function() use ($player, $player_id, $attr_groups, $cross_stats, $history) {
     require ROOT_PATH . '/src/templates/member/player_profile.php';
 });

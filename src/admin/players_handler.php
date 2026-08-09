@@ -12,7 +12,7 @@ $search         = trim($_GET['q'] ?? '');
 $filter_club_id = (int)($_GET['club_id'] ?? 0);
 $filter_team_id = (int)($_GET['team_id'] ?? 0);
 
-$sql    = "SELECT p.id, p.first_name, p.last_name, p.phone, p.contact_name, p.description,
+$sql    = "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.description,
                   c.id AS club_id, c.name AS club_name
            FROM players p
            LEFT JOIN clubs c ON c.id = p.club_id
@@ -89,7 +89,7 @@ foreach ($unlinked_rows as $m) {
 $has_unlinked = !empty($unlinked_by_team);
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
-$teams = $pdo->query("SELECT id, name FROM teams ORDER BY is_active DESC, name ASC")->fetchAll();
+$teams = $pdo->query("SELECT id, name FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
 render_admin_page('Spieler', 'players', function() use (
     $players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,

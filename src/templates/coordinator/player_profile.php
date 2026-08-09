@@ -8,74 +8,181 @@ $active_teams = array_filter(
 );
 ?>
 <div class="mb-3">
-    <a href="/coordinator/players" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
+    <a href="/coordinator/members" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
     </a>
 </div>
 
 <?php if ($error):   ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
-<?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
+<?php if ($success): ?><div class="alert alert-success">Spielerdaten gespeichert.</div><?php endif; ?>
 
-<!-- Header -->
+<!-- Header + inline edit -->
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
-        <h2 class="card-title h5 fw-bold mb-1">
-            <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
-        </h2>
-        <?php if (!empty($player['club_name'])): ?>
-        <div class="text-muted mb-2">
-            <i class="bi bi-building me-1"></i><?= e($player['club_name']) ?>
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+                <h2 class="card-title h5 fw-bold mb-1">
+                    <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                </h2>
+                <?php if (!empty($player['club_name'])): ?>
+                <div class="text-muted small mb-1">
+                    <i class="bi bi-building me-1"></i><?= e($player['club_name']) ?>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($active_teams)): ?>
+                <div class="mb-2 d-flex flex-wrap gap-1">
+                    <?php foreach ($active_teams as $u): ?>
+                    <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+                        <i class="bi bi-people me-1"></i><?= e($u['team_name']) ?>
+                    </span>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($player['email'])): ?>
+                <div class="text-muted small mb-1">
+                    <i class="bi bi-envelope me-1"></i><?= e($player['email']) ?>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($player['phone'])): ?>
+                <div class="text-muted small mb-1">
+                    <i class="bi bi-telephone me-1"></i>
+                    <a href="tel:<?= e($player['phone']) ?>"><?= e($player['phone']) ?></a>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($player['description'])): ?>
+                <div class="text-muted small mb-1"><?= nl2br(e($player['description'])) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($player['contact_name']) || !empty($player['contact_phone'])): ?>
+                <div class="text-muted small mb-1">
+                    <i class="bi bi-person-lines-fill me-1"></i>
+                    Kontakt: <?= e($player['contact_name'] ?? '') ?>
+                    <?php if (!empty($player['contact_phone'])): ?>
+                    <?php if (!empty($player['contact_name'])): ?>, <?php endif; ?>
+                    <a href="tel:<?= e($player['contact_phone']) ?>"><?= e($player['contact_phone']) ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#player-edit-form"
+                    aria-expanded="false">
+                <i class="bi bi-pencil"></i>
+            </button>
         </div>
-        <?php endif; ?>
-        <?php if (!empty($active_teams)): ?>
-        <div class="mb-2 d-flex flex-wrap gap-1">
-            <?php foreach ($active_teams as $u): ?>
-            <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
-                <i class="bi bi-people me-1"></i><?= e($u['team_name']) ?>
-            </span>
-            <?php endforeach; ?>
+
+        <!-- Collapsible edit form -->
+        <div class="collapse" id="player-edit-form">
+            <hr class="my-3">
+            <form method="POST" action="/coordinator/players/<?= (int)$player_id ?>" novalidate>
+                <?= csrf_field() ?>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label small fw-medium">Vorname <span class="text-danger">*</span></label>
+                        <input type="text" name="first_name" class="form-control form-control-sm"
+                               value="<?= e($player['first_name']) ?>" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-medium">Nachname <span class="text-danger">*</span></label>
+                        <input type="text" name="last_name" class="form-control form-control-sm"
+                               value="<?= e($player['last_name']) ?>" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">E-Mail</label>
+                        <input type="email" name="email" class="form-control form-control-sm"
+                               value="<?= e($player['email'] ?? '') ?>" placeholder="optional">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-medium">Telefon</label>
+                        <input type="text" name="phone" class="form-control form-control-sm"
+                               value="<?= e($player['phone'] ?? '') ?>" placeholder="optional">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-medium">Kontaktname</label>
+                        <input type="text" name="contact_name" class="form-control form-control-sm"
+                               value="<?= e($player['contact_name'] ?? '') ?>" placeholder="optional">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-medium">Kontakttelefon</label>
+                        <input type="text" name="contact_phone" class="form-control form-control-sm"
+                               value="<?= e($player['contact_phone'] ?? '') ?>" placeholder="optional">
+                    </div>
+                    <?php if (!empty($clubs)): ?>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">Verein</label>
+                        <select name="club_id" class="form-select form-select-sm">
+                            <option value="0">— kein Verein —</option>
+                            <?php foreach ($clubs as $cl): ?>
+                            <option value="<?= (int)$cl['id'] ?>"
+                                <?= ((int)($player['club_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
+                                <?= e($cl['name']) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">Anmerkungen</label>
+                        <textarea name="description" class="form-control form-control-sm" rows="2"
+                                  placeholder="optional"><?= e($player['description'] ?? '') ?></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-floppy me-1"></i>Speichern
+                </button>
+            </form>
         </div>
-        <?php endif; ?>
-        <?php if (!empty($player['phone'])): ?>
-        <div class="text-muted small mb-1">
-            <i class="bi bi-telephone me-1"></i>
-            <a href="tel:<?= e($player['phone']) ?>"><?= e($player['phone']) ?></a>
-        </div>
-        <?php endif; ?>
-        <?php if (!empty($player['contact_name'])): ?>
-        <div class="text-muted small mb-1">
-            <i class="bi bi-person-lines-fill me-1"></i>
-            Kontaktperson: <?= e($player['contact_name']) ?>
-        </div>
-        <?php endif; ?>
     </div>
 </div>
-
-<?php if (!empty($player['description'])): ?>
-<div class="card mb-4">
-    <div class="card-header fw-semibold">Beschreibung</div>
-    <div class="card-body"><p class="mb-0"><?= nl2br(e($player['description'])) ?></p></div>
-</div>
-<?php endif; ?>
 
 <!-- User accounts -->
 <div class="card mb-4">
     <div class="card-header fw-semibold">Benutzerkonten</div>
     <div class="card-body">
 
-        <!-- My team: read-only display -->
+        <!-- My team: actions -->
+        <?php
+        $back = '/coordinator/players/' . $player_id;
+        ?>
         <div class="mb-3">
             <div class="small fw-medium text-muted mb-2">Mein Team</div>
             <?php if (!empty($my_linked)): ?>
-            <div class="d-flex flex-wrap gap-2">
-                <?php foreach ($my_linked as $u): ?>
-                <span class="badge border py-1 px-2 d-inline-flex align-items-center gap-1
-                             <?= $u['user_active'] ? 'bg-success-subtle text-success-emphasis border-success-subtle' : 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle' ?>">
-                    <i class="bi bi-person me-1"></i><?= e($u['username']) ?>
-                    <?= $u['user_active'] ? '' : '<span class="opacity-75">(inaktiv)</span>' ?>
-                </span>
-                <?php endforeach; ?>
+            <?php foreach ($my_linked as $u): ?>
+            <div class="d-flex justify-content-between align-items-center gap-2 py-1">
+                <div>
+                    <span class="fw-medium"><i class="bi bi-person me-1"></i><?= e($u['username']) ?></span>
+                    <?php if (!$u['user_active']): ?>
+                    <span class="badge bg-secondary ms-1">Inaktiv</span>
+                    <?php endif; ?>
+                </div>
+                <div class="d-flex gap-1 flex-shrink-0">
+                    <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/reset-password"
+                          onsubmit="return confirm('Das Passwort wird zurückgesetzt und einmalig angezeigt.')">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="_back" value="<?= e($back) ?>">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-key me-1"></i>Passwort
+                        </button>
+                    </form>
+                    <?php if ($u['user_active']): ?>
+                    <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/deactivate"
+                          onsubmit="return confirm('Mitglied deaktivieren?')">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="_back" value="<?= e($back) ?>">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">Deaktivieren</button>
+                    </form>
+                    <?php else: ?>
+                    <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/reactivate"
+                          onsubmit="return confirm('Mitglied reaktivieren?')">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="_back" value="<?= e($back) ?>">
+                        <button type="submit" class="btn btn-sm btn-outline-success">Reaktivieren</button>
+                    </form>
+                    <?php endif; ?>
+                </div>
             </div>
+            <?php endforeach; ?>
             <?php else: ?>
             <p class="text-muted small mb-0">Kein Account aus meinem Team verknüpft.</p>
             <?php endif; ?>

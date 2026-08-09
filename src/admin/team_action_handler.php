@@ -31,12 +31,13 @@ if (!$team) {
 }
 
 if ($action === 'edit') {
-    $new_name = trim($_POST['team_name'] ?? '');
+    $new_name   = trim($_POST['team_name']  ?? '');
+    $sort_order = (int)($_POST['sort_order'] ?? 0);
     if (empty($new_name) || strlen($new_name) > 100) {
         redirect('/admin/teams?error=' . urlencode('Teamname ist erforderlich (max. 100 Zeichen).'));
     }
-    $stmt = $pdo->prepare("UPDATE teams SET name = ? WHERE id = ?");
-    $stmt->execute([$new_name, $team_id]);
+    $pdo->prepare("UPDATE teams SET name = ?, sort_order = ? WHERE id = ?")
+        ->execute([$new_name, $sort_order, $team_id]);
     redirect('/admin/teams');
 
 } elseif ($action === 'deactivate') {
