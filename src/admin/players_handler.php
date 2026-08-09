@@ -89,7 +89,7 @@ foreach ($unlinked_rows as $m) {
 $has_unlinked = !empty($unlinked_by_team);
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
-$teams = $pdo->query("SELECT id, name FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
+$teams = $pdo->query("SELECT id, name, is_active FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
 render_admin_page('Spieler', 'players', function() use (
     $players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
