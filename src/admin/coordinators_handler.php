@@ -7,14 +7,15 @@ require_admin();
 
 $pdo = get_db();
 
-// All coordinators with full data
+// All coordinators with full data — personal info from players (canonical person table)
 $coordinators_stmt = $pdo->query(
-    "SELECT u.id, u.first_name, u.last_name, u.username, u.is_active, u.email, u.phone,
+    "SELECT u.id, p.first_name, p.last_name, u.username, u.is_active, p.email, p.phone,
             u.confirmed_at, cl.name AS club_name
      FROM users u
-     LEFT JOIN clubs cl ON cl.id = u.club_id
+     JOIN players p ON p.id = u.player_id
+     LEFT JOIN clubs cl ON cl.id = p.club_id
      WHERE u.role = 'coordinator'
-     ORDER BY u.first_name, u.last_name"
+     ORDER BY p.first_name, p.last_name"
 );
 $all_coordinators  = $coordinators_stmt->fetchAll();
 $coordinators_by_id = array_column($all_coordinators, null, 'id');
@@ -125,13 +126,9 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                     <?php endif; ?>
                 </div>
                 <div class="d-flex gap-2 flex-wrap justify-content-end">
-                    <a href="/admin/coordinators/<?= $c['id'] ?>/edit-email"
-                       class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-envelope me-1"></i>Kontakt
-                    </a>
-                    <a href="/admin/coordinators/<?= $c['id'] ?>/settings"
+                    <a href="/admin/coordinators/<?= $c['id'] ?>/settings" data-save-scroll
                        class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-gear me-1"></i>Einstellungen
+                        <i class="bi bi-pencil me-1"></i>Bearbeiten
                     </a>
                     <form method="POST"
                           action="/admin/coordinators/<?= $c['id'] ?>/reset-password"

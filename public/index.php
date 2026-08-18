@@ -50,8 +50,15 @@ match (true) {
     $path === '/admin/teams/create'
         => require ROOT_PATH . '/src/admin/team_create_handler.php',
 
-    // Match /admin/teams/{id}/edit, /admin/teams/{id}/deactivate, /admin/teams/{id}/reactivate, /admin/teams/{id}/delete
-    (bool)preg_match('#^/admin/teams/(\d+)/(edit|deactivate|reactivate|delete)$#', $path, $matches)
+    // /admin/teams/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/admin/teams/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['team_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/team_edit_handler.php';
+        })(),
+
+    // /admin/teams/{id}/(deactivate|reactivate|delete) — POST actions
+    (bool)preg_match('#^/admin/teams/(\d+)/(deactivate|reactivate|delete)$#', $path, $matches)
         => (function() use ($matches, $method) {
             $team_id = (int)$matches[1];
             $action  = $matches[2];
@@ -81,7 +88,15 @@ match (true) {
     $path === '/admin/clubs/create'
         => require ROOT_PATH . '/src/admin/club_create_handler.php',
 
-    (bool)preg_match('#^/admin/clubs/(\d+)/(edit|deactivate|reactivate)$#', $path, $matches)
+    // /admin/clubs/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/admin/clubs/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['club_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/club_edit_handler.php';
+        })(),
+
+    // /admin/clubs/{id}/(deactivate|reactivate) — POST actions
+    (bool)preg_match('#^/admin/clubs/(\d+)/(deactivate|reactivate)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['club_id'] = (int)$matches[1];
             $_REQUEST['action']  = $matches[2];
@@ -95,7 +110,15 @@ match (true) {
     $path === '/admin/players/create'
         => require ROOT_PATH . '/src/admin/player_create_handler.php',
 
-    (bool)preg_match('#^/admin/players/(\d+)/(edit|link-user|unlink-user)$#', $path, $matches)
+    // /admin/players/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/admin/players/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/player_edit_handler.php';
+        })(),
+
+    // /admin/players/{id}/(link-user|unlink-user) — POST actions
+    (bool)preg_match('#^/admin/players/(\d+)/(link-user|unlink-user)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['player_id'] = (int)$matches[1];
             $_REQUEST['action']    = $matches[2];
@@ -164,11 +187,18 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/member_edit_email_handler.php';
         })(),
 
-    (bool)preg_match('#^/coordinator/members/(\d+)/(deactivate|reactivate|reset-password)$#', $path, $matches)
+    (bool)preg_match('#^/coordinator/members/(\d+)/(deactivate|reactivate|reset-password|delete)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['member_id'] = (int)$matches[1];
             $_REQUEST['action']    = $matches[2];
             require ROOT_PATH . '/src/coordinator/member_action_handler.php';
+        })(),
+
+    // /coordinator/members/{id}/change-player — GET+POST: reassign player-user link
+    (bool)preg_match('#^/coordinator/members/(\d+)/change-player$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['member_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/member_change_player_handler.php';
         })(),
 
     // ── Coordinator: Lists ─────────────────────────────────────────────

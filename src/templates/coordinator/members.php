@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/members.php — Merged member + player list
-// Variables: $members, $unlinked_members, $linkable_players, $error, $success
+// Variables: $members, $player_attr_visible, $player_attr_hidden, $error, $success
 declare(strict_types=1);
 
 $active_members   = array_values(array_filter($members, fn($m) => $m['is_active']));
@@ -25,8 +25,18 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
 </div>
 <?php else: ?>
 
+<!-- Info mode switcher -->
+<div class="d-flex gap-1 flex-wrap mb-3">
+    <button class="btn btn-sm" data-mode-btn="club">Verein</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="contact">Kontakt</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="description">Beschreibung</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="attr-visible">Attribute (sichtbar)</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="attr-hidden">Attribute (verborgen)</button>
+</div>
+
 <div class="list-group mb-4">
     <?php foreach ($active_members as $m): ?>
+    <?php $pid = (int)$m['player_id']; ?>
     <div class="list-group-item px-3 py-3">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div class="flex-grow-1 min-w-0">
@@ -38,47 +48,89 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                     </span>
                     <?php endif; ?>
                 </div>
-                <div class="text-muted small"><code>@<?= e($m['username']) ?></code>
-                    <?php if (!empty($m['email'])): ?>
-                    &nbsp;·&nbsp;<i class="bi bi-envelope"></i> <?= e($m['email']) ?>
-                    <?php endif; ?>
-                </div>
-                <?php if ($m['player_id']): ?>
-                <div class="mt-1">
+                <div class="text-muted small"><code>@<?= e($m['username']) ?></code></div>
+
+                <!-- Info panels (JS switches visibility) -->
+                <div class="info-mode mt-1" data-mode="club">
                     <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
-                        <i class="bi bi-person-vcard me-1"></i><?= e($m['player_last'] . ', ' . $m['player_first']) ?>
+                        <i class="bi bi-person-vcard me-1"></i><?= e($m['last_name'] . ', ' . $m['first_name']) ?>
                         <?php if (!empty($m['club_name'])): ?>
                         <span class="opacity-75 fw-normal"> · <?= e($m['club_name']) ?></span>
                         <?php endif; ?>
                     </span>
                 </div>
-                <?php elseif (!empty($linkable_players)): ?>
-                <div class="mt-1">
-                    <div class="dropdown d-inline-block">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-link-45deg me-1"></i>Spieler verknüpfen
-                        </button>
-                        <ul class="dropdown-menu" style="max-height:260px;overflow-y:auto">
-                            <?php foreach ($linkable_players as $lp): ?>
-                            <li>
-                                <form method="POST" action="/coordinator/players/<?= (int)$lp['id'] ?>/link-user">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="user_id" value="<?= (int)$m['id'] ?>">
-                                    <input type="hidden" name="_back" value="/coordinator/members">
-                                    <button type="submit" class="dropdown-item">
-                                        <?= e($lp['last_name'] . ', ' . $lp['first_name']) ?>
-                                        <?php if (!empty($lp['club_name'])): ?>
-                                        <small class="text-muted"> · <?= e($lp['club_name']) ?></small>
-                                        <?php endif; ?>
-                                    </button>
-                                </form>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
+
+                <div class="info-mode mt-1 d-none" data-mode="contact">
+                    <?php
+                    // Collect unique member emails: account email (u.email) + player email (p.email)
+                    $member_emails = array_unique(array_filter([
+                        $m['player_email'] ?? null,
+                        ($m['email'] !== ($m['player_email'] ?? null)) ? ($m['email'] ?? null) : null,
+                    ]));
+                    ?>
+                    <?php foreach ($member_emails as $addr): ?>
+                    <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($addr) ?></div>
+                    <?php endforeach; ?>
+                    <?php if (!empty($m['player_phone'])): ?>
+                    <div class="text-muted small"><i class="bi bi-telephone me-1"></i><a href="tel:<?= e($m['player_phone']) ?>"><?= e($m['player_phone']) ?></a></div>
+                    <?php endif; ?>
+                    <?php if (!empty($m['contact_name']) || !empty($m['contact_phone']) || !empty($m['contact_email'])): ?>
+                    <div class="text-muted small">
+                        <i class="bi bi-person-lines-fill me-1"></i>
+                        <?= e($m['contact_name'] ?? '') ?>
+                        <?php if (!empty($m['contact_phone'])): ?>
+                        <?php if (!empty($m['contact_name'])): ?>&nbsp;·&nbsp;<?php endif; ?>
+                        <a href="tel:<?= e($m['contact_phone']) ?>"><?= e($m['contact_phone']) ?></a>
+                        <?php endif; ?>
+                        <?php if (!empty($m['contact_email'])): ?>
+                        <?php if (!empty($m['contact_name']) || !empty($m['contact_phone'])): ?>&nbsp;·&nbsp;<?php endif; ?>
+                        <?= e($m['contact_email']) ?>
+                        <?php endif; ?>
                     </div>
+                    <?php endif; ?>
+                    <?php if (empty($member_emails) && empty($m['player_phone']) && empty($m['contact_name']) && empty($m['contact_phone']) && empty($m['contact_email'])): ?>
+                    <span class="text-muted small">Keine Kontaktdaten</span>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
+
+                <div class="info-mode mt-1 d-none" data-mode="description">
+                    <?php if (!empty($m['description'])): ?>
+                    <span class="text-muted small"><?= e($m['description']) ?></span>
+                    <?php else: ?>
+                    <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                </div>
+
+                <div class="info-mode mt-1 d-none" data-mode="attr-visible">
+                    <?php $attrs = $player_attr_visible[$pid] ?? []; ?>
+                    <?php if (!empty($attrs)): ?>
+                    <div class="d-flex flex-wrap gap-1">
+                        <?php foreach ($attrs as $a): ?>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                            <?= e($a['name']) ?>: <?= e($a['value']) ?>
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php else: ?>
+                    <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                </div>
+
+                <div class="info-mode mt-1 d-none" data-mode="attr-hidden">
+                    <?php $attrs = $player_attr_hidden[$pid] ?? []; ?>
+                    <?php if (!empty($attrs)): ?>
+                    <div class="d-flex flex-wrap gap-1">
+                        <?php foreach ($attrs as $a): ?>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                            <?= e($a['name']) ?>: <?= e($a['value']) ?>
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php else: ?>
+                    <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                </div>
+
             </div>
             <span class="badge bg-success flex-shrink-0">Aktiv</span>
         </div>
@@ -90,17 +142,10 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                     <i class="bi bi-key me-1"></i>Passwort
                 </button>
             </form>
-            <?php if ($m['player_id']): ?>
-            <a href="/coordinator/players/<?= (int)$m['player_id'] ?>"
+            <a href="/coordinator/players/<?= (int)$m['player_id'] ?>" data-save-scroll
                class="btn btn-sm btn-outline-secondary min-touch">
                 <i class="bi bi-pencil me-1"></i>Profil
             </a>
-            <?php else: ?>
-            <a href="/coordinator/members/<?= (int)$m['id'] ?>/edit-email"
-               class="btn btn-sm btn-outline-secondary min-touch">
-                <i class="bi bi-envelope me-1"></i>E-Mail
-            </a>
-            <?php endif; ?>
             <form method="POST" action="/coordinator/members/<?= (int)$m['id'] ?>/deactivate"
                   onsubmit="return confirm('Mitglied deaktivieren?')">
                 <?= csrf_field() ?>
@@ -126,14 +171,12 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                 <div class="flex-grow-1 min-w-0">
                     <div class="fw-semibold text-muted"><?= e($m['last_name'] . ', ' . $m['first_name']) ?></div>
                     <div class="text-muted small"><code>@<?= e($m['username']) ?></code></div>
-                    <?php if ($m['player_id']): ?>
                     <div class="mt-1">
                         <a href="/coordinator/players/<?= (int)$m['player_id'] ?>"
                            class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle text-decoration-none">
-                            <i class="bi bi-person-vcard me-1"></i><?= e($m['player_last'] . ', ' . $m['player_first']) ?>
+                            <i class="bi bi-person-vcard me-1"></i><?= e($m['last_name'] . ', ' . $m['first_name']) ?>
                         </a>
                     </div>
-                    <?php endif; ?>
                 </div>
                 <span class="badge bg-secondary flex-shrink-0">Inaktiv</span>
             </div>
@@ -145,10 +188,17 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                         Reaktivieren
                     </button>
                 </form>
-                <a href="/coordinator/members/<?= (int)$m['id'] ?>/edit-email"
+                <a href="/coordinator/players/<?= (int)$m['player_id'] ?>" data-save-scroll
                    class="btn btn-sm btn-outline-secondary min-touch">
-                    <i class="bi bi-envelope me-1"></i>E-Mail
+                    <i class="bi bi-person-vcard me-1"></i>Profil
                 </a>
+                <form method="POST" action="/coordinator/members/<?= (int)$m['id'] ?>/delete"
+                      onsubmit="return confirm('<?= e('Benutzerkonto ' . $m['username'] . ' endgültig löschen? Das Spielerprofil bleibt erhalten.') ?>')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-danger min-touch">
+                        <i class="bi bi-trash me-1"></i>Löschen
+                    </button>
+                </form>
             </div>
         </div>
         <?php endforeach; ?>
@@ -157,3 +207,29 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
 <?php endif; ?>
 
 <?php endif; ?>
+
+<script>
+(function () {
+    var STORAGE_KEY = 'members-info-mode';
+    var current = sessionStorage.getItem(STORAGE_KEY) || 'club';
+
+    function setMode(mode) {
+        current = mode;
+        sessionStorage.setItem(STORAGE_KEY, mode);
+        document.querySelectorAll('[data-mode-btn]').forEach(function (btn) {
+            var active = btn.dataset.modeBtn === mode;
+            btn.classList.toggle('btn-primary', active);
+            btn.classList.toggle('btn-outline-secondary', !active);
+        });
+        document.querySelectorAll('.info-mode').forEach(function (el) {
+            el.classList.toggle('d-none', el.dataset.mode !== mode);
+        });
+    }
+
+    document.querySelectorAll('[data-mode-btn]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setMode(this.dataset.modeBtn); });
+    });
+
+    setMode(current);
+}());
+</script>

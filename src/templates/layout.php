@@ -278,6 +278,17 @@ function render_layout_foot(): void {
         }, {passive: true});
     })();
     </script>
+    <script>
+    (function(){
+        var key='scroll:'+location.pathname.replace(/\?.*$/,'');
+        var saved=sessionStorage.getItem(key);
+        if(saved!==null){window.scrollTo(0,+saved);sessionStorage.removeItem(key);}
+        document.addEventListener('click',function(e){
+            var a=e.target.closest('[data-save-scroll]');
+            if(a){sessionStorage.setItem('scroll:'+location.pathname.replace(/\?.*$/,''),window.scrollY);}
+        });
+    }());
+    </script>
 </body>
 </html>
     <?php

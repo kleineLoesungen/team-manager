@@ -94,13 +94,17 @@
                 <?php if (!empty($p['phone'])): ?>
                 <div class="text-muted small"><i class="bi bi-telephone me-1"></i><?= e($p['phone']) ?></div>
                 <?php endif; ?>
-                <?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>
+                <?php if (!empty($p['contact_name']) || !empty($p['contact_phone']) || !empty($p['contact_email'])): ?>
                 <div class="text-muted small">
                     <i class="bi bi-person-lines-fill me-1"></i>
                     Kontakt: <?= e($p['contact_name'] ?? '') ?>
                     <?php if (!empty($p['contact_phone'])): ?>
                     <?php if (!empty($p['contact_name'])): ?>, <?php endif; ?>
                     <?= e($p['contact_phone']) ?>
+                    <?php endif; ?>
+                    <?php if (!empty($p['contact_email'])): ?>
+                    <?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>, <?php endif; ?>
+                    <?= e($p['contact_email']) ?>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -117,24 +121,17 @@
             <div class="d-flex flex-wrap gap-1 align-items-center">
                 <?php foreach ($linked as $u): ?>
                 <?php
-                    $team_ok   = !empty($u['team_active']);
-                    $user_ok   = (bool)$u['is_active'];
-                    $bg_class  = ($team_ok && $user_ok) ? 'bg-success-subtle text-success-emphasis border-success-subtle'
-                               : 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle';
+                    $team_ok  = !empty($u['team_active']);
+                    $user_ok  = (bool)$u['is_active'];
+                    $bg_class = ($team_ok && $user_ok) ? 'bg-success-subtle text-success-emphasis border-success-subtle'
+                              : 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle';
                 ?>
-                <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/unlink-user" class="m-0">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-                    <button type="submit"
-                            class="btn btn-sm badge border py-1 px-2 d-inline-flex align-items-center gap-1 <?= $bg_class ?>"
-                            onclick="return confirm('<?= e('Account ' . $u['username'] . ' vom Spieler trennen?') ?>')">
-                        <i class="bi bi-person me-1"></i><?= e($u['username']) ?>
-                        <?php if (!empty($u['team_name'])): ?>
-                        <span class="opacity-75">(<?= e($u['team_name']) ?><?= $team_ok ? '' : ' – inaktiv' ?>)</span>
-                        <?php endif; ?>
-                        <i class="bi bi-x"></i>
-                    </button>
-                </form>
+                <span class="badge border py-1 px-2 d-inline-flex align-items-center gap-1 <?= $bg_class ?>">
+                    <i class="bi bi-person me-1"></i><?= e($u['username']) ?>
+                    <?php if (!empty($u['team_name'])): ?>
+                    <span class="opacity-75">(<?= e($u['team_name']) ?><?= $team_ok ? '' : ' – inaktiv' ?>)</span>
+                    <?php endif; ?>
+                </span>
                 <?php endforeach; ?>
             </div>
             <?php else: ?>
@@ -165,75 +162,12 @@
         </form>
         <?php endif; ?>
 
-        <!-- Edit accordion -->
-        <div class="accordion accordion-flush" id="acc-<?= (int)$p['id'] ?>">
-            <div class="accordion-item border-0">
-                <h3 class="accordion-header">
-                    <button class="accordion-button collapsed p-0 bg-transparent text-secondary small fw-normal shadow-none"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#edit-<?= (int)$p['id'] ?>">
-                        <i class="bi bi-pencil me-1"></i>Bearbeiten
-                    </button>
-                </h3>
-                <div id="edit-<?= (int)$p['id'] ?>" class="accordion-collapse collapse">
-                    <div class="accordion-body px-0 pt-2 pb-0">
-                        <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/edit">
-                            <?= csrf_field() ?>
-                            <div class="row g-2 mb-2">
-                                <div class="col-6">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Vorname <span class="text-danger">*</span></label>
-                                    <input type="text" name="first_name" class="form-control form-control-sm"
-                                           value="<?= e($p['first_name']) ?>" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Nachname <span class="text-danger">*</span></label>
-                                    <input type="text" name="last_name" class="form-control form-control-sm"
-                                           value="<?= e($p['last_name']) ?>" required>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Klub</label>
-                                    <select name="club_id" class="form-select form-select-sm">
-                                        <option value="0">— kein Klub —</option>
-                                        <?php foreach ($clubs as $c): ?>
-                                        <option value="<?= (int)$c['id'] ?>"
-                                            <?= (int)$p['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
-                                            <?= e($c['name']) ?>
-                                        </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label form-label-sm fw-medium mb-1">E-Mail</label>
-                                    <input type="email" name="email" class="form-control form-control-sm"
-                                           value="<?= e($p['email'] ?? '') ?>" placeholder="optional">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Telefon</label>
-                                    <input type="text" name="phone" class="form-control form-control-sm"
-                                           value="<?= e($p['phone'] ?? '') ?>" placeholder="optional">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Kontaktname</label>
-                                    <input type="text" name="contact_name" class="form-control form-control-sm"
-                                           value="<?= e($p['contact_name'] ?? '') ?>" placeholder="optional">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Kontakttelefon</label>
-                                    <input type="text" name="contact_phone" class="form-control form-control-sm"
-                                           value="<?= e($p['contact_phone'] ?? '') ?>" placeholder="optional">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label form-label-sm fw-medium mb-1">Anmerkungen</label>
-                                    <textarea name="description" class="form-control form-control-sm" rows="2"
-                                              placeholder="optional"><?= e($p['description'] ?? '') ?></textarea>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-primary">Speichern</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <!-- Bearbeiten link -->
+        <div class="mt-2">
+            <a href="/admin/players/<?= (int)$p['id'] ?>/edit" data-save-scroll
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i>Bearbeiten
+            </a>
         </div>
 
     </div>

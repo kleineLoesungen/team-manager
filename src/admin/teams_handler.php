@@ -24,13 +24,8 @@ foreach ($coaches_stmt->fetchAll() as $coach) {
     $coaches_by_team[$coach['team_id']][] = $coach;
 }
 
-$error = !empty($_GET['error']) ? e($_GET['error']) : '';
-
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Teams verwalten', 'teams', function() use ($teams, $coaches_by_team, $error) {
-    if ($error) {
-        echo '<div class="alert alert-danger">' . $error . '</div>';
-    }
+render_admin_page('Teams verwalten', 'teams', function() use ($teams, $coaches_by_team) {
     require ROOT_PATH . '/src/templates/admin/dashboard.php';
 });

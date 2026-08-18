@@ -5,6 +5,9 @@
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= $error ?></div>
 <?php endif; ?>
+<?php if (!empty($_GET['success'])): ?>
+<div class="alert alert-success"><?= e($_GET['success']) ?></div>
+<?php endif; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($active_clubs) ?> aktiver Klub<?= count($active_clubs) !== 1 ? 's' : '' ?></span>
@@ -20,35 +23,19 @@
 <?php else: ?>
 
 <?php if (!empty($active_clubs)): ?>
-<div class="row g-3">
+<div class="list-group">
     <?php foreach ($active_clubs as $club): ?>
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-                    <h2 class="h6 fw-semibold mb-0"><?= e($club['name']) ?></h2>
-                    <div class="d-flex gap-2 flex-wrap align-items-start">
-                        <!-- Inline edit form -->
-                        <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/edit"
-                              class="d-flex gap-2 align-items-center">
-                            <?= csrf_field() ?>
-                            <input type="text"
-                                   class="form-control form-control-sm min-touch"
-                                   name="name"
-                                   value="<?= e($club['name']) ?>"
-                                   maxlength="100"
-                                   required
-                                   style="min-width:140px">
-                            <button type="submit" class="btn btn-sm btn-outline-primary">Speichern</button>
-                        </form>
-                        <!-- Deactivate -->
-                        <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/deactivate">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Deaktivieren</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+    <div class="list-group-item px-3 py-3">
+        <div class="fw-semibold mb-2"><?= e($club['name']) ?></div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="/admin/clubs/<?= (int)$club['id'] ?>/edit" data-save-scroll
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i>Bearbeiten
+            </a>
+            <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/deactivate">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-sm btn-outline-danger">Deaktivieren</button>
+            </form>
         </div>
     </div>
     <?php endforeach; ?>
@@ -58,41 +45,27 @@
 <?php endif; ?>
 
 <?php if (!empty($inactive_clubs)): ?>
-<div class="mt-4">
-    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#inactiveClubs"
-            aria-expanded="false">
-        <i class="bi bi-chevron-down"></i>
-        Inaktiv (<?= count($inactive_clubs) ?>)
-    </button>
-    <div class="collapse mt-2" id="inactiveClubs">
-        <div class="row g-3">
-            <?php foreach ($inactive_clubs as $club): ?>
-            <div class="col-12">
-                <div class="card border-secondary opacity-75">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-                            <div>
-                                <h2 class="h6 fw-semibold mb-0 text-muted"><?= e($club['name']) ?></h2>
-                                <span class="badge bg-secondary mt-1">Deaktiviert</span>
-                            </div>
-                            <!-- Reactivate -->
-                            <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/reactivate">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+<details class="mt-4">
+    <summary class="text-muted small mb-3" style="cursor:pointer;list-style:none;">
+        <i class="bi bi-chevron-right me-1"></i>Inaktiv (<?= count($inactive_clubs) ?>)
+    </summary>
+    <div class="list-group mt-2 opacity-75">
+        <?php foreach ($inactive_clubs as $club): ?>
+        <div class="list-group-item px-3 py-3">
+            <div class="fw-semibold text-muted mb-1"><?= e($club['name']) ?></div>
+            <span class="badge bg-secondary mb-2">Deaktiviert</span>
+            <div class="d-flex gap-2 flex-wrap">
+                <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/reactivate">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
+                    </button>
+                </form>
             </div>
-            <?php endforeach; ?>
         </div>
+        <?php endforeach; ?>
     </div>
-</div>
+</details>
 <?php endif; ?>
 
 <?php endif; ?>

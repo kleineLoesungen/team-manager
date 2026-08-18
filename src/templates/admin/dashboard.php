@@ -5,12 +5,18 @@
 $active_teams   = array_filter($teams, fn($t) => $t['is_active']);
 $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
 ?>
+<?php if (!empty($_GET['error'])): ?>
+<div class="alert alert-danger"><?= e($_GET['error']) ?></div>
+<?php endif; ?>
+<?php if (!empty($_GET['success'])): ?>
+<div class="alert alert-success"><?= e($_GET['success']) ?></div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($active_teams) ?> aktive(s) Team(s)</span>
-    <button type="button" class="btn btn-primary min-touch"
-            data-bs-toggle="modal" data-bs-target="#createTeamModal">
+    <a href="/admin/teams/create" class="btn btn-primary min-touch">
         <i class="bi bi-plus-lg me-1"></i>Team erstellen
-    </button>
+    </a>
 </div>
 
 <?php if (empty($teams)): ?>
@@ -21,200 +27,88 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
 <?php else: ?>
 
 <?php if (!empty($active_teams)): ?>
-<div class="row g-3">
+<div class="list-group">
     <?php foreach ($active_teams as $team): ?>
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h2 class="h5 fw-semibold mb-1">
-                            <?php if ($team['sort_order'] !== 0): ?>
-                            <span class="text-muted fw-normal me-1" style="font-size:.85em"><?= (int)$team['sort_order'] ?>.</span>
-                            <?php endif; ?>
-                            <?= e($team['name']) ?>
-                        </h2>
-                        <p class="text-muted small mb-0">
-                            <?php
-                            $count = count($coaches_by_team[$team['id']] ?? []);
-                            echo $count === 0
-                                ? 'Keine Koordinatoren zugewiesen'
-                                : $count . ' Koordinatoren zugewiesen';
-                            ?>
-                        </p>
-                    </div>
-                    <div class="d-flex gap-2 flex-wrap justify-content-end">
-                        <button type="button"
-                                class="btn btn-sm btn-outline-secondary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editTeamModal<?= $team['id'] ?>">
-                            Bearbeiten
-                        </button>
-                        <form method="POST"
-                              action="/admin/teams/<?= $team['id'] ?>/deactivate"
-                              onsubmit="return confirm('<?= e('Das Team wird deaktiviert. Alle Koordinatoren und Mitglieder bleiben im System, können sich aber nicht anmelden.') ?>')">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                Team deaktivieren
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Coaches list for this team -->
-                <?php if (!empty($coaches_by_team[$team['id']])): ?>
-                <ul class="list-unstyled mt-2 mb-0">
-                    <?php foreach ($coaches_by_team[$team['id']] as $coach): ?>
-                    <li class="small text-muted">
-                        <i class="bi bi-person me-1"></i>
-                        <?= e($coach['first_name'] . ' ' . $coach['last_name']) ?>
-                        <code class="ms-1">(<?= e($coach['username']) ?>)</code>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
+    <div class="list-group-item px-3 py-3">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+            <div class="fw-semibold">
+                <?php if ($team['sort_order'] !== 0): ?>
+                <span class="text-muted fw-normal me-1" style="font-size:.85em"><?= (int)$team['sort_order'] ?>.</span>
                 <?php endif; ?>
+                <?= e($team['name']) ?>
+                <span class="badge bg-success ms-1">Aktiv</span>
             </div>
         </div>
-
-        <!-- Edit Team Modal -->
-        <div class="modal fade" id="editTeamModal<?= $team['id'] ?>" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-semibold">Team bearbeiten</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form method="POST" action="/admin/teams/<?= $team['id'] ?>/edit">
-                        <?= csrf_field() ?>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="team_name_<?= $team['id'] ?>" class="form-label fw-semibold small">
-                                    Teamname
-                                </label>
-                                <input type="text"
-                                       class="form-control min-touch"
-                                       id="team_name_<?= $team['id'] ?>"
-                                       name="team_name"
-                                       value="<?= e($team['name']) ?>"
-                                       required
-                                       maxlength="100">
-                            </div>
-                            <div>
-                                <label for="sort_order_<?= $team['id'] ?>" class="form-label fw-semibold small">
-                                    Sortiernummer
-                                </label>
-                                <input type="number"
-                                       class="form-control"
-                                       id="sort_order_<?= $team['id'] ?>"
-                                       name="sort_order"
-                                       value="<?= (int)$team['sort_order'] ?>"
-                                       min="0"
-                                       step="1">
-                                <div class="form-text">Niedrigere Zahl = weiter oben. 0 = keine Sortierung.</div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                                Abbrechen
-                            </button>
-                            <button type="submit" class="btn btn-primary">Speichern</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <?php
+        $coaches = $coaches_by_team[$team['id']] ?? [];
+        $count   = count($coaches);
+        ?>
+        <div class="text-muted small">
+            <?= $count === 0 ? 'Keine Koordinatoren zugewiesen' : $count . ' Koordinator' . ($count === 1 ? '' : 'en') . ' zugewiesen' ?>
         </div>
-
+        <?php if (!empty($coaches)): ?>
+        <div class="text-muted small mt-1">
+            <?= implode(', ', array_map(fn($c) => e($c['first_name'] . ' ' . $c['last_name']), $coaches)) ?>
+        </div>
+        <?php endif; ?>
+        <div class="d-flex gap-2 flex-wrap mt-2">
+            <a href="/admin/teams/<?= (int)$team['id'] ?>/edit" data-save-scroll
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i>Bearbeiten
+            </a>
+            <form method="POST" action="/admin/teams/<?= (int)$team['id'] ?>/deactivate"
+                  onsubmit="return confirm('<?= e('Das Team wird deaktiviert. Alle Koordinatoren und Mitglieder bleiben im System, können sich aber nicht anmelden.') ?>')">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    Team deaktivieren
+                </button>
+            </form>
+        </div>
     </div>
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
 
 <?php if (!empty($inactive_teams)): ?>
-<div class="mt-4">
-    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#inactiveTeams"
-            aria-expanded="false">
-        <i class="bi bi-chevron-down"></i>
-        Inaktiv (<?= count($inactive_teams) ?>)
-    </button>
-    <div class="collapse mt-2" id="inactiveTeams">
-        <div class="row g-3">
-            <?php foreach ($inactive_teams as $team): ?>
-            <div class="col-12">
-                <div class="card border-secondary opacity-75">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h2 class="h5 fw-semibold mb-1 text-muted"><?= e($team['name']) ?></h2>
-                                <span class="badge bg-secondary">Deaktiviert</span>
-                                <p class="text-muted small mb-0 mt-1">
-                                    <?php
-                                    $count = count($coaches_by_team[$team['id']] ?? []);
-                                    echo $count === 0
-                                        ? 'Keine Trainer zugewiesen'
-                                        : $count . ' Trainer zugewiesen';
-                                    ?>
-                                </p>
-                            </div>
-                            <div class="d-flex gap-2 flex-wrap justify-content-end">
-                                <form method="POST"
-                                      action="/admin/teams/<?= $team['id'] ?>/reactivate"
-                                      onsubmit="return confirm('<?= e('Das Team wird reaktiviert. Koordinatoren können sich wieder anmelden.') ?>')">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
-                                    </button>
-                                </form>
-                                <form method="POST"
-                                      action="/admin/teams/<?= $team['id'] ?>/delete"
-                                      onsubmit="return confirm('<?= e('Team „' . $team['name'] . '" endgültig löschen? Alle Mitglieder, Listen, Ticker und sonstige Daten werden unwiderruflich gelöscht.') ?>')">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash me-1"></i>Endgültig löschen
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+<details class="mt-4">
+    <summary class="text-muted small mb-3" style="cursor:pointer;list-style:none;">
+        <i class="bi bi-chevron-right me-1"></i>Inaktiv (<?= count($inactive_teams) ?>)
+    </summary>
+    <div class="list-group mt-2 opacity-75">
+        <?php foreach ($inactive_teams as $team): ?>
+        <div class="list-group-item px-3 py-3">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                <div class="fw-semibold text-muted">
+                    <?= e($team['name']) ?>
+                    <span class="badge bg-secondary ms-1">Deaktiviert</span>
                 </div>
             </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<?php endif; ?>
-
-<!-- Create Team Modal -->
-<div class="modal fade" id="createTeamModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold">Team erstellen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <?php
+            $count = count($coaches_by_team[$team['id']] ?? []);
+            ?>
+            <div class="text-muted small">
+                <?= $count === 0 ? 'Keine Koordinatoren zugewiesen' : $count . ' Koordinator' . ($count === 1 ? '' : 'en') . ' zugewiesen' ?>
             </div>
-            <form method="POST" action="/admin/teams/create">
-                <?= csrf_field() ?>
-                <div class="modal-body">
-                    <label for="new_team_name" class="form-label fw-semibold small">Teamname</label>
-                    <input type="text"
-                           class="form-control min-touch"
-                           id="new_team_name"
-                           name="team_name"
-                           required
-                           maxlength="100"
-                           placeholder="z.B. U17 Herren">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        Abbrechen
+            <div class="d-flex gap-2 flex-wrap mt-2">
+                <form method="POST" action="/admin/teams/<?= (int)$team['id'] ?>/reactivate"
+                      onsubmit="return confirm('<?= e('Das Team wird reaktiviert. Koordinatoren können sich wieder anmelden.') ?>')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
                     </button>
-                    <button type="submit" class="btn btn-primary">Team erstellen</button>
-                </div>
-            </form>
+                </form>
+                <form method="POST" action="/admin/teams/<?= (int)$team['id'] ?>/delete"
+                      onsubmit="return confirm('<?= e('Team „' . $team['name'] . '" endgültig löschen? Alle Mitglieder, Listen, Ticker und sonstige Daten werden unwiderruflich gelöscht.') ?>')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash me-1"></i>Endgültig löschen
+                    </button>
+                </form>
+            </div>
         </div>
+        <?php endforeach; ?>
     </div>
-</div>
+</details>
+<?php endif; ?>
+
+<?php endif; ?>
