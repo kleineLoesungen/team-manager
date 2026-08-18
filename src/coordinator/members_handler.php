@@ -14,7 +14,7 @@ $success = !empty($_GET['success']) ? e($_GET['success']) : '';
 
 // All team members with their linked player records (player_id is NOT NULL after migration 024)
 $stmt = $pdo->prepare(
-    "SELECT u.id, u.username, u.is_active, u.email, u.confirmed_at,
+    "SELECT u.id, u.username, u.is_active, u.confirmed_at,
             p.first_name, p.last_name,
             p.id AS player_id, p.email AS player_email, p.phone AS player_phone,
             p.contact_name, p.contact_phone, p.contact_email, p.description,

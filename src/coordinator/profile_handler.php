@@ -50,16 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $phone !== '' ? $phone : null,
             $player_id,
         ]);
-        // Sync to users for legacy compatibility (name shown in some admin queries)
-        $pdo->prepare(
-            "UPDATE users SET first_name=?, last_name=?, email=?, phone=? WHERE id=?"
-        )->execute([
-            $first_name,
-            $last_name,
-            $email_raw !== '' ? $email_raw : null,
-            $phone !== '' ? $phone : null,
-            $user_id,
-        ]);
+        // Sync display_name session key and confirmed_at if needed
         reset_rls_context($pdo);
         set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', $user_id);
 

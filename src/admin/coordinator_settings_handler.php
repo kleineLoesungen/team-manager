@@ -50,8 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $pdo->prepare("UPDATE players SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE id = ?")
             ->execute([$first_name, $last_name, $email_val, $phone_val, (int)$coordinator['player_id']]);
-        $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ? AND role = 'coordinator'")
-            ->execute([$first_name, $last_name, $email_val, $coordinator_id]);
 
         redirect('/admin/coordinators/' . $coordinator_id . '/settings?success=' . urlencode('Daten gespeichert.'));
     }

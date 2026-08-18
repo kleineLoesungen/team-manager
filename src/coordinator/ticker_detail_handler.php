@@ -115,9 +115,10 @@ $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Freigabe members for info display
 $stmt = $pdo->prepare(
-    "SELECT u.first_name, u.last_name
+    "SELECT p.first_name, p.last_name
      FROM ticker_members tm
      JOIN users u ON tm.user_id = u.id
+     JOIN players p ON p.id = u.player_id
      WHERE tm.ticker_id = ? AND tm.team_id = ?"
 );
 $stmt->execute([$ticker_id, $_SESSION['team_id']]);

@@ -13,10 +13,12 @@ $pdo = get_db();
 
 // Fetch all active coordinators whose team is also active (cross-team; no team_id filter for admin)
 $stmt = $pdo->query(
-    "SELECT u.id, u.first_name, u.last_name, u.email
-     FROM users u JOIN teams t ON t.id = u.team_id
+    "SELECT u.id, p.first_name, p.last_name, p.email
+     FROM users u
+     JOIN teams t ON t.id = u.team_id
+     JOIN players p ON p.id = u.player_id
      WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
-     ORDER BY u.first_name, u.last_name"
+     ORDER BY p.first_name, p.last_name"
 );
 $all_coordinators = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -43,8 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Re-fetch recipients (never trust GET state for actual send)
         $re_stmt = $pdo->query(
-            "SELECT u.email FROM users u JOIN teams t ON t.id = u.team_id
-             WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE AND u.email IS NOT NULL"
+            "SELECT p.email FROM users u
+             JOIN teams t ON t.id = u.team_id
+             JOIN players p ON p.id = u.player_id
+             WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE AND p.email IS NOT NULL"
         );
         $recipients = $re_stmt->fetchAll(PDO::FETCH_COLUMN);
 

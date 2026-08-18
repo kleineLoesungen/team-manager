@@ -14,7 +14,7 @@ if ($player_id <= 0) {
 $pdo  = get_db();
 $stmt = $pdo->prepare(
     "SELECT p.id, p.first_name, p.last_name, p.club_id, p.email, p.phone,
-            p.contact_name, p.contact_phone, p.contact_email, p.description
+            p.contact_name, p.contact_phone, p.contact_email, p.description, p.is_active
      FROM players p
      WHERE p.id = ?"
 );
@@ -26,6 +26,11 @@ if (!$player) {
 }
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name ASC")->fetchAll();
+
+// Determine whether player can be deleted (must be inactive + no linked users)
+$linked_count_stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE player_id = ?");
+$linked_count_stmt->execute([$player_id]);
+$can_delete = !$player['is_active'] && (int)$linked_count_stmt->fetchColumn() === 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -66,11 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $player_id,
     ]);
 
-    // Keep linked member account name in sync with the canonical player name
-    $pdo->prepare(
-        "UPDATE users SET first_name = ?, last_name = ? WHERE player_id = ? AND role = 'member'"
-    )->execute([$first_name, $last_name, $player_id]);
-
     redirect('/admin/players?success=' . urlencode($first_name . ' ' . $last_name . ' gespeichert.'));
 }
 
@@ -79,6 +79,6 @@ $error = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Spieler bearbeiten', 'players', function() use ($player, $clubs, $error) {
+render_admin_page('Spieler bearbeiten', 'players', function() use ($player, $clubs, $error, $can_delete) {
     require ROOT_PATH . '/src/templates/admin/player_edit.php';
 });

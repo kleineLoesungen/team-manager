@@ -1,15 +1,24 @@
 <?php
 // src/templates/admin/player_edit.php — Edit player form
-// Variables: $player (array), $clubs (array), $error (string)
+// Variables: $player (array), $clubs (array), $error (string), $can_delete (bool)
 ?>
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= $error ?></div>
 <?php endif; ?>
 
-<div class="mb-3">
+<div class="mb-3 d-flex align-items-center gap-2">
     <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
+    <?php if (!$player['is_active']): ?>
+    <span class="badge bg-secondary">Deaktiviert</span>
+    <form method="POST" action="/admin/players/<?= (int)$player['id'] ?>/reactivate">
+        <?= csrf_field() ?>
+        <button type="submit" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
+        </button>
+    </form>
+    <?php endif; ?>
 </div>
 
 <form method="POST" action="/admin/players/<?= (int)$player['id'] ?>/edit">
@@ -111,3 +120,19 @@
         </div>
     </div>
 </form>
+
+<?php if ($can_delete): ?>
+<div class="card border-danger mt-4">
+    <div class="card-header text-danger fw-semibold">Gefahrenzone</div>
+    <div class="card-body">
+        <p class="text-muted small">Dieser Spieler ist deaktiviert und hat keine verknüpften Benutzerkonten. Er kann dauerhaft gelöscht werden.</p>
+        <form method="POST" action="/admin/players/<?= (int)$player['id'] ?>/delete"
+              onsubmit="return confirm('Spieler endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-danger btn-sm">
+                <i class="bi bi-trash me-1"></i>Spieler endgültig löschen
+            </button>
+        </form>
+    </div>
+</div>
+<?php endif; ?>

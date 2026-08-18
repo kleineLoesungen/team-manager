@@ -46,12 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
             $stmt = $pdo->prepare(
-                "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash, email, player_id)
-                 VALUES (?, 'coordinator', ?, ?, ?, ?, ?, ?)
+                "INSERT INTO users (team_id, role, username, password_hash, player_id)
+                 VALUES (?, 'coordinator', ?, ?, ?)
                  RETURNING id"
             );
-            $stmt->execute([$team_id, $first_name, $last_name, $username, $password_hash,
-                            $email_raw !== '' ? $email_raw : null, $player_id]);
+            $stmt->execute([$team_id, $username, $password_hash, $player_id]);
             $new_user_id = (int)$stmt->fetchColumn();
 
             $pdo->prepare(

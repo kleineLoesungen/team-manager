@@ -93,9 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $club_id > 0 ? $club_id : null,
                 $player_id,
             ]);
-            $pdo->prepare(
-                "UPDATE users SET first_name=?, last_name=? WHERE player_id=? AND role='member'"
-            )->execute([$first_name, $last_name, $player_id]);
             reset_rls_context($pdo);
             set_team_context($pdo, (int)$_SESSION['team_id'], 'member', $user_id);
 

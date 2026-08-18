@@ -46,8 +46,8 @@ $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 $agg_sql = "
     SELECT
         u.id           AS player_id,
-        u.first_name,
-        u.last_name,
+        p.first_name,
+        p.last_name,
         c.id           AS column_id,
         c.name         AS column_name,
         c.data_type,
@@ -61,6 +61,7 @@ $agg_sql = "
             0
         ) AS aggregated_value
     FROM users u
+    JOIN players p ON p.id = u.player_id
     CROSS JOIN (
         SELECT id, name, data_type, sort_order
         FROM columns
@@ -101,8 +102,8 @@ if ($filter_date_from !== null || $filter_date_to !== null) {
 }
 
 $agg_sql .= "
-    GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.data_type, c.sort_order
-    ORDER BY u.first_name, u.last_name, c.sort_order
+    GROUP BY u.id, p.first_name, p.last_name, c.id, c.name, c.data_type, c.sort_order
+    ORDER BY p.first_name, p.last_name, c.sort_order
 ";
 
 $agg_stmt = $pdo->prepare($agg_sql);
@@ -193,8 +194,8 @@ $ranking_params = array_merge(
 $ranking_sql = "
     SELECT
         u.id           AS player_id,
-        u.first_name,
-        u.last_name,
+        p.first_name,
+        p.last_name,
         c.id           AS column_id,
         c.name         AS column_name,
         c.data_type,
@@ -245,6 +246,7 @@ $ranking_sql = "
         COALESCE(SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN 1 ELSE NULL END), 0) AS count_8_12w
 
     FROM users u
+    JOIN players p ON p.id = u.player_id
     CROSS JOIN (
         SELECT id, name, data_type, sort_order
         FROM columns
@@ -263,8 +265,8 @@ if ($filter_list_id !== null) {
 }
 
 $ranking_sql .= "
-    GROUP BY u.id, u.first_name, u.last_name, c.id, c.name, c.data_type, c.sort_order
-    ORDER BY u.first_name, u.last_name, c.sort_order
+    GROUP BY u.id, p.first_name, p.last_name, c.id, c.name, c.data_type, c.sort_order
+    ORDER BY p.first_name, p.last_name, c.sort_order
 ";
 
 $ranking_stmt = $pdo->prepare($ranking_sql);
@@ -327,9 +329,10 @@ if ($sort_col_id > 0) {
 // ── Per-list breakdown: member selector + all-members aggregate view ──────────
 // Fetch all active members for the selector dropdown
 $members_stmt = $pdo->prepare(
-    "SELECT id, first_name, last_name FROM users
-     WHERE team_id = ? AND role = 'member' AND is_active = TRUE
-     ORDER BY first_name, last_name"
+    "SELECT u.id, p.first_name, p.last_name FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
+     ORDER BY p.first_name, p.last_name"
 );
 $members_stmt->execute([$team_id]);
 $all_members = $members_stmt->fetchAll(PDO::FETCH_ASSOC);

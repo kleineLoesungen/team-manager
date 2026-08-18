@@ -62,8 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // RLS blocks unauthenticated reads — temporarily bypass for credential lookup
                 set_admin_context($pdo);
                 $stmt = $pdo->prepare(
-                    "SELECT id, team_id, role, first_name, last_name, is_active, password_hash, confirmed_at
-                     FROM users WHERE username = ?"
+                    "SELECT u.id, u.team_id, u.role, p.first_name, p.last_name,
+                            u.is_active, u.password_hash, u.confirmed_at
+                     FROM users u
+                     JOIN players p ON p.id = u.player_id
+                     WHERE u.username = ?"
                 );
                 $stmt->execute([$username]);
                 $user = $stmt->fetch();

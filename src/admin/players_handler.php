@@ -13,6 +13,7 @@ $filter_club_id = (int)($_GET['club_id'] ?? 0);
 $filter_team_id = (int)($_GET['team_id'] ?? 0);
 
 $sql    = "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.contact_email, p.description,
+                  p.is_active,
                   c.id AS club_id, c.name AS club_name
            FROM players p
            LEFT JOIN clubs c ON c.id = p.club_id
@@ -40,12 +41,14 @@ $sql .= " ORDER BY p.last_name ASC, p.first_name ASC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
-$players = $stmt->fetchAll();
+$all_players     = $stmt->fetchAll();
+$players         = array_values(array_filter($all_players, fn($p) => (bool)$p['is_active']));
+$inactive_players = array_values(array_filter($all_players, fn($p) => !(bool)$p['is_active']));
 
 // Fetch linked member accounts for the current result set (grouped by player)
 $linked_users_map = [];
-if (!empty($players)) {
-    $player_ids   = array_column($players, 'id');
+if (!empty($all_players)) {
+    $player_ids   = array_column($all_players, 'id');
     $placeholders = implode(',', array_fill(0, count($player_ids), '?'));
     $u_stmt = $pdo->prepare(
         "SELECT u.id, u.player_id, u.username, u.is_active,
@@ -62,14 +65,9 @@ if (!empty($players)) {
 }
 
 // Unlinked active member users grouped by team — for the two-step team→user link UI
-$unlinked_rows = $pdo->query(
-    "SELECT u.id, u.username, u.first_name, u.last_name,
-            t.id AS team_id, t.name AS team_name, t.is_active AS team_active
-     FROM users u
-     JOIN teams t ON t.id = u.team_id
-     WHERE u.role = 'member' AND u.player_id IS NULL AND u.is_active = TRUE
-     ORDER BY t.is_active DESC, t.name ASC, u.last_name ASC, u.first_name ASC"
-)->fetchAll();
+// After migration 024, player_id is NOT NULL for all users, so this always returns empty.
+// Kept for UI compatibility; personal data columns now come from players via JOIN.
+$unlinked_rows = [];
 
 $unlinked_by_team = [];
 foreach ($unlinked_rows as $m) {
@@ -94,7 +92,7 @@ $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY
 $teams = $pdo->query("SELECT id, name, is_active FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
 render_admin_page('Spieler', 'players', function() use (
-    $players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
+    $players, $inactive_players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
     $search, $filter_club_id, $filter_team_id
 ) {
     require ROOT_PATH . '/src/templates/admin/players.php';

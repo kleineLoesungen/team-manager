@@ -65,10 +65,6 @@ if ($action === 'edit') {
         $description !== '' ? $description : null,
         $player_id,
     ]);
-    // Keep linked member account name in sync with the canonical player name
-    $pdo->prepare(
-        "UPDATE users SET first_name=?, last_name=? WHERE player_id=? AND role='member'"
-    )->execute([$first_name, $last_name, $player_id]);
     redirect('/admin/players?success=' . urlencode(
         $first_name . ' ' . $last_name . ' gespeichert.'
     ));
@@ -107,6 +103,33 @@ if ($action === 'edit') {
 } elseif ($action === 'unlink-user') {
     // player_id is NOT NULL after migration 024 — every user must remain linked to a player.
     redirect('/admin/players?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Spielerprofil.'));
+
+} elseif ($action === 'deactivate') {
+    $pdo->prepare("UPDATE players SET is_active = FALSE WHERE id = ?")
+        ->execute([$player_id]);
+    redirect('/admin/players?success=' . urlencode('Spieler deaktiviert.'));
+
+} elseif ($action === 'reactivate') {
+    $pdo->prepare("UPDATE players SET is_active = TRUE WHERE id = ?")
+        ->execute([$player_id]);
+    redirect('/admin/players?success=' . urlencode('Spieler reaktiviert.'));
+
+} elseif ($action === 'delete') {
+    // Safety check: only deactivated players can be deleted
+    $chk = $pdo->prepare("SELECT is_active FROM players WHERE id = ?");
+    $chk->execute([$player_id]);
+    $p = $chk->fetch();
+    if (!$p || $p['is_active']) {
+        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Nur deaktivierte Spieler können gelöscht werden.'));
+    }
+    // Safety check: player must have no linked user accounts
+    $linked = $pdo->prepare("SELECT COUNT(*) FROM users WHERE player_id = ?");
+    $linked->execute([$player_id]);
+    if ((int)$linked->fetchColumn() > 0) {
+        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Spieler ist noch mit Benutzerkonten verknüpft. Konten zuerst löschen.'));
+    }
+    $pdo->prepare("DELETE FROM players WHERE id = ? AND is_active = FALSE")->execute([$player_id]);
+    redirect('/admin/players?success=' . urlencode('Spieler gelöscht.'));
 
 } else {
     redirect('/admin/players');

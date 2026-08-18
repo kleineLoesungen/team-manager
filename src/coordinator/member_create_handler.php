@@ -71,11 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
                 $pdo->prepare(
-                    "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash, player_id)
-                     VALUES (?, 'member', ?, ?, ?, ?, ?)"
+                    "INSERT INTO users (team_id, role, username, password_hash, player_id)
+                     VALUES (?, 'member', ?, ?, ?)"
                 )->execute([
                     $team_id,
-                    $linked_player['first_name'], $linked_player['last_name'],
                     $username, $password_hash, $player_id,
                 ]);
 
@@ -119,9 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
                 $pdo->prepare(
-                    "INSERT INTO users (team_id, role, first_name, last_name, username, password_hash, player_id)
-                     VALUES (?, 'member', ?, ?, ?, ?, ?)"
-                )->execute([$team_id, $first_name, $last_name, $username, $password_hash, $new_player_id]);
+                    "INSERT INTO users (team_id, role, username, password_hash, player_id)
+                     VALUES (?, 'member', ?, ?, ?)"
+                )->execute([$team_id, $username, $password_hash, $new_player_id]);
 
                 $credential_username = $username;
                 $credential_password = $plain_password;

@@ -1,7 +1,7 @@
 <?php
 // src/templates/admin/players.php — Admin player list
-// Variables: $players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
-//            $search, $filter_club_id, $filter_team_id
+// Variables: $players, $inactive_players, $clubs, $teams, $linked_users_map,
+//            $unlinked_by_team, $has_unlinked, $search, $filter_club_id, $filter_team_id
 ?>
 <?php if (!empty($_GET['error'])): ?>
 <div class="alert alert-danger"><?= e($_GET['error']) ?></div>
@@ -11,7 +11,7 @@
 <?php endif; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <span class="text-muted"><?= count($players) ?> Spieler</span>
+    <span class="text-muted"><?= count($players) ?> aktive Spieler</span>
     <a href="/admin/players/create" class="btn btn-primary min-touch">
         <i class="bi bi-plus-lg me-1"></i>Spieler hinzufügen
     </a>
@@ -68,13 +68,13 @@
 
 <?php if (empty($players)): ?>
 <div class="alert alert-info">
-    Keine Spieler gefunden.
+    Keine aktiven Spieler gefunden.
     <?php if ($search === '' && $filter_club_id === 0 && $filter_team_id === 0): ?>
     <a href="/admin/players/create" class="alert-link">Ersten Spieler anlegen</a>.
     <?php endif; ?>
 </div>
 <?php else: ?>
-<div class="list-group">
+<div class="list-group mb-4">
     <?php foreach ($players as $p): ?>
     <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
     <div class="list-group-item px-3 py-3">
@@ -162,17 +162,88 @@
         </form>
         <?php endif; ?>
 
-        <!-- Bearbeiten link -->
-        <div class="mt-2">
+        <!-- Bearbeiten + Deaktivieren -->
+        <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
             <a href="/admin/players/<?= (int)$p['id'] ?>/edit" data-save-scroll
                class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-pencil me-1"></i>Bearbeiten
             </a>
+            <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/deactivate"
+                  onsubmit="return confirm('Spieler deaktivieren?')">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-pause-circle me-1"></i>Deaktivieren
+                </button>
+            </form>
         </div>
 
     </div>
     <?php endforeach; ?>
 </div>
+<?php endif; ?>
+
+<?php if (!empty($inactive_players)): ?>
+<details class="mb-4">
+    <summary class="text-muted small mb-2" style="cursor:pointer">
+        <?= count($inactive_players) ?> deaktivierte Spieler anzeigen
+    </summary>
+    <div class="list-group mt-2">
+        <?php foreach ($inactive_players as $p): ?>
+        <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
+        <div class="list-group-item px-3 py-3 opacity-75">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                    <div class="fw-semibold text-muted">
+                        <?= e($p['last_name']) ?>, <?= e($p['first_name']) ?>
+                        <span class="badge bg-secondary ms-1">Inaktiv</span>
+                    </div>
+                    <?php if (!empty($p['club_name'])): ?>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle mt-1">
+                        <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>
+                    </span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Linked user accounts -->
+            <?php if (!empty($linked)): ?>
+            <div class="mb-2">
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                    <?php foreach ($linked as $u): ?>
+                    <?php
+                        $team_ok  = !empty($u['team_active']);
+                        $user_ok  = (bool)$u['is_active'];
+                        $bg_class = ($team_ok && $user_ok) ? 'bg-success-subtle text-success-emphasis border-success-subtle'
+                                  : 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle';
+                    ?>
+                    <span class="badge border py-1 px-2 d-inline-flex align-items-center gap-1 <?= $bg_class ?>">
+                        <i class="bi bi-person me-1"></i><?= e($u['username']) ?>
+                        <?php if (!empty($u['team_name'])): ?>
+                        <span class="opacity-75">(<?= e($u['team_name']) ?>)</span>
+                        <?php endif; ?>
+                    </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Reaktivieren + Bearbeiten -->
+            <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                <a href="/admin/players/<?= (int)$p['id'] ?>/edit"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil me-1"></i>Bearbeiten
+                </a>
+                <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/reactivate">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
+                    </button>
+                </form>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</details>
 <?php endif; ?>
 
 <?php if ($has_unlinked): ?>

@@ -1241,6 +1241,29 @@ function maybe_migrate_db(PDO $pdo): void {
         $pdo->exec("SELECT set_config('app.is_admin', '', false)");
         error_log('team-manager: migration 024 player_id enforce skipped — ' . $e->getMessage());
     }
+
+    // Migration 025a: is_active flag on players (soft-delete support)
+    try {
+        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 025a players.is_active skipped — ' . $e->getMessage());
+    }
+
+    // Migration 025b: drop deprecated personal columns from users (canonical data is in players)
+    foreach (['first_name', 'last_name', 'email', 'phone', 'club_id'] as $col) {
+        try {
+            $col_exists = (bool)$pdo->query(
+                "SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = '{$schema}' AND table_name = 'users' AND column_name = '{$col}'"
+            )->fetchColumn();
+            if ($col_exists) {
+                $pdo->exec("ALTER TABLE {$schema}.users DROP COLUMN {$col}");
+                error_log("team-manager: migration 025b dropped users.{$col}");
+            }
+        } catch (PDOException $e) {
+            error_log("team-manager: migration 025b drop users.{$col} skipped — " . $e->getMessage());
+        }
+    }
 }
 
 /**

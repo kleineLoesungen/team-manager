@@ -117,8 +117,8 @@ match (true) {
             require ROOT_PATH . '/src/admin/player_edit_handler.php';
         })(),
 
-    // /admin/players/{id}/(link-user|unlink-user) — POST actions
-    (bool)preg_match('#^/admin/players/(\d+)/(link-user|unlink-user)$#', $path, $matches)
+    // /admin/players/{id}/(link-user|unlink-user|deactivate|reactivate|delete) — POST actions
+    (bool)preg_match('#^/admin/players/(\d+)/(link-user|unlink-user|deactivate|reactivate|delete)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['player_id'] = (int)$matches[1];
             $_REQUEST['action']    = $matches[2];

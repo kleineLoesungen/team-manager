@@ -62,11 +62,8 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
 
                 <div class="info-mode mt-1 d-none" data-mode="contact">
                     <?php
-                    // Collect unique member emails: account email (u.email) + player email (p.email)
-                    $member_emails = array_unique(array_filter([
-                        $m['player_email'] ?? null,
-                        ($m['email'] !== ($m['player_email'] ?? null)) ? ($m['email'] ?? null) : null,
-                    ]));
+                    // Canonical email is players.email (stored as player_email)
+                    $member_emails = array_filter([$m['player_email'] ?? null]);
                     ?>
                     <?php foreach ($member_emails as $addr): ?>
                     <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($addr) ?></div>

@@ -51,10 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $club_id > 0 ? $club_id : null,
         $player_id,
     ]);
-    // Keep linked member account name in sync with the canonical player name
-    $pdo->prepare(
-        "UPDATE users SET first_name=?, last_name=? WHERE player_id=? AND role='member'"
-    )->execute([$first_name, $last_name, $player_id]);
     reset_rls_context($pdo);
     set_team_context($pdo, $team_id, 'coordinator', $user_id);
 
@@ -76,9 +72,10 @@ if (!$player) redirect('/coordinator/members');
 
 // All linked user accounts (every team)
 $al_stmt = $pdo->prepare(
-    "SELECT u.id AS user_id, u.username, u.email AS user_email, u.is_active AS user_active,
+    "SELECT u.id AS user_id, u.username, p.email AS user_email, u.is_active AS user_active,
             t.id AS team_id, t.name AS team_name, t.is_active AS team_active
      FROM users u
+     JOIN players p ON p.id = u.player_id
      JOIN teams t ON t.id = u.team_id
      WHERE u.player_id = ? AND u.role = 'member'
      ORDER BY t.name ASC, u.username ASC"

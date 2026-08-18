@@ -13,11 +13,12 @@ $teams = $teams_stmt->fetchAll();
 
 // Fetch coordinators per team via coordinator_teams (supports multi-team assignments)
 $coaches_stmt = $pdo->query(
-    "SELECT u.id, ct.team_id, u.first_name, u.last_name, u.username, u.is_active
+    "SELECT u.id, ct.team_id, p.first_name, p.last_name, u.username, u.is_active
      FROM coordinator_teams ct
      JOIN users u ON u.id = ct.user_id
+     JOIN players p ON p.id = u.player_id
      WHERE ct.left_at IS NULL
-     ORDER BY u.first_name, u.last_name"
+     ORDER BY p.first_name, p.last_name"
 );
 $coaches_by_team = [];
 foreach ($coaches_stmt->fetchAll() as $coach) {
