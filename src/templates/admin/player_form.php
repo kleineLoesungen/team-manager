@@ -60,6 +60,13 @@
                placeholder="+49 …">
     </div>
 
+    <div class="mb-3">
+        <label for="contact_email" class="form-label fw-semibold">Kontakt-E-Mail <span class="text-muted fw-normal">(optional)</span></label>
+        <input type="email" id="contact_email" name="contact_email" class="form-control"
+               value="<?= e($form['contact_email']) ?>" maxlength="254"
+               placeholder="eltern@beispiel.de">
+    </div>
+
     <div class="mb-4">
         <label for="description" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
         <textarea id="description" name="description" class="form-control" rows="3"

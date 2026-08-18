@@ -38,14 +38,13 @@ if ($action === 'link-user') {
     $user_id = (int)($_POST['user_id'] ?? 0);
     if ($user_id <= 0) redirect($back);
 
-    // Must be an unlinked active member of MY team
+    // Member must be active on MY team; after migration 024 all members already have a player link
     $u = $pdo->prepare(
-        "SELECT id FROM users
-         WHERE id = ? AND team_id = ? AND role = 'member' AND player_id IS NULL AND is_active = TRUE"
+        "SELECT id FROM users WHERE id = ? AND team_id = ? AND role = 'member' AND is_active = TRUE"
     );
     $u->execute([$user_id, $team_id]);
     if (!$u->fetch()) {
-        redirect($back . '?error=' . urlencode('Mitglied nicht gefunden oder bereits verknüpft.'));
+        redirect($back . '?error=' . urlencode('Mitglied nicht gefunden.'));
     }
 
     // Enforce one-to-one: player may have at most one user per team
@@ -63,16 +62,9 @@ if ($action === 'link-user') {
     redirect($back);
 
 } elseif ($action === 'unlink-user') {
-    $user_id = (int)($_POST['user_id'] ?? 0);
-    if ($user_id <= 0) redirect($back);
-
-    // Only unlink users from MY team that are linked to THIS player
-    $pdo->prepare(
-        "UPDATE users SET player_id = NULL
-         WHERE id = ? AND player_id = ? AND team_id = ? AND role = 'member'"
-    )->execute([$user_id, $player_id, $team_id]);
-
-    redirect($back);
+    // player_id is NOT NULL — every user must be linked to a player.
+    // To reassign, use /admin/players or delete and recreate the member account.
+    redirect($back . '?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Spielerprofil.'));
 
 } else {
     redirect($back);

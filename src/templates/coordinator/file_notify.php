@@ -62,11 +62,18 @@
     </div>
 
     <!-- 3. Mail-Vorschau -->
+    <?php
+    $both_count = count(array_filter($with_email,
+        fn($u) => !empty($u['email']) && !empty($u['contact_email'])));
+    ?>
     <div class="card mb-3">
         <div class="card-header small fw-semibold">Vorschau der E-Mail</div>
         <div class="card-body">
             <p class="mb-1">
                 <span class="text-muted small">An:</span> <?= count($with_email) ?> Empfänger
+                <?php if ($both_count > 0): ?>
+                <span class="text-muted small">(<?= $both_count ?> davon erhalten auch eine Kopie an die Kontakt-E-Mail)</span>
+                <?php endif; ?>
             </p>
             <p class="mb-1">
                 <span class="text-muted small">Betreff:</span> <?= e($subject_prefilled) ?>

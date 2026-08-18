@@ -88,6 +88,15 @@ if ($action === 'reset-password') {
         $pdo->prepare(
             "INSERT INTO coordinator_teams (user_id, team_id, joined_at) VALUES (?, ?, NOW())"
         )->execute([$coordinator_id, $new_team_id]);
+
+        // If coordinator has no primary team, set it so single-team login path works
+        $cur = $pdo->prepare("SELECT team_id FROM users WHERE id = ? AND role = 'coordinator'");
+        $cur->execute([$coordinator_id]);
+        if (!$cur->fetchColumn()) {
+            $pdo->prepare("UPDATE users SET team_id = ? WHERE id = ? AND role = 'coordinator'")
+                ->execute([$new_team_id, $coordinator_id]);
+        }
+
         redirect($settings_url);
     } catch (PDOException $e) {
         error_log('Coordinator add-team error: ' . $e->getMessage());
@@ -104,12 +113,14 @@ if ($action === 'reset-password') {
         if (!$club_check->fetch()) {
             redirect($settings_url . '?error=' . urlencode('Verein nicht gefunden oder inaktiv.'));
         }
-        $pdo->prepare("UPDATE users SET club_id = ? WHERE id = ? AND role = 'coordinator'")
-            ->execute([$club_id, $coordinator_id]);
-    } else {
-        $pdo->prepare("UPDATE users SET club_id = NULL WHERE id = ? AND role = 'coordinator'")
-            ->execute([$coordinator_id]);
     }
+
+    // Write club to players (canonical person table). admin context already active via require_admin().
+    $pdo->prepare(
+        "UPDATE players SET club_id = ?
+         WHERE id = (SELECT player_id FROM users WHERE id = ? AND role = 'coordinator')"
+    )->execute([$club_id > 0 ? $club_id : null, $coordinator_id]);
+
     redirect($settings_url . '?success=' . urlencode('Verein gespeichert.'));
 
 } elseif ($action === 'delete') {
@@ -135,6 +146,21 @@ if ($action === 'reset-password') {
         "UPDATE coordinator_teams SET left_at = NOW()
          WHERE user_id = ? AND team_id = ? AND left_at IS NULL"
     )->execute([$coordinator_id, $team_id_to_remove]);
+
+    // Keep users.team_id in sync — login single-team fast path uses it, not coordinator_teams
+    $cur = $pdo->prepare("SELECT team_id FROM users WHERE id = ? AND role = 'coordinator'");
+    $cur->execute([$coordinator_id]);
+    if ((int)$cur->fetchColumn() === $team_id_to_remove) {
+        $next = $pdo->prepare(
+            "SELECT team_id FROM coordinator_teams
+             WHERE user_id = ? AND left_at IS NULL
+             ORDER BY joined_at DESC LIMIT 1"
+        );
+        $next->execute([$coordinator_id]);
+        $next_team_id = $next->fetchColumn() ?: null;
+        $pdo->prepare("UPDATE users SET team_id = ? WHERE id = ? AND role = 'coordinator'")
+            ->execute([$next_team_id, $coordinator_id]);
+    }
 
     redirect($settings_url);
 

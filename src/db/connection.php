@@ -661,6 +661,7 @@ function maybe_migrate_db(PDO $pdo): void {
                 phone        VARCHAR(50) NULL,
                 contact_name  VARCHAR(100) NULL,
                 contact_phone VARCHAR(50)  NULL,
+                contact_email VARCHAR(254) NULL,
                 created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )");
             $pdo->exec("CREATE INDEX IF NOT EXISTS idx_players_club ON {$schema}.players(club_id)");
@@ -1138,6 +1139,45 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 018 players.contact_phone skipped — ' . $e->getMessage());
     }
 
+    // Migration 021: players.contact_email — email address of the emergency/parent contact person
+    try {
+        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS contact_email VARCHAR(254) NULL");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 021 players.contact_email skipped — ' . $e->getMessage());
+    }
+
+    // Migration 023: sync users first/last name from players for linked members — players is the canonical source
+    // because coordinators edit player profiles; users.first_name/last_name is never updated after account creation.
+    try {
+        $pdo->exec(
+            "UPDATE {$schema}.users u
+             SET first_name = p.first_name,
+                 last_name  = p.last_name
+             FROM {$schema}.players p
+             WHERE u.player_id = p.id
+               AND u.role = 'member'
+               AND (u.first_name <> p.first_name OR u.last_name <> p.last_name)"
+        );
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 023 users name sync skipped — ' . $e->getMessage());
+    }
+
+    // Migration 022: backfill players.email from users.email for linked members where players.email is NULL
+    // users.email is not edited in normal flow; players.email is the canonical address for members.
+    try {
+        $pdo->exec(
+            "UPDATE {$schema}.players p
+             SET email = u.email
+             FROM {$schema}.users u
+             WHERE u.player_id = p.id
+               AND u.role = 'member'
+               AND u.email IS NOT NULL
+               AND (p.email IS NULL OR p.email = '')"
+        );
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 022 players.email backfill skipped — ' . $e->getMessage());
+    }
+
     // Migration 020: teams.sort_order — custom ordering for team lists
     try {
         $pdo->exec("ALTER TABLE {$schema}.teams ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0");
@@ -1169,6 +1209,37 @@ function maybe_migrate_db(PDO $pdo): void {
         )");
     } catch (PDOException $e) {
         error_log('team-manager: migration 019 pav_select skipped — ' . $e->getMessage());
+    }
+
+    // Migration 024: create player records for all users without player_id; enforce NOT NULL.
+    // For production: run database/migrate_024_player_link.sql FIRST (makes this a no-op).
+    // For dev/fresh installs: this handles both initial setup and any gaps.
+    try {
+        $pdo->exec("SELECT set_config('app.is_admin', 'true', false)");
+        $pdo->exec("
+            DO \$\$
+            DECLARE
+                u   RECORD;
+                pid INT;
+            BEGIN
+                FOR u IN
+                    SELECT id, first_name, last_name, email, phone, club_id, created_at
+                    FROM {$schema}.users
+                    WHERE player_id IS NULL
+                LOOP
+                    INSERT INTO {$schema}.players (first_name, last_name, email, phone, club_id, created_at)
+                    VALUES (u.first_name, u.last_name, u.email, u.phone, u.club_id, u.created_at)
+                    RETURNING id INTO pid;
+
+                    UPDATE {$schema}.users SET player_id = pid WHERE id = u.id;
+                END LOOP;
+            END \$\$
+        ");
+        $pdo->exec("ALTER TABLE {$schema}.users ALTER COLUMN player_id SET NOT NULL");
+        $pdo->exec("SELECT set_config('app.is_admin', '', false)");
+    } catch (PDOException $e) {
+        $pdo->exec("SELECT set_config('app.is_admin', '', false)");
+        error_log('team-manager: migration 024 player_id enforce skipped — ' . $e->getMessage());
     }
 }
 
@@ -1353,6 +1424,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         phone        VARCHAR(50) NULL,
         contact_name  VARCHAR(100) NULL,
         contact_phone VARCHAR(50)  NULL,
+        contact_email VARCHAR(254) NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_players_club ON {$s}.players(club_id)");

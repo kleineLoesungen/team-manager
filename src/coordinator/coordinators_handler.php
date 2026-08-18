@@ -11,15 +11,16 @@ $pdo = get_db();
 // grouped by team. Requires admin context to cross team boundaries.
 set_admin_context($pdo);
 $stmt = $pdo->query(
-    "SELECT u.id, u.first_name, u.last_name, u.phone, u.email,
+    "SELECT u.id, p.first_name, p.last_name, p.phone, p.email,
             cl.name AS club_name,
             t.id AS team_id, t.name AS team_name, t.sort_order AS team_sort_order
      FROM coordinator_teams ct
      JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
-     LEFT JOIN clubs cl ON cl.id = u.club_id
+     JOIN players p ON p.id = u.player_id
+     LEFT JOIN clubs cl ON cl.id = p.club_id
      JOIN teams t ON t.id = ct.team_id AND t.is_active = TRUE
      WHERE ct.left_at IS NULL
-     ORDER BY t.sort_order ASC, t.name ASC, u.last_name ASC, u.first_name ASC"
+     ORDER BY t.sort_order ASC, t.name ASC, p.last_name ASC, p.first_name ASC"
 );
 $rows = $stmt->fetchAll();
 reset_rls_context($pdo);

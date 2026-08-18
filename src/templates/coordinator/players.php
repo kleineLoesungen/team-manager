@@ -108,13 +108,17 @@ declare(strict_types=1);
                     <i class="bi bi-telephone me-1"></i><?= e($p['phone']) ?>
                 </div>
                 <?php endif; ?>
-                <?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>
+                <?php if (!empty($p['contact_name']) || !empty($p['contact_phone']) || !empty($p['contact_email'])): ?>
                 <div class="text-muted small">
                     <i class="bi bi-person-lines-fill me-1"></i>
                     Kontakt: <?= e($p['contact_name'] ?? '') ?>
                     <?php if (!empty($p['contact_phone'])): ?>
                     <?php if (!empty($p['contact_name'])): ?>, <?php endif; ?>
                     <?= e($p['contact_phone']) ?>
+                    <?php endif; ?>
+                    <?php if (!empty($p['contact_email'])): ?>
+                    <?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>, <?php endif; ?>
+                    <?= e($p['contact_email']) ?>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>

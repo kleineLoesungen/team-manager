@@ -52,13 +52,17 @@ $active_teams = array_filter(
                 <?php if (!empty($player['description'])): ?>
                 <div class="text-muted small mb-1"><?= nl2br(e($player['description'])) ?></div>
                 <?php endif; ?>
-                <?php if (!empty($player['contact_name']) || !empty($player['contact_phone'])): ?>
+                <?php if (!empty($player['contact_name']) || !empty($player['contact_phone']) || !empty($player['contact_email'])): ?>
                 <div class="text-muted small mb-1">
                     <i class="bi bi-person-lines-fill me-1"></i>
                     Kontakt: <?= e($player['contact_name'] ?? '') ?>
                     <?php if (!empty($player['contact_phone'])): ?>
                     <?php if (!empty($player['contact_name'])): ?>, <?php endif; ?>
                     <a href="tel:<?= e($player['contact_phone']) ?>"><?= e($player['contact_phone']) ?></a>
+                    <?php endif; ?>
+                    <?php if (!empty($player['contact_email'])): ?>
+                    <?php if (!empty($player['contact_name']) || !empty($player['contact_phone'])): ?>, <?php endif; ?>
+                    <?= e($player['contact_email']) ?>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -108,6 +112,11 @@ $active_teams = array_filter(
                         <input type="text" name="contact_phone" class="form-control form-control-sm"
                                value="<?= e($player['contact_phone'] ?? '') ?>" placeholder="optional">
                     </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-medium">Kontakt-E-Mail</label>
+                        <input type="email" name="contact_email" class="form-control form-control-sm"
+                               value="<?= e($player['contact_email'] ?? '') ?>" placeholder="optional">
+                    </div>
                     <?php if (!empty($clubs)): ?>
                     <div class="col-12">
                         <label class="form-label small fw-medium">Verein</label>
@@ -155,8 +164,11 @@ $active_teams = array_filter(
                     <?php if (!$u['user_active']): ?>
                     <span class="badge bg-secondary ms-1">Inaktiv</span>
                     <?php endif; ?>
+                    <?php if (!empty($u['user_email'])): ?>
+                    <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($u['user_email']) ?></div>
+                    <?php endif; ?>
                 </div>
-                <div class="d-flex gap-1 flex-shrink-0">
+                <div class="d-flex gap-1 flex-shrink-0 flex-wrap">
                     <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/reset-password"
                           onsubmit="return confirm('Das Passwort wird zurückgesetzt und einmalig angezeigt.')">
                         <?= csrf_field() ?>
@@ -165,6 +177,10 @@ $active_teams = array_filter(
                             <i class="bi bi-key me-1"></i>Passwort
                         </button>
                     </form>
+                    <a href="/coordinator/members/<?= (int)$u['user_id'] ?>/change-player?from_player=<?= (int)$player_id ?>"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left-right me-1"></i>Spieler
+                    </a>
                     <?php if ($u['user_active']): ?>
                     <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/deactivate"
                           onsubmit="return confirm('Mitglied deaktivieren?')">
@@ -362,28 +378,3 @@ foreach ($cross_stats as $stat) {
     <?php endif; ?>
 </div>
 
-<?php if (!empty($my_linked)): ?>
-<div class="card border-danger mb-4">
-    <div class="card-header text-danger fw-semibold">Gefahrenzone</div>
-    <div class="card-body">
-        <?php foreach ($my_linked as $u): ?>
-        <form method="POST"
-              action="/coordinator/players/<?= (int)$player_id ?>/unlink-user"
-              class="mb-2 last-mb-0">
-            <?= csrf_field() ?>
-            <input type="hidden" name="user_id" value="<?= (int)$u['user_id'] ?>">
-            <div class="d-flex justify-content-between align-items-center gap-3">
-                <div class="small">
-                    Verknüpfung mit <strong><?= e($u['username']) ?></strong> aufheben
-                </div>
-                <button type="submit"
-                        class="btn btn-sm btn-outline-danger flex-shrink-0"
-                        onclick="return confirm('<?= e('Verknüpfung mit ' . $u['username'] . ' wirklich aufheben?') ?>')">
-                    <i class="bi bi-unlink me-1"></i>Trennen
-                </button>
-            </div>
-        </form>
-        <?php endforeach; ?>
-    </div>
-</div>
-<?php endif; ?>

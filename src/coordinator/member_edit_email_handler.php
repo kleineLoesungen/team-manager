@@ -1,6 +1,6 @@
 <?php
 // src/coordinator/member_edit_email_handler.php — GET+POST /coordinator/members/{id}/edit-email
-// Coordinator-only: set or update a member's email address.
+// Coordinator-only: set or update a member's email address via their player record.
 
 declare(strict_types=1);
 
@@ -13,9 +13,12 @@ if ($member_id <= 0) {
 
 $pdo = get_db();
 
-// Triple-constraint ownership check: id + role='member' + team_id (coordinator's team)
+// Triple-constraint ownership check: id + role='member' + team_id
 $check = $pdo->prepare(
-    "SELECT id, first_name, last_name, email FROM users WHERE id = ? AND role = 'member' AND team_id = ?"
+    "SELECT u.id, u.player_id, p.first_name, p.last_name, p.email
+     FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.id = ? AND u.role = 'member' AND u.team_id = ?"
 );
 $check->execute([$member_id, $_SESSION['team_id']]);
 $member = $check->fetch(PDO::FETCH_ASSOC);
@@ -37,10 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($email_raw !== '' && mb_strlen($email_raw) > 255) {
         $error = 'E-Mail-Adresse zu lang (max. 255 Zeichen).';
     } else {
-        $upd = $pdo->prepare(
-            "UPDATE users SET email = ? WHERE id = ? AND role = 'member' AND team_id = ?"
-        );
-        $upd->execute([$email_raw !== '' ? $email_raw : null, $member_id, $_SESSION['team_id']]);
+        $email_val = $email_raw !== '' ? $email_raw : null;
+
+        // Write to players (canonical person table) — needs admin context
+        set_admin_context($pdo);
+        $pdo->prepare("UPDATE players SET email = ? WHERE id = ?")
+            ->execute([$email_val, (int)$member['player_id']]);
+        reset_rls_context($pdo);
+        set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
+
         redirect('/coordinator/members?success=' . urlencode(
             'E-Mail-Adresse für ' . $member['first_name'] . ' ' . $member['last_name'] . ' gespeichert.'
         ));

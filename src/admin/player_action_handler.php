@@ -37,6 +37,7 @@ if ($action === 'edit') {
     $phone        = trim($_POST['phone']        ?? '');
     $contact_name  = trim($_POST['contact_name']  ?? '');
     $contact_phone = trim($_POST['contact_phone'] ?? '');
+    $contact_email = trim($_POST['contact_email'] ?? '');
     $description   = trim($_POST['description']   ?? '');
 
     if (empty($first_name) || empty($last_name)) {
@@ -45,10 +46,13 @@ if ($action === 'edit') {
     if ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
         redirect('/admin/players?error=' . urlencode('Ungültige E-Mail-Adresse.'));
     }
+    if ($contact_email !== '' && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
+        redirect('/admin/players?error=' . urlencode('Ungültige Kontakt-E-Mail-Adresse.'));
+    }
 
     $pdo->prepare(
         "UPDATE players SET club_id = ?, first_name = ?, last_name = ?, email = ?,
-                            phone = ?, contact_name = ?, contact_phone = ?, description = ?
+                            phone = ?, contact_name = ?, contact_phone = ?, contact_email = ?, description = ?
          WHERE id = ?"
     )->execute([
         $club_id > 0 ? $club_id : null,
@@ -57,9 +61,14 @@ if ($action === 'edit') {
         $phone !== '' ? $phone : null,
         $contact_name !== '' ? $contact_name : null,
         $contact_phone !== '' ? $contact_phone : null,
+        $contact_email !== '' ? $contact_email : null,
         $description !== '' ? $description : null,
         $player_id,
     ]);
+    // Keep linked member account name in sync with the canonical player name
+    $pdo->prepare(
+        "UPDATE users SET first_name=?, last_name=? WHERE player_id=? AND role='member'"
+    )->execute([$first_name, $last_name, $player_id]);
     redirect('/admin/players?success=' . urlencode(
         $first_name . ' ' . $last_name . ' gespeichert.'
     ));
@@ -96,18 +105,8 @@ if ($action === 'edit') {
     redirect('/admin/players');
 
 } elseif ($action === 'unlink-user') {
-    $user_id = (int)($_POST['user_id'] ?? 0);
-
-    if ($user_id <= 0) {
-        redirect('/admin/players');
-    }
-
-    // Safety: only unlink if the user is currently linked to THIS player
-    $pdo->prepare(
-        "UPDATE users SET player_id = NULL WHERE id = ? AND player_id = ? AND role = 'member'"
-    )->execute([$user_id, $player_id]);
-
-    redirect('/admin/players');
+    // player_id is NOT NULL after migration 024 — every user must remain linked to a player.
+    redirect('/admin/players?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Spielerprofil.'));
 
 } else {
     redirect('/admin/players');

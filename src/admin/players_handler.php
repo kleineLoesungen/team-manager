@@ -12,11 +12,13 @@ $search         = trim($_GET['q'] ?? '');
 $filter_club_id = (int)($_GET['club_id'] ?? 0);
 $filter_team_id = (int)($_GET['team_id'] ?? 0);
 
-$sql    = "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.description,
+$sql    = "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.contact_email, p.description,
                   c.id AS club_id, c.name AS club_name
            FROM players p
            LEFT JOIN clubs c ON c.id = p.club_id
-           WHERE 1=1";
+           WHERE NOT EXISTS (
+               SELECT 1 FROM users u WHERE u.player_id = p.id AND u.role = 'coordinator'
+           )";
 $params = [];
 
 if ($search !== '') {
@@ -40,7 +42,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $players = $stmt->fetchAll();
 
-// Fetch all linked member users for the current result set (one query, grouped by player)
+// Fetch linked member accounts for the current result set (grouped by player)
 $linked_users_map = [];
 if (!empty($players)) {
     $player_ids   = array_column($players, 'id');

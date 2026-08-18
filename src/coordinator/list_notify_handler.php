@@ -40,17 +40,33 @@ $content_link = app_url($target_role === 'member'
     : '/coordinator/lists/' . $list_id);
 
 // Fetch all recipients in target role (active users in an active team, with or without email)
-$rec_stmt = $pdo->prepare(
-    "SELECT u.id, u.first_name, u.last_name, u.email
-     FROM users u JOIN teams t ON t.id = u.team_id
-     WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND t.is_active = TRUE
-     ORDER BY u.first_name, u.last_name"
-);
-$rec_stmt->execute([$_SESSION['team_id'], $target_role]);
+// For member recipients also join linked player to get contact_email
+if ($target_role === 'member') {
+    // For members: canonical email is players.email; fall back to users.email for unlinked members
+    $rec_stmt = $pdo->prepare(
+        "SELECT u.id, u.first_name, u.last_name,
+                COALESCE(p.email, u.email) AS email,
+                p.contact_email
+         FROM users u JOIN teams t ON t.id = u.team_id
+         LEFT JOIN players p ON p.id = u.player_id
+         WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE AND t.is_active = TRUE
+         ORDER BY u.first_name, u.last_name"
+    );
+} else {
+    $rec_stmt = $pdo->prepare(
+        "SELECT u.id, u.first_name, u.last_name, u.email, NULL AS contact_email
+         FROM users u JOIN teams t ON t.id = u.team_id
+         WHERE u.team_id = ? AND u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
+         ORDER BY u.first_name, u.last_name"
+    );
+}
+$rec_stmt->execute([$_SESSION['team_id']]);
 $all_recipients = $rec_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$with_email    = array_values(array_filter($all_recipients, fn($u) => !empty($u['email'])));
-$without_email = array_values(array_filter($all_recipients, fn($u) =>  empty($u['email'])));
+$with_email    = array_values(array_filter($all_recipients,
+    fn($u) => !empty($u['email']) || !empty($u['contact_email'])));
+$without_email = array_values(array_filter($all_recipients,
+    fn($u) =>  empty($u['email']) && empty($u['contact_email'])));
 
 // Fetch team name for subject prefix
 $team_stmt = $pdo->prepare("SELECT name FROM teams WHERE id = ?");
@@ -78,11 +94,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Nachricht zu lang (max. 2000 Zeichen).';
     } else {
         // Re-fetch recipients for actual send (never trust GET-time state)
-        $re_stmt = $pdo->prepare(
-            "SELECT u.first_name, u.email, u.role FROM users u JOIN teams t ON t.id = u.team_id
-             WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND t.is_active = TRUE AND u.email IS NOT NULL"
-        );
-        $re_stmt->execute([$_SESSION['team_id'], $target_role]);
+        if ($target_role === 'member') {
+            $re_stmt = $pdo->prepare(
+                "SELECT u.first_name, u.role,
+                        COALESCE(p.email, u.email) AS email,
+                        p.contact_email
+                 FROM users u JOIN teams t ON t.id = u.team_id
+                 LEFT JOIN players p ON p.id = u.player_id
+                 WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE AND t.is_active = TRUE
+                   AND (p.email IS NOT NULL OR u.email IS NOT NULL OR p.contact_email IS NOT NULL)"
+            );
+        } else {
+            $re_stmt = $pdo->prepare(
+                "SELECT u.first_name, u.email, u.role, NULL AS contact_email
+                 FROM users u JOIN teams t ON t.id = u.team_id
+                 WHERE u.team_id = ? AND u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
+                   AND u.email IS NOT NULL"
+            );
+        }
+        $re_stmt->execute([$_SESSION['team_id']]);
         $send_recipients = $re_stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $sent   = 0;
@@ -98,10 +128,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $list['name'],
                 $recipient_link
             );
-            if (send_notification_email($recipient['email'], $subject_raw, $body)) {
-                $sent++;
-            } else {
-                $failed++;
+            // Send to member email and/or contact email per the combination rule
+            $addresses = array_unique(array_filter([
+                $recipient['email']         ?? null,
+                $recipient['contact_email'] ?? null,
+            ]));
+            foreach ($addresses as $addr) {
+                if (send_notification_email($addr, $subject_raw, $body)) {
+                    $sent++;
+                } else {
+                    $failed++;
+                }
             }
         }
 

@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone        = trim($_POST['phone']        ?? '');
         $contact_name  = trim($_POST['contact_name']  ?? '');
         $contact_phone = trim($_POST['contact_phone'] ?? '');
+        $contact_email = trim($_POST['contact_email'] ?? '');
         $description   = trim($_POST['description']   ?? '');
         $club_id       = (int)($_POST['club_id']      ?? 0);
 
@@ -74,21 +75,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Vor- und Nachname sind erforderlich.';
         } elseif ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
             $error = 'Ungültige E-Mail-Adresse.';
+        } elseif ($contact_email !== '' && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'Ungültige Kontakt-E-Mail-Adresse.';
         } else {
             set_admin_context($pdo);
             $pdo->prepare(
                 "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
-                  contact_name=?, contact_phone=?, description=?, club_id=? WHERE id=?"
+                  contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
             )->execute([
                 $first_name, $last_name,
                 $email_raw !== '' ? $email_raw : null,
                 $phone !== '' ? $phone : null,
                 $contact_name !== '' ? $contact_name : null,
                 $contact_phone !== '' ? $contact_phone : null,
+                $contact_email !== '' ? $contact_email : null,
                 $description !== '' ? $description : null,
                 $club_id > 0 ? $club_id : null,
                 $player_id,
             ]);
+            $pdo->prepare(
+                "UPDATE users SET first_name=?, last_name=? WHERE player_id=? AND role='member'"
+            )->execute([$first_name, $last_name, $player_id]);
             reset_rls_context($pdo);
             set_team_context($pdo, (int)$_SESSION['team_id'], 'member', $user_id);
 
@@ -104,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'phone'        => $_POST['phone']        ?? '',
                 'contact_name'  => $_POST['contact_name']  ?? '',
                 'contact_phone' => $_POST['contact_phone'] ?? '',
+                'contact_email' => $_POST['contact_email'] ?? '',
                 'description'  => $_POST['description']  ?? '',
                 'club_id'      => (int)($_POST['club_id'] ?? 0),
             ]);

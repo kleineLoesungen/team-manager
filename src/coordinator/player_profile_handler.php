@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone        = trim($_POST['phone']        ?? '');
     $contact_name  = trim($_POST['contact_name']  ?? '');
     $contact_phone = trim($_POST['contact_phone'] ?? '');
+    $contact_email = trim($_POST['contact_email'] ?? '');
     $description   = trim($_POST['description']   ?? '');
     $club_id       = (int)($_POST['club_id']      ?? 0);
 
@@ -31,21 +32,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
         redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Ungültige E-Mail-Adresse.'));
     }
+    if ($contact_email !== '' && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
+        redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Ungültige Kontakt-E-Mail-Adresse.'));
+    }
 
     set_admin_context($pdo);
     $pdo->prepare(
         "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
-          contact_name=?, contact_phone=?, description=?, club_id=? WHERE id=?"
+          contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
     )->execute([
         $first_name, $last_name,
         $email_raw !== '' ? $email_raw : null,
         $phone !== '' ? $phone : null,
         $contact_name !== '' ? $contact_name : null,
         $contact_phone !== '' ? $contact_phone : null,
+        $contact_email !== '' ? $contact_email : null,
         $description !== '' ? $description : null,
         $club_id > 0 ? $club_id : null,
         $player_id,
     ]);
+    // Keep linked member account name in sync with the canonical player name
+    $pdo->prepare(
+        "UPDATE users SET first_name=?, last_name=? WHERE player_id=? AND role='member'"
+    )->execute([$first_name, $last_name, $player_id]);
     reset_rls_context($pdo);
     set_team_context($pdo, $team_id, 'coordinator', $user_id);
 
@@ -67,7 +76,7 @@ if (!$player) redirect('/coordinator/members');
 
 // All linked user accounts (every team)
 $al_stmt = $pdo->prepare(
-    "SELECT u.id AS user_id, u.username, u.is_active AS user_active,
+    "SELECT u.id AS user_id, u.username, u.email AS user_email, u.is_active AS user_active,
             t.id AS team_id, t.name AS team_name, t.is_active AS team_active
      FROM users u
      JOIN teams t ON t.id = u.team_id

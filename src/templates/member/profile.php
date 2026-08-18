@@ -79,6 +79,12 @@
                            value="<?= e($player['contact_phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
+                <div class="col-12">
+                    <label for="contact_email" class="form-label">Kontakt-E-Mail</label>
+                    <input type="email" id="contact_email" name="contact_email" class="form-control"
+                           value="<?= e($player['contact_email'] ?? '') ?>" maxlength="254"
+                           placeholder="eltern@beispiel.de">
+                </div>
             </div>
         </div>
     </div>

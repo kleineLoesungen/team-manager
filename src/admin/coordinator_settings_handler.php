@@ -14,9 +14,10 @@ if ($coordinator_id <= 0) {
 $pdo = get_db();
 
 $check = $pdo->prepare(
-    "SELECT u.id, u.first_name, u.last_name, u.username, u.club_id, cl.name AS club_name
+    "SELECT u.id, u.player_id, u.username, p.first_name, p.last_name, p.email, p.phone, p.club_id, cl.name AS club_name
      FROM users u
-     LEFT JOIN clubs cl ON cl.id = u.club_id
+     JOIN players p ON p.id = u.player_id
+     LEFT JOIN clubs cl ON cl.id = p.club_id
      WHERE u.id = ? AND u.role = 'coordinator'"
 );
 $check->execute([$coordinator_id]);
@@ -24,6 +25,36 @@ $coordinator = $check->fetch(PDO::FETCH_ASSOC);
 
 if (!$coordinator) {
     redirect('/admin/coordinators');
+}
+
+// Handle personal data update (POST to this page)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+
+    $first_name = trim($_POST['first_name'] ?? '');
+    $last_name  = trim($_POST['last_name']  ?? '');
+    $email_raw  = trim($_POST['email']      ?? '');
+    $phone_raw  = trim($_POST['phone']      ?? '');
+
+    if (empty($first_name) || empty($last_name)) {
+        $error = 'Vor- und Nachname sind erforderlich.';
+    } elseif ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Ungültige E-Mail-Adresse.';
+    } elseif ($email_raw !== '' && mb_strlen($email_raw) > 255) {
+        $error = 'E-Mail-Adresse zu lang (max. 255 Zeichen).';
+    } elseif ($phone_raw !== '' && mb_strlen($phone_raw) > 50) {
+        $error = 'Telefonnummer zu lang (max. 50 Zeichen).';
+    } else {
+        $email_val = $email_raw !== '' ? $email_raw : null;
+        $phone_val = $phone_raw !== '' ? $phone_raw : null;
+
+        $pdo->prepare("UPDATE players SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE id = ?")
+            ->execute([$first_name, $last_name, $email_val, $phone_val, (int)$coordinator['player_id']]);
+        $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ? AND role = 'coordinator'")
+            ->execute([$first_name, $last_name, $email_val, $coordinator_id]);
+
+        redirect('/admin/coordinators/' . $coordinator_id . '/settings?success=' . urlencode('Daten gespeichert.'));
+    }
 }
 
 $ct_stmt = $pdo->prepare(

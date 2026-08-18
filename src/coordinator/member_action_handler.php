@@ -17,7 +17,7 @@ require_csrf();
 $member_id = (int)($_REQUEST['member_id'] ?? 0);
 $action    = $_REQUEST['action'] ?? '';
 
-if ($member_id <= 0 || !in_array($action, ['reset-password', 'deactivate', 'reactivate'], true)) {
+if ($member_id <= 0 || !in_array($action, ['reset-password', 'deactivate', 'reactivate', 'delete'], true)) {
     redirect('/coordinator/members');
 }
 
@@ -31,11 +31,11 @@ $back_url = ($back_raw !== '' && $back_raw[0] === '/' && (!isset($back_raw[1]) |
     : '/coordinator/members';
 
 // Ownership check: member must belong to this coordinator's team AND be role='member'
-// Prevents acting on members from other teams even if team_id RLS is bypassed.
 $check = $pdo->prepare(
-    "SELECT id, username, first_name, last_name
-     FROM users
-     WHERE id = ? AND team_id = ? AND role = 'member'"
+    "SELECT u.id, u.username, u.is_active, p.first_name, p.last_name
+     FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.id = ? AND u.team_id = ? AND u.role = 'member'"
 );
 $check->execute([$member_id, $team_id]);
 $member = $check->fetch();
@@ -84,6 +84,19 @@ try {
             );
             $stmt->execute([$member_id, $team_id]);
             redirect($back_url);
+
+        case 'delete':
+            // Only deactivated members may be deleted; player record is kept.
+            if ($member['is_active']) {
+                redirect('/coordinator/members?error=' . urlencode('Nur deaktivierte Mitglieder können gelöscht werden.'));
+            }
+            set_admin_context($pdo);
+            $pdo->prepare(
+                "DELETE FROM users WHERE id = ? AND team_id = ? AND role = 'member' AND is_active = FALSE"
+            )->execute([$member_id, $team_id]);
+            reset_rls_context($pdo);
+            set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
+            redirect('/coordinator/members?success=' . urlencode($member['first_name'] . ' ' . $member['last_name'] . ' wurde gelöscht.'));
     }
 
 } catch (PDOException $e) {

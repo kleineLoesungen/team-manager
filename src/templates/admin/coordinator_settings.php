@@ -9,6 +9,39 @@
 <?php if ($error):   ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
 <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
 
+<!-- Personal data -->
+<div class="card mb-4">
+    <div class="card-header fw-semibold">Persönliche Daten</div>
+    <div class="card-body">
+        <form method="POST" action="/admin/coordinators/<?= (int)$coordinator['id'] ?>/settings">
+            <?= csrf_field() ?>
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label form-label-sm fw-medium mb-1">Vorname <span class="text-danger">*</span></label>
+                    <input type="text" name="first_name" class="form-control form-control-sm"
+                           value="<?= e($coordinator['first_name']) ?>" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label form-label-sm fw-medium mb-1">Nachname <span class="text-danger">*</span></label>
+                    <input type="text" name="last_name" class="form-control form-control-sm"
+                           value="<?= e($coordinator['last_name']) ?>" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label form-label-sm fw-medium mb-1">E-Mail <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="email" name="email" class="form-control form-control-sm"
+                           value="<?= e($coordinator['email'] ?? '') ?>" placeholder="optional">
+                </div>
+                <div class="col-12">
+                    <label class="form-label form-label-sm fw-medium mb-1">Telefon <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="tel" name="phone" class="form-control form-control-sm"
+                           value="<?= e($coordinator['phone'] ?? '') ?>" placeholder="optional">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">Speichern</button>
+        </form>
+    </div>
+</div>
+
 <!-- Team assignments -->
 <div class="card mb-4">
     <div class="card-header fw-semibold">Teams</div>

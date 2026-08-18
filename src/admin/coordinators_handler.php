@@ -84,69 +84,63 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
     $render_coordinator = function(array $c) use ($coordinator_team_names) {
         $my_teams = $coordinator_team_names[$c['id']] ?? [];
         ?>
-        <div class="list-group-item">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div class="flex-grow-1 min-w-0">
-                    <div class="mb-1">
-                        <strong><?= e($c['first_name'] . ' ' . $c['last_name']) ?></strong>
-                        <code class="ms-2 text-muted small"><?= e($c['username']) ?></code>
-                        <?php if (empty($c['confirmed_at'])): ?>
-                        <span class="badge bg-warning text-dark ms-1" title="Hat Profil noch nicht bestätigt">
-                            <i class="bi bi-exclamation-triangle me-1"></i>Nicht bestätigt
-                        </span>
-                        <?php endif; ?>
-                    </div>
-                    <?php if (!empty($c['club_name'])): ?>
-                    <div class="mb-1">
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
-                            <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
-                        </span>
-                    </div>
-                    <?php endif; ?>
-                    <?php if (!empty($my_teams)): ?>
-                    <div class="d-flex flex-wrap gap-1 mb-1">
-                        <?php foreach ($my_teams as $tn): ?>
-                        <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
-                            <?= e($tn) ?>
-                        </span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
-                    <div class="text-muted small">
-                        <?php if (!empty($c['email'])): ?>
-                            <i class="bi bi-envelope me-1"></i><?= e($c['email']) ?>
-                        <?php else: ?>
-                            <span class="text-warning small"><i class="bi bi-envelope-x me-1"></i>Keine E-Mail</span>
-                        <?php endif; ?>
-                    </div>
-                    <?php if (!empty($c['phone'])): ?>
-                    <div class="text-muted small">
-                        <i class="bi bi-telephone me-1"></i><?= e($c['phone']) ?>
-                    </div>
+        <div class="list-group-item px-3 py-3">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                <div class="fw-semibold">
+                    <?= e($c['first_name'] . ' ' . $c['last_name']) ?>
+                    <?php if (empty($c['confirmed_at'])): ?>
+                    <span class="badge bg-warning text-dark ms-1" title="Hat Profil noch nicht bestätigt">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Nicht bestätigt
+                    </span>
                     <?php endif; ?>
                 </div>
-                <div class="d-flex gap-2 flex-wrap justify-content-end">
-                    <a href="/admin/coordinators/<?= $c['id'] ?>/settings" data-save-scroll
-                       class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-pencil me-1"></i>Bearbeiten
-                    </a>
-                    <form method="POST"
-                          action="/admin/coordinators/<?= $c['id'] ?>/reset-password"
-                          onsubmit="return confirm('<?= e('Das Passwort wird zurückgesetzt und angezeigt. Diese Aktion kann nicht rückgängig gemacht werden.') ?>')">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                            Passwort zurücksetzen
-                        </button>
-                    </form>
-                    <form method="POST"
-                          action="/admin/coordinators/<?= $c['id'] ?>/deactivate"
-                          onsubmit="return confirm('<?= e('Der Koordinator wird deaktiviert und kann sich nicht mehr anmelden.') ?>')">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm btn-outline-warning">
-                            Deaktivieren
-                        </button>
-                    </form>
-                </div>
+                <code class="text-muted small flex-shrink-0"><?= e($c['username']) ?></code>
+            </div>
+            <?php if (!empty($c['club_name'])): ?>
+            <div class="mb-1">
+                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                    <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
+                </span>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($my_teams)): ?>
+            <div class="d-flex flex-wrap gap-1 mb-1">
+                <?php foreach ($my_teams as $tn): ?>
+                <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+                    <?= e($tn) ?>
+                </span>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($c['email'])): ?>
+            <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($c['email']) ?></div>
+            <?php else: ?>
+            <div class="text-warning small"><i class="bi bi-envelope-x me-1"></i>Keine E-Mail</div>
+            <?php endif; ?>
+            <?php if (!empty($c['phone'])): ?>
+            <div class="text-muted small"><i class="bi bi-telephone me-1"></i><?= e($c['phone']) ?></div>
+            <?php endif; ?>
+            <div class="d-flex gap-2 flex-wrap mt-2">
+                <a href="/admin/coordinators/<?= $c['id'] ?>/settings" data-save-scroll
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil me-1"></i>Bearbeiten
+                </a>
+                <form method="POST"
+                      action="/admin/coordinators/<?= $c['id'] ?>/reset-password"
+                      onsubmit="return confirm('<?= e('Das Passwort wird zurückgesetzt und angezeigt. Diese Aktion kann nicht rückgängig gemacht werden.') ?>')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-key me-1"></i>Passwort
+                    </button>
+                </form>
+                <form method="POST"
+                      action="/admin/coordinators/<?= $c['id'] ?>/deactivate"
+                      onsubmit="return confirm('<?= e('Der Koordinator wird deaktiviert und kann sich nicht mehr anmelden.') ?>')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        Deaktivieren
+                    </button>
+                </form>
             </div>
         </div>
         <?php
@@ -190,19 +184,20 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
         <div class="collapse mt-2" id="inactiveCoordinators">
             <div class="list-group opacity-75">
                 <?php foreach ($inactive_coordinators as $coordinator): ?>
-                <div class="list-group-item">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong class="text-muted"><?= e($coordinator['first_name'] . ' ' . $coordinator['last_name']) ?></strong>
-                            <code class="ms-2 text-muted small"><?= e($coordinator['username']) ?></code>
+                <div class="list-group-item px-3 py-3">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                        <div class="fw-semibold text-muted">
+                            <?= e($coordinator['first_name'] . ' ' . $coordinator['last_name']) ?>
                             <span class="badge bg-secondary ms-1">Deaktiviert</span>
-                            <?php if (!empty($coordinator['club_name'])): ?>
-                            <div class="text-muted small mt-1">
-                                <i class="bi bi-building me-1"></i><?= e($coordinator['club_name']) ?>
-                            </div>
-                            <?php endif; ?>
                         </div>
-                        <div class="d-flex gap-2">
+                        <code class="text-muted small flex-shrink-0"><?= e($coordinator['username']) ?></code>
+                    </div>
+                    <?php if (!empty($coordinator['club_name'])): ?>
+                    <div class="text-muted small mb-1">
+                        <i class="bi bi-building me-1"></i><?= e($coordinator['club_name']) ?>
+                    </div>
+                    <?php endif; ?>
+                    <div class="d-flex gap-2 flex-wrap mt-2">
                         <form method="POST"
                               action="/admin/coordinators/<?= $coordinator['id'] ?>/reactivate"
                               onsubmit="return confirm('<?= e('Der Koordinator wird reaktiviert und kann sich wieder anmelden.') ?>')">
@@ -215,11 +210,10 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                               action="/admin/coordinators/<?= $coordinator['id'] ?>/delete"
                               onsubmit="return confirm('<?= e('Koordinator ' . $coordinator['first_name'] . ' ' . $coordinator['last_name'] . ' endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.') ?>')">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-danger">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
                                 <i class="bi bi-trash me-1"></i>Löschen
                             </button>
                         </form>
-                        </div>
                     </div>
                 </div>
                 <?php endforeach; ?>

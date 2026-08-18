@@ -11,7 +11,7 @@ require ROOT_PATH . '/src/templates/admin/layout.php';
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $error = '';
 $form  = ['first_name' => '', 'last_name' => '', 'club_id' => 0, 'email' => '',
-           'phone' => '', 'contact_name' => '', 'contact_phone' => '', 'description' => ''];
+           'phone' => '', 'contact_name' => '', 'contact_phone' => '', 'contact_email' => '', 'description' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -22,17 +22,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form['phone']         = trim($_POST['phone']         ?? '');
     $form['contact_name']  = trim($_POST['contact_name']  ?? '');
     $form['contact_phone'] = trim($_POST['contact_phone'] ?? '');
+    $form['contact_email'] = trim($_POST['contact_email'] ?? '');
     $form['description']   = trim($_POST['description']   ?? '');
 
     if (empty($form['first_name']) || empty($form['last_name'])) {
         $error = 'Vor- und Nachname sind erforderlich.';
     } elseif ($form['email'] !== '' && !filter_var($form['email'], FILTER_VALIDATE_EMAIL)) {
         $error = 'Ungültige E-Mail-Adresse.';
+    } elseif ($form['contact_email'] !== '' && !filter_var($form['contact_email'], FILTER_VALIDATE_EMAIL)) {
+        $error = 'Ungültige Kontakt-E-Mail-Adresse.';
     } else {
         try {
             $stmt = $pdo->prepare(
-                "INSERT INTO players (club_id, first_name, last_name, email, phone, contact_name, contact_phone, description)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
+                "INSERT INTO players (club_id, first_name, last_name, email, phone, contact_name, contact_phone, contact_email, description)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
             );
             $stmt->execute([
                 $form['club_id'] > 0 ? $form['club_id'] : null,
@@ -41,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $form['phone'] !== '' ? $form['phone'] : null,
                 $form['contact_name'] !== '' ? $form['contact_name'] : null,
                 $form['contact_phone'] !== '' ? $form['contact_phone'] : null,
+                $form['contact_email'] !== '' ? $form['contact_email'] : null,
                 $form['description'] !== '' ? $form['description'] : null,
             ]);
             $player_id = (int)$stmt->fetchColumn();

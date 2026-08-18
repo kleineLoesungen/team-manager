@@ -1,6 +1,6 @@
 <?php
 // src/coordinator/profile_handler.php — GET+POST /coordinator/profile and /coordinator/confirm-profile
-// Coordinators edit their own contact data and (on first login) confirm their profile per DSGVO.
+// Coordinators edit their own contact data via their linked player record.
 
 declare(strict_types=1);
 
@@ -12,11 +12,17 @@ $user_id = (int)$_SESSION['user_id'];
 $is_confirm_route = str_ends_with($_SERVER['REQUEST_URI'] ?? '', 'confirm-profile');
 $is_first_confirm = $_SESSION['confirmed_at'] === null;
 
+// Load coordinator's player record (player_id is NOT NULL after migration 024)
 $stmt = $pdo->prepare(
-    "SELECT first_name, last_name, email, phone, confirmed_at FROM users WHERE id = ?"
+    "SELECT u.player_id, u.confirmed_at,
+            p.first_name, p.last_name, p.email, p.phone
+     FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.id = ?"
 );
 $stmt->execute([$user_id]);
 $self = $stmt->fetch();
+$player_id = (int)$self['player_id'];
 
 $error = '';
 
@@ -33,6 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
         $error = 'Ungültige E-Mail-Adresse.';
     } else {
+        // Write to players (canonical person table) — needs admin context to bypass RLS
+        set_admin_context($pdo);
+        $pdo->prepare(
+            "UPDATE players SET first_name=?, last_name=?, email=?, phone=? WHERE id=?"
+        )->execute([
+            $first_name,
+            $last_name,
+            $email_raw !== '' ? $email_raw : null,
+            $phone !== '' ? $phone : null,
+            $player_id,
+        ]);
+        // Sync to users for legacy compatibility (name shown in some admin queries)
         $pdo->prepare(
             "UPDATE users SET first_name=?, last_name=?, email=?, phone=? WHERE id=?"
         )->execute([
@@ -42,11 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $phone !== '' ? $phone : null,
             $user_id,
         ]);
+        reset_rls_context($pdo);
+        set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', $user_id);
 
-        // Update display name in session
         $_SESSION['display_name'] = $first_name . ' ' . $last_name;
 
-        // Stamp confirmation (idempotent — COALESCE keeps original timestamp)
         if ($is_confirm_route) {
             $pdo->prepare("UPDATE users SET confirmed_at = COALESCE(confirmed_at, NOW()) WHERE id = ?")
                 ->execute([$user_id]);

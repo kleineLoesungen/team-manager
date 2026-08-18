@@ -200,6 +200,7 @@ CREATE TABLE IF NOT EXISTS team_manager.players (
     phone        VARCHAR(50) NULL,
     contact_name  VARCHAR(100) NULL,
     contact_phone VARCHAR(50)  NULL,
+    contact_email VARCHAR(254) NULL,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_players_club ON team_manager.players(club_id);
