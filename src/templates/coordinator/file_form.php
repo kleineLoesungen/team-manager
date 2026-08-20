@@ -1,6 +1,12 @@
 <?php
 // src/templates/coordinator/file_form.php — create new file form
 ?>
+<div class="mb-3">
+    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+    </a>
+</div>
+
 <form method="POST" action="/coordinator/files/create">
     <?= csrf_field() ?>
 
@@ -39,3 +45,9 @@
         <a href="/coordinator/lists" class="btn btn-outline-secondary min-touch">Abbrechen</a>
     </div>
 </form>
+
+<div class="mt-4">
+    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+    </a>
+</div>

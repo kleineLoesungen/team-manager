@@ -14,6 +14,11 @@ $time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ', time_start
 $stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($list) {
+    // pdo_pgsql returns booleans as 't'/'f'; filter_var does not handle these — use explicit list
+    $list['show_all_rows'] = in_array($list['show_all_rows'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
+    $list['is_hidden']     = in_array($list['is_hidden']     ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
+}
 
 if (!$list) {
     http_response_code(404);

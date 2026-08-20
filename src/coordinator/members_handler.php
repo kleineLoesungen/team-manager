@@ -23,7 +23,7 @@ $stmt = $pdo->prepare(
      JOIN players p ON p.id = u.player_id
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE u.role = 'member'
-     ORDER BY u.is_active DESC, p.last_name ASC, p.first_name ASC"
+     ORDER BY u.is_active DESC, p.first_name ASC, p.last_name ASC"
 );
 $stmt->execute();
 $members = $stmt->fetchAll();

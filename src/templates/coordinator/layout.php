@@ -1,9 +1,5 @@
 <?php
-// src/templates/coach/layout.php — Coach area layout wrapper
-// Provides render_coach_page() which wraps content in Bootstrap 5 layout.
-// Per D-01: separate layout, no sharing with admin layout.
-// Phase 3 adds 'lists' and 'columns' nav items (in addition to Phase 2 'members').
-// Phase 4 adds 'stats' nav item for statistics aggregation.
+// src/templates/coordinator/layout.php — Coordinator area layout (mobile-first)
 
 declare(strict_types=1);
 
@@ -11,118 +7,73 @@ require_once dirname(__DIR__) . '/layout.php';
 
 /**
  * Render a full coordinator page.
- * @param string $title   Page title (German)
- * @param string $active  Active nav item — 'members', 'lists', 'settings', 'stats', 'logo', 'ticker'
- * @param callable $body  Function that outputs the main content HTML
+ * @param string   $title  Page title (German)
+ * @param string   $active Active tab key: 'members', 'lists', 'ticker', 'stats',
+ *                         'profile', 'coordinators', 'settings', 'logo'
+ * @param callable $body   Outputs main content HTML
  */
 function render_coach_page(string $title, string $active, callable $body): void {
     render_layout_head($title);
-    render_navbar();
+
+    $tab = match(true) {
+        $active === 'members'                                              => 'members',
+        $active === 'lists'                                                => 'lists',
+        $active === 'ticker'                                               => 'ticker',
+        $active === 'stats'                                                => 'stats',
+        default                                                            => 'profile',
+    };
+
+    $team_name = htmlspecialchars($_SESSION['team_name'] ?? 'Team Manager', ENT_QUOTES);
     ?>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar (desktop) -->
-            <nav class="col-md-3 col-lg-2 d-none d-md-block bg-light sidebar py-3 border-end"
-                 style="min-height: calc(100vh - 56px);">
-                <ul class="nav flex-column">
-                    <li class="nav-item px-3 pt-2 pb-1">
-                        <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">Team</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'members' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/members">
-                            <i class="bi bi-person-vcard me-2"></i>Mitglieder
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'coordinators' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/coordinators">
-                            <i class="bi bi-person-badge me-2"></i>Koordinatoren
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/stats">
-                            <i class="bi bi-graph-up me-2"></i>Statistik
-                        </a>
-                    </li>
-                    <li class="nav-item px-3 pt-3 pb-1">
-                        <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">Inhalte</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'lists' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/lists">
-                            <i class="bi bi-collection me-2"></i>Listen
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'ticker' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/ticker">
-                            <i class="bi bi-megaphone me-2"></i>Ticker
-                        </a>
-                    </li>
-                    <li class="nav-item px-3 pt-3 pb-1">
-                        <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">Verwaltung</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'profile' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/profile">
-                            <i class="bi bi-person-circle me-2"></i>Mein Profil
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'settings' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/settings">
-                            <i class="bi bi-gear me-2"></i>Einstellungen
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'logo' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/coordinator/logo">
-                            <i class="bi bi-image me-2"></i>Logo
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+    <div class="app">
 
-            <!-- Mobile top tabs -->
-            <div class="d-md-none w-100 mobile-tab-bar">
-                <div class="d-flex">
-                    <a class="mobile-tab-link <?= $active === 'members' ? 'active' : '' ?>" href="/coordinator/members">
-                        <i class="bi bi-person-vcard tab-icon"></i><span>Mitglieder</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'coordinators' ? 'active' : '' ?>" href="/coordinator/coordinators">
-                        <i class="bi bi-person-badge tab-icon"></i><span>Koordinatoren</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/coordinator/stats">
-                        <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
-                    </a>
-                    <div style="width:1px;background:var(--bs-border-color);margin:6px 0;flex-shrink:0;"></div>
-                    <a class="mobile-tab-link <?= $active === 'lists' ? 'active' : '' ?>" href="/coordinator/lists">
-                        <i class="bi bi-collection tab-icon"></i><span>Listen</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'ticker' ? 'active' : '' ?>" href="/coordinator/ticker">
-                        <i class="bi bi-megaphone tab-icon"></i><span>Ticker</span>
-                    </a>
-                    <div style="width:1px;background:var(--bs-border-color);margin:6px 0;flex-shrink:0;"></div>
-                    <a class="mobile-tab-link <?= $active === 'profile' ? 'active' : '' ?>" href="/coordinator/profile">
-                        <i class="bi bi-person-circle tab-icon"></i><span>Profil</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'settings' ? 'active' : '' ?>" href="/coordinator/settings">
-                        <i class="bi bi-gear tab-icon"></i><span>Einstellungen</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'logo' ? 'active' : '' ?>" href="/coordinator/logo">
-                        <i class="bi bi-image tab-icon"></i><span>Logo</span>
-                    </a>
-                </div>
-            </div>
+        <header class="topbar">
+            <img src="/logo" alt="" class="topbar-logo"
+                 onerror="this.style.display='none'" loading="eager">
+            <span class="topbar-title"><?= $team_name ?></span>
+            <span class="topbar-context"><?= e($title) ?></span>
+            <button class="btn-theme" id="theme-toggle" aria-label="Dunkelmodus">
+                <i class="bi bi-moon"></i>
+            </button>
+        </header>
 
-            <!-- Main content -->
-            <main class="col-md-9 col-lg-10 px-4 py-4">
-                <h1 class="h4 fw-semibold mb-4"><?= e($title) ?></h1>
-                <?php $body(); ?>
-            </main>
-        </div>
+        <main class="app-content">
+            <?php $body(); ?>
+        </main>
+
+        <nav class="tabbar" aria-label="Hauptnavigation">
+            <a href="/coordinator/members"
+               class="tab-item <?= $tab === 'members' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'members' ? 'page' : 'false' ?>">
+                <i class="bi bi-person-vcard"></i>
+                <span class="tab-label">Mitglieder</span>
+            </a>
+            <a href="/coordinator/lists"
+               class="tab-item <?= $tab === 'lists' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'lists' ? 'page' : 'false' ?>">
+                <i class="bi bi-collection"></i>
+                <span class="tab-label">Listen</span>
+            </a>
+            <a href="/coordinator/ticker"
+               class="tab-item <?= $tab === 'ticker' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'ticker' ? 'page' : 'false' ?>">
+                <i class="bi bi-megaphone"></i>
+                <span class="tab-label">Ticker</span>
+            </a>
+            <a href="/coordinator/stats"
+               class="tab-item <?= $tab === 'stats' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'stats' ? 'page' : 'false' ?>">
+                <i class="bi bi-graph-up"></i>
+                <span class="tab-label">Statistik</span>
+            </a>
+            <a href="/coordinator/profile"
+               class="tab-item <?= $tab === 'profile' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'profile' ? 'page' : 'false' ?>">
+                <i class="bi bi-person-circle"></i>
+                <span class="tab-label">Profil</span>
+            </a>
+        </nav>
+
     </div>
     <?php
     render_layout_foot();

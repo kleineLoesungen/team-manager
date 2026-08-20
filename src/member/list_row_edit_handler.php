@@ -29,9 +29,10 @@ if ((int)$_SESSION['user_id'] !== $player_id) {
 
 // Fetch player info for display
 $player_stmt = $pdo->prepare(
-    "SELECT id, first_name, last_name
-     FROM users
-     WHERE id = ? AND team_id = ? AND role = 'member' AND is_active = TRUE"
+    "SELECT u.id, p.first_name, p.last_name
+     FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.id = ? AND u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE"
 );
 $player_stmt->execute([$player_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);

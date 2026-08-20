@@ -1,6 +1,5 @@
 <?php
-// src/templates/admin/layout.php — Admin area layout wrapper
-// Provides render_admin_page() which wraps content in sidebar layout.
+// src/templates/admin/layout.php — Admin area layout (mobile-first)
 
 declare(strict_types=1);
 
@@ -8,105 +7,71 @@ require_once dirname(__DIR__) . '/layout.php';
 
 /**
  * Render a full admin page.
- * @param string $title   Page title
- * @param string $active  Active nav item: 'teams' or 'coaches'
- * @param callable $body  Function that outputs the main content HTML
+ * @param string   $title  Page title
+ * @param string   $active Active tab key: 'teams', 'coordinators', 'players', 'clubs',
+ *                         'settings', 'attributes', 'notify'
+ * @param callable $body   Outputs main content HTML
  */
 function render_admin_page(string $title, string $active, callable $body): void {
     render_layout_head($title);
-    render_navbar();
+
+    $tab = match(true) {
+        $active === 'teams'                                                => 'teams',
+        $active === 'coordinators'                                         => 'coordinators',
+        $active === 'players'                                              => 'players',
+        $active === 'clubs'                                                => 'clubs',
+        default                                                            => 'settings',
+    };
     ?>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-none d-md-block bg-light sidebar py-3 border-end"
-                 style="min-height: calc(100vh - 56px);">
-                <ul class="nav flex-column">
-                    <li class="nav-item px-3 pt-2 pb-1">
-                        <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">Verwaltung</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'teams' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/teams">
-                            <i class="bi bi-people-fill me-2"></i>Teams
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'coordinators' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/coordinators">
-                            <i class="bi bi-person-badge me-2"></i>Koordinatoren
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'clubs' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/clubs">
-                            <i class="bi bi-building me-2"></i>Klubs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'players' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/players">
-                            <i class="bi bi-person-vcard me-2"></i>Spieler
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'attributes' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/attributes">
-                            <i class="bi bi-tags me-2"></i>Attribut-Gruppen
-                        </a>
-                    </li>
-                    <li class="nav-item px-3 pt-3 pb-1">
-                        <span class="text-uppercase text-muted fw-semibold" style="font-size:0.68rem;letter-spacing:.06em">System</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'settings' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/settings">
-                            <i class="bi bi-gear-fill me-2"></i>Einstellungen
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'notify' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/admin/notify">
-                            <i class="bi bi-envelope me-2"></i>Benachrichtigung
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+    <div class="app">
 
-            <!-- Mobile top tabs -->
-            <div class="d-md-none w-100 mobile-tab-bar">
-                <div class="d-flex">
-                    <a class="mobile-tab-link <?= $active === 'teams' ? 'active' : '' ?>" href="/admin/teams">
-                        <i class="bi bi-people-fill tab-icon"></i><span>Teams</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'coordinators' ? 'active' : '' ?>" href="/admin/coordinators">
-                        <i class="bi bi-person-badge tab-icon"></i><span>Koordinatoren</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'clubs' ? 'active' : '' ?>" href="/admin/clubs">
-                        <i class="bi bi-building tab-icon"></i><span>Klubs</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'players' ? 'active' : '' ?>" href="/admin/players">
-                        <i class="bi bi-person-vcard tab-icon"></i><span>Spieler</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'attributes' ? 'active' : '' ?>" href="/admin/attributes">
-                        <i class="bi bi-tags tab-icon"></i><span>Attribute</span>
-                    </a>
-                    <div style="width:1px;background:var(--bs-border-color);margin:6px 0;flex-shrink:0;"></div>
-                    <a class="mobile-tab-link <?= $active === 'settings' ? 'active' : '' ?>" href="/admin/settings">
-                        <i class="bi bi-gear-fill tab-icon"></i><span>Einstellungen</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'notify' ? 'active' : '' ?>" href="/admin/notify">
-                        <i class="bi bi-envelope tab-icon"></i><span>Benachrichtigung</span>
-                    </a>
-                </div>
-            </div>
+        <header class="topbar">
+            <img src="/logo" alt="" class="topbar-logo"
+                 onerror="this.style.display='none'" loading="eager">
+            <span class="topbar-title">Team Manager</span>
+            <span class="topbar-context">Admin</span>
+            <button class="btn-theme" id="theme-toggle" aria-label="Dunkelmodus">
+                <i class="bi bi-moon"></i>
+            </button>
+        </header>
 
-            <!-- Main content -->
-            <main class="col-md-9 col-lg-10 px-4 py-4">
-                <h1 class="h4 fw-semibold mb-4"><?= e($title) ?></h1>
-                <?php $body(); ?>
-            </main>
-        </div>
+        <main class="app-content">
+            <?php $body(); ?>
+        </main>
+
+        <nav class="tabbar" aria-label="Hauptnavigation">
+            <a href="/admin/teams"
+               class="tab-item <?= $tab === 'teams' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'teams' ? 'page' : 'false' ?>">
+                <i class="bi bi-people-fill"></i>
+                <span class="tab-label">Teams</span>
+            </a>
+            <a href="/admin/coordinators"
+               class="tab-item <?= $tab === 'coordinators' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'coordinators' ? 'page' : 'false' ?>">
+                <i class="bi bi-person-badge"></i>
+                <span class="tab-label">Koordinatoren</span>
+            </a>
+            <a href="/admin/players"
+               class="tab-item <?= $tab === 'players' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'players' ? 'page' : 'false' ?>">
+                <i class="bi bi-person-vcard"></i>
+                <span class="tab-label">Spieler</span>
+            </a>
+            <a href="/admin/clubs"
+               class="tab-item <?= $tab === 'clubs' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'clubs' ? 'page' : 'false' ?>">
+                <i class="bi bi-building"></i>
+                <span class="tab-label">Klubs</span>
+            </a>
+            <a href="/admin/settings"
+               class="tab-item <?= $tab === 'settings' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'settings' ? 'page' : 'false' ?>">
+                <i class="bi bi-gear-fill"></i>
+                <span class="tab-label">Einstellungen</span>
+            </a>
+        </nav>
+
     </div>
     <?php
     render_layout_foot();

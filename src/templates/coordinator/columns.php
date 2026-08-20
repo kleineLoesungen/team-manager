@@ -2,6 +2,12 @@
 // src/templates/coordinator/columns.php — Global columns overview (LIST-02)
 // Variables: $columns (array of global column rows)
 ?>
+<div class="mb-3">
+    <a href="/coordinator/settings" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
+    </a>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($columns) ?> globale <?= count($columns) === 1 ? 'Spalte' : 'Spalten' ?></span>
 </div>
@@ -61,4 +67,10 @@
             <button type="submit" class="btn btn-primary min-touch">Spalte anlegen</button>
         </form>
     </div>
+</div>
+
+<div class="mt-4">
+    <a href="/coordinator/settings" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
+    </a>
 </div>

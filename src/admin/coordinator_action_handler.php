@@ -24,7 +24,7 @@ $pdo = get_db();
 
 // Verify coach exists and is a coach role
 $check = $pdo->prepare(
-    "SELECT id, username, first_name, last_name FROM users WHERE id = ? AND role = 'coordinator'"
+    "SELECT id, username FROM users WHERE id = ? AND role = 'coordinator'"
 );
 $check->execute([$coordinator_id]);
 $coach = $check->fetch();

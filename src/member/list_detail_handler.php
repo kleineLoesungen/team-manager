@@ -23,6 +23,9 @@ $list_time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ", time_
 $list_stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, date, description{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
+// pdo_pgsql returns booleans as 't'/'f' strings; normalize explicitly
+// filter_var does NOT handle 't'/'f' — use in_array with exhaustive truthy list
+$list['show_all_rows'] = in_array($list['show_all_rows'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
 
 // Fetch columns: local + global columns selected for this list (D-11)
 // coach_only filter only added when column exists in DB (migration may not have run yet)
@@ -47,17 +50,19 @@ $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 // Row visibility: show all rows or only own row
 if ($list['show_all_rows']) {
     $player_stmt = $pdo->prepare(
-        "SELECT id, first_name, last_name
-         FROM users
-         WHERE team_id = ? AND role = 'member' AND is_active = TRUE
-         ORDER BY first_name, last_name"
+        "SELECT u.id, p.first_name, p.last_name
+         FROM users u
+         JOIN players p ON p.id = u.player_id
+         WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
+         ORDER BY p.first_name, p.last_name"
     );
     $player_stmt->execute([$_SESSION['team_id']]);
 } else {
     $player_stmt = $pdo->prepare(
-        "SELECT id, first_name, last_name
-         FROM users
-         WHERE id = ? AND team_id = ? AND role = 'member' AND is_active = TRUE"
+        "SELECT u.id, p.first_name, p.last_name
+         FROM users u
+         JOIN players p ON p.id = u.player_id
+         WHERE u.id = ? AND u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE"
     );
     $player_stmt->execute([$current_user_id, $_SESSION['team_id']]);
 }

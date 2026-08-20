@@ -12,16 +12,18 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
              . ' - ' . $_share_url;
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-1">
-    <a id="back-to-lists" href="/member/lists" class="text-muted small">
-        <i class="bi bi-arrow-left me-1"></i>Alle Listen
+<div class="mb-3">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
     </a>
+</div>
+
+<div class="d-flex align-items-center gap-2 mb-2">
     <?php if (!empty($list['date'])): ?>
     <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
     <?php endif; ?>
-    <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
     <button type="button"
-            class="btn btn-sm btn-outline-secondary min-touch"
+            class="btn btn-sm btn-outline-secondary ms-auto"
             data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
             onclick="shareItem(this)">
         <i class="bi bi-share me-1"></i>Teilen
@@ -158,3 +160,10 @@ function shareFallback(text, btn) {
     document.body.removeChild(ta);
 }
 </script>
+
+<div class="mt-4">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+    </a>
+</div>
+<script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>

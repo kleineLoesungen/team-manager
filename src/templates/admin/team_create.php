@@ -40,3 +40,9 @@
         <i class="bi bi-plus-lg me-1"></i>Team erstellen
     </button>
 </form>
+
+<div class="mt-4">
+    <a href="/admin/teams" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück
+    </a>
+</div>

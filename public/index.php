@@ -321,6 +321,13 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/player_link_handler.php';
         })(),
 
+    // /coordinator/players/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/coordinator/players/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['player_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/player_edit_handler.php';
+        })(),
+
     (bool)preg_match('#^/coordinator/players/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['player_id'] = (int)$matches[1];
@@ -383,6 +390,10 @@ match (true) {
             $_REQUEST['ticker_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/coordinator/ticker_detail_handler.php';
         })(),
+
+    // ── Member: Coordinators directory (admin-gated) ────────────────────
+    $path === '/member/coordinators'
+        => require ROOT_PATH . '/src/member/coordinators_handler.php',
 
     // ── Member: Confirm Profile (GDPR first-login) ───────────────────────
     $path === '/member/confirm-profile'

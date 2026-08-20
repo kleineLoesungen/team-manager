@@ -2,6 +2,12 @@
 // src/templates/coach/list_form.php — Create list form
 // Variables: $error (string), $global_columns (array of global column rows), $list_type (string)
 ?>
+<div class="mb-3">
+    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+    </a>
+</div>
+
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -155,4 +161,10 @@
             <a href="/coordinator/lists" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
         </form>
     </div>
+</div>
+
+<div class="mt-4">
+    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+    </a>
 </div>

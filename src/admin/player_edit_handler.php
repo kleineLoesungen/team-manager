@@ -27,10 +27,6 @@ if (!$player) {
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name ASC")->fetchAll();
 
-// Determine whether player can be deleted (must be inactive + no linked users)
-$linked_count_stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE player_id = ?");
-$linked_count_stmt->execute([$player_id]);
-$can_delete = !$player['is_active'] && (int)$linked_count_stmt->fetchColumn() === 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -79,6 +75,6 @@ $error = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Spieler bearbeiten', 'players', function() use ($player, $clubs, $error, $can_delete) {
+render_admin_page('Spieler bearbeiten', 'players', function() use ($player, $clubs, $error) {
     require ROOT_PATH . '/src/templates/admin/player_edit.php';
 });

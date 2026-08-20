@@ -111,3 +111,9 @@
         <?php endif; ?>
     </div>
 </div>
+
+<div class="mt-4">
+    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück
+    </a>
+</div>

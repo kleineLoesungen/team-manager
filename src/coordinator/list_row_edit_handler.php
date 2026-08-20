@@ -22,9 +22,10 @@ if (!can_edit_cell($list_id, $player_id)) {
 
 // Verify player belongs to this team
 $player_stmt = $pdo->prepare(
-    "SELECT id, first_name, last_name
-     FROM users
-     WHERE id = ? AND team_id = ? AND role = 'member'"
+    "SELECT u.id, p.first_name, p.last_name
+     FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.id = ? AND u.team_id = ? AND u.role = 'member'"
 );
 $player_stmt->execute([$player_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);

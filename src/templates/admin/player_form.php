@@ -2,6 +2,12 @@
 // src/templates/admin/player_form.php — Create player form
 // Variables: $clubs (array), $teams (array), $error (string), $form (array)
 ?>
+<div class="mb-3">
+    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Spieler
+    </a>
+</div>
+
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -78,3 +84,9 @@
         <a href="/admin/players" class="btn btn-outline-secondary">Abbrechen</a>
     </div>
 </form>
+
+<div class="mt-4">
+    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Spieler
+    </a>
+</div>

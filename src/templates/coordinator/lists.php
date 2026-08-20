@@ -52,15 +52,17 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
 
 <!-- Add button row (same as list view) -->
 <div class="d-flex justify-content-end mb-3">
-    <div class="btn-group">
-        <a href="/coordinator/lists/create" class="btn btn-primary btn-sm min-touch">
-            <i class="bi bi-plus-lg me-1"></i>Mitgliederliste
-        </a>
-        <button type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split"
+    <div class="dropdown">
+        <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
-            <span class="visually-hidden">Weitere Optionen</span>
+            <i class="bi bi-plus-lg me-1"></i>Neu
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" href="/coordinator/lists/create">
+                    <i class="bi bi-people me-2"></i>Mitgliederliste
+                </a>
+            </li>
             <li>
                 <a class="dropdown-item" href="/coordinator/lists/create?type=free">
                     <i class="bi bi-table me-2"></i>Freie Liste
@@ -260,15 +262,17 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($items) ?> <?= count($items) === 1 ? 'Eintrag' : 'Einträge' ?></span>
-    <div class="btn-group">
-        <a href="/coordinator/lists/create" class="btn btn-primary min-touch">
-            <i class="bi bi-plus-lg me-1"></i>Mitgliederliste
-        </a>
-        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
-            <span class="visually-hidden">Weitere Optionen</span>
+            <i class="bi bi-plus-lg me-1"></i>Neu
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" href="/coordinator/lists/create">
+                    <i class="bi bi-people me-2"></i>Mitgliederliste
+                </a>
+            </li>
             <li>
                 <a class="dropdown-item" href="/coordinator/lists/create?type=free">
                     <i class="bi bi-table me-2"></i>Freie Liste
@@ -292,7 +296,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <?php else: ?>
 
 <?php if (!empty($visible)): ?>
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mb-4">
+<div class="row row-cols-1 g-3 mb-4">
     <?php foreach ($visible as $item): $render_card($item); endforeach; ?>
 </div>
 <?php endif; ?>

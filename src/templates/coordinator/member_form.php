@@ -3,6 +3,12 @@
 // Variables (via use()): $error (string), $linkable_players (array)
 // Two modes: link existing playerless record, or create new player inline.
 ?>
+<div class="mb-3">
+    <a href="/coordinator/members" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
+    </a>
+</div>
+
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -135,3 +141,9 @@
     <?php endif; ?>
 })();
 </script>
+
+<div class="mt-4">
+    <a href="/coordinator/members" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
+    </a>
+</div>

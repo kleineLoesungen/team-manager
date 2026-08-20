@@ -19,7 +19,10 @@ if (!$file) {
 // Determine notify button state for file notifications
 $notify_target_role = ($file['visibility'] === 'private') ? 'coordinator' : 'member';
 $chk = $pdo->prepare(
-    "SELECT 1 FROM users WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL LIMIT 1"
+    "SELECT 1 FROM users u
+     JOIN players p ON p.id = u.player_id
+     WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND p.email IS NOT NULL
+     LIMIT 1"
 );
 $chk->execute([$_SESSION['team_id'], $notify_target_role]);
 $has_notify_recipients = (bool)$chk->fetch();

@@ -16,30 +16,36 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
              . ' - ' . $_share_url;
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <?php
-            $badge_class = match($list['visibility']) {
-                'public'    => 'bg-success',
-                'protected' => 'bg-warning text-dark',
-                'private'   => 'bg-secondary',
-                default     => 'bg-secondary',
-            };
-            $badge_label = match($list['visibility']) {
-                'public'    => 'Öffentlich',
-                'protected' => 'Geschützt',
-                'private'   => 'Privat',
-                default     => e($list['visibility']),
-            };
-        ?>
-        <span class="badge <?= $badge_class ?> me-2"><?= $badge_label ?></span>
+<div class="mb-3">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
+    </a>
+</div>
+
+<?php
+    $badge_class = match($list['visibility']) {
+        'public'    => 'bg-success',
+        'protected' => 'bg-warning text-dark',
+        'private'   => 'bg-secondary',
+        default     => 'bg-secondary',
+    };
+    $badge_label = match($list['visibility']) {
+        'public'    => 'Öffentlich',
+        'protected' => 'Geschützt',
+        'private'   => 'Privat',
+        default     => e($list['visibility']),
+    };
+?>
+<div class="mb-3">
+    <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge <?= $badge_class ?>"><?= $badge_label ?></span>
         <?php if (!empty($list['date'])): ?>
         <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
         <?php endif; ?>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
         <button type="button"
-                class="btn btn-sm btn-outline-secondary min-touch"
+                class="btn btn-sm btn-outline-secondary"
                 data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
                 onclick="shareItem(this)">
             <i class="bi bi-share me-1"></i>Teilen
@@ -47,20 +53,18 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
         <?php if (!$is_free_list): ?>
         <?php if ($has_notify_recipients): ?>
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>/notify"
-           class="btn btn-sm btn-outline-primary min-touch">
-            <i class="bi bi-envelope me-1"></i>Benachrichtigung senden
+           class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-envelope me-1"></i>Benachrichtigung
         </a>
         <?php else: ?>
-        <button type="button"
-                class="btn btn-sm btn-outline-secondary min-touch"
-                disabled
+        <button type="button" class="btn btn-sm btn-outline-secondary" disabled
                 title="Keine gültigen E-Mail-Adressen vorhanden">
-            <i class="bi bi-envelope me-1"></i>Benachrichtigung senden
+            <i class="bi bi-envelope me-1"></i>Benachrichtigung
         </button>
         <?php endif; ?>
         <?php endif; ?>
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>/settings"
-           class="btn btn-sm btn-outline-secondary min-touch">
+           class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-gear me-1"></i>Einstellungen
         </a>
     </div>
@@ -497,14 +501,14 @@ $show_full_form = $is_free_list
 <?php endif; // is_free_list ?>
 
 <div class="mt-3">
-    <a id="back-to-lists" href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
 <script>
 (function() {
     var saved = sessionStorage.getItem('coordinator_lists_url');
-    if (saved) document.getElementById('back-to-lists').href = saved;
+    if (saved) document.querySelectorAll('.back-to-lists').forEach(function(a){ a.href = saved; });
 })();
 
 function shareItem(btn) {

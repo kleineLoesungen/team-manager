@@ -34,7 +34,7 @@
             </a>
             <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/deactivate">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn-sm btn-outline-danger">Deaktivieren</button>
+                <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-pause-circle me-1"></i>Deaktivieren</button>
             </form>
         </div>
     </div>
@@ -45,11 +45,14 @@
 <?php endif; ?>
 
 <?php if (!empty($inactive_clubs)): ?>
-<details class="mt-4">
-    <summary class="text-muted small mb-3" style="cursor:pointer;list-style:none;">
-        <i class="bi bi-chevron-right me-1"></i>Inaktiv (<?= count($inactive_clubs) ?>)
-    </summary>
-    <div class="list-group mt-2 opacity-75">
+<div class="mt-4">
+    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+            type="button" data-bs-toggle="collapse" data-bs-target="#inactiveClubs" aria-expanded="false">
+        <i class="bi bi-chevron-down"></i>
+        Inaktiv (<?= count($inactive_clubs) ?>)
+    </button>
+    <div class="collapse mt-2" id="inactiveClubs">
+    <div class="list-group opacity-75">
         <?php foreach ($inactive_clubs as $club): ?>
         <div class="list-group-item px-3 py-3">
             <div class="fw-semibold text-muted mb-1"><?= e($club['name']) ?></div>
@@ -65,7 +68,8 @@
         </div>
         <?php endforeach; ?>
     </div>
-</details>
+    </div>
+</div>
 <?php endif; ?>
 
 <?php endif; ?>

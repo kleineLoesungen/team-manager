@@ -1,80 +1,167 @@
 <?php
-// src/templates/public/ticker_detail.php
-// Variables: $ticker (array), $messages (array), $app_title (string)
+// src/templates/public/ticker_detail.php — Public ticker feed (no auth)
+// Variables: $ticker (array), $messages (array), $app_title (string), $team (array)
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <script>(function(){var t=localStorage.getItem('tm-theme')||'light';document.documentElement.setAttribute('data-theme',t);document.documentElement.setAttribute('data-bs-theme',t);}());</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($ticker['name']) ?> – <?= e($app_title) ?></title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><?= e($ticker['name']) ?> — <?= e($app_title) ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #F2F2F7;
+            --surface:  #FFFFFF;
+            --surface-2:#F2F2F7;
+            --line:     rgba(60,60,67,.15);
+            --t1:       #000000;
+            --t2:       rgba(60,60,67,.85);
+            --t3:       rgba(60,60,67,.65);
+            --ok:       #1A7F3C;  --ok-bg:   #E5F4EC;
+            --bad:      #B91C1C;  --bad-bg:  #FEE2E2;
+            --warn:     #92510A;  --warn-bg: #FEF0C7;
+            --blue:     #1D4ED8;  --blue-bg: #DBEAFE;
+            --topbar-h: 50px;
+            --pad:      16px;
+            --r:        12px;
+        }
+        [data-theme="dark"] {
+            --bg:       #000000;
+            --surface:  #1C1C1E;
+            --surface-2:#2C2C2E;
+            --line:     rgba(255,255,255,.10);
+            --t1:       #FFFFFF;
+            --t2:       rgba(235,235,245,.80);
+            --t3:       rgba(235,235,245,.38);
+            --ok:       #30D158;  --ok-bg:   #0D2818;
+            --bad:      #FF453A;  --bad-bg:  #330A08;
+            --warn:     #FFB340;  --warn-bg: #2A1A00;
+            --blue:     #93C5FD;  --blue-bg: #1E3A5F;
+        }
+        *,*::before,*::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', system-ui, sans-serif; background: var(--bg); color: var(--t1); margin: 0; }
+        .app { max-width: 540px; margin: 0 auto; min-height: 100dvh; }
+        .app-content { padding: var(--pad); padding-bottom: 32px; }
+        .topbar { position: sticky; top: 0; z-index: 200; height: var(--topbar-h); background: var(--surface); border-bottom: .5px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 var(--pad); }
+        .topbar-title { font-size: 17px; font-weight: 600; color: var(--t1); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .topbar-context { font-size: 12px; color: var(--t3); white-space: nowrap; flex-shrink: 0; }
+        .btn-theme { background: none; border: none; cursor: pointer; color: var(--t2); border-radius: 8px; padding: 5px 6px; flex-shrink: 0; line-height: 1; font-size: 18px; }
+        .btn-theme:hover { background: var(--surface-2); }
+        .list-group { border-radius: var(--r) !important; overflow: hidden; background: var(--surface); }
+        .list-group-item { background: var(--surface) !important; color: var(--t1) !important; border: none !important; border-bottom: .5px solid var(--line) !important; padding: 12px var(--pad) !important; }
+        .list-group-item:last-child { border-bottom: none !important; }
+        .badge { font-size: 11.5px !important; font-weight: 600 !important; padding: 3px 8px !important; border-radius: 20px !important; border: none !important; }
+        .badge.bg-success  { background-color: var(--ok-bg)     !important; color: var(--ok)   !important; }
+        .badge.bg-secondary{ background-color: var(--surface-2) !important; color: var(--t3)   !important; }
+        .badge.bg-danger   { background-color: var(--bad-bg)    !important; color: var(--bad)  !important; }
+        .badge.bg-warning  { background-color: var(--warn-bg)   !important; color: var(--warn) !important; }
+        .badge.bg-primary  { background-color: var(--blue-bg)   !important; color: var(--blue) !important; }
+        .btn { display: inline-flex !important; align-items: center !important; border-radius: 10px !important; font-weight: 500 !important; border: none !important; transition: opacity .15s !important; }
+        .btn:active { opacity: .85 !important; }
+        .btn-outline-secondary { background: var(--surface-2) !important; color: var(--t1) !important; }
+        .btn-outline-secondary:hover { opacity: .75 !important; }
+        .btn-sm { font-size: .875rem; padding: .25rem .5rem; }
+        .alert { border: none !important; border-radius: var(--r) !important; }
+        .alert-info { background: var(--surface-2) !important; color: var(--t2) !important; }
+        .text-muted { color: var(--t3) !important; }
+        .text-body  { color: var(--t1) !important; }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container py-4" style="max-width: 700px;">
+<body>
+<div class="app">
 
-    <!-- Back link -->
-    <a href="/ticker" class="text-muted text-decoration-none small d-block mb-3">
-        <i class="bi bi-arrow-left me-1"></i>Alle Ticker
-    </a>
+    <header class="topbar">
+        <span class="topbar-title"><?= e($team['name'] ?? $app_title) ?></span>
+        <span class="topbar-context">Ticker</span>
+        <button class="btn-theme" id="theme-toggle" aria-label="Dunkelmodus">
+            <i class="bi bi-moon"></i>
+        </button>
+    </header>
 
-    <!-- Ticker header -->
-    <div class="mb-4">
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <h2 class="fw-semibold mb-0"><?= e($ticker['name']) ?></h2>
+    <main class="app-content">
+
+        <div class="mb-3">
+            <a href="/ticker" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Alle Ticker
+            </a>
+        </div>
+
+        <?php if ($ticker['description']): ?>
+        <p class="text-muted small mb-3"><?= e($ticker['description']) ?></p>
+        <?php endif; ?>
+
+        <div class="mb-4">
             <?php if ($ticker['status'] === 'active'): ?>
-                <span class="badge bg-success">Aktiv</span>
+            <span class="badge bg-success">Live</span>
             <?php else: ?>
-                <span class="badge bg-secondary">Geschlossen</span>
+            <span class="badge bg-secondary">Geschlossen</span>
             <?php endif; ?>
         </div>
-        <?php if ($ticker['description']): ?>
-        <p class="text-muted mb-1"><?= e($ticker['description']) ?></p>
-        <?php endif; ?>
-        <?php if ($ticker['status'] === 'active'): ?>
-        <!-- D-02: Silent auto-update hint in muted color, no countdown -->
-        <p class="text-muted small mb-0">Wird automatisch aktualisiert…</p>
-        <?php else: ?>
-        <div class="alert alert-info py-2" role="alert">Dieser Ticker ist geschlossen.</div>
-        <?php endif; ?>
-    </div>
 
-    <!-- Message feed (newest first, D-05) -->
-    <?php if (empty($messages)): ?>
-    <p class="text-muted text-center py-5">Noch keine Nachrichten.</p>
-    <?php else: ?>
-    <div id="messages">
-        <?php foreach ($messages as $msg): ?>
-        <div class="card mb-2 shadow-sm">
-            <div class="card-body py-2 px-3">
-                <strong><?= e($msg['timestamp']) ?></strong>
-                <?php if ($msg['tag_id']): ?>
-                <span class="badge bg-<?= e($msg['tag_color'] ?? 'secondary') ?> ms-1">
-                    <?= e($msg['tag_label'] ?? '') ?>
-                </span>
-                <?php endif; ?>
-                <p class="mb-0 mt-1"><?= e($msg['message']) ?></p>
-            </div>
+        <!-- Message feed (newest first) -->
+        <p class="text-muted small mb-2">
+            <?= count($messages) ?> <?= count($messages) === 1 ? 'Nachricht' : 'Nachrichten' ?>
+        </p>
+
+        <?php if (empty($messages)): ?>
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-chat-dots d-block mb-2" style="font-size:2rem;"></i>
+            Noch keine Nachrichten
         </div>
-        <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
+        <?php else: ?>
+        <div class="list-group mb-4">
+            <?php foreach ($messages as $msg): ?>
+            <div class="list-group-item">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="text-muted small fw-semibold"><?= e(substr($msg['timestamp'], 0, 5)) ?></span>
+                    <?php if ($msg['tag_id']): ?>
+                    <span class="badge bg-<?= e($msg['tag_color'] ?? 'secondary') ?>">
+                        <?= e($msg['tag_label'] ?? '') ?>
+                    </span>
+                    <?php endif; ?>
+                </div>
+                <p class="mb-0"><?= e($msg['message']) ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
 
-    <p class="text-muted text-center small mt-4">
-        <a href="/login" class="text-muted">Anmelden</a> · <?= e($app_title) ?>
-    </p>
+        <p class="text-muted text-center small mt-4">
+            <a href="/login" style="color: var(--t3)">Anmelden</a> · <?= e($app_title) ?>
+        </p>
+
+    </main>
 </div>
 
-<?php if ($ticker['status'] === 'active'): ?>
-<!-- D-01: Auto-reload every 5 seconds — only for active tickers (D-03) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+        crossorigin="anonymous"></script>
 <script>
-    setTimeout(() => {
-        location.reload();
-    }, 30000);
+(function(){
+    function tmApply(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.setAttribute('data-bs-theme', t);
+        localStorage.setItem('tm-theme', t);
+        var btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+        var ico = btn.querySelector('i');
+        if (ico) ico.className = t === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+        btn.setAttribute('aria-label', t === 'dark' ? 'Hellmodus' : 'Dunkelmodus');
+    }
+    tmApply(localStorage.getItem('tm-theme') || 'light');
+    var btn = document.getElementById('theme-toggle');
+    if (btn) btn.addEventListener('click', function() {
+        var cur = localStorage.getItem('tm-theme') || 'light';
+        tmApply(cur === 'dark' ? 'light' : 'dark');
+    });
+}());
 </script>
+<?php if ($ticker['status'] === 'active'): ?>
+<script>setTimeout(function(){ location.reload(); }, 30000);</script>
 <?php endif; ?>
 </body>
 </html>

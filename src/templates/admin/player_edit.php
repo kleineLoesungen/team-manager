@@ -87,7 +87,7 @@
                    value="<?= e($player['contact_name'] ?? '') ?>"
                    placeholder="optional">
         </div>
-        <div class="col-6">
+        <div class="col-12">
             <label for="contact_phone" class="form-label fw-semibold">Kontakttelefon</label>
             <input type="text"
                    id="contact_phone"
@@ -96,7 +96,7 @@
                    value="<?= e($player['contact_phone'] ?? '') ?>"
                    placeholder="optional">
         </div>
-        <div class="col-6">
+        <div class="col-12">
             <label for="contact_email" class="form-label fw-semibold">Kontakt-E-Mail</label>
             <input type="email"
                    id="contact_email"
@@ -121,18 +121,9 @@
     </div>
 </form>
 
-<?php if ($can_delete): ?>
-<div class="card border-danger mt-4">
-    <div class="card-header text-danger fw-semibold">Gefahrenzone</div>
-    <div class="card-body">
-        <p class="text-muted small">Dieser Spieler ist deaktiviert und hat keine verknüpften Benutzerkonten. Er kann dauerhaft gelöscht werden.</p>
-        <form method="POST" action="/admin/players/<?= (int)$player['id'] ?>/delete"
-              onsubmit="return confirm('Spieler endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-danger btn-sm">
-                <i class="bi bi-trash me-1"></i>Spieler endgültig löschen
-            </button>
-        </form>
-    </div>
+<div class="mt-4">
+    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück
+    </a>
 </div>
-<?php endif; ?>
+

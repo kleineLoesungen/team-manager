@@ -4,6 +4,12 @@
 
 // ── Section 1: Globale Spalten (preserved from columns.php) ──────────────────
 ?>
+<div class="mb-3">
+    <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
+</div>
+
 <h4 class="fw-semibold mb-3">Globale Spalten</h4>
 <p class="text-muted mb-3">Globale Spalten erscheinen in allen Listen des Teams.</p>
 
@@ -152,4 +158,10 @@ $color_labels = [
             <button type="submit" class="btn btn-primary">Tag anlegen</button>
         </form>
     </div>
+</div>
+
+<div class="mt-4">
+    <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
 </div>

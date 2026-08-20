@@ -12,10 +12,9 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 ?>
 
 <div class="mb-3 d-flex gap-2 flex-wrap">
-    <a id="back-to-lists" href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
-    <script>(function(){var s=sessionStorage.getItem('coordinator_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
     <button type="button"
             class="btn btn-sm btn-outline-secondary min-touch"
             data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
@@ -182,3 +181,10 @@ function renderPreview() {
 document.addEventListener('DOMContentLoaded', renderPreview);
 document.getElementById('edit-tab') && document.getElementById('edit-tab').addEventListener('hidden.bs.tab', renderPreview);
 </script>
+
+<div class="mt-3">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
+    </a>
+</div>
+<script>(function(){var s=sessionStorage.getItem('coordinator_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>

@@ -29,3 +29,9 @@
         <i class="bi bi-check-lg me-1"></i>Speichern
     </button>
 </form>
+
+<div class="mt-4">
+    <a href="/admin/clubs" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück
+    </a>
+</div>

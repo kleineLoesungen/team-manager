@@ -18,7 +18,7 @@ $stmt = $pdo->query(
      JOIN teams t ON t.id = u.team_id
      JOIN players p ON p.id = u.player_id
      WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
-     ORDER BY p.first_name, p.last_name"
+     ORDER BY p.last_name, p.first_name"
 );
 $all_coordinators = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -19,16 +19,16 @@ $stmt = $pdo->prepare(
      JOIN players p ON p.id = u.player_id
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE u.team_id = ? AND u.role = 'member'
-     ORDER BY p.last_name ASC, p.first_name ASC"
+     ORDER BY p.first_name ASC, p.last_name ASC"
 );
 $stmt->execute([$team_id]);
 $players = $stmt->fetchAll();
 
 // Unlinked active members (for the "add" form)
 $ul_stmt = $pdo->prepare(
-    "SELECT id, first_name, last_name, username FROM users
+    "SELECT id, username FROM users
      WHERE team_id = ? AND role = 'member' AND player_id IS NULL AND is_active = TRUE
-     ORDER BY last_name ASC, first_name ASC"
+     ORDER BY username ASC"
 );
 $ul_stmt->execute([$team_id]);
 $unlinked_members = $ul_stmt->fetchAll();
@@ -45,7 +45,7 @@ if (!empty($unlinked_members)) {
              SELECT 1 FROM users u
              WHERE u.player_id = p.id AND u.team_id = ? AND u.role = 'member'
          )
-         ORDER BY p.last_name ASC, p.first_name ASC"
+         ORDER BY p.first_name ASC, p.last_name ASC"
     );
     $lp_stmt->execute([$team_id]);
     $linkable_players = $lp_stmt->fetchAll();

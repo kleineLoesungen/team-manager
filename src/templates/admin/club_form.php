@@ -2,6 +2,12 @@
 // src/templates/admin/club_form.php — Create club form
 // Variables: $error (string), $name (string)
 ?>
+<div class="mb-3">
+    <a href="/admin/clubs" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Klubs
+    </a>
+</div>
+
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -27,4 +33,10 @@
             </div>
         </form>
     </div>
+</div>
+
+<div class="mt-4">
+    <a href="/admin/clubs" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Klubs
+    </a>
 </div>

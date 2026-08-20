@@ -12,51 +12,6 @@ $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 $user_id = (int)$_SESSION['user_id'];
 
-// Handle POST: edit player data
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_csrf();
-
-    $first_name   = trim($_POST['first_name']   ?? '');
-    $last_name    = trim($_POST['last_name']    ?? '');
-    $email_raw    = trim($_POST['email']        ?? '');
-    $phone        = trim($_POST['phone']        ?? '');
-    $contact_name  = trim($_POST['contact_name']  ?? '');
-    $contact_phone = trim($_POST['contact_phone'] ?? '');
-    $contact_email = trim($_POST['contact_email'] ?? '');
-    $description   = trim($_POST['description']   ?? '');
-    $club_id       = (int)($_POST['club_id']      ?? 0);
-
-    if (empty($first_name) || empty($last_name)) {
-        redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Vor- und Nachname sind erforderlich.'));
-    }
-    if ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
-        redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Ungültige E-Mail-Adresse.'));
-    }
-    if ($contact_email !== '' && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
-        redirect('/coordinator/players/' . $player_id . '?error=' . urlencode('Ungültige Kontakt-E-Mail-Adresse.'));
-    }
-
-    set_admin_context($pdo);
-    $pdo->prepare(
-        "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
-          contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
-    )->execute([
-        $first_name, $last_name,
-        $email_raw !== '' ? $email_raw : null,
-        $phone !== '' ? $phone : null,
-        $contact_name !== '' ? $contact_name : null,
-        $contact_phone !== '' ? $contact_phone : null,
-        $contact_email !== '' ? $contact_email : null,
-        $description !== '' ? $description : null,
-        $club_id > 0 ? $club_id : null,
-        $player_id,
-    ]);
-    reset_rls_context($pdo);
-    set_team_context($pdo, $team_id, 'coordinator', $user_id);
-
-    redirect('/coordinator/players/' . $player_id . '?success=1');
-}
-
 // Admin context for player fetch — coordinator can view any player
 set_admin_context($pdo);
 

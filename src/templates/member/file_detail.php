@@ -12,10 +12,9 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 ?>
 
 <div class="mb-3 d-flex gap-2 flex-wrap">
-    <a id="back-to-lists" href="/member/lists" class="btn btn-sm btn-outline-secondary">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
-    <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.getElementById('back-to-lists').href=s;})();</script>
     <button type="button"
             class="btn btn-sm btn-outline-secondary min-touch"
             data-share="<?= htmlspecialchars($_share_text, ENT_QUOTES) ?>"
@@ -118,3 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 <?php endif; ?>
 </script>
+
+<div class="mt-3">
+    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
+    </a>
+</div>
+<script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>

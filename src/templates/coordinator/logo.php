@@ -2,6 +2,12 @@
 // src/templates/coordinator/logo.php
 // Variables: $error (string), $success (bool), $deleted (bool), $current_logo (string path or '')
 ?>
+<div class="mb-3">
+    <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
+</div>
+
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -52,4 +58,10 @@
             <button type="submit" class="btn btn-primary min-touch">Logo speichern</button>
         </form>
     </div>
+</div>
+
+<div class="mt-4">
+    <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
 </div>

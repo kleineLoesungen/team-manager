@@ -183,11 +183,14 @@
 <?php endif; ?>
 
 <?php if (!empty($inactive_players)): ?>
-<details class="mb-4">
-    <summary class="text-muted small mb-2" style="cursor:pointer">
-        <?= count($inactive_players) ?> deaktivierte Spieler anzeigen
-    </summary>
-    <div class="list-group mt-2">
+<div class="mt-4">
+    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+            type="button" data-bs-toggle="collapse" data-bs-target="#inactivePlayers" aria-expanded="false">
+        <i class="bi bi-chevron-down"></i>
+        Inaktiv (<?= count($inactive_players) ?>)
+    </button>
+    <div class="collapse mt-2" id="inactivePlayers">
+    <div class="list-group opacity-75">
         <?php foreach ($inactive_players as $p): ?>
         <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
         <div class="list-group-item px-3 py-3 opacity-75">
@@ -227,7 +230,7 @@
             </div>
             <?php endif; ?>
 
-            <!-- Reaktivieren + Bearbeiten -->
+            <!-- Reaktivieren + Bearbeiten + Löschen -->
             <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
                 <a href="/admin/players/<?= (int)$p['id'] ?>/edit"
                    class="btn btn-sm btn-outline-secondary">
@@ -235,15 +238,25 @@
                 </a>
                 <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/reactivate">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-sm btn-outline-success">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
                     </button>
                 </form>
+                <?php if (empty($linked)): ?>
+                <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/delete"
+                      onsubmit="return confirm('<?= e($p['last_name'] . ', ' . $p['first_name']) ?> endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i>Löschen
+                    </button>
+                </form>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
-</details>
+    </div>
+</div>
 <?php endif; ?>
 
 <?php if ($has_unlinked): ?>

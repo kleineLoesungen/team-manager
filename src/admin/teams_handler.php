@@ -18,7 +18,7 @@ $coaches_stmt = $pdo->query(
      JOIN users u ON u.id = ct.user_id
      JOIN players p ON p.id = u.player_id
      WHERE ct.left_at IS NULL
-     ORDER BY p.first_name, p.last_name"
+     ORDER BY p.last_name, p.first_name"
 );
 $coaches_by_team = [];
 foreach ($coaches_stmt->fetchAll() as $coach) {

@@ -1,4 +1,10 @@
 <?php declare(strict_types=1); ?>
+<div class="mb-3">
+    <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
+</div>
+
 <?php if (empty($teams_map)): ?>
     <p class="text-muted">Keine aktiven Koordinatoren gefunden.</p>
 <?php else: ?>
@@ -36,3 +42,9 @@
     </div>
     <?php endforeach; ?>
 <?php endif; ?>
+
+<div class="mt-4">
+    <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
+</div>

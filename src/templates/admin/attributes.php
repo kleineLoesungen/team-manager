@@ -2,6 +2,12 @@
 // src/templates/admin/attributes.php — Admin: Player attribute groups + nested attributes
 // Variables: $groups (array keyed by group_id), $error (string)
 ?>
+<div class="mb-3">
+    <a href="/admin/settings" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
+    </a>
+</div>
+
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= $error ?></div>
 <?php endif; ?>
@@ -181,3 +187,9 @@
 <?php endforeach; ?>
 
 <?php endif; ?>
+
+<div class="mt-4">
+    <a href="/admin/settings" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
+    </a>
+</div>

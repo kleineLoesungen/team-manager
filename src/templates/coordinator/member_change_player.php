@@ -134,3 +134,9 @@
     switchMode('<?= $restore_mode === 'new' ? 'new' : 'link' ?>');
 }());
 </script>
+
+<div class="mt-4">
+    <a href="<?= e($cancel_url) ?>" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück
+    </a>
+</div>

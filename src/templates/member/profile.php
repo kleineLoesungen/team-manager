@@ -147,7 +147,7 @@ foreach ($attr_groups as $g) {
 <?php endif; ?>
 
 <?php else: ?>
-<div class="card">
+<div class="card mb-4">
     <div class="card-body text-center py-5">
         <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
         <p class="mb-1">Dein Konto ist noch keinem Spielerprofil zugeordnet.</p>
@@ -155,3 +155,20 @@ foreach ($attr_groups as $g) {
     </div>
 </div>
 <?php endif; ?>
+
+<div class="list-group mt-4">
+    <a href="/member/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+        <i class="bi bi-person-badge fs-5"></i>
+        <span class="flex-grow-1">Koordinatoren</span>
+        <i class="bi bi-chevron-right text-muted small"></i>
+    </a>
+    <a href="/member/player-profile" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+        <i class="bi bi-clock-history fs-5"></i>
+        <span class="flex-grow-1">Verlauf</span>
+        <i class="bi bi-chevron-right text-muted small"></i>
+    </a>
+    <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
+        <i class="bi bi-box-arrow-right fs-5"></i>
+        <span class="flex-grow-1">Abmelden</span>
+    </a>
+</div>

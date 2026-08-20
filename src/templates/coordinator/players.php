@@ -23,9 +23,7 @@ declare(strict_types=1);
                     <option value="">Mitglied wählen …</option>
                     <?php foreach ($unlinked_members as $m): ?>
                     <option value="<?= (int)$m['id'] ?>">
-                        <?= e($m['first_name'] . ' ' . $m['last_name']) ?>
-                        <? /* username in parens for disambiguation */ ?>
-                        (<?= e($m['username']) ?>)
+                        <?= e($m['username']) ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -36,7 +34,7 @@ declare(strict_types=1);
                     <option value="">Spieler wählen …</option>
                     <?php foreach ($linkable_players as $lp): ?>
                     <option value="<?= (int)$lp['id'] ?>">
-                        <?= e($lp['last_name'] . ', ' . $lp['first_name']) ?>
+                        <?= e($lp['first_name'] . ' ' . $lp['last_name']) ?>
                         <?php if (!empty($lp['club_name'])): ?>
                         — <?= e($lp['club_name']) ?>
                         <?php endif; ?>
@@ -92,7 +90,7 @@ declare(strict_types=1);
     <div class="list-group-item px-3 py-3">
         <div class="d-flex justify-content-between align-items-start gap-2">
             <div class="flex-grow-1 min-w-0">
-                <div class="fw-semibold"><?= e($p['last_name'] . ', ' . $p['first_name']) ?></div>
+                <div class="fw-semibold"><?= e($p['first_name'] . ' ' . $p['last_name']) ?></div>
                 <?php if (!empty($p['club_name'])): ?>
                 <div class="text-muted small">
                     <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>

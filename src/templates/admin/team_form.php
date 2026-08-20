@@ -2,6 +2,12 @@
 // src/templates/admin/team_form.php — Standalone team edit form
 // Variables: $team (array with id, name), $error (string)
 ?>
+<div class="mb-3">
+    <a href="/admin/teams" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Teams
+    </a>
+</div>
+
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -22,3 +28,9 @@
         <button type="submit" class="btn btn-primary">Speichern</button>
     </div>
 </form>
+
+<div class="mt-4">
+    <a href="/admin/teams" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Teams
+    </a>
+</div>

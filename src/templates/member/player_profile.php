@@ -3,6 +3,12 @@
 declare(strict_types=1);
 ?>
 
+<div class="mb-3">
+    <a href="/member/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
+</div>
+
 <?php if ($player === null): ?>
 <!-- Not linked state: member has no linked player record -->
 <div class="card shadow-sm">
@@ -212,3 +218,9 @@ foreach ($cross_stats as $stat) {
 </div>
 
 <?php endif; ?>
+
+<div class="mt-4">
+    <a href="/member/profile" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
+    </a>
+</div>

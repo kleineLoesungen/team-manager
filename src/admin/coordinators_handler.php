@@ -15,7 +15,7 @@ $coordinators_stmt = $pdo->query(
      JOIN players p ON p.id = u.player_id
      LEFT JOIN clubs cl ON cl.id = p.club_id
      WHERE u.role = 'coordinator'
-     ORDER BY p.first_name, p.last_name"
+     ORDER BY p.last_name, p.first_name"
 );
 $all_coordinators  = $coordinators_stmt->fetchAll();
 $coordinators_by_id = array_column($all_coordinators, null, 'id');
@@ -86,36 +86,27 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
         ?>
         <div class="list-group-item px-3 py-3">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-                <div class="fw-semibold">
+                <div class="fw-semibold d-flex align-items-center gap-2">
                     <?= e($c['first_name'] . ' ' . $c['last_name']) ?>
                     <?php if (empty($c['confirmed_at'])): ?>
-                    <span class="badge bg-warning text-dark ms-1" title="Hat Profil noch nicht bestätigt">
-                        <i class="bi bi-exclamation-triangle me-1"></i>Nicht bestätigt
-                    </span>
+                    <i class="bi bi-exclamation-circle text-muted small flex-shrink-0"
+                       title="Profil noch nicht bestätigt"></i>
                     <?php endif; ?>
                 </div>
-                <code class="text-muted small flex-shrink-0"><?= e($c['username']) ?></code>
+                <div class="text-muted small">@<?= e($c['username']) ?></div>
             </div>
             <?php if (!empty($c['club_name'])): ?>
-            <div class="mb-1">
-                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
-                    <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
-                </span>
+            <div class="text-muted small mt-1">
+                <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
             </div>
             <?php endif; ?>
             <?php if (!empty($my_teams)): ?>
-            <div class="d-flex flex-wrap gap-1 mb-1">
-                <?php foreach ($my_teams as $tn): ?>
-                <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle">
-                    <?= e($tn) ?>
-                </span>
-                <?php endforeach; ?>
+            <div class="text-muted small mt-1">
+                <?= implode(' · ', array_map('htmlspecialchars', $my_teams)) ?>
             </div>
             <?php endif; ?>
             <?php if (!empty($c['email'])): ?>
-            <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($c['email']) ?></div>
-            <?php else: ?>
-            <div class="text-warning small"><i class="bi bi-envelope-x me-1"></i>Keine E-Mail</div>
+            <div class="text-muted small mt-1"><i class="bi bi-envelope me-1"></i><?= e($c['email']) ?></div>
             <?php endif; ?>
             <?php if (!empty($c['phone'])): ?>
             <div class="text-muted small"><i class="bi bi-telephone me-1"></i><?= e($c['phone']) ?></div>
@@ -129,7 +120,7 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                       action="/admin/coordinators/<?= $c['id'] ?>/reset-password"
                       onsubmit="return confirm('<?= e('Das Passwort wird zurückgesetzt und angezeigt. Diese Aktion kann nicht rückgängig gemacht werden.') ?>')">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-key me-1"></i>Passwort
                     </button>
                 </form>
@@ -137,8 +128,8 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                       action="/admin/coordinators/<?= $c['id'] ?>/deactivate"
                       onsubmit="return confirm('<?= e('Der Koordinator wird deaktiviert und kann sich nicht mehr anmelden.') ?>')">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        Deaktivieren
+                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-pause-circle me-1"></i>Deaktivieren
                     </button>
                 </form>
             </div>
@@ -202,7 +193,7 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                               action="/admin/coordinators/<?= $coordinator['id'] ?>/reactivate"
                               onsubmit="return confirm('<?= e('Der Koordinator wird reaktiviert und kann sich wieder anmelden.') ?>')">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-success">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
                             </button>
                         </form>

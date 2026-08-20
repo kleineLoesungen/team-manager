@@ -67,80 +67,10 @@ $active_teams = array_filter(
                 </div>
                 <?php endif; ?>
             </div>
-            <button class="btn btn-sm btn-outline-secondary flex-shrink-0"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#player-edit-form"
-                    aria-expanded="false">
+            <a href="/coordinator/players/<?= (int)$player_id ?>/edit"
+               class="btn btn-sm btn-outline-secondary flex-shrink-0">
                 <i class="bi bi-pencil"></i>
-            </button>
-        </div>
-
-        <!-- Collapsible edit form -->
-        <div class="collapse" id="player-edit-form">
-            <hr class="my-3">
-            <form method="POST" action="/coordinator/players/<?= (int)$player_id ?>" novalidate>
-                <?= csrf_field() ?>
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label small fw-medium">Vorname <span class="text-danger">*</span></label>
-                        <input type="text" name="first_name" class="form-control form-control-sm"
-                               value="<?= e($player['first_name']) ?>" required>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small fw-medium">Nachname <span class="text-danger">*</span></label>
-                        <input type="text" name="last_name" class="form-control form-control-sm"
-                               value="<?= e($player['last_name']) ?>" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">E-Mail</label>
-                        <input type="email" name="email" class="form-control form-control-sm"
-                               value="<?= e($player['email'] ?? '') ?>" placeholder="optional">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small fw-medium">Telefon</label>
-                        <input type="text" name="phone" class="form-control form-control-sm"
-                               value="<?= e($player['phone'] ?? '') ?>" placeholder="optional">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small fw-medium">Kontaktname</label>
-                        <input type="text" name="contact_name" class="form-control form-control-sm"
-                               value="<?= e($player['contact_name'] ?? '') ?>" placeholder="optional">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small fw-medium">Kontakttelefon</label>
-                        <input type="text" name="contact_phone" class="form-control form-control-sm"
-                               value="<?= e($player['contact_phone'] ?? '') ?>" placeholder="optional">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">Kontakt-E-Mail</label>
-                        <input type="email" name="contact_email" class="form-control form-control-sm"
-                               value="<?= e($player['contact_email'] ?? '') ?>" placeholder="optional">
-                    </div>
-                    <?php if (!empty($clubs)): ?>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">Verein</label>
-                        <select name="club_id" class="form-select form-select-sm">
-                            <option value="0">— kein Verein —</option>
-                            <?php foreach ($clubs as $cl): ?>
-                            <option value="<?= (int)$cl['id'] ?>"
-                                <?= ((int)($player['club_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
-                                <?= e($cl['name']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <?php endif; ?>
-                    <div class="col-12">
-                        <label class="form-label small fw-medium">Anmerkungen</label>
-                        <textarea name="description" class="form-control form-control-sm" rows="2"
-                                  placeholder="optional"><?= e($player['description'] ?? '') ?></textarea>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-sm btn-primary">
-                    <i class="bi bi-floppy me-1"></i>Speichern
-                </button>
-            </form>
+            </a>
         </div>
     </div>
 </div>
@@ -186,14 +116,14 @@ $active_teams = array_filter(
                           onsubmit="return confirm('Mitglied deaktivieren?')">
                         <?= csrf_field() ?>
                         <input type="hidden" name="_back" value="<?= e($back) ?>">
-                        <button type="submit" class="btn btn-sm btn-outline-warning">Deaktivieren</button>
+                        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-pause-circle me-1"></i>Deaktivieren</button>
                     </form>
                     <?php else: ?>
                     <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/reactivate"
                           onsubmit="return confirm('Mitglied reaktivieren?')">
                         <?= csrf_field() ?>
                         <input type="hidden" name="_back" value="<?= e($back) ?>">
-                        <button type="submit" class="btn btn-sm btn-outline-success">Reaktivieren</button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren</button>
                     </form>
                     <?php endif; ?>
                 </div>
@@ -376,5 +306,11 @@ foreach ($cross_stats as $stat) {
     }());
     </script>
     <?php endif; ?>
+</div>
+
+<div class="mt-4">
+    <a href="/coordinator/members" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
+    </a>
 </div>
 

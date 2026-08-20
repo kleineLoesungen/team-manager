@@ -3,7 +3,7 @@
 // Included by render_login_page() in layout.php
 // Variables available: $error (string), $message (string)
 ?>
-<div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 56px);">
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100dvh;">
     <div class="card shadow" style="width: 100%; max-width: 400px; margin: 1rem;">
         <div class="card-body p-4">
             <h1 class="h4 fw-semibold mb-4 text-center">Anmelden</h1>

@@ -40,6 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $stmt2->execute([$app_color]);
 
+        $show_coord = !empty($_POST['show_coordinators_for_members']) ? 'true' : 'false';
+        $pdo->prepare(
+            "INSERT INTO settings (key, value) VALUES ('show_coordinators_for_members', ?)
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+        )->execute([$show_coord]);
+
         // Handle default logo upload (optional — skip if no file submitted)
         if (!empty($_FILES['default_logo']['tmp_name'])) {
             $file    = $_FILES['default_logo'];
@@ -102,12 +108,16 @@ $stmt3     = $pdo->prepare("SELECT value FROM settings WHERE key = 'default_team
 $stmt3->execute();
 $default_logo = $stmt3->fetchColumn() ?: '';
 
+$stmt4    = $pdo->prepare("SELECT value FROM settings WHERE key = 'show_coordinators_for_members'");
+$stmt4->execute();
+$show_coordinators_for_members = $stmt4->fetchColumn() === 'true';
+
 $success      = !empty($_GET['success']);
 $logo_deleted = !empty($_GET['logo_deleted']);
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $error, $success, $logo_deleted) {
+render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
@@ -142,29 +152,59 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
                 </div>
                 <div class="mb-4">
                     <label for="default_logo" class="form-label fw-semibold">Standard-Logo (Fallback für Teams ohne eigenes Logo)</label>
-                    <?php if ($default_logo): ?>
-                    <div class="mb-2">
-                        <img src="/logo?t=<?= time() ?>" alt="Aktuelles Standard-Logo"
-                             style="max-height:64px; max-width:160px; object-fit:contain;" class="d-block border rounded p-1">
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($default_logo): ?>
-                    <form method="POST" action="/admin/settings" class="mb-2">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="action" value="delete_default_logo">
-                        <button type="submit" class="btn btn-outline-danger btn-sm min-touch"
-                                onclick="return confirm('Standard-Logo wirklich löschen?')">
-                            <i class="bi bi-trash me-1"></i>Standard-Logo löschen
-                        </button>
-                    </form>
-                    <?php endif; ?>
                     <input type="file" class="form-control" id="default_logo" name="default_logo"
                            accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml">
                     <div class="form-text">Wird nur für Teams verwendet, die noch kein eigenes Logo hochgeladen haben. Max. 2 MB. PNG, JPEG, GIF, WebP, SVG.</div>
                 </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Koordinatoren aller Teams</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox"
+                               id="show_coordinators_for_members"
+                               name="show_coordinators_for_members" value="1"
+                               <?= $show_coordinators_for_members ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="show_coordinators_for_members">
+                            Koordinatoren aller Teams für Mitglieder anzeigen
+                        </label>
+                    </div>
+                    <div class="form-text">Mitglieder sehen immer die Koordinatoren ihres eigenen Teams. Wenn aktiviert, werden zusätzlich Koordinatoren aller anderen Teams angezeigt.</div>
+                </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
             </form>
+
+            <?php if ($default_logo): ?>
+            <div class="mt-4 pt-3" style="border-top: .5px solid var(--line)">
+                <p class="fw-semibold small mb-2">Aktuelles Standard-Logo</p>
+                <img src="/logo?t=<?= time() ?>" alt="Aktuelles Standard-Logo"
+                     style="max-height:64px; max-width:160px; object-fit:contain;" class="d-block border rounded p-1 mb-3">
+                <form method="POST" action="/admin/settings">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="delete_default_logo">
+                    <button type="submit" class="btn btn-outline-danger btn-sm min-touch"
+                            onclick="return confirm('Standard-Logo wirklich löschen?')">
+                        <i class="bi bi-trash me-1"></i>Standard-Logo löschen
+                    </button>
+                </form>
+            </div>
+            <?php endif; ?>
         </div>
+    </div>
+
+    <div class="list-group mt-4">
+        <a href="/admin/attributes" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-tags fs-5"></i>
+            <span class="flex-grow-1">Attribut-Gruppen</span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+        <a href="/admin/notify" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-envelope fs-5"></i>
+            <span class="flex-grow-1">Benachrichtigungen</span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+        <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
+            <i class="bi bi-box-arrow-right fs-5"></i>
+            <span class="flex-grow-1">Abmelden</span>
+        </a>
     </div>
     <?php
 });

@@ -1264,6 +1264,56 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log("team-manager: migration 025b drop users.{$col} skipped — " . $e->getMessage());
         }
     }
+
+    // Migration 026: players_delete RLS policy (missing from initial schema — blocked admin DELETE)
+    // players table had FORCE RLS with no DELETE policy, so DELETE silently hit 0 rows even for admin.
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS players_delete ON {$schema}.players");
+        $pdo->exec("CREATE POLICY players_delete ON {$schema}.players FOR DELETE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        error_log('team-manager: migration 026 players_delete policy created');
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 026 players_delete skipped — ' . $e->getMessage());
+    }
+
+    // Migration 027: widen players_select so all roles can see relevant player records.
+    // (a) Members can see all player records for member users in their team (show_all_rows support).
+    // (b) Coordinators can see their OWN player record (coordinator profile page).
+    //     Previously only member-linked players were visible to coordinators, blocking /coordinator/profile.
+    // (c) Any authenticated user can see their own player record (self-view fallback).
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.players");
+        $pdo->exec("CREATE POLICY players_select ON {$schema}.players FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (
+                current_setting('app.current_role', true) = 'coordinator'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = players.id
+                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                      AND u.role = 'member'
+                )
+            )
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.player_id = players.id
+                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                      AND u.role = 'member'
+                )
+            )
+            OR EXISTS (
+                SELECT 1 FROM {$schema}.users u
+                WHERE u.player_id = players.id
+                  AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            )
+        )");
+        error_log('team-manager: migration 027 players_select widened (member team-scope + self-view)');
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 027 players_select skipped — ' . $e->getMessage());
+    }
 }
 
 /**

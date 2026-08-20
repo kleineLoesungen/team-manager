@@ -4,6 +4,12 @@
 // Per UI spec Screen 4.
 ?>
 
+<div class="mb-3">
+    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Koordinatoren
+    </a>
+</div>
+
 <?php if ($error): ?>
 <div class="alert alert-danger mb-3"><?= e($error) ?></div>
 <?php endif; ?>
@@ -64,3 +70,9 @@
 </div>
 
 <?php endif; ?>
+
+<div class="mt-4">
+    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Koordinatoren
+    </a>
+</div>

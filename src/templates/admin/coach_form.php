@@ -2,6 +2,12 @@
 // src/templates/admin/coach_form.php — Coach creation form
 // Variables: $teams (array), $error (string), $selected_team_id (int|null)
 ?>
+<div class="mb-3">
+    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Koordinatoren
+    </a>
+</div>
+
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
@@ -59,3 +65,9 @@
         <button type="submit" class="btn btn-primary">Koordinator hinzufügen</button>
     </div>
 </form>
+
+<div class="mt-4">
+    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Koordinatoren
+    </a>
+</div>

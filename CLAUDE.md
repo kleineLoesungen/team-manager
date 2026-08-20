@@ -107,7 +107,6 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 | No framework | HIGH | Verified against project constraints: simple CRUD, fixed UI, no heavy JS |
 | Native sessions configuration | MEDIUM-HIGH | Security options verified; requires careful configuration but no external service needed |
 | PostgreSQL 14+ | HIGH | Stable, excellent team data support, ACID, JSON columns for future flexibility |
-## Next Steps for Phase 1
 ## Sources
 - [PHP Documentation](https://www.php.net/manual/en/) - Official PHP reference, password hashing, PDO, sessions, filtering
 - [PostgreSQL Official Docs](https://www.postgresql.org/docs/) - Database documentation
@@ -173,15 +172,19 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 ```
 public/             Webroot — index.php front controller + .htaccess
 src/
-  admin/            Admin handlers (teams, coordinators, settings)
+  admin/            Admin handlers (teams, coordinators, settings, players)
   auth/             Login, logout, session
-  coordinator/      Coordinator handlers (lists, columns, members, stats, files, logo)
-  member/           Member handlers (lists, stats, files)
+  coordinator/      Coordinator handlers (lists, columns, members, stats, files, logo, ticker)
+  member/           Member handlers (lists, stats, files, ticker, coordinators, profile)
+  public/           Public (unauthenticated) handlers — ticker overview + detail
+  lib/
+    phpmailer/      PHPMailer library (bundled, no Composer)
   db/               PDO connection + visibility helpers
   templates/
     admin/          Admin HTML templates
     coordinator/    Coordinator HTML templates
     member/         Member HTML templates
+    public/         Public HTML templates (ticker_overview, ticker_detail)
     layout.php      Shared login layout
     login.php       Login page
   utils/
@@ -213,6 +216,12 @@ Browser → public/index.php (front controller)
 |-------|---------|
 | `teams` | Teams with name, active flag, logo path |
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
+| `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
+| `players` | Player profiles linked to users via `player_id` |
+| `clubs` | Clubs that players belong to |
+| `player_attribute_groups` | Groups for custom player attributes (e.g. "Medizin") |
+| `player_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
+| `player_attribute_values` | Attribute values per player |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |
 | `lists` | Team lists with visibility, type (member/free), date, description |
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
@@ -220,6 +229,10 @@ Browser → public/index.php (front controller)
 | `cells` | EAV values — one row per (list, column, player) |
 | `files` | Markdown documents (coordinator + member, own table, self-init) |
 | `free_list_rows` | Custom rows for free-type lists (self-init) |
+| `tickers` | Live ticker events per team (status: active/closed, event_date, start_time) |
+| `ticker_tags` | Tag labels + color per team for ticker messages |
+| `ticker_messages` | Messages posted to a ticker (with optional tag_id) |
+| `ticker_members` | Which members have write access to a ticker |
 
 Admin credentials live in `config.php` / environment variables — not in the DB.
 <!-- GSD:architecture-end -->

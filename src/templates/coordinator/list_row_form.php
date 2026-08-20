@@ -5,8 +5,8 @@
 ?>
 
 <div class="mb-3">
-    <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="text-muted small">
-        <i class="bi bi-arrow-left me-1"></i><?= e($list['name']) ?>
+    <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Liste
     </a>
 </div>
 
@@ -80,4 +80,10 @@
             <?php endif; ?>
         </form>
     </div>
+</div>
+
+<div class="mt-4">
+    <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Liste
+    </a>
 </div>

@@ -41,7 +41,7 @@ $lp_stmt = $pdo->prepare(
      AND NOT EXISTS (
          SELECT 1 FROM users u WHERE u.player_id = p.id AND u.role = 'coordinator'
      )
-     ORDER BY p.last_name ASC, p.first_name ASC"
+     ORDER BY p.first_name ASC, p.last_name ASC"
 );
 $lp_stmt->execute([$team_id, $member_id]);
 $linkable_players = $lp_stmt->fetchAll();

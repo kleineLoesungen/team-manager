@@ -38,7 +38,10 @@ $has_notify_recipients = false;
 if (!$is_free_list) {
     $notify_target_role = ($list['visibility'] === 'private') ? 'coordinator' : 'member';
     $chk = $pdo->prepare(
-        "SELECT 1 FROM users WHERE team_id = ? AND role = ? AND is_active = TRUE AND email IS NOT NULL LIMIT 1"
+        "SELECT 1 FROM users u
+         JOIN players p ON p.id = u.player_id
+         WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND p.email IS NOT NULL
+         LIMIT 1"
     );
     $chk->execute([$_SESSION['team_id'], $notify_target_role]);
     $has_notify_recipients = (bool)$chk->fetch();
@@ -83,10 +86,11 @@ if ($is_free_list) {
     $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $player_stmt = $pdo->prepare(
-        "SELECT id, first_name, last_name
-         FROM users
-         WHERE team_id = ? AND role = 'member' AND is_active = TRUE
-         ORDER BY first_name, last_name"
+        "SELECT u.id, p.first_name, p.last_name
+         FROM users u
+         JOIN players p ON p.id = u.player_id
+         WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
+         ORDER BY p.first_name, p.last_name"
     );
     $player_stmt->execute([$_SESSION['team_id']]);
     $players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);

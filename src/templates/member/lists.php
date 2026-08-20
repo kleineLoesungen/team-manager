@@ -236,7 +236,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <?php else: ?>
 
 <?php if (!empty($visible)): ?>
-<div class="row row-cols-1 row-cols-md-2 g-3 mb-4">
+<div class="row row-cols-1 g-3 mb-4">
     <?php foreach ($visible as $item): $render_card($item); endforeach; ?>
 </div>
 <?php endif; ?>
@@ -255,7 +255,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
         <i class="bi bi-chevron-down"></i>
     </button>
     <div class="collapse" id="hiddenItems">
-        <div class="row row-cols-1 row-cols-md-2 g-3 mt-1">
+        <div class="row row-cols-1 g-3 mt-1">
             <?php foreach ($hidden as $item): $render_card($item); endforeach; ?>
         </div>
     </div>

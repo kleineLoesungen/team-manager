@@ -1,89 +1,71 @@
 <?php
-// src/templates/player/layout.php — Player area layout wrapper
-// Provides render_player_page() which wraps content in Bootstrap 5 layout.
-// Per D-12: separate player layout, own navigation, single 'Listen' nav item.
-// Phase 4 adds 'stats' nav item for statistics aggregation.
+// src/templates/member/layout.php — Member area layout (mobile-first)
 
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/layout.php';
 
 /**
- * Render a full player page.
- * @param string $title   Page title (German)
- * @param string $active  Active nav item — 'lists', 'stats', 'profile', 'ticker'
- * @param callable $body  Function that outputs the main content HTML
+ * Render a full member page.
+ * @param string   $title  Page title (German)
+ * @param string   $active Active tab key: 'lists', 'ticker', 'stats', 'profile', 'player_profile'
+ * @param callable $body   Outputs main content HTML
  */
 function render_player_page(string $title, string $active, callable $body): void {
     render_layout_head($title);
-    render_navbar();
+
+    $tab = match(true) {
+        $active === 'lists'                                                => 'lists',
+        $active === 'ticker'                                               => 'ticker',
+        $active === 'stats'                                                => 'stats',
+        default                                                            => 'profile',
+    };
+
+    $team_name = htmlspecialchars($_SESSION['team_name'] ?? 'Team Manager', ENT_QUOTES);
     ?>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar (desktop) -->
-            <nav class="col-md-3 col-lg-2 d-none d-md-block bg-light sidebar py-3 border-end"
-                 style="min-height: calc(100vh - 56px);">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'lists' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/member/lists">
-                            <i class="bi bi-collection me-2"></i>Inhalte
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'ticker' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/member/ticker">
-                            <i class="bi bi-megaphone me-2"></i>Ticker
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'stats' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/member/stats">
-                            <i class="bi bi-graph-up me-2"></i>Statistik
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'profile' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/member/profile">
-                            <i class="bi bi-person-circle me-2"></i>Mein Profil
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $active === 'player_profile' ? 'active fw-bold bg-primary text-white rounded' : 'text-dark' ?> px-3 py-2"
-                           href="/member/player-profile">
-                            <i class="bi bi-clock-history me-2"></i>Verlauf
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+    <div class="app">
 
-            <!-- Mobile top tabs -->
-            <div class="d-md-none w-100 mobile-tab-bar">
-                <div class="d-flex">
-                    <a class="mobile-tab-link <?= $active === 'lists' ? 'active' : '' ?>" href="/member/lists">
-                        <i class="bi bi-collection tab-icon"></i><span>Inhalte</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'ticker' ? 'active' : '' ?>" href="/member/ticker">
-                        <i class="bi bi-megaphone tab-icon"></i><span>Ticker</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'stats' ? 'active' : '' ?>" href="/member/stats">
-                        <i class="bi bi-graph-up tab-icon"></i><span>Statistik</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'profile' ? 'active' : '' ?>" href="/member/profile">
-                        <i class="bi bi-person-circle tab-icon"></i><span>Mein Profil</span>
-                    </a>
-                    <a class="mobile-tab-link <?= $active === 'player_profile' ? 'active' : '' ?>" href="/member/player-profile">
-                        <i class="bi bi-clock-history tab-icon"></i><span>Verlauf</span>
-                    </a>
-                </div>
-            </div>
+        <header class="topbar">
+            <img src="/logo" alt="" class="topbar-logo"
+                 onerror="this.style.display='none'" loading="eager">
+            <span class="topbar-title"><?= $team_name ?></span>
+            <span class="topbar-context"><?= e($title) ?></span>
+            <button class="btn-theme" id="theme-toggle" aria-label="Dunkelmodus">
+                <i class="bi bi-moon"></i>
+            </button>
+        </header>
 
-            <!-- Main content -->
-            <main class="col-md-9 col-lg-10 px-4 py-4">
-                <h1 class="h4 fw-semibold mb-4"><?= e($title) ?></h1>
-                <?php $body(); ?>
-            </main>
-        </div>
+        <main class="app-content">
+            <?php $body(); ?>
+        </main>
+
+        <nav class="tabbar" aria-label="Hauptnavigation">
+            <a href="/member/lists"
+               class="tab-item <?= $tab === 'lists' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'lists' ? 'page' : 'false' ?>">
+                <i class="bi bi-collection"></i>
+                <span class="tab-label">Listen</span>
+            </a>
+            <a href="/member/ticker"
+               class="tab-item <?= $tab === 'ticker' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'ticker' ? 'page' : 'false' ?>">
+                <i class="bi bi-megaphone"></i>
+                <span class="tab-label">Ticker</span>
+            </a>
+            <a href="/member/stats"
+               class="tab-item <?= $tab === 'stats' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'stats' ? 'page' : 'false' ?>">
+                <i class="bi bi-graph-up"></i>
+                <span class="tab-label">Statistik</span>
+            </a>
+            <a href="/member/profile"
+               class="tab-item <?= $tab === 'profile' ? 'is-on' : '' ?>"
+               aria-current="<?= $tab === 'profile' ? 'page' : 'false' ?>">
+                <i class="bi bi-person-circle"></i>
+                <span class="tab-label">Profil</span>
+            </a>
+        </nav>
+
     </div>
     <?php
     render_layout_foot();

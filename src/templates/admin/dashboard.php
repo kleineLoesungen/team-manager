@@ -59,8 +59,8 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
             <form method="POST" action="/admin/teams/<?= (int)$team['id'] ?>/deactivate"
                   onsubmit="return confirm('<?= e('Das Team wird deaktiviert. Alle Koordinatoren und Mitglieder bleiben im System, können sich aber nicht anmelden.') ?>')">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                    Team deaktivieren
+                <button type="submit" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-pause-circle me-1"></i>Team deaktivieren
                 </button>
             </form>
         </div>
@@ -70,11 +70,14 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
 <?php endif; ?>
 
 <?php if (!empty($inactive_teams)): ?>
-<details class="mt-4">
-    <summary class="text-muted small mb-3" style="cursor:pointer;list-style:none;">
-        <i class="bi bi-chevron-right me-1"></i>Inaktiv (<?= count($inactive_teams) ?>)
-    </summary>
-    <div class="list-group mt-2 opacity-75">
+<div class="mt-4">
+    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+            type="button" data-bs-toggle="collapse" data-bs-target="#inactiveTeams" aria-expanded="false">
+        <i class="bi bi-chevron-down"></i>
+        Inaktiv (<?= count($inactive_teams) ?>)
+    </button>
+    <div class="collapse mt-2" id="inactiveTeams">
+    <div class="list-group opacity-75">
         <?php foreach ($inactive_teams as $team): ?>
         <div class="list-group-item px-3 py-3">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
@@ -108,7 +111,8 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
         </div>
         <?php endforeach; ?>
     </div>
-</details>
+    </div>
+</div>
 <?php endif; ?>
 
 <?php endif; ?>
