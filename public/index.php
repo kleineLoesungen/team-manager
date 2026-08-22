@@ -155,6 +155,16 @@ match (true) {
             require ROOT_PATH . '/src/admin/column_action_handler.php';
         })(),
 
+    (bool)preg_match('#^/admin/columns/(\d+)/rename$#', $path, $matches)
+        => (function() use ($matches) {
+            require ROOT_PATH . '/src/admin/column_rename_handler.php';
+        })(),
+
+    (bool)preg_match('#^/admin/columns/(\d+)/merge/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            require ROOT_PATH . '/src/admin/column_merge_handler.php';
+        })(),
+
     // ── Admin: Player Attributes ─────────────────────────────────────────
     $path === '/admin/attributes'
         => require ROOT_PATH . '/src/admin/attributes_handler.php',

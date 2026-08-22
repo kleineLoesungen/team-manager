@@ -17,6 +17,12 @@
 <?php if ($deleted): ?>
 <div class="alert alert-success">Systemspalte erfolgreich gelöscht.</div>
 <?php endif; ?>
+<?php if (!empty($_GET['renamed'])): ?>
+<div class="alert alert-success">Systemspalte erfolgreich umbenannt.</div>
+<?php endif; ?>
+<?php if (!empty($_GET['merged'])): ?>
+<div class="alert alert-success">Spalten erfolgreich zusammengeführt.</div>
+<?php endif; ?>
 
 <h4 class="fw-semibold mb-1">Systemspalten</h4>
 <p class="text-muted mb-3">
@@ -52,6 +58,10 @@
                 <td class="text-muted small"><?= (int)$col['sort_order'] ?></td>
                 <td class="text-muted small"><?= e(date('d.m.Y', strtotime($col['created_at']))) ?></td>
                 <td class="text-end">
+                    <a href="/admin/columns/<?= (int)$col['id'] ?>/rename"
+                       class="btn btn-outline-secondary btn-sm me-1">
+                        <i class="bi bi-pencil me-1"></i>Umbenennen
+                    </a>
                     <a href="/admin/columns/<?= (int)$col['id'] ?>/delete"
                        class="btn btn-outline-danger btn-sm">
                         <i class="bi bi-trash me-1"></i>Löschen
