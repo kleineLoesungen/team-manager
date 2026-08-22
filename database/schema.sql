@@ -79,11 +79,14 @@ CREATE INDEX IF NOT EXISTS idx_lists_visibility ON team_manager.lists(visibility
 -- Columns — attribute metadata for EAV (global: list_id IS NULL; local: list_id IS NOT NULL)
 -- Global columns: data_type IN ('boolean', 'number') only — text NOT allowed for global (STAT requirement)
 -- Local columns: data_type IN ('boolean', 'number', 'text')
+-- System columns: team_id IS NULL, list_id IS NULL, is_system = TRUE (admin-managed, cross-team)
+-- Coordinator global columns: team_id IS NOT NULL, list_id IS NULL, is_system = FALSE (team-scoped)
 CREATE TABLE IF NOT EXISTS team_manager.columns (
     id          SERIAL PRIMARY KEY,
-    team_id     INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    team_id     INTEGER REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    -- team_id IS NULL for system columns (cross-team); team_id IS NOT NULL for team-scoped columns
     list_id     INTEGER REFERENCES team_manager.lists(id) ON DELETE CASCADE,
-    -- list_id IS NULL => global column (belongs to team); list_id IS NOT NULL => local column (belongs to list)
+    -- list_id IS NULL => global column; list_id IS NOT NULL => local column (belongs to list)
     name        VARCHAR(100) NOT NULL,
     data_type   VARCHAR(10)  NOT NULL
                 CHECK (data_type IN ('boolean', 'number', 'text')),
@@ -91,12 +94,18 @@ CREATE TABLE IF NOT EXISTS team_manager.columns (
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
     sort_order  INTEGER      NOT NULL DEFAULT 0,
     coach_only  BOOLEAN      NOT NULL DEFAULT FALSE,
+    is_system   BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 -- Migration for existing databases:
 -- ALTER TABLE columns ADD COLUMN IF NOT EXISTS coach_only BOOLEAN NOT NULL DEFAULT FALSE;
+-- Migration 028:
+-- ALTER TABLE team_manager.columns ALTER COLUMN team_id DROP NOT NULL;
+-- ALTER TABLE team_manager.columns ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE;
+-- UPDATE team_manager.columns SET is_system = TRUE, team_id = NULL WHERE list_id IS NULL AND is_system = FALSE;
 CREATE INDEX IF NOT EXISTS idx_columns_team_id  ON team_manager.columns(team_id);
 CREATE INDEX IF NOT EXISTS idx_columns_list_id  ON team_manager.columns(list_id);
+CREATE INDEX IF NOT EXISTS idx_columns_is_system ON team_manager.columns(is_system);
 
 -- List–global-column associations — which global columns appear in each list (D-11)
 -- A global column only shows in a list if a row exists here for that (list_id, column_id) pair.
