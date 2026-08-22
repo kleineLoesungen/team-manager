@@ -1342,12 +1342,23 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 028 step 2 skipped — ' . $e->getMessage());
     }
 
-    // Step 3: promote all existing global columns to system columns (one-time, idempotent re-run is harmless)
+    // Step 3: promote existing global columns to system columns — ONE-TIME data migration.
+    // Guard via settings table so newly-created coordinator global columns are not
+    // accidentally promoted on subsequent boots.
     try {
-        $pdo->exec(
-            "UPDATE {$schema}.columns SET is_system = TRUE, team_id = NULL
-             WHERE list_id IS NULL AND is_system = FALSE"
-        );
+        $done = $pdo->query(
+            "SELECT value FROM {$schema}.settings WHERE key = 'migration_028_data_done'"
+        )->fetchColumn();
+        if (!$done) {
+            $pdo->exec(
+                "UPDATE {$schema}.columns SET is_system = TRUE, team_id = NULL
+                 WHERE list_id IS NULL AND is_system = FALSE"
+            );
+            $pdo->exec(
+                "INSERT INTO {$schema}.settings (key, value)
+                 VALUES ('migration_028_data_done', 'true') ON CONFLICT DO NOTHING"
+            );
+        }
     } catch (PDOException $e) {
         error_log('team-manager: migration 028 step 3 skipped — ' . $e->getMessage());
     }
