@@ -146,6 +146,15 @@ match (true) {
             require ROOT_PATH . '/src/admin/coordinator_action_handler.php';
         })(),
 
+    // ── Admin: System Columns ────────────────────────────────────────────
+    $path === '/admin/columns'
+        => require ROOT_PATH . '/src/admin/columns_handler.php',
+
+    (bool)preg_match('#^/admin/columns/(\d+)/delete$#', $path, $matches)
+        => (function() use ($matches) {
+            require ROOT_PATH . '/src/admin/column_action_handler.php';
+        })(),
+
     // ── Admin: Player Attributes ─────────────────────────────────────────
     $path === '/admin/attributes'
         => require ROOT_PATH . '/src/admin/attributes_handler.php',

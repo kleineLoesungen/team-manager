@@ -201,6 +201,11 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
             <span class="flex-grow-1">Benachrichtigungen</span>
             <i class="bi bi-chevron-right text-muted small"></i>
         </a>
+        <a href="/admin/columns" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-columns-gap fs-5"></i>
+            <span class="flex-grow-1">Systemspalten</span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
         <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
             <i class="bi bi-box-arrow-right fs-5"></i>
             <span class="flex-grow-1">Abmelden</span>
