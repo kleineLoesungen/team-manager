@@ -152,6 +152,26 @@ CREATE POLICY columns_delete ON columns
         )
     );
 
+-- Columns UPDATE: admin can update any column; coordinators can only update their own non-system columns
+CREATE POLICY columns_update ON columns
+    FOR UPDATE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coordinator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND (is_system IS NULL OR is_system = FALSE)
+        )
+    )
+    WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coordinator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND (is_system IS NULL OR is_system = FALSE)
+        )
+    );
+
 -- List–global-column junction: coaches manage; players read (visibility follows parent list)
 ALTER TABLE list_global_columns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE list_global_columns FORCE ROW LEVEL SECURITY;
