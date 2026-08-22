@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-08-02 - Completed 08-06-PLAN.md: Coordinator player views, profile, attribute edit, and coordinator directory  
+**Last Updated:** 2026-08-22 - Completed quick task 260822-k76: player-history column consistency for /member/player-profile  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -178,6 +178,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260822-k76 | player-history column consistency for /member/player-profile | 2026-08-22 | 7ef59fd | [260822-k76-player-history-column-consistency-for-me](.planning/quick/260822-k76-player-history-column-consistency-for-me/) |
 | 260729-ijq | Share button for list/doc and one-click copy of user credentials | 2026-07-29 | 78b2e16 | [260729-ijq-share-button-for-list-doc-and-one-click-](.planning/quick/260729-ijq-share-button-for-list-doc-and-one-click-/) |
 | 260714-wus | Show time range in list detail pages; persist last calendar view via sessionStorage back links | 2026-07-14 | 22673f0 | — |
 | 260714-wkp | Move ICS hint to bottom of calendar tab; add time range in timeline cards | 2026-07-14 | 542e156 | [260714-wkp-move-ics-calendar-hint-to-bottom-of-cale](.planning/quick/260714-wkp-move-ics-calendar-hint-to-bottom-of-cale/) |
