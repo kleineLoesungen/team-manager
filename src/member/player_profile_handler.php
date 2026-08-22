@@ -106,7 +106,7 @@ if ($player_id) {
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL AND c.is_system = FALSE
          WHERE ce.player_id IN ($placeholders)
            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
-         ORDER BY t.name ASC, c.name ASC, l.date DESC"
+         ORDER BY c.name ASC, c.data_type ASC, l.date DESC"
     );
     $coord_stmt->execute($all_user_ids);
     $coordinator_stats = $coord_stmt->fetchAll();

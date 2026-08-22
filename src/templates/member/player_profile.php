@@ -249,21 +249,30 @@ foreach ($coordinator_stats as $stat) {
     <div class="collapse" id="coordinator-stats-section">
         <div class="card mt-2">
             <div class="card-header fw-semibold text-muted">Teamspezifische Spalten</div>
+            <div class="card-body pb-0">
+                <div class="d-flex flex-wrap gap-2">
+                    <?php foreach ($col_names_coord as $i => $cn): ?>
+                    <button type="button"
+                            class="btn btn-sm <?= $i === 0 ? 'btn-primary' : 'btn-outline-secondary' ?> js-col-switch-coord"
+                            data-col-coord="<?= e($cn) ?>">
+                        <?= e($cn) ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Team</th>
-                            <th>Spalte</th>
                             <th>Datum</th>
                             <th>Wert</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($coordinator_stats as $stat): ?>
-                        <tr>
+                        <tr data-col-coord="<?= e($stat['col_name']) ?>">
                             <td><?= e($stat['team_name']) ?></td>
-                            <td class="text-muted small"><?= e($stat['col_name']) ?></td>
                             <td><?= $stat['date'] ? e(date('d.m.Y', strtotime($stat['date']))) : '<span class="text-muted">—</span>' ?></td>
                             <td>
                                 <?php if ($stat['data_type'] === 'boolean'): ?>
@@ -280,8 +289,8 @@ foreach ($coordinator_stats as $stat) {
                     <?php if (!empty($col_agg_coord)): ?>
                     <tfoot>
                         <?php foreach ($col_agg_coord as $cn => $agg): ?>
-                        <tr class="table-secondary fw-semibold">
-                            <td colspan="3" class="text-muted small">Gesamt <?= e($cn) ?></td>
+                        <tr data-col-coord="<?= e($cn) ?>" class="table-secondary fw-semibold">
+                            <td colspan="2" class="text-muted small">Gesamt</td>
                             <td>
                                 <?php if ($agg['type'] === 'boolean'): ?>
                                 <?php $pct = $agg['total'] > 0 ? round($agg['true_count'] / $agg['total'] * 100) : 0; ?>
@@ -296,6 +305,26 @@ foreach ($coordinator_stats as $stat) {
                     <?php endif; ?>
                 </table>
             </div>
+            <script>
+            (function () {
+                var btns = document.querySelectorAll('.js-col-switch-coord');
+                var rows = document.querySelectorAll('tr[data-col-coord]');
+                function activate(col) {
+                    btns.forEach(function (b) {
+                        var active = b.dataset.colCoord === col;
+                        b.classList.toggle('btn-primary', active);
+                        b.classList.toggle('btn-outline-secondary', !active);
+                    });
+                    rows.forEach(function (r) {
+                        r.style.display = r.dataset.colCoord === col ? '' : 'none';
+                    });
+                }
+                if (btns.length > 0) activate(btns[0].dataset.colCoord);
+                btns.forEach(function (b) {
+                    b.addEventListener('click', function () { activate(this.dataset.colCoord); });
+                });
+            }());
+            </script>
         </div>
     </div>
 </div>
