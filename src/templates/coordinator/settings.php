@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/settings.php — Einstellungen page
-// Variables: $columns (array), $ticker_tags (array), $error (string), $success (string)
+// Variables: $columns (array), $system_columns (array), $ticker_tags (array), $error (string), $success (string)
 
 // ── Section 1: Globale Spalten (preserved from columns.php) ──────────────────
 ?>
@@ -13,12 +13,50 @@
 <h4 class="fw-semibold mb-3">Globale Spalten</h4>
 <p class="text-muted mb-3">Globale Spalten erscheinen in allen Listen des Teams.</p>
 
+<?php if (!empty($system_columns)): ?>
+<h6 class="fw-semibold text-muted mb-2">Systemspalten</h6>
+<div class="table-responsive mb-2">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Typ</th>
+                <th>Reihenfolge</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($system_columns as $col): ?>
+            <tr>
+                <td>
+                    <?= e($col['name']) ?>
+                    <span class="badge bg-light text-dark border ms-2">
+                        <i class="bi bi-lock-fill me-1"></i>System
+                    </span>
+                </td>
+                <td>
+                    <span class="badge bg-light text-dark border">
+                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
+                    </span>
+                </td>
+                <td class="text-muted small"><?= (int)$col['sort_order'] ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<p class="text-muted small mb-4">
+    <i class="bi bi-info-circle me-1"></i>
+    Systemspalten werden vom Admin verwaltet und können hier nicht bearbeitet werden.
+</p>
+<?php endif; ?>
+
 <?php if (empty($columns)): ?>
 <div class="text-center py-4 mb-4">
-    <p class="h5 text-muted">Noch keine globalen Spalten</p>
-    <p class="text-muted">Globale Spalten erscheinen in allen Listen Ihres Teams.</p>
+    <p class="h5 text-muted">Noch keine eigenen globalen Spalten</p>
+    <p class="text-muted">Team-eigene globale Spalten erscheinen in allen Listen deines Teams.</p>
 </div>
 <?php else: ?>
+<h6 class="fw-semibold text-muted mb-2">Team-eigene Spalten</h6>
 <div class="table-responsive mb-4">
     <table class="table table-hover align-middle">
         <thead>

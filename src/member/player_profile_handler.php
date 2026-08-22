@@ -15,10 +15,11 @@ $link_stmt->execute([(int)$_SESSION['user_id']]);
 $player_id = $link_stmt->fetchColumn();
 
 // If no player is linked, render a "not linked" state (not an error)
-$player      = null;
-$attr_groups = [];
-$cross_stats = [];
-$history     = [];
+$player           = null;
+$attr_groups      = [];
+$system_stats     = [];
+$coordinator_stats = [];
+$history          = [];
 
 if ($player_id) {
     $player_id = (int)$player_id;
@@ -72,7 +73,6 @@ if ($player_id) {
     }
 
     // Cross-team stats: aggregate cells across ALL user accounts linked to this player
-    $all_user_ids = array_column($history, 'username'); // already fetched above
     // Re-query user IDs since history has usernames not IDs
     $uid_stmt = $pdo->prepare("SELECT id FROM users WHERE player_id = ?");
     $uid_stmt->execute([$player_id]);
@@ -82,18 +82,34 @@ if ($player_id) {
         $all_user_ids[] = (int)$_SESSION['user_id'];
     }
     $placeholders = implode(',', array_fill(0, count($all_user_ids), '?'));
-    $stats_stmt = $pdo->prepare(
+
+    // System columns query — cross-team, consistent column names
+    $sys_stmt = $pdo->prepare(
         "SELECT c.name AS col_name, c.data_type, t.name AS team_name, l.date, ce.value
          FROM cells ce
          JOIN lists l ON l.id = ce.list_id
          JOIN teams t ON t.id = l.team_id
-         JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL
+         JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL AND c.is_system = TRUE
          WHERE ce.player_id IN ($placeholders)
            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
-         ORDER BY l.date DESC"
+         ORDER BY c.sort_order ASC, c.name ASC, l.date DESC"
     );
-    $stats_stmt->execute($all_user_ids);
-    $cross_stats = $stats_stmt->fetchAll();
+    $sys_stmt->execute($all_user_ids);
+    $system_stats = $sys_stmt->fetchAll();
+
+    // Coordinator global columns query — team-scoped, shown in collapsible section
+    $coord_stmt = $pdo->prepare(
+        "SELECT c.name AS col_name, c.data_type, t.name AS team_name, l.date, ce.value
+         FROM cells ce
+         JOIN lists l ON l.id = ce.list_id
+         JOIN teams t ON t.id = l.team_id
+         JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL AND c.is_system = FALSE
+         WHERE ce.player_id IN ($placeholders)
+           AND (l.date IS NULL OR l.date <= CURRENT_DATE)
+         ORDER BY t.name ASC, c.name ASC, l.date DESC"
+    );
+    $coord_stmt->execute($all_user_ids);
+    $coordinator_stats = $coord_stmt->fetchAll();
 
     // CRITICAL: reset admin context immediately, restore member team context
     reset_rls_context($pdo);
@@ -102,6 +118,6 @@ if ($player_id) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Mein Verlauf', 'player_profile', function() use ($player, $player_id, $attr_groups, $cross_stats, $history) {
+render_player_page('Mein Verlauf', 'player_profile', function() use ($player, $player_id, $attr_groups, $system_stats, $coordinator_stats, $history) {
     require ROOT_PATH . '/src/templates/member/player_profile.php';
 });

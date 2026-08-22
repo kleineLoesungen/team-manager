@@ -50,11 +50,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── GET: fetch data ───────────────────────────────────────────────────────────
 
-// Global columns (existing functionality, preserved from columns_handler.php)
+// System columns (cross-team, admin-managed, read-only for coordinators)
+$sys_stmt = $pdo->query(
+    "SELECT id, name, data_type, sort_order, created_at
+     FROM columns
+     WHERE is_system = TRUE AND list_id IS NULL
+     ORDER BY sort_order ASC, name ASC"
+);
+$system_columns = $sys_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Team-scoped global columns (coordinator-managed)
 $stmt = $pdo->prepare(
     "SELECT id, name, data_type, is_active, created_at
      FROM columns
-     WHERE team_id = ? AND list_id IS NULL
+     WHERE team_id = ? AND list_id IS NULL AND is_system = FALSE
      ORDER BY sort_order, created_at"
 );
 $stmt->execute([$_SESSION['team_id']]);
@@ -79,7 +88,7 @@ $success = !empty($_GET['success']) ? match($_GET['success']) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Einstellungen', 'settings', function() use ($columns, $ticker_tags, $error, $success) {
+render_coach_page('Einstellungen', 'settings', function() use ($columns, $system_columns, $ticker_tags, $error, $success) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/settings.php';
