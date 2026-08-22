@@ -1342,32 +1342,13 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 028 step 2 skipped — ' . $e->getMessage());
     }
 
-    // Step 3: promote existing global columns to system columns — ONE-TIME data migration.
-    // Guard via settings table so newly-created coordinator global columns are not
-    // accidentally promoted on subsequent boots.
-    try {
-        $done = $pdo->query(
-            "SELECT value FROM {$schema}.settings WHERE key = 'migration_028_data_done'"
-        )->fetchColumn();
-        if (!$done) {
-            $pdo->exec(
-                "UPDATE {$schema}.columns SET is_system = TRUE, team_id = NULL
-                 WHERE list_id IS NULL AND is_system = FALSE"
-            );
-            $pdo->exec(
-                "INSERT INTO {$schema}.settings (key, value)
-                 VALUES ('migration_028_data_done', 'true') ON CONFLICT DO NOTHING"
-            );
-        }
-    } catch (PDOException $e) {
-        error_log('team-manager: migration 028 step 3 skipped — ' . $e->getMessage());
-    }
-
-    // Step 4: index on is_system for query performance
+    // Step 3: index on is_system for query performance
+    // (data migration — promoting existing global columns to system columns —
+    //  is handled via a manual SQL script run directly on the production database)
     try {
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_columns_is_system ON {$schema}.columns(is_system)");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 028 step 4 skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 028 step 3 skipped — ' . $e->getMessage());
     }
 
     // Step 5a: update columns_visibility_select to allow system columns for any authenticated user with team context
