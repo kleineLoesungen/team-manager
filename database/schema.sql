@@ -118,19 +118,20 @@ CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON team_manager.list_global_columns
 CREATE INDEX IF NOT EXISTS idx_lgc_column_id ON team_manager.list_global_columns(column_id);
 
 -- Cells — EAV values (value stored as TEXT; parsed by app layer per column.data_type)
+-- member_id has no FK to users — it also stores free_list_rows.id for free lists.
 CREATE TABLE IF NOT EXISTS team_manager.cells (
     id          SERIAL PRIMARY KEY,
     list_id     INTEGER NOT NULL REFERENCES team_manager.lists(id)   ON DELETE CASCADE,
     column_id   INTEGER NOT NULL REFERENCES team_manager.columns(id) ON DELETE CASCADE,
-    player_id   INTEGER NOT NULL REFERENCES team_manager.users(id)   ON DELETE CASCADE,
+    member_id   INTEGER NOT NULL,
     value       TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (list_id, column_id, player_id)
+    UNIQUE (list_id, column_id, member_id)
 );
 CREATE INDEX IF NOT EXISTS idx_cells_list_id    ON team_manager.cells(list_id);
 CREATE INDEX IF NOT EXISTS idx_cells_column_id  ON team_manager.cells(column_id);
-CREATE INDEX IF NOT EXISTS idx_cells_player_id  ON team_manager.cells(player_id);
+CREATE INDEX IF NOT EXISTS idx_cells_member_id  ON team_manager.cells(member_id);
 
 -- ── Phase 7: Live-Ticker ─────────────────────────────────────────────────────
 
@@ -178,9 +179,9 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_members (
 );
 CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON team_manager.ticker_members(user_id, team_id);
 
--- ── Phase 8: Player & Club Management ─────────────────────────────────────────
+-- ── Phase 8: Member & Club Management ─────────────────────────────────────────
 
--- Clubs — permanent home of players, independent of team assignments
+-- Clubs — permanent home of members, independent of team assignments
 CREATE TABLE IF NOT EXISTS team_manager.clubs (
     id         SERIAL PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
@@ -188,18 +189,18 @@ CREATE TABLE IF NOT EXISTS team_manager.clubs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Player attribute groups — admin-defined groupings for dynamic player attributes (e.g. "Kontakt", "Spielerprofil")
-CREATE TABLE IF NOT EXISTS team_manager.player_attribute_groups (
+-- Member attribute groups — admin-defined groupings for dynamic member attributes (e.g. "Kontakt", "Mitgliedsprofil")
+CREATE TABLE IF NOT EXISTS team_manager.member_attribute_groups (
     id         SERIAL PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Players — permanent identity layer, separate from users accounts
--- A player may or may not have a linked users account (users.player_id is the FK)
+-- Members — permanent identity layer, separate from users accounts
+-- A member may or may not have a linked users account (users.member_id is the FK)
 -- email: shared across all teams (single profile); confirmed_at on users tracks GDPR consent
-CREATE TABLE IF NOT EXISTS team_manager.players (
+CREATE TABLE IF NOT EXISTS team_manager.members (
     id           SERIAL PRIMARY KEY,
     club_id      INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL,
     first_name   VARCHAR(100) NOT NULL,
@@ -210,9 +211,10 @@ CREATE TABLE IF NOT EXISTS team_manager.players (
     contact_name  VARCHAR(100) NULL,
     contact_phone VARCHAR(50)  NULL,
     contact_email VARCHAR(254) NULL,
+    is_active    BOOLEAN NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_players_club ON team_manager.players(club_id);
+CREATE INDEX IF NOT EXISTS idx_members_club ON team_manager.members(club_id);
 
 -- Coordinator-teams — multi-team coordinator membership (replaces single users.team_id conceptually)
 -- users.team_id is KEPT and synced to active session team to preserve existing RLS pattern
@@ -228,31 +230,31 @@ CREATE INDEX IF NOT EXISTS idx_ct_user ON team_manager.coordinator_teams(user_id
 CREATE INDEX IF NOT EXISTS idx_ct_team ON team_manager.coordinator_teams(team_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_ct_active ON team_manager.coordinator_teams(user_id, team_id) WHERE left_at IS NULL;
 
--- Player-attributes — EAV attribute definitions within groups
+-- Member-attributes — EAV attribute definitions within groups
 -- visible_to_player: member can see this value; editable_by_player: member can edit it
-CREATE TABLE IF NOT EXISTS team_manager.player_attributes (
+CREATE TABLE IF NOT EXISTS team_manager.member_attributes (
     id                 SERIAL PRIMARY KEY,
-    group_id           INTEGER NOT NULL REFERENCES team_manager.player_attribute_groups(id) ON DELETE CASCADE,
+    group_id           INTEGER NOT NULL REFERENCES team_manager.member_attribute_groups(id) ON DELETE CASCADE,
     name               VARCHAR(100) NOT NULL,
     visible_to_player  BOOLEAN NOT NULL DEFAULT TRUE,
     editable_by_player BOOLEAN NOT NULL DEFAULT FALSE,
     sort_order         INTEGER NOT NULL DEFAULT 0,
     created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_pa_group ON team_manager.player_attributes(group_id);
+CREATE INDEX IF NOT EXISTS idx_ma_group ON team_manager.member_attributes(group_id);
 
--- Player-attribute-values — EAV values (player_id × attribute_id → TEXT value)
--- ON CONFLICT (player_id, attribute_id) DO UPDATE for upsert pattern
-CREATE TABLE IF NOT EXISTS team_manager.player_attribute_values (
+-- Member-attribute-values — EAV values (member_id × attribute_id → TEXT value)
+-- ON CONFLICT (member_id, attribute_id) DO UPDATE for upsert pattern
+CREATE TABLE IF NOT EXISTS team_manager.member_attribute_values (
     id           SERIAL PRIMARY KEY,
-    player_id    INTEGER NOT NULL REFERENCES team_manager.players(id) ON DELETE CASCADE,
-    attribute_id INTEGER NOT NULL REFERENCES team_manager.player_attributes(id) ON DELETE CASCADE,
+    member_id    INTEGER NOT NULL REFERENCES team_manager.members(id) ON DELETE CASCADE,
+    attribute_id INTEGER NOT NULL REFERENCES team_manager.member_attributes(id) ON DELETE CASCADE,
     value        TEXT NOT NULL DEFAULT '',
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (player_id, attribute_id)
+    UNIQUE (member_id, attribute_id)
 );
-CREATE INDEX IF NOT EXISTS idx_pav_player ON team_manager.player_attribute_values(player_id);
+CREATE INDEX IF NOT EXISTS idx_mav_member ON team_manager.member_attribute_values(member_id);
 
--- Migration for existing databases (Phase 8 — player & club management):
--- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS player_id INTEGER REFERENCES team_manager.players(id) ON DELETE SET NULL;
+-- Migration for existing databases (Phase 8 — member & club management):
+-- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES team_manager.members(id) ON DELETE SET NULL;
 -- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS phone VARCHAR(50) NULL;

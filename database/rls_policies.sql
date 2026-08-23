@@ -215,6 +215,31 @@ CREATE POLICY lgc_delete ON list_global_columns
         )
     );
 
+CREATE POLICY lgc_update ON list_global_columns
+    FOR UPDATE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coordinator'
+            AND EXISTS (
+                SELECT 1 FROM lists
+                WHERE lists.id = list_global_columns.list_id
+                  AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            )
+        )
+    )
+    WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coordinator'
+            AND EXISTS (
+                SELECT 1 FROM lists
+                WHERE lists.id = list_global_columns.list_id
+                  AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            )
+        )
+    );
+
 -- Cells SELECT: visibility inherited from parent list; players can read cells from public + protected lists
 CREATE POLICY cells_visibility_select ON cells
     FOR SELECT
@@ -236,7 +261,7 @@ CREATE POLICY cells_visibility_select ON cells
         )
     );
 
--- Cells INSERT: admin and coach can insert any cell; player can only insert their own cell in public lists
+-- Cells INSERT: admin and coordinator can insert any cell; member can only insert their own cell in public lists
 CREATE POLICY cells_insert ON cells
     FOR INSERT
     WITH CHECK (
@@ -244,7 +269,7 @@ CREATE POLICY cells_insert ON cells
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
-            AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (
                 SELECT 1 FROM lists
                 WHERE lists.id = cells.list_id
@@ -254,7 +279,7 @@ CREATE POLICY cells_insert ON cells
         )
     );
 
--- Cells UPDATE: admin and coach can update any cell; player can only update their own cell in public lists
+-- Cells UPDATE: admin and coordinator can update any cell; member can only update their own cell in public lists
 CREATE POLICY cells_ownership_update ON cells
     FOR UPDATE
     USING (
@@ -262,7 +287,7 @@ CREATE POLICY cells_ownership_update ON cells
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
-            AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (
                 SELECT 1 FROM lists
                 WHERE lists.id = cells.list_id
@@ -365,4 +390,160 @@ CREATE POLICY ticker_members_insert ON team_manager.ticker_members FOR INSERT WI
 CREATE POLICY ticker_members_delete ON team_manager.ticker_members FOR DELETE USING (
     current_setting('app.current_role', true) = 'coordinator'
     AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+
+-- ── Phase 8: Member & Club Management RLS ─────────────────────────────────────
+
+ALTER TABLE team_manager.clubs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.clubs FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY clubs_select ON team_manager.clubs FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
+);
+CREATE POLICY clubs_insert ON team_manager.clubs FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY clubs_update ON team_manager.clubs FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY clubs_delete ON team_manager.clubs FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+
+ALTER TABLE team_manager.member_attribute_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.member_attribute_groups FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY mag_select ON team_manager.member_attribute_groups FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
+);
+CREATE POLICY mag_insert ON team_manager.member_attribute_groups FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY mag_update ON team_manager.member_attribute_groups FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY mag_delete ON team_manager.member_attribute_groups FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+
+ALTER TABLE team_manager.members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.members FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY members_select ON team_manager.members FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (
+        current_setting('app.current_role', true) IN ('coordinator', 'member')
+        AND EXISTS (
+            SELECT 1 FROM team_manager.users u
+            WHERE u.member_id = members.id
+              AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+              AND u.role = 'member'
+        )
+    )
+    OR EXISTS (
+        SELECT 1 FROM team_manager.users u
+        WHERE u.member_id = members.id
+          AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+    )
+);
+CREATE POLICY members_insert ON team_manager.members FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY members_update ON team_manager.members FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY members_delete ON team_manager.members FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+
+ALTER TABLE team_manager.coordinator_teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.coordinator_teams FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY ct_select ON team_manager.coordinator_teams FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+);
+CREATE POLICY ct_insert ON team_manager.coordinator_teams FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY ct_update ON team_manager.coordinator_teams FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+
+ALTER TABLE team_manager.member_attributes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.member_attributes FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY ma_select ON team_manager.member_attributes FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR current_setting('app.current_role', true) = 'coordinator'
+    OR (
+        current_setting('app.current_role', true) = 'member'
+        AND visible_to_player = TRUE
+    )
+);
+CREATE POLICY ma_insert ON team_manager.member_attributes FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY ma_update ON team_manager.member_attributes FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY ma_delete ON team_manager.member_attributes FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+
+ALTER TABLE team_manager.member_attribute_values ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.member_attribute_values FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY mav_select ON team_manager.member_attribute_values FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR current_setting('app.current_role', true) = 'coordinator'
+    OR (
+        current_setting('app.current_role', true) = 'member'
+        AND EXISTS (
+            SELECT 1 FROM team_manager.users u
+            WHERE u.member_id = member_attribute_values.member_id
+              AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        )
+        AND EXISTS (
+            SELECT 1 FROM team_manager.member_attributes ma
+            WHERE ma.id = member_attribute_values.attribute_id
+              AND ma.visible_to_player = TRUE
+        )
+    )
+);
+CREATE POLICY mav_insert ON team_manager.member_attribute_values FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR current_setting('app.current_role', true) = 'coordinator'
+    OR (
+        current_setting('app.current_role', true) = 'member'
+        AND EXISTS (
+            SELECT 1 FROM team_manager.users u
+            WHERE u.member_id = member_attribute_values.member_id
+              AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        )
+        AND EXISTS (
+            SELECT 1 FROM team_manager.member_attributes ma
+            WHERE ma.id = member_attribute_values.attribute_id
+              AND ma.editable_by_player = TRUE
+        )
+    )
+);
+CREATE POLICY mav_update ON team_manager.member_attribute_values FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR current_setting('app.current_role', true) = 'coordinator'
+    OR (
+        current_setting('app.current_role', true) = 'member'
+        AND EXISTS (
+            SELECT 1 FROM team_manager.users u
+            WHERE u.member_id = member_attribute_values.member_id
+              AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        )
+        AND EXISTS (
+            SELECT 1 FROM team_manager.member_attributes ma
+            WHERE ma.id = member_attribute_values.attribute_id
+              AND ma.editable_by_player = TRUE
+        )
+    )
 );

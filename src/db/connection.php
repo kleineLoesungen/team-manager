@@ -199,7 +199,7 @@ function maybe_migrate_db(PDO $pdo): void {
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (current_setting('app.current_role', true) = 'member'
-                    AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                    AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
             )");
             $pdo->exec("DROP POLICY IF EXISTS cells_ownership_update ON {$schema}.cells");
@@ -207,7 +207,7 @@ function maybe_migrate_db(PDO $pdo): void {
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (current_setting('app.current_role', true) = 'member'
-                    AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                    AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
             )");
             error_log('Migration 004: renamed roles coach→moderator, player→member and recreated RLS policies');
@@ -235,7 +235,7 @@ function maybe_migrate_db(PDO $pdo): void {
             current_setting('app.is_admin', true) = 'true'
             OR current_setting('app.current_role', true) = 'coordinator'
             OR (current_setting('app.current_role', true) = 'member'
-                AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
         )");
         $pdo->exec("DROP POLICY IF EXISTS cells_ownership_update ON {$schema}.cells");
@@ -243,7 +243,7 @@ function maybe_migrate_db(PDO $pdo): void {
             current_setting('app.is_admin', true) = 'true'
             OR current_setting('app.current_role', true) = 'coordinator'
             OR (current_setting('app.current_role', true) = 'member'
-                AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
         )");
         error_log('Migration 005: role member ensured, RLS policies updated');
@@ -461,7 +461,7 @@ function maybe_migrate_db(PDO $pdo): void {
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (current_setting('app.current_role', true) = 'member'
-                    AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                    AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
             )");
             $pdo->exec("DROP POLICY IF EXISTS cells_ownership_update ON {$schema}.cells");
@@ -469,7 +469,7 @@ function maybe_migrate_db(PDO $pdo): void {
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (current_setting('app.current_role', true) = 'member'
-                    AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                    AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     AND EXISTS (SELECT 1 FROM {$schema}.lists WHERE lists.id = cells.list_id AND lists.visibility = 'public' AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
             )");
             // free_list_rows
@@ -741,8 +741,8 @@ function maybe_migrate_db(PDO $pdo): void {
 
     // RLS for all new tables (drop-and-recreate for idempotency — runs for both fresh and existing installs)
     if ($clubs_exists) {
-        foreach (['clubs', 'player_attribute_groups', 'players',
-                  'coordinator_teams', 'player_attributes', 'player_attribute_values'] as $tbl) {
+        foreach (['clubs', 'member_attribute_groups', 'members',
+                  'coordinator_teams', 'member_attributes', 'member_attribute_values'] as $tbl) {
             try {
                 $pdo->exec("ALTER TABLE {$schema}.{$tbl} ENABLE ROW LEVEL SECURITY");
             } catch (PDOException $e) {
@@ -776,56 +776,63 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log('team-manager: migration 012 RLS clubs skipped — ' . $e->getMessage());
         }
 
-        // player_attribute_groups policies
+        // member_attribute_groups policies (renamed from player_attribute_groups)
         try {
-            $pdo->exec("DROP POLICY IF EXISTS pag_select ON {$schema}.player_attribute_groups");
-            $pdo->exec("CREATE POLICY pag_select ON {$schema}.player_attribute_groups FOR SELECT USING (
+            $pdo->exec("DROP POLICY IF EXISTS pag_select ON {$schema}.member_attribute_groups");
+            $pdo->exec("DROP POLICY IF EXISTS mag_select ON {$schema}.member_attribute_groups");
+            $pdo->exec("CREATE POLICY mag_select ON {$schema}.member_attribute_groups FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pag_insert ON {$schema}.player_attribute_groups");
-            $pdo->exec("CREATE POLICY pag_insert ON {$schema}.player_attribute_groups FOR INSERT WITH CHECK (
+            $pdo->exec("DROP POLICY IF EXISTS pag_insert ON {$schema}.member_attribute_groups");
+            $pdo->exec("DROP POLICY IF EXISTS mag_insert ON {$schema}.member_attribute_groups");
+            $pdo->exec("CREATE POLICY mag_insert ON {$schema}.member_attribute_groups FOR INSERT WITH CHECK (
                 current_setting('app.is_admin', true) = 'true'
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pag_update ON {$schema}.player_attribute_groups");
-            $pdo->exec("CREATE POLICY pag_update ON {$schema}.player_attribute_groups FOR UPDATE USING (
+            $pdo->exec("DROP POLICY IF EXISTS pag_update ON {$schema}.member_attribute_groups");
+            $pdo->exec("DROP POLICY IF EXISTS mag_update ON {$schema}.member_attribute_groups");
+            $pdo->exec("CREATE POLICY mag_update ON {$schema}.member_attribute_groups FOR UPDATE USING (
                 current_setting('app.is_admin', true) = 'true'
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pag_delete ON {$schema}.player_attribute_groups");
-            $pdo->exec("CREATE POLICY pag_delete ON {$schema}.player_attribute_groups FOR DELETE USING (
+            $pdo->exec("DROP POLICY IF EXISTS pag_delete ON {$schema}.member_attribute_groups");
+            $pdo->exec("DROP POLICY IF EXISTS mag_delete ON {$schema}.member_attribute_groups");
+            $pdo->exec("CREATE POLICY mag_delete ON {$schema}.member_attribute_groups FOR DELETE USING (
                 current_setting('app.is_admin', true) = 'true'
             )");
         } catch (PDOException $e) {
-            error_log('team-manager: migration 012 RLS player_attribute_groups skipped — ' . $e->getMessage());
+            error_log('team-manager: migration 012 RLS member_attribute_groups skipped — ' . $e->getMessage());
         }
 
-        // players policies (no direct team_id — scope via team_memberships subquery)
+        // members policies (renamed from players — no direct team_id — scope via users subquery)
         try {
-            $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.players");
-            $pdo->exec("CREATE POLICY players_select ON {$schema}.players FOR SELECT USING (
+            $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.members");
+            $pdo->exec("DROP POLICY IF EXISTS members_select ON {$schema}.members");
+            $pdo->exec("CREATE POLICY members_select ON {$schema}.members FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = players.id
+                    WHERE u.member_id = members.id
                       AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                       AND u.role = 'member'
                 )
                 OR EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = players.id
+                    WHERE u.member_id = members.id
                       AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 )
             )");
-            $pdo->exec("DROP POLICY IF EXISTS players_insert ON {$schema}.players");
-            $pdo->exec("CREATE POLICY players_insert ON {$schema}.players FOR INSERT WITH CHECK (
+            $pdo->exec("DROP POLICY IF EXISTS players_insert ON {$schema}.members");
+            $pdo->exec("DROP POLICY IF EXISTS members_insert ON {$schema}.members");
+            $pdo->exec("CREATE POLICY members_insert ON {$schema}.members FOR INSERT WITH CHECK (
                 current_setting('app.is_admin', true) = 'true'
             )");
-            $pdo->exec("DROP POLICY IF EXISTS players_update ON {$schema}.players");
-            $pdo->exec("CREATE POLICY players_update ON {$schema}.players FOR UPDATE USING (
+            $pdo->exec("DROP POLICY IF EXISTS players_update ON {$schema}.members");
+            $pdo->exec("DROP POLICY IF EXISTS members_update ON {$schema}.members");
+            $pdo->exec("CREATE POLICY members_update ON {$schema}.members FOR UPDATE USING (
                 current_setting('app.is_admin', true) = 'true'
             )");
         } catch (PDOException $e) {
-            error_log('team-manager: migration 012 RLS players skipped — ' . $e->getMessage());
+            error_log('team-manager: migration 012 RLS members skipped — ' . $e->getMessage());
         }
 
         // team_memberships policies
@@ -866,10 +873,11 @@ function maybe_migrate_db(PDO $pdo): void {
             error_log('team-manager: migration 012 RLS coordinator_teams skipped — ' . $e->getMessage());
         }
 
-        // player_attributes policies (member reads only if visible_to_player = TRUE)
+        // member_attributes policies (renamed from player_attributes — member reads only if visible_to_player = TRUE)
         try {
-            $pdo->exec("DROP POLICY IF EXISTS pa_select ON {$schema}.player_attributes");
-            $pdo->exec("CREATE POLICY pa_select ON {$schema}.player_attributes FOR SELECT USING (
+            $pdo->exec("DROP POLICY IF EXISTS pa_select ON {$schema}.member_attributes");
+            $pdo->exec("DROP POLICY IF EXISTS ma_select ON {$schema}.member_attributes");
+            $pdo->exec("CREATE POLICY ma_select ON {$schema}.member_attributes FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (
@@ -877,80 +885,86 @@ function maybe_migrate_db(PDO $pdo): void {
                     AND visible_to_player = TRUE
                 )
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pa_insert ON {$schema}.player_attributes");
-            $pdo->exec("CREATE POLICY pa_insert ON {$schema}.player_attributes FOR INSERT WITH CHECK (
+            $pdo->exec("DROP POLICY IF EXISTS pa_insert ON {$schema}.member_attributes");
+            $pdo->exec("DROP POLICY IF EXISTS ma_insert ON {$schema}.member_attributes");
+            $pdo->exec("CREATE POLICY ma_insert ON {$schema}.member_attributes FOR INSERT WITH CHECK (
                 current_setting('app.is_admin', true) = 'true'
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pa_update ON {$schema}.player_attributes");
-            $pdo->exec("CREATE POLICY pa_update ON {$schema}.player_attributes FOR UPDATE USING (
+            $pdo->exec("DROP POLICY IF EXISTS pa_update ON {$schema}.member_attributes");
+            $pdo->exec("DROP POLICY IF EXISTS ma_update ON {$schema}.member_attributes");
+            $pdo->exec("CREATE POLICY ma_update ON {$schema}.member_attributes FOR UPDATE USING (
                 current_setting('app.is_admin', true) = 'true'
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pa_delete ON {$schema}.player_attributes");
-            $pdo->exec("CREATE POLICY pa_delete ON {$schema}.player_attributes FOR DELETE USING (
+            $pdo->exec("DROP POLICY IF EXISTS pa_delete ON {$schema}.member_attributes");
+            $pdo->exec("DROP POLICY IF EXISTS ma_delete ON {$schema}.member_attributes");
+            $pdo->exec("CREATE POLICY ma_delete ON {$schema}.member_attributes FOR DELETE USING (
                 current_setting('app.is_admin', true) = 'true'
             )");
         } catch (PDOException $e) {
-            error_log('team-manager: migration 012 RLS player_attributes skipped — ' . $e->getMessage());
+            error_log('team-manager: migration 012 RLS member_attributes skipped — ' . $e->getMessage());
         }
 
-        // player_attribute_values policies (most complex)
+        // member_attribute_values policies (renamed from player_attribute_values)
         try {
-            $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.player_attribute_values");
-            $pdo->exec("CREATE POLICY pav_select ON {$schema}.player_attribute_values FOR SELECT USING (
+            $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.member_attribute_values");
+            $pdo->exec("DROP POLICY IF EXISTS mav_select ON {$schema}.member_attribute_values");
+            $pdo->exec("CREATE POLICY mav_select ON {$schema}.member_attribute_values FOR SELECT USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (
                     current_setting('app.current_role', true) = 'member'
                     AND EXISTS (
                         SELECT 1 FROM {$schema}.users u
-                        WHERE u.player_id = player_attribute_values.player_id
+                        WHERE u.member_id = member_attribute_values.member_id
                           AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     )
                     AND EXISTS (
-                        SELECT 1 FROM {$schema}.player_attributes pa
-                        WHERE pa.id = player_attribute_values.attribute_id
-                          AND pa.visible_to_player = TRUE
+                        SELECT 1 FROM {$schema}.member_attributes ma
+                        WHERE ma.id = member_attribute_values.attribute_id
+                          AND ma.visible_to_player = TRUE
                     )
                 )
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pav_insert ON {$schema}.player_attribute_values");
-            $pdo->exec("CREATE POLICY pav_insert ON {$schema}.player_attribute_values FOR INSERT WITH CHECK (
+            $pdo->exec("DROP POLICY IF EXISTS pav_insert ON {$schema}.member_attribute_values");
+            $pdo->exec("DROP POLICY IF EXISTS mav_insert ON {$schema}.member_attribute_values");
+            $pdo->exec("CREATE POLICY mav_insert ON {$schema}.member_attribute_values FOR INSERT WITH CHECK (
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (
                     current_setting('app.current_role', true) = 'member'
                     AND EXISTS (
                         SELECT 1 FROM {$schema}.users u
-                        WHERE u.player_id = player_attribute_values.player_id
+                        WHERE u.member_id = member_attribute_values.member_id
                           AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     )
                     AND EXISTS (
-                        SELECT 1 FROM {$schema}.player_attributes pa
-                        WHERE pa.id = player_attribute_values.attribute_id
-                          AND pa.editable_by_player = TRUE
+                        SELECT 1 FROM {$schema}.member_attributes ma
+                        WHERE ma.id = member_attribute_values.attribute_id
+                          AND ma.editable_by_player = TRUE
                     )
                 )
             )");
-            $pdo->exec("DROP POLICY IF EXISTS pav_update ON {$schema}.player_attribute_values");
-            $pdo->exec("CREATE POLICY pav_update ON {$schema}.player_attribute_values FOR UPDATE USING (
+            $pdo->exec("DROP POLICY IF EXISTS pav_update ON {$schema}.member_attribute_values");
+            $pdo->exec("DROP POLICY IF EXISTS mav_update ON {$schema}.member_attribute_values");
+            $pdo->exec("CREATE POLICY mav_update ON {$schema}.member_attribute_values FOR UPDATE USING (
                 current_setting('app.is_admin', true) = 'true'
                 OR current_setting('app.current_role', true) = 'coordinator'
                 OR (
                     current_setting('app.current_role', true) = 'member'
                     AND EXISTS (
                         SELECT 1 FROM {$schema}.users u
-                        WHERE u.player_id = player_attribute_values.player_id
+                        WHERE u.member_id = member_attribute_values.member_id
                           AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                     )
                     AND EXISTS (
-                        SELECT 1 FROM {$schema}.player_attributes pa
-                        WHERE pa.id = player_attribute_values.attribute_id
-                          AND pa.editable_by_player = TRUE
+                        SELECT 1 FROM {$schema}.member_attributes ma
+                        WHERE ma.id = member_attribute_values.attribute_id
+                          AND ma.editable_by_player = TRUE
                     )
                 )
             )");
         } catch (PDOException $e) {
-            error_log('team-manager: migration 012 RLS player_attribute_values skipped — ' . $e->getMessage());
+            error_log('team-manager: migration 012 RLS member_attribute_values skipped — ' . $e->getMessage());
         }
     }
 
@@ -993,98 +1007,94 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 014 skipped — ' . $e->getMessage());
     }
 
-    // Migration 015: fix player_attribute_values RLS policies
-    // The old pav_select referenced team_memberships (now empty — membership moved to users.player_id).
-    // All three policies were in one try/catch, so a failure on pav_select silently skipped pav_insert/pav_update.
-    // Fix: separate try/catch per policy; pav_select now uses users.player_id.
+    // Migration 015: fix member_attribute_values RLS policies (renamed from player_attribute_values)
+    // The old pav_select referenced team_memberships (now empty — membership moved to users.member_id).
+    // All three policies were in one try/catch, so a failure silently skipped others.
+    // Fix: separate try/catch per policy; mav_select now uses users.member_id.
     try {
-        $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.player_attribute_values");
-        $pdo->exec("CREATE POLICY pav_select ON {$schema}.player_attribute_values FOR SELECT USING (
-            current_setting('app.is_admin', true) = 'true'
-            OR (
-                current_setting('app.current_role', true) = 'coordinator'
-                AND EXISTS (
-                    SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = player_attribute_values.player_id
-                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-                      AND u.role = 'member'
-                )
-            )
-            OR (
-                current_setting('app.current_role', true) = 'member'
-                AND EXISTS (
-                    SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = player_attribute_values.player_id
-                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
-                )
-                AND EXISTS (
-                    SELECT 1 FROM {$schema}.player_attributes pa
-                    WHERE pa.id = player_attribute_values.attribute_id
-                      AND pa.visible_to_player = TRUE
-                )
-            )
-        )");
-    } catch (PDOException $e) {
-        error_log('team-manager: migration 015 pav_select skipped — ' . $e->getMessage());
-    }
-    try {
-        $pdo->exec("DROP POLICY IF EXISTS pav_insert ON {$schema}.player_attribute_values");
-        $pdo->exec("CREATE POLICY pav_insert ON {$schema}.player_attribute_values FOR INSERT WITH CHECK (
+        $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.member_attribute_values");
+        $pdo->exec("DROP POLICY IF EXISTS mav_select ON {$schema}.member_attribute_values");
+        $pdo->exec("CREATE POLICY mav_select ON {$schema}.member_attribute_values FOR SELECT USING (
             current_setting('app.is_admin', true) = 'true'
             OR current_setting('app.current_role', true) = 'coordinator'
             OR (
                 current_setting('app.current_role', true) = 'member'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = player_attribute_values.player_id
+                    WHERE u.member_id = member_attribute_values.member_id
                       AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 )
                 AND EXISTS (
-                    SELECT 1 FROM {$schema}.player_attributes pa
-                    WHERE pa.id = player_attribute_values.attribute_id
-                      AND pa.editable_by_player = TRUE
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.visible_to_player = TRUE
                 )
             )
         )");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 015 pav_insert skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 015 mav_select skipped — ' . $e->getMessage());
     }
     try {
-        $pdo->exec("DROP POLICY IF EXISTS pav_update ON {$schema}.player_attribute_values");
-        $pdo->exec("CREATE POLICY pav_update ON {$schema}.player_attribute_values FOR UPDATE USING (
+        $pdo->exec("DROP POLICY IF EXISTS pav_insert ON {$schema}.member_attribute_values");
+        $pdo->exec("DROP POLICY IF EXISTS mav_insert ON {$schema}.member_attribute_values");
+        $pdo->exec("CREATE POLICY mav_insert ON {$schema}.member_attribute_values FOR INSERT WITH CHECK (
             current_setting('app.is_admin', true) = 'true'
             OR current_setting('app.current_role', true) = 'coordinator'
             OR (
                 current_setting('app.current_role', true) = 'member'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = player_attribute_values.player_id
+                    WHERE u.member_id = member_attribute_values.member_id
                       AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 )
                 AND EXISTS (
-                    SELECT 1 FROM {$schema}.player_attributes pa
-                    WHERE pa.id = player_attribute_values.attribute_id
-                      AND pa.editable_by_player = TRUE
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.editable_by_player = TRUE
                 )
             )
         )");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 015 pav_update skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 015 mav_insert skipped — ' . $e->getMessage());
+    }
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS pav_update ON {$schema}.member_attribute_values");
+        $pdo->exec("DROP POLICY IF EXISTS mav_update ON {$schema}.member_attribute_values");
+        $pdo->exec("CREATE POLICY mav_update ON {$schema}.member_attribute_values FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.member_id = member_attribute_values.member_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.editable_by_player = TRUE
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 015 mav_update skipped — ' . $e->getMessage());
     }
 
-    // Migration 016: fix players_select RLS (remove stale team_memberships ref), drop team_memberships.
-    // team_memberships was designed to track player-team history but was never populated after the
-    // model switched to users.player_id. The stale subquery made players invisible to coordinators
-    // under normal RLS, forcing set_admin_context() workarounds everywhere. Now uses users.player_id.
+    // Migration 016: fix members_select RLS (remove stale team_memberships ref), drop team_memberships.
+    // team_memberships was designed to track member-team history but was never populated after the
+    // model switched to users.member_id. The stale subquery made members invisible to coordinators
+    // under normal RLS, forcing set_admin_context() workarounds everywhere. Now uses users.member_id.
     try {
-        $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.players");
-        $pdo->exec("CREATE POLICY players_select ON {$schema}.players FOR SELECT USING (
+        $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.members");
+        $pdo->exec("DROP POLICY IF EXISTS members_select ON {$schema}.members");
+        $pdo->exec("CREATE POLICY members_select ON {$schema}.members FOR SELECT USING (
             current_setting('app.is_admin', true) = 'true'
             OR (
                 current_setting('app.current_role', true) = 'coordinator'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = players.id
+                    WHERE u.member_id = members.id
                       AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                       AND u.role = 'member'
                 )
@@ -1093,13 +1103,13 @@ function maybe_migrate_db(PDO $pdo): void {
                 current_setting('app.current_role', true) = 'member'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = players.id
+                    WHERE u.member_id = members.id
                       AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 )
             )
         )");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 016 players_select skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 016 members_select skipped — ' . $e->getMessage());
     }
     try {
         $pdo->exec("DROP TABLE IF EXISTS {$schema}.team_memberships CASCADE");
@@ -1107,54 +1117,54 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 016 drop team_memberships skipped — ' . $e->getMessage());
     }
 
-    // Migration 017: players.email + users.confirmed_at (GDPR first-login confirmation).
-    // Email moves from users to players (single profile across teams).
+    // Migration 017: members.email + users.confirmed_at (GDPR first-login confirmation).
+    // Email moves from users to members (single profile across teams).
     // confirmed_at tracks when a user first confirmed their data; NULL = not yet confirmed.
     try {
-        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL");
+        $pdo->exec("ALTER TABLE {$schema}.members ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 017 players.email skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 017 members.email skipped — ' . $e->getMessage());
     }
     try {
         $pdo->exec("ALTER TABLE {$schema}.users ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ NULL");
     } catch (PDOException $e) {
         error_log('team-manager: migration 017 users.confirmed_at skipped — ' . $e->getMessage());
     }
-    // Backfill: copy member emails to their linked player record (one-time)
+    // Backfill: copy member emails to their linked member record (one-time)
     try {
-        $pdo->exec("UPDATE {$schema}.players p
+        $pdo->exec("UPDATE {$schema}.members p
                     SET email = u.email
                     FROM {$schema}.users u
-                    WHERE u.player_id = p.id
+                    WHERE u.member_id = p.id
                       AND u.email IS NOT NULL
                       AND p.email IS NULL");
     } catch (PDOException $e) {
         error_log('team-manager: migration 017 email backfill skipped — ' . $e->getMessage());
     }
 
-    // Migration 018: players.contact_phone — phone number of the emergency contact person
+    // Migration 018: members.contact_phone — phone number of the emergency contact person
     try {
-        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50) NULL");
+        $pdo->exec("ALTER TABLE {$schema}.members ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50) NULL");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 018 players.contact_phone skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 018 members.contact_phone skipped — ' . $e->getMessage());
     }
 
-    // Migration 021: players.contact_email — email address of the emergency/parent contact person
+    // Migration 021: members.contact_email — email address of the emergency/parent contact person
     try {
-        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS contact_email VARCHAR(254) NULL");
+        $pdo->exec("ALTER TABLE {$schema}.members ADD COLUMN IF NOT EXISTS contact_email VARCHAR(254) NULL");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 021 players.contact_email skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 021 members.contact_email skipped — ' . $e->getMessage());
     }
 
-    // Migration 023: sync users first/last name from players for linked members — players is the canonical source
-    // because coordinators edit player profiles; users.first_name/last_name is never updated after account creation.
+    // Migration 023: sync users first/last name from members for linked users — members is the canonical source
+    // because coordinators edit member profiles; users.first_name/last_name is never updated after account creation.
     try {
         $pdo->exec(
             "UPDATE {$schema}.users u
              SET first_name = p.first_name,
                  last_name  = p.last_name
-             FROM {$schema}.players p
-             WHERE u.player_id = p.id
+             FROM {$schema}.members p
+             WHERE u.member_id = p.id
                AND u.role = 'member'
                AND (u.first_name <> p.first_name OR u.last_name <> p.last_name)"
         );
@@ -1162,20 +1172,20 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 023 users name sync skipped — ' . $e->getMessage());
     }
 
-    // Migration 022: backfill players.email from users.email for linked members where players.email is NULL
-    // users.email is not edited in normal flow; players.email is the canonical address for members.
+    // Migration 022: backfill members.email from users.email for linked members where members.email is NULL
+    // users.email is not edited in normal flow; members.email is the canonical address for members.
     try {
         $pdo->exec(
-            "UPDATE {$schema}.players p
+            "UPDATE {$schema}.members p
              SET email = u.email
              FROM {$schema}.users u
-             WHERE u.player_id = p.id
+             WHERE u.member_id = p.id
                AND u.role = 'member'
                AND u.email IS NOT NULL
                AND (p.email IS NULL OR p.email = '')"
         );
     } catch (PDOException $e) {
-        error_log('team-manager: migration 022 players.email backfill skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 022 members.email backfill skipped — ' . $e->getMessage());
     }
 
     // Migration 020: teams.sort_order — custom ordering for team lists
@@ -1185,33 +1195,34 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 020 teams.sort_order skipped — ' . $e->getMessage());
     }
 
-    // Migration 019: widen pav_select coordinator arm — old policy restricted reads to players
+    // Migration 019: widen mav_select coordinator arm — old policy restricted reads to members
     // that have a member account on the coordinator's current team, causing a write-succeeds/
-    // read-fails inconsistency for cross-team or unlinked players. Now matches pav_insert/pav_update.
+    // read-fails inconsistency for cross-team or unlinked members. Now matches mav_insert/mav_update.
     try {
-        $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.player_attribute_values");
-        $pdo->exec("CREATE POLICY pav_select ON {$schema}.player_attribute_values FOR SELECT USING (
+        $pdo->exec("DROP POLICY IF EXISTS pav_select ON {$schema}.member_attribute_values");
+        $pdo->exec("DROP POLICY IF EXISTS mav_select ON {$schema}.member_attribute_values");
+        $pdo->exec("CREATE POLICY mav_select ON {$schema}.member_attribute_values FOR SELECT USING (
             current_setting('app.is_admin', true) = 'true'
             OR current_setting('app.current_role', true) = 'coordinator'
             OR (
                 current_setting('app.current_role', true) = 'member'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = player_attribute_values.player_id
+                    WHERE u.member_id = member_attribute_values.member_id
                       AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
                 )
                 AND EXISTS (
-                    SELECT 1 FROM {$schema}.player_attributes pa
-                    WHERE pa.id = player_attribute_values.attribute_id
-                      AND pa.visible_to_player = TRUE
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.visible_to_player = TRUE
                 )
             )
         )");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 019 pav_select skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 019 mav_select skipped — ' . $e->getMessage());
     }
 
-    // Migration 024: create player records for all users without player_id; enforce NOT NULL.
+    // Migration 024: create member records for all users without member_id; enforce NOT NULL.
     // For production: run database/migrate_024_player_link.sql FIRST (makes this a no-op).
     // For dev/fresh installs: this handles both initial setup and any gaps.
     try {
@@ -1225,28 +1236,28 @@ function maybe_migrate_db(PDO $pdo): void {
                 FOR u IN
                     SELECT id, first_name, last_name, email, phone, club_id, created_at
                     FROM {$schema}.users
-                    WHERE player_id IS NULL
+                    WHERE member_id IS NULL
                 LOOP
-                    INSERT INTO {$schema}.players (first_name, last_name, email, phone, club_id, created_at)
+                    INSERT INTO {$schema}.members (first_name, last_name, email, phone, club_id, created_at)
                     VALUES (u.first_name, u.last_name, u.email, u.phone, u.club_id, u.created_at)
                     RETURNING id INTO pid;
 
-                    UPDATE {$schema}.users SET player_id = pid WHERE id = u.id;
+                    UPDATE {$schema}.users SET member_id = pid WHERE id = u.id;
                 END LOOP;
             END \$\$
         ");
-        $pdo->exec("ALTER TABLE {$schema}.users ALTER COLUMN player_id SET NOT NULL");
+        $pdo->exec("ALTER TABLE {$schema}.users ALTER COLUMN member_id SET NOT NULL");
         $pdo->exec("SELECT set_config('app.is_admin', '', false)");
     } catch (PDOException $e) {
         $pdo->exec("SELECT set_config('app.is_admin', '', false)");
-        error_log('team-manager: migration 024 player_id enforce skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 024 member_id enforce skipped — ' . $e->getMessage());
     }
 
-    // Migration 025a: is_active flag on players (soft-delete support)
+    // Migration 025a: is_active flag on members (soft-delete support)
     try {
-        $pdo->exec("ALTER TABLE {$schema}.players ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE");
+        $pdo->exec("ALTER TABLE {$schema}.members ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE");
     } catch (PDOException $e) {
-        error_log('team-manager: migration 025a players.is_active skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 025a members.is_active skipped — ' . $e->getMessage());
     }
 
     // Migration 025b: drop deprecated personal columns from users (canonical data is in players)
@@ -1265,32 +1276,34 @@ function maybe_migrate_db(PDO $pdo): void {
         }
     }
 
-    // Migration 026: players_delete RLS policy (missing from initial schema — blocked admin DELETE)
-    // players table had FORCE RLS with no DELETE policy, so DELETE silently hit 0 rows even for admin.
+    // Migration 026: members_delete RLS policy (missing from initial schema — blocked admin DELETE)
+    // members table had FORCE RLS with no DELETE policy, so DELETE silently hit 0 rows even for admin.
     try {
-        $pdo->exec("DROP POLICY IF EXISTS players_delete ON {$schema}.players");
-        $pdo->exec("CREATE POLICY players_delete ON {$schema}.players FOR DELETE USING (
+        $pdo->exec("DROP POLICY IF EXISTS players_delete ON {$schema}.members");
+        $pdo->exec("DROP POLICY IF EXISTS members_delete ON {$schema}.members");
+        $pdo->exec("CREATE POLICY members_delete ON {$schema}.members FOR DELETE USING (
             current_setting('app.is_admin', true) = 'true'
         )");
-        error_log('team-manager: migration 026 players_delete policy created');
+        error_log('team-manager: migration 026 members_delete policy created');
     } catch (PDOException $e) {
-        error_log('team-manager: migration 026 players_delete skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 026 members_delete skipped — ' . $e->getMessage());
     }
 
-    // Migration 027: widen players_select so all roles can see relevant player records.
-    // (a) Members can see all player records for member users in their team (show_all_rows support).
-    // (b) Coordinators can see their OWN player record (coordinator profile page).
-    //     Previously only member-linked players were visible to coordinators, blocking /coordinator/profile.
-    // (c) Any authenticated user can see their own player record (self-view fallback).
+    // Migration 027: widen members_select so all roles can see relevant member records.
+    // (a) Members can see all member records for member users in their team (show_all_rows support).
+    // (b) Coordinators can see their OWN member record (coordinator profile page).
+    //     Previously only member-linked profiles were visible to coordinators, blocking /coordinator/profile.
+    // (c) Any authenticated user can see their own member record (self-view fallback).
     try {
-        $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.players");
-        $pdo->exec("CREATE POLICY players_select ON {$schema}.players FOR SELECT USING (
+        $pdo->exec("DROP POLICY IF EXISTS players_select ON {$schema}.members");
+        $pdo->exec("DROP POLICY IF EXISTS members_select ON {$schema}.members");
+        $pdo->exec("CREATE POLICY members_select ON {$schema}.members FOR SELECT USING (
             current_setting('app.is_admin', true) = 'true'
             OR (
                 current_setting('app.current_role', true) = 'coordinator'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = players.id
+                    WHERE u.member_id = members.id
                       AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                       AND u.role = 'member'
                 )
@@ -1299,21 +1312,337 @@ function maybe_migrate_db(PDO $pdo): void {
                 current_setting('app.current_role', true) = 'member'
                 AND EXISTS (
                     SELECT 1 FROM {$schema}.users u
-                    WHERE u.player_id = players.id
+                    WHERE u.member_id = members.id
                       AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                       AND u.role = 'member'
                 )
             )
             OR EXISTS (
                 SELECT 1 FROM {$schema}.users u
-                WHERE u.player_id = players.id
+                WHERE u.member_id = members.id
                   AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             )
         )");
-        error_log('team-manager: migration 027 players_select widened (member team-scope + self-view)');
+        error_log('team-manager: migration 027 members_select widened (member team-scope + self-view)');
     } catch (PDOException $e) {
-        error_log('team-manager: migration 027 players_select skipped — ' . $e->getMessage());
+        error_log('team-manager: migration 027 members_select skipped — ' . $e->getMessage());
     }
+
+    // Migration 028: add missing UPDATE RLS policies for columns and list_global_columns.
+    // columns_update was never in maybe_migrate_db (only in db_init_rls); lgc_update was never
+    // created at all. Without these, UPDATE statements are silently blocked (0 rows, no error)
+    // under FORCE ROW LEVEL SECURITY.
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS columns_update ON {$schema}.columns");
+        $pdo->exec("CREATE POLICY columns_update ON {$schema}.columns FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (current_setting('app.current_role', true) = 'coordinator'
+                AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                AND (is_system IS NULL OR is_system = FALSE))
+        ) WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+            OR (current_setting('app.current_role', true) = 'coordinator'
+                AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                AND (is_system IS NULL OR is_system = FALSE))
+        )");
+        $pdo->exec("DROP POLICY IF EXISTS lgc_update ON {$schema}.list_global_columns");
+        $pdo->exec("CREATE POLICY lgc_update ON {$schema}.list_global_columns FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (current_setting('app.current_role', true) = 'coordinator'
+                AND EXISTS (SELECT 1 FROM {$schema}.lists
+                            WHERE lists.id = list_global_columns.list_id
+                            AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        ) WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+            OR (current_setting('app.current_role', true) = 'coordinator'
+                AND EXISTS (SELECT 1 FROM {$schema}.lists
+                            WHERE lists.id = list_global_columns.list_id
+                            AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        )");
+        error_log('team-manager: migration 028 columns_update + lgc_update RLS policies added');
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 028 skipped — ' . $e->getMessage());
+    }
+
+    // Migration 029: rename player* → member* (tables, columns, RLS policies)
+    // Guarded renames use column/table existence checks so re-runs are safe.
+
+    // ── cells.player_id → cells.member_id ──────────────────────────────────────
+    try {
+        $pid_cells = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema='{$schema}' AND table_name='cells' AND column_name='player_id'"
+        )->fetchColumn();
+        if ($pid_cells) {
+            $pdo->exec("ALTER TABLE {$schema}.cells RENAME COLUMN player_id TO member_id");
+            $pdo->exec("ALTER INDEX IF EXISTS {$schema}.idx_cells_player_id RENAME TO idx_cells_member_id");
+            error_log('team-manager: migration 029 cells.player_id → member_id');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 cells rename skipped — ' . $e->getMessage());
+    }
+
+    // ── users.player_id → users.member_id ──────────────────────────────────────
+    try {
+        $pid_users = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema='{$schema}' AND table_name='users' AND column_name='player_id'"
+        )->fetchColumn();
+        if ($pid_users) {
+            $pdo->exec("ALTER TABLE {$schema}.users RENAME COLUMN player_id TO member_id");
+            error_log('team-manager: migration 029 users.player_id → member_id');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 users rename skipped — ' . $e->getMessage());
+    }
+
+    // ── player_attribute_values: rename player_id column + rename table ─────────
+    try {
+        $pav_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.tables
+             WHERE table_schema='{$schema}' AND table_name='player_attribute_values'"
+        )->fetchColumn();
+        if ($pav_exists) {
+            $pav_pid = (bool)$pdo->query(
+                "SELECT 1 FROM information_schema.columns
+                 WHERE table_schema='{$schema}' AND table_name='player_attribute_values' AND column_name='player_id'"
+            )->fetchColumn();
+            if ($pav_pid) {
+                $pdo->exec("ALTER TABLE {$schema}.player_attribute_values RENAME COLUMN player_id TO member_id");
+                $pdo->exec("ALTER INDEX IF EXISTS {$schema}.idx_pav_player RENAME TO idx_mav_member");
+            }
+            $pdo->exec("ALTER TABLE {$schema}.player_attribute_values RENAME TO member_attribute_values");
+            error_log('team-manager: migration 029 player_attribute_values → member_attribute_values');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 player_attribute_values rename skipped — ' . $e->getMessage());
+    }
+
+    // ── player_attributes → member_attributes ───────────────────────────────────
+    try {
+        $pa_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.tables
+             WHERE table_schema='{$schema}' AND table_name='player_attributes'"
+        )->fetchColumn();
+        if ($pa_exists) {
+            $pdo->exec("ALTER TABLE {$schema}.player_attributes RENAME TO member_attributes");
+            error_log('team-manager: migration 029 player_attributes → member_attributes');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 player_attributes rename skipped — ' . $e->getMessage());
+    }
+
+    // ── player_attribute_groups → member_attribute_groups ───────────────────────
+    try {
+        $pag_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.tables
+             WHERE table_schema='{$schema}' AND table_name='player_attribute_groups'"
+        )->fetchColumn();
+        if ($pag_exists) {
+            $pdo->exec("ALTER TABLE {$schema}.player_attribute_groups RENAME TO member_attribute_groups");
+            error_log('team-manager: migration 029 player_attribute_groups → member_attribute_groups');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 player_attribute_groups rename skipped — ' . $e->getMessage());
+    }
+
+    // ── players → members ────────────────────────────────────────────────────────
+    try {
+        $pl_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.tables
+             WHERE table_schema='{$schema}' AND table_name='players'"
+        )->fetchColumn();
+        if ($pl_exists) {
+            $pdo->exec("ALTER TABLE {$schema}.players RENAME TO members");
+            $pdo->exec("ALTER INDEX IF EXISTS {$schema}.idx_players_club RENAME TO idx_members_club");
+            error_log('team-manager: migration 029 players → members');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 players rename skipped — ' . $e->getMessage());
+    }
+
+    // ── Recreate all RLS policies touching renamed tables/columns (always run) ─
+    // cells: reference member_id column
+    try {
+        $pdo->exec("DROP POLICY IF EXISTS cells_insert ON {$schema}.cells");
+        $pdo->exec("CREATE POLICY cells_insert ON {$schema}.cells FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (current_setting('app.current_role', true) = 'member'
+                AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                AND EXISTS (SELECT 1 FROM {$schema}.lists
+                            WHERE lists.id = cells.list_id
+                            AND lists.visibility = 'public'
+                            AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        )");
+        $pdo->exec("DROP POLICY IF EXISTS cells_ownership_update ON {$schema}.cells");
+        $pdo->exec("CREATE POLICY cells_ownership_update ON {$schema}.cells FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (current_setting('app.current_role', true) = 'member'
+                AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                AND EXISTS (SELECT 1 FROM {$schema}.lists
+                            WHERE lists.id = cells.list_id
+                            AND lists.visibility = 'public'
+                            AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 cells RLS skipped — ' . $e->getMessage());
+    }
+
+    // members table (renamed from players): drop old player_* policy names, create members_*
+    foreach (['players_select','players_insert','players_update','players_delete',
+              'members_select','members_insert','members_update','members_delete'] as $_pol) {
+        try { $pdo->exec("DROP POLICY IF EXISTS {$_pol} ON {$schema}.members"); } catch (PDOException $e) {}
+    }
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.members ENABLE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.members FORCE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    try {
+        $pdo->exec("CREATE POLICY members_select ON {$schema}.members FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR (
+                current_setting('app.current_role', true) IN ('coordinator', 'member')
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.member_id = members.id
+                      AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+                      AND u.role = 'member'
+                )
+            )
+            OR EXISTS (
+                SELECT 1 FROM {$schema}.users u
+                WHERE u.member_id = members.id
+                  AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            )
+        )");
+        $pdo->exec("CREATE POLICY members_insert ON {$schema}.members FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        $pdo->exec("CREATE POLICY members_update ON {$schema}.members FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        $pdo->exec("CREATE POLICY members_delete ON {$schema}.members FOR DELETE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 members RLS skipped — ' . $e->getMessage());
+    }
+
+    // member_attribute_groups (renamed from player_attribute_groups)
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.member_attribute_groups ENABLE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.member_attribute_groups FORCE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    foreach (['pag_select','pag_insert','pag_update','pag_delete',
+              'mag_select','mag_insert','mag_update','mag_delete'] as $_pol) {
+        try { $pdo->exec("DROP POLICY IF EXISTS {$_pol} ON {$schema}.member_attribute_groups"); } catch (PDOException $e) {}
+    }
+    try {
+        $pdo->exec("CREATE POLICY mag_select ON {$schema}.member_attribute_groups FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
+        )");
+        $pdo->exec("CREATE POLICY mag_insert ON {$schema}.member_attribute_groups FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        $pdo->exec("CREATE POLICY mag_update ON {$schema}.member_attribute_groups FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        $pdo->exec("CREATE POLICY mag_delete ON {$schema}.member_attribute_groups FOR DELETE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 member_attribute_groups RLS skipped — ' . $e->getMessage());
+    }
+
+    // member_attributes (renamed from player_attributes)
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.member_attributes ENABLE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.member_attributes FORCE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    foreach (['pa_select','pa_insert','pa_update','pa_delete',
+              'ma_select','ma_insert','ma_update','ma_delete'] as $_pol) {
+        try { $pdo->exec("DROP POLICY IF EXISTS {$_pol} ON {$schema}.member_attributes"); } catch (PDOException $e) {}
+    }
+    try {
+        $pdo->exec("CREATE POLICY ma_select ON {$schema}.member_attributes FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (current_setting('app.current_role', true) = 'member' AND visible_to_player = TRUE)
+        )");
+        $pdo->exec("CREATE POLICY ma_insert ON {$schema}.member_attributes FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        $pdo->exec("CREATE POLICY ma_update ON {$schema}.member_attributes FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+        $pdo->exec("CREATE POLICY ma_delete ON {$schema}.member_attributes FOR DELETE USING (
+            current_setting('app.is_admin', true) = 'true'
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 member_attributes RLS skipped — ' . $e->getMessage());
+    }
+
+    // member_attribute_values (renamed from player_attribute_values)
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.member_attribute_values ENABLE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    try { $pdo->exec("ALTER TABLE IF EXISTS {$schema}.member_attribute_values FORCE ROW LEVEL SECURITY"); } catch (PDOException $e) {}
+    foreach (['pav_select','pav_insert','pav_update',
+              'mav_select','mav_insert','mav_update'] as $_pol) {
+        try { $pdo->exec("DROP POLICY IF EXISTS {$_pol} ON {$schema}.member_attribute_values"); } catch (PDOException $e) {}
+    }
+    try {
+        $pdo->exec("CREATE POLICY mav_select ON {$schema}.member_attribute_values FOR SELECT USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.member_id = member_attribute_values.member_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.visible_to_player = TRUE
+                )
+            )
+        )");
+        $pdo->exec("CREATE POLICY mav_insert ON {$schema}.member_attribute_values FOR INSERT WITH CHECK (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.member_id = member_attribute_values.member_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.editable_by_player = TRUE
+                )
+            )
+        )");
+        $pdo->exec("CREATE POLICY mav_update ON {$schema}.member_attribute_values FOR UPDATE USING (
+            current_setting('app.is_admin', true) = 'true'
+            OR current_setting('app.current_role', true) = 'coordinator'
+            OR (
+                current_setting('app.current_role', true) = 'member'
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.users u
+                    WHERE u.member_id = member_attribute_values.member_id
+                      AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+                )
+                AND EXISTS (
+                    SELECT 1 FROM {$schema}.member_attributes ma
+                    WHERE ma.id = member_attribute_values.attribute_id
+                      AND ma.editable_by_player = TRUE
+                )
+            )
+        )");
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 member_attribute_values RLS skipped — ' . $e->getMessage());
+    }
+
+    error_log('team-manager: migration 029 complete');
 
 }
 
@@ -1403,22 +1732,22 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON {$s}.list_global_columns(list_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lgc_column_id ON {$s}.list_global_columns(column_id)");
 
-    // Note: player_id has no FK to users — it also stores free_list_rows.id for free lists.
+    // Note: member_id has no FK to users — it also stores free_list_rows.id for free lists.
     // The app layer enforces ownership; RLS enforces row visibility.
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.cells (
         id         SERIAL PRIMARY KEY,
         list_id    INTEGER NOT NULL REFERENCES {$s}.lists(id)    ON DELETE CASCADE,
         column_id  INTEGER NOT NULL REFERENCES {$s}.columns(id)  ON DELETE CASCADE,
-        player_id  INTEGER NOT NULL,
+        member_id  INTEGER NOT NULL,
         value      TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        UNIQUE (list_id, column_id, player_id)
+        UNIQUE (list_id, column_id, member_id)
     )");
 
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_list_id   ON {$s}.cells(list_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_column_id ON {$s}.cells(column_id)");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_player_id ON {$s}.cells(player_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_cells_member_id ON {$s}.cells(member_id)");
 
     // free_list_rows: custom row labels for 'free' type lists
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.free_list_rows (
@@ -1473,7 +1802,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON {$s}.ticker_members(user_id, team_id)");
 
-    // ── Phase 8: Player & Club Management ─────────────────────────────────
+    // ── Phase 8: Member & Club Management ─────────────────────────────────
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.clubs (
         id         SERIAL PRIMARY KEY,
         name       VARCHAR(100) NOT NULL,
@@ -1481,14 +1810,14 @@ function db_init_schema(PDO $pdo, string $s): void {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.player_attribute_groups (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.member_attribute_groups (
         id         SERIAL PRIMARY KEY,
         name       VARCHAR(100) NOT NULL,
         sort_order INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.players (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.members (
         id           SERIAL PRIMARY KEY,
         club_id      INTEGER REFERENCES {$s}.clubs(id) ON DELETE SET NULL,
         first_name   VARCHAR(100) NOT NULL,
@@ -1501,7 +1830,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         contact_email VARCHAR(254) NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_players_club ON {$s}.players(club_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_members_club ON {$s}.members(club_id)");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.coordinator_teams (
         id        SERIAL PRIMARY KEY,
@@ -1514,26 +1843,26 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ct_team ON {$s}.coordinator_teams(team_id)");
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_ct_active ON {$s}.coordinator_teams(user_id, team_id) WHERE left_at IS NULL");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.player_attributes (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.member_attributes (
         id                 SERIAL PRIMARY KEY,
-        group_id           INTEGER NOT NULL REFERENCES {$s}.player_attribute_groups(id) ON DELETE CASCADE,
+        group_id           INTEGER NOT NULL REFERENCES {$s}.member_attribute_groups(id) ON DELETE CASCADE,
         name               VARCHAR(100) NOT NULL,
         visible_to_player  BOOLEAN NOT NULL DEFAULT TRUE,
         editable_by_player BOOLEAN NOT NULL DEFAULT FALSE,
         sort_order         INTEGER NOT NULL DEFAULT 0,
         created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_pa_group ON {$s}.player_attributes(group_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ma_group ON {$s}.member_attributes(group_id)");
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.player_attribute_values (
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.member_attribute_values (
         id           SERIAL PRIMARY KEY,
-        player_id    INTEGER NOT NULL REFERENCES {$s}.players(id) ON DELETE CASCADE,
-        attribute_id INTEGER NOT NULL REFERENCES {$s}.player_attributes(id) ON DELETE CASCADE,
+        member_id    INTEGER NOT NULL REFERENCES {$s}.members(id) ON DELETE CASCADE,
+        attribute_id INTEGER NOT NULL REFERENCES {$s}.member_attributes(id) ON DELETE CASCADE,
         value        TEXT NOT NULL DEFAULT '',
         updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        UNIQUE (player_id, attribute_id)
+        UNIQUE (member_id, attribute_id)
     )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_pav_player ON {$s}.player_attribute_values(player_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_mav_member ON {$s}.member_attribute_values(member_id)");
 }
 
 /**
@@ -1656,6 +1985,20 @@ function db_init_rls(PDO $pdo, string $s): void {
                         AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
     )");
 
+    $pdo->exec("CREATE POLICY lgc_update ON {$s}.list_global_columns FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coordinator'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = list_global_columns.list_id
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coordinator'
+            AND EXISTS (SELECT 1 FROM {$s}.lists
+                        WHERE lists.id = list_global_columns.list_id
+                        AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer))
+    )");
+
     $pdo->exec("ALTER TABLE {$s}.cells ENABLE ROW LEVEL SECURITY");
     $pdo->exec("ALTER TABLE {$s}.cells FORCE ROW LEVEL SECURITY");
 
@@ -1673,7 +2016,7 @@ function db_init_rls(PDO $pdo, string $s): void {
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (current_setting('app.current_role', true) = 'member'
-            AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id
                         AND lists.visibility = 'public'
@@ -1684,7 +2027,7 @@ function db_init_rls(PDO $pdo, string $s): void {
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (current_setting('app.current_role', true) = 'member'
-            AND player_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND member_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.lists
                         WHERE lists.id = cells.list_id
                         AND lists.visibility = 'public'
@@ -1830,7 +2173,7 @@ function db_init_rls(PDO $pdo, string $s): void {
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
     )");
 
-    // ── Phase 8: Player & Club Management RLS ─────────────────────────────
+    // ── Phase 8: Member & Club Management RLS ─────────────────────────────
     $pdo->exec("ALTER TABLE {$s}.clubs ENABLE ROW LEVEL SECURITY");
     try {
         $pdo->exec("ALTER TABLE {$s}.clubs FORCE ROW LEVEL SECURITY");
@@ -1851,56 +2194,56 @@ function db_init_rls(PDO $pdo, string $s): void {
         current_setting('app.is_admin', true) = 'true'
     )");
 
-    $pdo->exec("ALTER TABLE {$s}.player_attribute_groups ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.member_attribute_groups ENABLE ROW LEVEL SECURITY");
     try {
-        $pdo->exec("ALTER TABLE {$s}.player_attribute_groups FORCE ROW LEVEL SECURITY");
+        $pdo->exec("ALTER TABLE {$s}.member_attribute_groups FORCE ROW LEVEL SECURITY");
     } catch (PDOException $e) {
-        error_log('db_init_rls: FORCE RLS player_attribute_groups skipped (non-fatal) — ' . $e->getMessage());
+        error_log('db_init_rls: FORCE RLS member_attribute_groups skipped (non-fatal) — ' . $e->getMessage());
     }
-    $pdo->exec("CREATE POLICY pag_select ON {$s}.player_attribute_groups FOR SELECT USING (
+    $pdo->exec("CREATE POLICY mag_select ON {$s}.member_attribute_groups FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
         OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
     )");
-    $pdo->exec("CREATE POLICY pag_insert ON {$s}.player_attribute_groups FOR INSERT WITH CHECK (
+    $pdo->exec("CREATE POLICY mag_insert ON {$s}.member_attribute_groups FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY pag_update ON {$s}.player_attribute_groups FOR UPDATE USING (
+    $pdo->exec("CREATE POLICY mag_update ON {$s}.member_attribute_groups FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY pag_delete ON {$s}.player_attribute_groups FOR DELETE USING (
+    $pdo->exec("CREATE POLICY mag_delete ON {$s}.member_attribute_groups FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
 
-    $pdo->exec("ALTER TABLE {$s}.players ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.members ENABLE ROW LEVEL SECURITY");
     try {
-        $pdo->exec("ALTER TABLE {$s}.players FORCE ROW LEVEL SECURITY");
+        $pdo->exec("ALTER TABLE {$s}.members FORCE ROW LEVEL SECURITY");
     } catch (PDOException $e) {
-        error_log('db_init_rls: FORCE RLS players skipped (non-fatal) — ' . $e->getMessage());
+        error_log('db_init_rls: FORCE RLS members skipped (non-fatal) — ' . $e->getMessage());
     }
-    $pdo->exec("CREATE POLICY players_select ON {$s}.players FOR SELECT USING (
+    $pdo->exec("CREATE POLICY members_select ON {$s}.members FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
         OR (
-            current_setting('app.current_role', true) = 'coordinator'
+            current_setting('app.current_role', true) IN ('coordinator', 'member')
             AND EXISTS (
                 SELECT 1 FROM {$s}.users u
-                WHERE u.player_id = players.id
+                WHERE u.member_id = members.id
                   AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
                   AND u.role = 'member'
             )
         )
-        OR (
-            current_setting('app.current_role', true) = 'member'
-            AND EXISTS (
-                SELECT 1 FROM {$s}.users u
-                WHERE u.player_id = players.id
-                  AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
-            )
+        OR EXISTS (
+            SELECT 1 FROM {$s}.users u
+            WHERE u.member_id = members.id
+              AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
         )
     )");
-    $pdo->exec("CREATE POLICY players_insert ON {$s}.players FOR INSERT WITH CHECK (
+    $pdo->exec("CREATE POLICY members_insert ON {$s}.members FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY players_update ON {$s}.players FOR UPDATE USING (
+    $pdo->exec("CREATE POLICY members_update ON {$s}.members FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+    )");
+    $pdo->exec("CREATE POLICY members_delete ON {$s}.members FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
 
@@ -1921,13 +2264,13 @@ function db_init_rls(PDO $pdo, string $s): void {
         current_setting('app.is_admin', true) = 'true'
     )");
 
-    $pdo->exec("ALTER TABLE {$s}.player_attributes ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.member_attributes ENABLE ROW LEVEL SECURITY");
     try {
-        $pdo->exec("ALTER TABLE {$s}.player_attributes FORCE ROW LEVEL SECURITY");
+        $pdo->exec("ALTER TABLE {$s}.member_attributes FORCE ROW LEVEL SECURITY");
     } catch (PDOException $e) {
-        error_log('db_init_rls: FORCE RLS player_attributes skipped (non-fatal) — ' . $e->getMessage());
+        error_log('db_init_rls: FORCE RLS member_attributes skipped (non-fatal) — ' . $e->getMessage());
     }
-    $pdo->exec("CREATE POLICY pa_select ON {$s}.player_attributes FOR SELECT USING (
+    $pdo->exec("CREATE POLICY ma_select ON {$s}.member_attributes FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (
@@ -1935,78 +2278,70 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND visible_to_player = TRUE
         )
     )");
-    $pdo->exec("CREATE POLICY pa_insert ON {$s}.player_attributes FOR INSERT WITH CHECK (
+    $pdo->exec("CREATE POLICY ma_insert ON {$s}.member_attributes FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY pa_update ON {$s}.player_attributes FOR UPDATE USING (
+    $pdo->exec("CREATE POLICY ma_update ON {$s}.member_attributes FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY pa_delete ON {$s}.player_attributes FOR DELETE USING (
+    $pdo->exec("CREATE POLICY ma_delete ON {$s}.member_attributes FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
 
-    $pdo->exec("ALTER TABLE {$s}.player_attribute_values ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.member_attribute_values ENABLE ROW LEVEL SECURITY");
     try {
-        $pdo->exec("ALTER TABLE {$s}.player_attribute_values FORCE ROW LEVEL SECURITY");
+        $pdo->exec("ALTER TABLE {$s}.member_attribute_values FORCE ROW LEVEL SECURITY");
     } catch (PDOException $e) {
-        error_log('db_init_rls: FORCE RLS player_attribute_values skipped (non-fatal) — ' . $e->getMessage());
+        error_log('db_init_rls: FORCE RLS member_attribute_values skipped (non-fatal) — ' . $e->getMessage());
     }
-    $pdo->exec("CREATE POLICY pav_select ON {$s}.player_attribute_values FOR SELECT USING (
-        current_setting('app.is_admin', true) = 'true'
-        OR (
-            current_setting('app.current_role', true) = 'coordinator'
-            AND EXISTS (
-                SELECT 1 FROM {$s}.users u
-                WHERE u.player_id = player_attribute_values.player_id
-                  AND u.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-                  AND u.role = 'member'
-            )
-        )
-        OR (
-            current_setting('app.current_role', true) = 'member'
-            AND EXISTS (
-                SELECT 1 FROM {$s}.users u
-                WHERE u.player_id = player_attribute_values.player_id
-                  AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
-            )
-            AND EXISTS (
-                SELECT 1 FROM {$s}.player_attributes pa
-                WHERE pa.id = player_attribute_values.attribute_id
-                  AND pa.visible_to_player = TRUE
-            )
-        )
-    )");
-    $pdo->exec("CREATE POLICY pav_insert ON {$s}.player_attribute_values FOR INSERT WITH CHECK (
+    $pdo->exec("CREATE POLICY mav_select ON {$s}.member_attribute_values FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
             AND EXISTS (
                 SELECT 1 FROM {$s}.users u
-                WHERE u.player_id = player_attribute_values.player_id
+                WHERE u.member_id = member_attribute_values.member_id
                   AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             )
             AND EXISTS (
-                SELECT 1 FROM {$s}.player_attributes pa
-                WHERE pa.id = player_attribute_values.attribute_id
-                  AND pa.editable_by_player = TRUE
+                SELECT 1 FROM {$s}.member_attributes ma
+                WHERE ma.id = member_attribute_values.attribute_id
+                  AND ma.visible_to_player = TRUE
             )
         )
     )");
-    $pdo->exec("CREATE POLICY pav_update ON {$s}.player_attribute_values FOR UPDATE USING (
+    $pdo->exec("CREATE POLICY mav_insert ON {$s}.member_attribute_values FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
             AND EXISTS (
                 SELECT 1 FROM {$s}.users u
-                WHERE u.player_id = player_attribute_values.player_id
+                WHERE u.member_id = member_attribute_values.member_id
                   AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
             )
             AND EXISTS (
-                SELECT 1 FROM {$s}.player_attributes pa
-                WHERE pa.id = player_attribute_values.attribute_id
-                  AND pa.editable_by_player = TRUE
+                SELECT 1 FROM {$s}.member_attributes ma
+                WHERE ma.id = member_attribute_values.attribute_id
+                  AND ma.editable_by_player = TRUE
+            )
+        )
+    )");
+    $pdo->exec("CREATE POLICY mav_update ON {$s}.member_attribute_values FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR current_setting('app.current_role', true) = 'coordinator'
+        OR (
+            current_setting('app.current_role', true) = 'member'
+            AND EXISTS (
+                SELECT 1 FROM {$s}.users u
+                WHERE u.member_id = member_attribute_values.member_id
+                  AND u.id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            )
+            AND EXISTS (
+                SELECT 1 FROM {$s}.member_attributes ma
+                WHERE ma.id = member_attribute_values.attribute_id
+                  AND ma.editable_by_player = TRUE
             )
         )
     )");
