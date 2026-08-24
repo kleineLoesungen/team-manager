@@ -279,6 +279,21 @@ CREATE POLICY cells_insert ON cells
         )
     );
 
+-- Cells DELETE: admin (bypasses RLS) or coordinator can delete cells in their team's lists
+CREATE POLICY cells_delete ON cells
+    FOR DELETE
+    USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (
+            current_setting('app.current_role', true) = 'coordinator'
+            AND EXISTS (
+                SELECT 1 FROM lists
+                WHERE lists.id = cells.list_id
+                  AND lists.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            )
+        )
+    );
+
 -- Cells UPDATE: admin and coordinator can update any cell; member can only update their own cell in public lists
 CREATE POLICY cells_ownership_update ON cells
     FOR UPDATE
