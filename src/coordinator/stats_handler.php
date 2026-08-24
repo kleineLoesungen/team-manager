@@ -67,7 +67,7 @@ $agg_sql = "
     CROSS JOIN (
         SELECT id, name, data_type, sort_order
         FROM columns
-        WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
+        WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
     ) c
     LEFT JOIN cells ON cells.member_id = u.id AND cells.column_id = c.id
     LEFT JOIN lists ON cells.list_id = lists.id
@@ -252,7 +252,7 @@ $ranking_sql = "
     CROSS JOIN (
         SELECT id, name, data_type, sort_order
         FROM columns
-        WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
+        WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
     ) c
     LEFT JOIN cells ON cells.member_id = u.id AND cells.column_id = c.id
     LEFT JOIN lists ON cells.list_id = lists.id

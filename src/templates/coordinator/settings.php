@@ -63,7 +63,7 @@
             <tr>
                 <th>Name</th>
                 <th>Typ</th>
-                <th>Erstellt</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -75,7 +75,27 @@
                         <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
                     </span>
                 </td>
-                <td class="text-muted small"><?= e(date('d.m.Y', strtotime($col['created_at']))) ?></td>
+                <td class="text-end">
+                    <?php if ($delete_pending_col_id !== null && $delete_pending_col_id === (int)$col['id']): ?>
+                    <form method="POST" action="/coordinator/settings" class="d-inline-flex gap-2 align-items-center">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="delete_column">
+                        <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
+                        <input type="hidden" name="confirm" value="1">
+                        <span class="text-danger small">Spalte und alle Einträge löschen?</span>
+                        <button type="submit" class="btn btn-sm btn-danger">Ja</button>
+                        <a href="/coordinator/settings" class="btn btn-sm btn-outline-secondary">Nein</a>
+                    </form>
+                    <?php else: ?>
+                    <form method="POST" action="/coordinator/settings" class="d-inline">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="delete_column">
+                        <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
+                        <input type="hidden" name="confirm" value="0">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Löschen</button>
+                    </form>
+                    <?php endif; ?>
+                </td>
             </tr>
             <?php endforeach; ?>
         </tbody>

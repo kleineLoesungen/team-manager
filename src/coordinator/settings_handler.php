@@ -8,6 +8,8 @@ require_coordinator();
 
 $pdo = get_db();
 
+$delete_pending_col_id = null;
+
 // ── Handle POST actions ──────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -32,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $stmt->execute([$_SESSION['team_id'], $label, $color, $_SESSION['team_id']]);
         redirect('/coordinator/settings?success=tag_created');
-    }
-
-    if ($action === 'delete_tag') {
+    } elseif ($action === 'delete_tag') {
         $tag_id = (int)($_POST['tag_id'] ?? 0);
         if ($tag_id > 0) {
             $stmt = $pdo->prepare(
@@ -43,9 +43,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$tag_id, $_SESSION['team_id']]);
         }
         redirect('/coordinator/settings?success=tag_deleted');
+    } elseif ($action === 'delete_column') {
+        $col_id  = (int)($_POST['column_id'] ?? 0);
+        $confirm = (int)($_POST['confirm']   ?? 0);
+        if ($confirm === 1 && $col_id > 0) {
+            $del = $pdo->prepare(
+                "DELETE FROM columns WHERE id = ? AND team_id = ? AND list_id IS NULL AND is_system = FALSE"
+            );
+            $del->execute([$col_id, $_SESSION['team_id']]);
+            redirect('/coordinator/settings?success=column_deleted');
+        } else {
+            $delete_pending_col_id = $col_id; // fall through to render with confirmation UI
+        }
+    } else {
+        redirect('/coordinator/settings');
     }
-
-    redirect('/coordinator/settings');
 }
 
 // ── GET: fetch data ───────────────────────────────────────────────────────────
@@ -83,14 +95,15 @@ $ticker_tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 $success = !empty($_GET['success']) ? match($_GET['success']) {
-    'tag_created' => 'Tag angelegt.',
-    'tag_deleted' => 'Tag gelöscht.',
-    default       => '',
+    'tag_created'    => 'Tag angelegt.',
+    'tag_deleted'    => 'Tag gelöscht.',
+    'column_deleted' => 'Spalte gelöscht.',
+    default          => '',
 } : '';
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Einstellungen', 'settings', function() use ($columns, $system_columns, $ticker_tags, $error, $success) {
+render_coach_page('Einstellungen', 'settings', function() use ($columns, $system_columns, $ticker_tags, $error, $success, $delete_pending_col_id) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/settings.php';

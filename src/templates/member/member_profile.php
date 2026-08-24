@@ -109,11 +109,11 @@ declare(strict_types=1);
 <?php endforeach; ?>
 <?php endif; ?>
 
-<!-- Section A: System column stats (main, always visible) -->
+<!-- Vergangene Einsätze: system columns with coordinator columns in "Weitere" dropdown -->
 <?php
-$col_names = array_values(array_unique(array_column($system_stats, 'col_name')));
+$col_names       = array_values(array_unique(array_column($system_stats, 'col_name')));
+$col_names_coord = array_values(array_unique(array_column($coordinator_stats, 'col_name')));
 
-// Per-column aggregates for the summary row
 $col_agg = [];
 foreach ($system_stats as $stat) {
     $cn = $stat['col_name'];
@@ -127,16 +127,30 @@ foreach ($system_stats as $stat) {
         if ($stat['value'] !== '') $col_agg[$cn]['sum'] += (float)$stat['value'];
     }
 }
+$col_agg_coord = [];
+foreach ($coordinator_stats as $stat) {
+    $cn = $stat['col_name'];
+    if (!isset($col_agg_coord[$cn])) {
+        $col_agg_coord[$cn] = ['type' => $stat['data_type'], 'total' => 0, 'true_count' => 0, 'sum' => 0.0];
+    }
+    $col_agg_coord[$cn]['total']++;
+    if ($stat['data_type'] === 'boolean') {
+        if (in_array($stat['value'], ['1', 'true'], true)) $col_agg_coord[$cn]['true_count']++;
+    } else {
+        if ($stat['value'] !== '') $col_agg_coord[$cn]['sum'] += (float)$stat['value'];
+    }
+}
+$all_col_agg = array_merge($col_agg, $col_agg_coord);
 ?>
 <div class="card mb-3">
     <div class="card-header fw-semibold">Vergangene Einsätze</div>
-    <?php if (empty($system_stats)): ?>
+    <?php if (empty($system_stats) && empty($coordinator_stats)): ?>
     <div class="card-body">
         <p class="text-muted mb-0">Noch keine Einsatzdaten vorhanden.</p>
     </div>
     <?php else: ?>
     <div class="card-body pb-0">
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
             <?php foreach ($col_names as $i => $cn): ?>
             <button type="button"
                     class="btn btn-sm <?= $i === 0 ? 'btn-primary' : 'btn-outline-secondary' ?> js-col-switch"
@@ -144,6 +158,23 @@ foreach ($system_stats as $stat) {
                 <?= e($cn) ?>
             </button>
             <?php endforeach; ?>
+            <?php if (!empty($col_names_coord)): ?>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    Weitere
+                </button>
+                <ul class="dropdown-menu">
+                    <?php foreach ($col_names_coord as $cn): ?>
+                    <li>
+                        <button type="button" class="dropdown-item js-col-coord" data-col="<?= e($cn) ?>">
+                            <?= e($cn) ?>
+                        </button>
+                    </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
     <div class="table-responsive">
@@ -171,10 +202,25 @@ foreach ($system_stats as $stat) {
                     </td>
                 </tr>
                 <?php endforeach; ?>
+                <?php foreach ($coordinator_stats as $stat): ?>
+                <tr data-col="<?= e($stat['col_name']) ?>">
+                    <td><?= e($stat['team_name']) ?></td>
+                    <td><?= $stat['date'] ? e(date('d.m.Y', strtotime($stat['date']))) : '<span class="text-muted">—</span>' ?></td>
+                    <td>
+                        <?php if ($stat['data_type'] === 'boolean'): ?>
+                        <?= in_array($stat['value'], ['1', 'true'], true)
+                            ? '<i class="bi bi-check-circle-fill text-success"></i>'
+                            : '<i class="bi bi-x-circle text-muted"></i>' ?>
+                        <?php else: ?>
+                        <?= e($stat['value']) ?>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
             </tbody>
-            <?php if (!empty($col_agg)): ?>
+            <?php if (!empty($all_col_agg)): ?>
             <tfoot>
-                <?php foreach ($col_agg as $cn => $agg): ?>
+                <?php foreach ($all_col_agg as $cn => $agg): ?>
                 <tr data-col="<?= e($cn) ?>" class="table-secondary fw-semibold">
                     <td colspan="2" class="text-muted small">Gesamt</td>
                     <td>
@@ -193,11 +239,11 @@ foreach ($system_stats as $stat) {
     </div>
     <script>
     (function () {
-        var btns = document.querySelectorAll('.js-col-switch');
-        var rows = document.querySelectorAll('tr[data-col]');
+        var mainBtns = document.querySelectorAll('.js-col-switch');
+        var rows     = document.querySelectorAll('tr[data-col]');
 
         function activate(col) {
-            btns.forEach(function (b) {
+            mainBtns.forEach(function (b) {
                 var active = b.dataset.col === col;
                 b.classList.toggle('btn-primary', active);
                 b.classList.toggle('btn-outline-secondary', !active);
@@ -207,128 +253,18 @@ foreach ($system_stats as $stat) {
             });
         }
 
-        if (btns.length > 0) activate(btns[0].dataset.col);
+        if (mainBtns.length > 0) activate(mainBtns[0].dataset.col);
 
-        btns.forEach(function (b) {
+        mainBtns.forEach(function (b) {
             b.addEventListener('click', function () { activate(this.dataset.col); });
+        });
+        document.querySelectorAll('.js-col-coord').forEach(function (item) {
+            item.addEventListener('click', function () { activate(this.dataset.col); });
         });
     }());
     </script>
     <?php endif; ?>
 </div>
-
-<!-- Section B: Coordinator-scoped global columns (collapsible, only if data exists) -->
-<?php if (!empty($coordinator_stats)): ?>
-<?php
-$col_names_coord = array_values(array_unique(array_column($coordinator_stats, 'col_name')));
-
-$col_agg_coord = [];
-foreach ($coordinator_stats as $stat) {
-    $cn = $stat['col_name'];
-    if (!isset($col_agg_coord[$cn])) {
-        $col_agg_coord[$cn] = ['type' => $stat['data_type'], 'total' => 0, 'true_count' => 0, 'sum' => 0.0];
-    }
-    $col_agg_coord[$cn]['total']++;
-    if ($stat['data_type'] === 'boolean') {
-        if (in_array($stat['value'], ['1', 'true'], true)) $col_agg_coord[$cn]['true_count']++;
-    } else {
-        if ($stat['value'] !== '') $col_agg_coord[$cn]['sum'] += (float)$stat['value'];
-    }
-}
-?>
-<div class="mt-3 mb-4">
-    <button class="btn btn-sm btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#coordinator-stats-section"
-            aria-expanded="false"
-            aria-controls="coordinator-stats-section">
-        <span>Koordinator-Spalten</span>
-        <i class="bi bi-chevron-down"></i>
-    </button>
-    <div class="collapse" id="coordinator-stats-section">
-        <div class="card mt-2">
-            <div class="card-header fw-semibold text-muted">Teamspezifische Spalten</div>
-            <div class="card-body pb-0">
-                <div class="d-flex flex-wrap gap-2">
-                    <?php foreach ($col_names_coord as $i => $cn): ?>
-                    <button type="button"
-                            class="btn btn-sm <?= $i === 0 ? 'btn-primary' : 'btn-outline-secondary' ?> js-col-switch-coord"
-                            data-col-coord="<?= e($cn) ?>">
-                        <?= e($cn) ?>
-                    </button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Team</th>
-                            <th>Datum</th>
-                            <th>Wert</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($coordinator_stats as $stat): ?>
-                        <tr data-col-coord="<?= e($stat['col_name']) ?>">
-                            <td><?= e($stat['team_name']) ?></td>
-                            <td><?= $stat['date'] ? e(date('d.m.Y', strtotime($stat['date']))) : '<span class="text-muted">—</span>' ?></td>
-                            <td>
-                                <?php if ($stat['data_type'] === 'boolean'): ?>
-                                <?= in_array($stat['value'], ['1', 'true'], true)
-                                    ? '<i class="bi bi-check-circle-fill text-success"></i>'
-                                    : '<i class="bi bi-x-circle text-muted"></i>' ?>
-                                <?php else: ?>
-                                <?= e($stat['value']) ?>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                    <?php if (!empty($col_agg_coord)): ?>
-                    <tfoot>
-                        <?php foreach ($col_agg_coord as $cn => $agg): ?>
-                        <tr data-col-coord="<?= e($cn) ?>" class="table-secondary fw-semibold">
-                            <td colspan="2" class="text-muted small">Gesamt</td>
-                            <td>
-                                <?php if ($agg['type'] === 'boolean'): ?>
-                                <?php $pct = $agg['total'] > 0 ? round($agg['true_count'] / $agg['total'] * 100) : 0; ?>
-                                <?= $agg['true_count'] ?> / <?= $agg['total'] ?> <span class="text-muted">(<?= $pct ?>%)</span>
-                                <?php else: ?>
-                                <?= $agg['sum'] == (int)$agg['sum'] ? (int)$agg['sum'] : number_format($agg['sum'], 2, ',', '.') ?>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tfoot>
-                    <?php endif; ?>
-                </table>
-            </div>
-            <script>
-            (function () {
-                var btns = document.querySelectorAll('.js-col-switch-coord');
-                var rows = document.querySelectorAll('tr[data-col-coord]');
-                function activate(col) {
-                    btns.forEach(function (b) {
-                        var active = b.dataset.colCoord === col;
-                        b.classList.toggle('btn-primary', active);
-                        b.classList.toggle('btn-outline-secondary', !active);
-                    });
-                    rows.forEach(function (r) {
-                        r.style.display = r.dataset.colCoord === col ? '' : 'none';
-                    });
-                }
-                if (btns.length > 0) activate(btns[0].dataset.colCoord);
-                btns.forEach(function (b) {
-                    b.addEventListener('click', function () { activate(this.dataset.colCoord); });
-                });
-            }());
-            </script>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
 <?php endif; ?>
 

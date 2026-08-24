@@ -461,5 +461,23 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             <i class="bi bi-arrow-left me-1"></i>Zurück zur Liste
         </a>
     </div>
+    <script>
+    (function () {
+        var KEY = 'list_settings_scroll_<?= (int)$list['id'] ?>';
+        var hasPending = <?= ($delete_pending_col_id !== null || $unbind_pending_col_id !== null) ? 'true' : 'false' ?>;
+        if (hasPending) {
+            var saved = sessionStorage.getItem(KEY);
+            if (saved !== null) {
+                sessionStorage.removeItem(KEY);
+                window.scrollTo(0, parseInt(saved, 10));
+            }
+        }
+        document.querySelectorAll('input[name="confirm"][value="0"]').forEach(function (inp) {
+            inp.closest('form').addEventListener('submit', function () {
+                sessionStorage.setItem(KEY, window.scrollY);
+            });
+        });
+    }());
+    </script>
     <?php
 });

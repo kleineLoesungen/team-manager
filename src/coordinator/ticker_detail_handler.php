@@ -8,18 +8,36 @@ require_coordinator();
 $ticker_id = (int)($_REQUEST['ticker_id'] ?? 0);
 $pdo = get_db();
 
-// Ownership check: ticker must belong to coordinator's team
+// Try current team first (cheap path)
 $stmt = $pdo->prepare(
-    "SELECT id, name, description, status FROM tickers WHERE id = ? AND team_id = ?"
+    "SELECT id, name, description, status, team_id FROM tickers WHERE id = ? AND team_id = ?"
 );
 $stmt->execute([$ticker_id, $_SESSION['team_id']]);
 $ticker = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$ticker) {
-    http_response_code(404);
-    echo '<h1>Ticker nicht gefunden</h1>';
-    exit;
+    // Check if ticker belongs to another team this coordinator manages
+    set_admin_context($pdo);
+    $stmt = $pdo->prepare(
+        "SELECT t.id, t.name, t.description, t.status, t.team_id
+         FROM tickers t
+         JOIN coordinator_teams ct ON ct.team_id = t.team_id AND ct.left_at IS NULL
+         WHERE t.id = ? AND ct.user_id = ?"
+    );
+    $stmt->execute([$ticker_id, $_SESSION['user_id']]);
+    $ticker = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$ticker) {
+        reset_rls_context($pdo);
+        set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
+        http_response_code(404);
+        echo '<h1>Ticker nicht gefunden</h1>';
+        exit;
+    }
+    // Keep admin context active — allows cross-team DB operations for this handler
 }
+
+$ticker_team_id = (int)$ticker['team_id'];
 
 $error        = '';
 $edit_message = null; // When ?edit_message_id is set, pre-fill edit form
@@ -110,7 +128,7 @@ $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->prepare(
     "SELECT id, label, color FROM ticker_tags WHERE team_id = ? ORDER BY sort_order, created_at"
 );
-$stmt->execute([$_SESSION['team_id']]);
+$stmt->execute([$ticker_team_id]);
 $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Freigabe members for info display
@@ -121,7 +139,7 @@ $stmt = $pdo->prepare(
      JOIN members p ON p.id = u.member_id
      WHERE tm.ticker_id = ? AND tm.team_id = ?"
 );
-$stmt->execute([$ticker_id, $_SESSION['team_id']]);
+$stmt->execute([$ticker_id, $ticker_team_id]);
 $freigabe_members = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
