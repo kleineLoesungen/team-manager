@@ -12,17 +12,17 @@ $user_id = (int)$_SESSION['user_id'];
 $is_confirm_route = str_ends_with($_SERVER['REQUEST_URI'] ?? '', 'confirm-profile');
 $is_first_confirm = $_SESSION['confirmed_at'] === null;
 
-// Load coordinator's player record (player_id is NOT NULL after migration 024)
+// Load coordinator's member record (member_id is NOT NULL after migration 029)
 $stmt = $pdo->prepare(
-    "SELECT u.player_id, u.confirmed_at,
+    "SELECT u.member_id, u.confirmed_at,
             p.first_name, p.last_name, p.email, p.phone
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.id = ?"
 );
 $stmt->execute([$user_id]);
 $self = $stmt->fetch();
-$player_id = (int)$self['player_id'];
+$player_id = (int)$self['member_id'];
 
 $error = '';
 
@@ -39,10 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
         $error = 'Ungültige E-Mail-Adresse.';
     } else {
-        // Write to players (canonical person table) — needs admin context to bypass RLS
+        // Write to members (canonical person table) — needs admin context to bypass RLS
         set_admin_context($pdo);
         $pdo->prepare(
-            "UPDATE players SET first_name=?, last_name=?, email=?, phone=? WHERE id=?"
+            "UPDATE members SET first_name=?, last_name=?, email=?, phone=? WHERE id=?"
         )->execute([
             $first_name,
             $last_name,

@@ -12,32 +12,32 @@ require_csrf();
 $pdo     = get_db();
 $user_id = (int)$_SESSION['user_id'];
 
-// Resolve the member's linked player_id — do not trust POST input
+// Resolve the member's linked profile record — do not trust POST input
 set_admin_context($pdo);
-$link_stmt = $pdo->prepare("SELECT player_id FROM users WHERE id = ?");
+$link_stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
 $link_stmt->execute([$user_id]);
-$player_id = (int)($link_stmt->fetchColumn() ?: 0);
+$member_profile_id = (int)($link_stmt->fetchColumn() ?: 0);
 
-if ($player_id <= 0) redirect('/member/profile');
+if ($member_profile_id <= 0) redirect('/member/profile');
 
 // Only save attributes that are both visible_to_player AND editable_by_player
 $allowed_stmt = $pdo->prepare(
-    "SELECT id FROM player_attributes WHERE visible_to_player = TRUE AND editable_by_player = TRUE"
+    "SELECT id FROM member_attributes WHERE visible_to_player = TRUE AND editable_by_player = TRUE"
 );
 $allowed_stmt->execute();
 $allowed_ids = array_flip(array_column($allowed_stmt->fetchAll(), 'id'));
 
 $values = $_POST['values'] ?? [];
 $upsert = $pdo->prepare(
-    "INSERT INTO player_attribute_values (player_id, attribute_id, value, updated_at)
+    "INSERT INTO member_attribute_values (member_id, attribute_id, value, updated_at)
      VALUES (?, ?, ?, NOW())
-     ON CONFLICT (player_id, attribute_id)
+     ON CONFLICT (member_id, attribute_id)
      DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
 );
 foreach ($values as $attr_id_raw => $value) {
     $attr_id = (int)$attr_id_raw;
     if ($attr_id <= 0 || !isset($allowed_ids[$attr_id])) continue;
-    $upsert->execute([$player_id, $attr_id, (string)$value]);
+    $upsert->execute([$member_profile_id, $attr_id, (string)$value]);
 }
 
 reset_rls_context($pdo);

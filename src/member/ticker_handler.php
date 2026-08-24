@@ -35,6 +35,6 @@ set_team_context($pdo, (int)$_SESSION['team_id'], 'member', (int)$_SESSION['user
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Ticker', 'ticker', function() use ($tickers, $other_tickers) {
+render_member_page('Ticker', 'ticker', function() use ($tickers, $other_tickers) {
     require ROOT_PATH . '/src/templates/member/ticker_list.php';
 });

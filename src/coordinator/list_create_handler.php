@@ -8,6 +8,16 @@ require_coordinator();
 $pdo   = get_db();
 $error = '';
 
+// System columns need admin context to bypass RLS (team_id = NULL not visible to coordinator)
+set_admin_context($pdo);
+$sys_cols_stmt = $pdo->prepare(
+    "SELECT id, name, data_type FROM columns
+     WHERE is_system = TRUE AND list_id IS NULL
+     ORDER BY sort_order ASC, name ASC"
+);
+$sys_cols_stmt->execute();
+$system_columns = $sys_cols_stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // Fetch all active global columns for this team (checkbox display + default value inputs)
 $cols_stmt = $pdo->prepare(
     "SELECT id, name, data_type FROM columns
@@ -99,9 +109,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $valid_ids = [];
             if ($list_type === 'member' && !empty($selected_cols)) {
                 $placeholders = implode(',', array_fill(0, count($selected_cols), '?'));
+                // Accept both team global columns and system columns (is_system = TRUE)
+                // Admin context was set above so system columns are visible in this query
                 $valid_stmt = $pdo->prepare(
                     "SELECT id FROM columns
-                     WHERE id IN ($placeholders) AND team_id = ? AND list_id IS NULL AND is_active = TRUE"
+                     WHERE id IN ($placeholders) AND list_id IS NULL AND is_active = TRUE
+                       AND (team_id = ? OR is_system = TRUE)"
                 );
                 $valid_stmt->execute([...$selected_cols, $_SESSION['team_id']]);
                 $valid_ids = $valid_stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -116,8 +129,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Pre-populate default cell values for all active players on this team
             if (!empty($valid_ids)) {
-                // Fetch column type map for validation
+                // Build type map from both team columns and system columns
                 $type_map = [];
+                foreach ($system_columns as $sc) {
+                    $type_map[(int)$sc['id']] = $sc['data_type'];
+                }
                 foreach ($global_columns as $gc) {
                     $type_map[(int)$gc['id']] = $gc['data_type'];
                 }
@@ -130,9 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $player_ids = $players_stmt->fetchAll(PDO::FETCH_COLUMN);
 
                 $cell_stmt = $pdo->prepare(
-                    "INSERT INTO cells (list_id, column_id, player_id, value)
+                    "INSERT INTO cells (list_id, column_id, member_id, value)
                      VALUES (?, ?, ?, ?)
-                     ON CONFLICT (list_id, column_id, player_id) DO NOTHING"
+                     ON CONFLICT (list_id, column_id, member_id) DO NOTHING"
                 );
 
                 foreach ($valid_ids as $col_id) {
@@ -144,16 +160,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $value = null;
                     if ($data_type === 'boolean') {
                         $value = isset($defaults[$col_id]) ? '1' : '0';
-                    } elseif ($data_type === 'number' && $raw !== null && $raw !== '') {
-                        $int_ok   = filter_var($raw, FILTER_VALIDATE_INT)   !== false;
-                        $float_ok = filter_var($raw, FILTER_VALIDATE_FLOAT) !== false;
-                        if ($int_ok || $float_ok) {
-                            $value = $raw;
+                    } elseif ($data_type === 'number') {
+                        if ($raw !== null && $raw !== '') {
+                            $int_ok   = filter_var($raw, FILTER_VALIDATE_INT)   !== false;
+                            $float_ok = filter_var($raw, FILTER_VALIDATE_FLOAT) !== false;
+                            $value = ($int_ok || $float_ok) ? $raw : '0';
+                        } else {
+                            $value = '0';
                         }
                     }
 
                     if ($value === null) {
-                        continue; // No default set — leave cell empty
+                        continue;
                     }
 
                     foreach ($player_ids as $pid) {
@@ -174,6 +192,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = ($list_type === 'free') ? 'Neue freie Liste' : 'Neue Mitgliederliste';
-render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $list_type) {
+render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $system_columns, $list_type) {
     require ROOT_PATH . '/src/templates/coordinator/list_form.php';
 });

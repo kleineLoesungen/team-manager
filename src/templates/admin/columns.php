@@ -12,10 +12,21 @@
 <div class="alert alert-danger"><?= $error ?></div>
 <?php endif; ?>
 <?php if ($success): ?>
+<?php if (!empty($_GET['promoted'])): ?>
+<div class="alert alert-success">
+    Systemspalte erfolgreich angelegt. <?= (int)$_GET['promoted'] ?> bestehende Team-Spalte(n) wurden automatisch übernommen und zusammengeführt.
+</div>
+<?php else: ?>
 <div class="alert alert-success">Systemspalte erfolgreich angelegt.</div>
+<?php endif; ?>
 <?php endif; ?>
 <?php if ($deleted): ?>
 <div class="alert alert-success">Systemspalte erfolgreich gelöscht.</div>
+<?php endif; ?>
+<?php if (!empty($_GET['converted'])): ?>
+<div class="alert alert-success">
+    Systemspalte gelöscht. Daten wurden in <?= (int)$_GET['converted'] ?> teambezogene Koordinatorspalte(n) überführt.
+</div>
 <?php endif; ?>
 <?php if (!empty($_GET['renamed'])): ?>
 <div class="alert alert-success">Systemspalte erfolgreich umbenannt.</div>
@@ -120,8 +131,9 @@
     </div>
     <div class="card-body">
         <p class="text-muted mb-0 small">
-            Das Löschen einer Systemspalte schlägt fehl, wenn noch Zellen in Listen auf diese Spalte
-            verweisen. Alle Listendaten müssen zuerst entfernt werden, bevor die Spalte gelöscht werden kann.
+            Beim Löschen einer Systemspalte, die noch von Teams genutzt wird, werden automatisch
+            teambezogene Koordinatorspalten angelegt und alle vorhandenen Daten dort übernommen.
+            Die Koordinatoren sehen ihre Daten weiterhin, können die Spalte aber selbst verwalten.
         </p>
     </div>
 </div>

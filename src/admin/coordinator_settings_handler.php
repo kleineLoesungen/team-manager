@@ -14,9 +14,9 @@ if ($coordinator_id <= 0) {
 $pdo = get_db();
 
 $check = $pdo->prepare(
-    "SELECT u.id, u.player_id, u.username, p.first_name, p.last_name, p.email, p.phone, p.club_id, cl.name AS club_name
+    "SELECT u.id, u.member_id, u.username, p.first_name, p.last_name, p.email, p.phone, p.club_id, cl.name AS club_name
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      LEFT JOIN clubs cl ON cl.id = p.club_id
      WHERE u.id = ? AND u.role = 'coordinator'"
 );
@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email_val = $email_raw !== '' ? $email_raw : null;
         $phone_val = $phone_raw !== '' ? $phone_raw : null;
 
-        $pdo->prepare("UPDATE players SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE id = ?")
-            ->execute([$first_name, $last_name, $email_val, $phone_val, (int)$coordinator['player_id']]);
+        $pdo->prepare("UPDATE members SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE id = ?")
+            ->execute([$first_name, $last_name, $email_val, $phone_val, (int)$coordinator['member_id']]);
 
         redirect('/admin/coordinators/' . $coordinator_id . '/settings?success=' . urlencode('Daten gespeichert.'));
     }

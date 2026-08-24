@@ -21,13 +21,13 @@
         <div class="d-flex gap-3 flex-wrap">
             <div class="form-check">
                 <input type="radio" id="mode_new" name="_mode_radio" value="new" class="form-check-input" checked>
-                <label for="mode_new" class="form-check-label fw-semibold">Neuen Spieler anlegen</label>
+                <label for="mode_new" class="form-check-label fw-semibold">Neues Profil anlegen</label>
             </div>
             <div class="form-check">
                 <input type="radio" id="mode_link" name="_mode_radio" value="link" class="form-check-input"
                        <?= empty($linkable_players) ? 'disabled' : '' ?>>
                 <label for="mode_link" class="form-check-label <?= empty($linkable_players) ? 'text-muted' : 'fw-semibold' ?>">
-                    Vorhandenen Spieler verknüpfen
+                    Vorhandenes Profil verknüpfen
                     <?php if (empty($linkable_players)): ?>
                     <span class="small fw-normal">(keine verfügbar)</span>
                     <?php endif; ?>
@@ -68,15 +68,15 @@
         </div>
     </div>
 
-    <!-- Link existing player fields -->
+    <!-- Link existing profile fields -->
     <div id="section_link" class="col-12" style="display:none">
         <?php if (!empty($linkable_players)): ?>
-        <label for="player_id_link" class="form-label">Spieler auswählen</label>
-        <select class="form-select form-select-lg" id="player_id_link" name="player_id_link">
-            <option value="">— Spieler wählen —</option>
+        <label for="member_id_link" class="form-label">Profil auswählen</label>
+        <select class="form-select form-select-lg" id="member_id_link" name="member_id_link">
+            <option value="">— Profil wählen —</option>
             <?php foreach ($linkable_players as $p): ?>
             <option value="<?= (int)$p['id'] ?>"
-                    <?= ((int)($_POST['player_id_link'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>>
+                    <?= ((int)($_POST['member_id_link'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>>
                 <?= e($p['first_name'] . ' ' . $p['last_name']) ?>
                 <?php if (!empty($p['club_name'])): ?> — <?= e($p['club_name']) ?><?php endif; ?>
             </option>
@@ -84,7 +84,7 @@
         </select>
         <div class="form-text">
             <i class="bi bi-info-circle me-1"></i>
-            Vorhandene Spielerprofile ohne Benutzerkonto.
+            Vorhandene Profile ohne Benutzerkonto.
         </div>
         <?php endif; ?>
     </div>
@@ -112,7 +112,7 @@
     var radios      = document.querySelectorAll('[name="_mode_radio"]');
     var fnFirst     = document.getElementById('first_name');
     var fnLast      = document.getElementById('last_name');
-    var fnLink      = document.getElementById('player_id_link');
+    var fnLink      = document.getElementById('member_id_link');
 
     function switchMode(mode) {
         modeInput.value = mode;

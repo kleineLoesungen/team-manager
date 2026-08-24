@@ -11,8 +11,8 @@ $pdo     = get_db();
 $user_id = (int)$_SESSION['user_id'];
 $error   = '';
 
-// Load linked player_id
-$link_stmt = $pdo->prepare("SELECT player_id FROM users WHERE id = ?");
+// Load linked member_id (profile record)
+$link_stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
 $link_stmt->execute([$user_id]);
 $player_id = (int)($link_stmt->fetchColumn() ?: 0);
 
@@ -24,7 +24,7 @@ if ($player_id) {
     set_admin_context($pdo);
     $p_stmt = $pdo->prepare(
         "SELECT p.*, c.name AS club_name
-         FROM players p LEFT JOIN clubs c ON c.id = p.club_id
+         FROM members p LEFT JOIN clubs c ON c.id = p.club_id
          WHERE p.id = ?"
     );
     $p_stmt->execute([$player_id]);
@@ -32,15 +32,15 @@ if ($player_id) {
 
     $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
-    // Load visible player attributes
+    // Load visible member attributes
     $attr_stmt = $pdo->prepare(
         "SELECT pag.name AS group_name, pag.sort_order AS group_order,
                 pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_order,
                 pa.editable_by_player,
                 COALESCE(pav.value, '') AS value
-         FROM player_attribute_groups pag
-         JOIN player_attributes pa ON pa.group_id = pag.id
-         LEFT JOIN player_attribute_values pav ON pav.attribute_id = pa.id AND pav.player_id = ?
+         FROM member_attribute_groups pag
+         JOIN member_attributes pa ON pa.group_id = pag.id
+         LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
          WHERE pa.visible_to_player = TRUE
          ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
     );
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             set_admin_context($pdo);
             $pdo->prepare(
-                "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
+                "UPDATE members SET first_name=?, last_name=?, email=?, phone=?,
                   contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
             )->execute([
                 $first_name, $last_name,
@@ -120,6 +120,6 @@ $success = !empty($_GET['success']);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Mein Profil', 'profile', function() use ($player, $player_id, $clubs, $attr_groups, $error, $success) {
+render_member_page('Mein Profil', 'profile', function() use ($player, $player_id, $clubs, $attr_groups, $error, $success) {
     require ROOT_PATH . '/src/templates/member/profile.php';
 });

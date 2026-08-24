@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/columns.php — Global columns overview (LIST-02)
-// Variables: $columns (array of global column rows)
+// Variables: $columns (array of team global column rows), $system_columns (array of system column rows)
 ?>
 <div class="mb-3">
     <a href="/coordinator/settings" class="btn btn-sm btn-outline-secondary">
@@ -8,14 +8,41 @@
     </a>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <span class="text-muted"><?= count($columns) ?> globale <?= count($columns) === 1 ? 'Spalte' : 'Spalten' ?></span>
+<?php if (!empty($system_columns)): ?>
+<h6 class="text-muted fw-semibold mb-2">
+    <i class="bi bi-lock-fill me-1"></i>Systemspalten <span class="fw-normal">(vom Admin verwaltet)</span>
+</h6>
+<div class="table-responsive mb-4">
+    <table class="table table-sm align-middle">
+        <tbody>
+            <?php foreach ($system_columns as $col): ?>
+            <tr class="text-muted">
+                <td><?= e($col['name']) ?></td>
+                <td>
+                    <span class="badge bg-light text-dark border">
+                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
+                    </span>
+                </td>
+                <td class="text-end">
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        <i class="bi bi-lock me-1"></i>Systemspalte
+                    </span>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="text-muted fw-semibold mb-0">Team-Spalten</h6>
+    <span class="text-muted small"><?= count($columns) ?> <?= count($columns) === 1 ? 'Spalte' : 'Spalten' ?></span>
 </div>
 
 <?php if (empty($columns)): ?>
-<div class="text-center py-5">
-    <p class="h5 text-muted">Noch keine globalen Spalten</p>
-    <p class="text-muted">Globale Spalten erscheinen in allen Listen Ihres Teams.</p>
+<div class="text-center py-4 text-muted mb-4">
+    <p class="mb-0">Noch keine eigenen globalen Spalten für dieses Team.</p>
 </div>
 <?php else: ?>
 <div class="table-responsive mb-4">
@@ -46,7 +73,7 @@
 
 <!-- Create global column form (inline at bottom of page) -->
 <div class="card shadow-sm" style="max-width: 500px;">
-    <div class="card-header fw-semibold">Neue globale Spalte anlegen</div>
+    <div class="card-header fw-semibold">Neue Team-Spalte anlegen</div>
     <div class="card-body">
         <form method="POST" action="/coordinator/columns/create">
             <?= csrf_field() ?>

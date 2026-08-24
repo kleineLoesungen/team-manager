@@ -25,10 +25,10 @@ $back = (str_starts_with($_back_raw, '/coordinator/players') && !str_contains($_
     ? $_back_raw
     : '/coordinator/players/' . $player_id;
 
-// Use admin context to verify the player exists — coordinators can manage links for any player,
+// Use admin context to verify the member profile exists — coordinators can manage links for any profile,
 // including ones not yet linked to their team.
 set_admin_context($pdo);
-$check = $pdo->prepare("SELECT id FROM players WHERE id = ?");
+$check = $pdo->prepare("SELECT id FROM members WHERE id = ?");
 $check->execute([$player_id]);
 if (!$check->fetch()) redirect('/coordinator/players');
 reset_rls_context($pdo);
@@ -47,24 +47,24 @@ if ($action === 'link-user') {
         redirect($back . '?error=' . urlencode('Mitglied nicht gefunden.'));
     }
 
-    // Enforce one-to-one: player may have at most one user per team
+    // Enforce one-to-one: member profile may have at most one user per team
     $dup = $pdo->prepare(
-        "SELECT id FROM users WHERE player_id = ? AND team_id = ? AND role = 'member'"
+        "SELECT id FROM users WHERE member_id = ? AND team_id = ? AND role = 'member'"
     );
     $dup->execute([$player_id, $team_id]);
     if ($dup->fetch()) {
-        redirect($back . '?error=' . urlencode('Dieser Spieler ist in deinem Team bereits mit einem Account verknüpft.'));
+        redirect($back . '?error=' . urlencode('Dieses Profil ist in deinem Team bereits mit einem Account verknüpft.'));
     }
 
-    $pdo->prepare("UPDATE users SET player_id = ? WHERE id = ? AND team_id = ? AND role = 'member'")
+    $pdo->prepare("UPDATE users SET member_id = ? WHERE id = ? AND team_id = ? AND role = 'member'")
         ->execute([$player_id, $user_id, $team_id]);
 
     redirect($back);
 
 } elseif ($action === 'unlink-user') {
-    // player_id is NOT NULL — every user must be linked to a player.
+    // member_id is NOT NULL — every user must be linked to a member profile.
     // To reassign, use /admin/players or delete and recreate the member account.
-    redirect($back . '?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Spielerprofil.'));
+    redirect($back . '?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Profil.'));
 
 } else {
     redirect($back);

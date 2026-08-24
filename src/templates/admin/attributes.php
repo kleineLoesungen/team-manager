@@ -164,7 +164,7 @@
                     <div class="form-check form-switch mt-1">
                         <input class="form-check-input" type="checkbox" name="visible_to_player"
                                role="switch" id="visible_new_<?= (int)$group['id'] ?>" checked>
-                        <label class="form-check-label small" for="visible_new_<?= (int)$group['id'] ?>">Spieler</label>
+                        <label class="form-check-label small" for="visible_new_<?= (int)$group['id'] ?>">Mitglied</label>
                     </div>
                 </div>
                 <div class="col-6 col-sm-2">
@@ -172,7 +172,7 @@
                     <div class="form-check form-switch mt-1">
                         <input class="form-check-input" type="checkbox" name="editable_by_player"
                                role="switch" id="editable_new_<?= (int)$group['id'] ?>">
-                        <label class="form-check-label small" for="editable_new_<?= (int)$group['id'] ?>">Spieler</label>
+                        <label class="form-check-label small" for="editable_new_<?= (int)$group['id'] ?>">Mitglied</label>
                     </div>
                 </div>
                 <div class="col-6 col-sm-2">

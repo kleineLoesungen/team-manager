@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$error) {
         set_admin_context($pdo);
         $pdo->prepare(
-            "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
+            "UPDATE members SET first_name=?, last_name=?, email=?, phone=?,
               contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
         )->execute([
             $first_name, $last_name,
@@ -65,7 +65,7 @@ set_admin_context($pdo);
 
 $p_stmt = $pdo->prepare(
     "SELECT p.*, c.name AS club_name
-     FROM players p
+     FROM members p
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE p.id = ?"
 );

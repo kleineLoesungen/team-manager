@@ -51,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ── GET: fetch data ───────────────────────────────────────────────────────────
 
 // System columns (cross-team, admin-managed, read-only for coordinators)
+// Requires admin context — system columns have team_id = NULL, invisible under coordinator RLS
+set_admin_context($pdo);
 $sys_stmt = $pdo->query(
     "SELECT id, name, data_type, sort_order, created_at
      FROM columns

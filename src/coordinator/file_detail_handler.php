@@ -20,7 +20,7 @@ if (!$file) {
 $notify_target_role = ($file['visibility'] === 'private') ? 'coordinator' : 'member';
 $chk = $pdo->prepare(
     "SELECT 1 FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND p.email IS NOT NULL
      LIMIT 1"
 );

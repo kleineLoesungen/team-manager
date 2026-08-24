@@ -21,7 +21,7 @@ if ($player_id <= 0) {
 
 $pdo = get_db();
 
-$check = $pdo->prepare("SELECT id, first_name, last_name FROM players WHERE id = ?");
+$check = $pdo->prepare("SELECT id, first_name, last_name FROM members WHERE id = ?");
 $check->execute([$player_id]);
 $player = $check->fetch();
 
@@ -51,7 +51,7 @@ if ($action === 'edit') {
     }
 
     $pdo->prepare(
-        "UPDATE players SET club_id = ?, first_name = ?, last_name = ?, email = ?,
+        "UPDATE members SET club_id = ?, first_name = ?, last_name = ?, email = ?,
                             phone = ?, contact_name = ?, contact_phone = ?, contact_email = ?, description = ?
          WHERE id = ?"
     )->execute([
@@ -78,24 +78,24 @@ if ($action === 'edit') {
 
     // Verify the user is an unlinked active member and get their team
     $user_check = $pdo->prepare(
-        "SELECT id, team_id FROM users WHERE id = ? AND role = 'member' AND player_id IS NULL"
+        "SELECT id, team_id FROM users WHERE id = ? AND role = 'member' AND member_id IS NULL"
     );
     $user_check->execute([$user_id]);
     $target_user = $user_check->fetch();
     if (!$target_user) {
-        redirect('/admin/players?error=' . urlencode('Account nicht gefunden oder bereits mit einem Spieler verknüpft.'));
+        redirect('/admin/players?error=' . urlencode('Account nicht gefunden oder bereits mit einem Profil verknüpft.'));
     }
 
-    // Enforce one-to-one: player may have at most one user per team
+    // Enforce one-to-one: member profile may have at most one user per team
     $dup = $pdo->prepare(
-        "SELECT id FROM users WHERE player_id = ? AND team_id = ? AND role = 'member'"
+        "SELECT id FROM users WHERE member_id = ? AND team_id = ? AND role = 'member'"
     );
     $dup->execute([$player_id, (int)$target_user['team_id']]);
     if ($dup->fetch()) {
-        redirect('/admin/players?error=' . urlencode('Dieser Spieler ist in diesem Team bereits mit einem Account verknüpft.'));
+        redirect('/admin/players?error=' . urlencode('Dieses Profil ist in diesem Team bereits mit einem Account verknüpft.'));
     }
 
-    $pdo->prepare("UPDATE users SET player_id = ? WHERE id = ? AND role = 'member'")
+    $pdo->prepare("UPDATE users SET member_id = ? WHERE id = ? AND role = 'member'")
         ->execute([$player_id, $user_id]);
 
     redirect('/admin/players');
@@ -105,30 +105,30 @@ if ($action === 'edit') {
     redirect('/admin/players?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Spielerprofil.'));
 
 } elseif ($action === 'deactivate') {
-    $pdo->prepare("UPDATE players SET is_active = FALSE WHERE id = ?")
+    $pdo->prepare("UPDATE members SET is_active = FALSE WHERE id = ?")
         ->execute([$player_id]);
-    redirect('/admin/players?success=' . urlencode('Spieler deaktiviert.'));
+    redirect('/admin/players?success=' . urlencode('Profil deaktiviert.'));
 
 } elseif ($action === 'reactivate') {
-    $pdo->prepare("UPDATE players SET is_active = TRUE WHERE id = ?")
+    $pdo->prepare("UPDATE members SET is_active = TRUE WHERE id = ?")
         ->execute([$player_id]);
     redirect('/admin/players?success=' . urlencode('Spieler reaktiviert.'));
 
 } elseif ($action === 'delete') {
-    // Safety check: only deactivated players can be deleted
-    $chk = $pdo->prepare("SELECT is_active FROM players WHERE id = ?");
+    // Safety check: only deactivated profiles can be deleted
+    $chk = $pdo->prepare("SELECT is_active FROM members WHERE id = ?");
     $chk->execute([$player_id]);
     $p = $chk->fetch();
     if (!$p || $p['is_active']) {
-        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Nur deaktivierte Spieler können gelöscht werden.'));
+        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Nur deaktivierte Profile können gelöscht werden.'));
     }
-    // Safety check: player must have no linked user accounts
-    $linked = $pdo->prepare("SELECT COUNT(*) FROM users WHERE player_id = ?");
+    // Safety check: member profile must have no linked user accounts
+    $linked = $pdo->prepare("SELECT COUNT(*) FROM users WHERE member_id = ?");
     $linked->execute([$player_id]);
     if ((int)$linked->fetchColumn() > 0) {
-        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Spieler ist noch mit Benutzerkonten verknüpft. Konten zuerst löschen.'));
+        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Dieses Profil ist noch mit Benutzerkonten verknüpft. Konten zuerst löschen.'));
     }
-    $pdo->prepare("DELETE FROM players WHERE id = ? AND is_active = FALSE")->execute([$player_id]);
+    $pdo->prepare("DELETE FROM members WHERE id = ? AND is_active = FALSE")->execute([$player_id]);
     redirect('/admin/players?success=' . urlencode('Spieler gelöscht.'));
 
 } else {

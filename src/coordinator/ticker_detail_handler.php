@@ -118,7 +118,7 @@ $stmt = $pdo->prepare(
     "SELECT p.first_name, p.last_name
      FROM ticker_members tm
      JOIN users u ON tm.user_id = u.id
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE tm.ticker_id = ? AND tm.team_id = ?"
 );
 $stmt->execute([$ticker_id, $_SESSION['team_id']]);

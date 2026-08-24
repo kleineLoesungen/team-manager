@@ -37,26 +37,85 @@ $local_columns = $local_cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $delete_pending_col_id = null;
 
-// Fetch global columns attached to this list via junction table
+// Fetch global columns attached to this list via junction table (including system columns)
+set_admin_context($pdo);
 $global_cols_stmt = $pdo->prepare(
-    "SELECT c.id, c.name, c.data_type
+    "SELECT c.id, c.name, c.data_type, c.is_system
      FROM columns c
      JOIN list_global_columns lgc ON lgc.column_id = c.id
-     WHERE lgc.list_id = ? AND c.team_id = ? AND c.is_active = TRUE
-     ORDER BY c.sort_order, c.created_at"
+     WHERE lgc.list_id = ? AND (c.team_id = ? OR c.is_system = TRUE) AND c.is_active = TRUE
+     ORDER BY c.is_system DESC, c.sort_order, c.created_at"
 );
 $global_cols_stmt->execute([$list_id, $_SESSION['team_id']]);
 $global_columns = $global_cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $unbind_pending_col_id = null;
 
+// Fetch global columns not yet linked to this list (available to add)
+$available_stmt = $pdo->prepare(
+    "SELECT c.id, c.name, c.data_type, c.is_system
+     FROM columns c
+     WHERE c.list_id IS NULL AND c.is_active = TRUE
+       AND (c.team_id = ? OR c.is_system = TRUE)
+       AND NOT EXISTS (
+           SELECT 1 FROM list_global_columns lgc WHERE lgc.list_id = ? AND lgc.column_id = c.id
+       )
+     ORDER BY c.is_system DESC, c.sort_order, c.name"
+);
+$available_stmt->execute([$_SESSION['team_id'], $list_id]);
+$available_columns = $available_stmt->fetchAll(PDO::FETCH_ASSOC);
+
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    // Handle column deletion (two-step: first POST shows confirm, second POST executes)
-    if (isset($_POST['action']) && $_POST['action'] === 'delete_column') {
+    if (isset($_POST['action']) && $_POST['action'] === 'bind_column') {
+        $col_id = (int)($_POST['column_id'] ?? 0);
+        // Validate: column must belong to this team or be a system column, and not already linked
+        $check = $pdo->prepare(
+            "SELECT c.id FROM columns c
+             WHERE c.id = ? AND c.list_id IS NULL AND c.is_active = TRUE
+               AND (c.team_id = ? OR c.is_system = TRUE)
+               AND NOT EXISTS (
+                   SELECT 1 FROM list_global_columns lgc WHERE lgc.list_id = ? AND lgc.column_id = c.id
+               )"
+        );
+        $check->execute([$col_id, $_SESSION['team_id'], $list_id]);
+        if (!$check->fetch()) {
+            $error = 'Spalte nicht gefunden oder bereits hinzugefügt.';
+        } else {
+            try {
+                $pdo->beginTransaction();
+                $pdo->prepare("INSERT INTO list_global_columns (list_id, column_id) VALUES (?, ?)")
+                    ->execute([$list_id, $col_id]);
+
+                // Pre-fill '0' for number columns for all active members
+                $type_row = $pdo->prepare("SELECT data_type FROM columns WHERE id = ?");
+                $type_row->execute([$col_id]);
+                if ($type_row->fetchColumn() === 'number') {
+                    $mids = $pdo->prepare(
+                        "SELECT id FROM users WHERE team_id = ? AND role = 'member' AND is_active = TRUE"
+                    );
+                    $mids->execute([$_SESSION['team_id']]);
+                    $cell_ins = $pdo->prepare(
+                        "INSERT INTO cells (list_id, column_id, member_id, value) VALUES (?, ?, ?, '0')
+                         ON CONFLICT (list_id, column_id, member_id) DO NOTHING"
+                    );
+                    foreach ($mids->fetchAll(PDO::FETCH_COLUMN) as $mid) {
+                        $cell_ins->execute([$list_id, $col_id, (int)$mid]);
+                    }
+                }
+
+                $pdo->commit();
+                redirect('/coordinator/lists/' . $list_id . '/settings?success=1');
+            } catch (PDOException $e) {
+                $pdo->rollBack();
+                error_log('Bind column error: ' . $e->getMessage());
+                $error = 'Fehler beim Hinzufügen der Spalte.';
+            }
+        }
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_column') {
         $col_id  = (int)($_POST['column_id'] ?? 0);
         $confirm = (int)($_POST['confirm']   ?? 0);
 
@@ -85,11 +144,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Show confirmation step — store pending col_id and fall through to render
             $unbind_pending_col_id = $col_id;
         } else {
-            // Ownership check: junction row must exist AND column belongs to this team
+            // Ownership check: junction row must exist AND column belongs to this team OR is a system column
             $check = $pdo->prepare(
                 "SELECT 1 FROM list_global_columns lgc
                  JOIN columns c ON c.id = lgc.column_id
-                 WHERE lgc.list_id = ? AND lgc.column_id = ? AND c.team_id = ?"
+                 WHERE lgc.list_id = ? AND lgc.column_id = ?
+                   AND (c.team_id = ? OR c.is_system = TRUE)"
             );
             $check->execute([$list_id, $col_id, $_SESSION['team_id']]);
             if (!$check->fetch()) {
@@ -187,9 +247,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id) {
+render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns) {
     ?>
+    <div class="mb-3">
+        <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Zurück zur Liste
+        </a>
+    </div>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
+    <?php if (!empty($_GET['success'])): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
     <div class="card shadow-sm">
         <div class="card-body">
             <h5 class="card-title"><?= e($list['name']) ?></h5>
@@ -315,12 +381,13 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
         </div>
     </div>
     <?php endif; ?>
-    <?php if (!empty($global_columns)): ?>
+    <?php if (!empty($global_columns) || !empty($available_columns)): ?>
     <div class="card shadow-sm mt-4">
         <div class="card-body">
             <h6 class="card-title">Globale Spalten</h6>
-            <p class="text-muted small mb-3">Globale Spalten stammen aus der Team-Konfiguration. Entfernen trennt die Spalte von dieser Liste und löscht alle zugehörigen Einträge — die Spalte selbst bleibt erhalten.</p>
-            <ul class="list-group list-group-flush">
+            <p class="text-muted small mb-3">Globale Spalten stammen aus der Team- oder Systemkonfiguration. Entfernen trennt die Spalte von dieser Liste und löscht alle zugehörigen Einträge — die Spalte selbst bleibt erhalten.</p>
+            <?php if (!empty($global_columns)): ?>
+            <ul class="list-group list-group-flush mb-3">
                 <?php foreach ($global_columns as $col): ?>
                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                     <div>
@@ -328,6 +395,11 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                         <span class="badge bg-light text-dark border ms-2 small">
                             <?= match($col['data_type']) { 'boolean' => 'Ja/Nein', 'number' => 'Zahl', 'text' => 'Text', default => e($col['data_type']) } ?>
                         </span>
+                        <?php if (!empty($col['is_system'])): ?>
+                        <span class="badge bg-secondary-subtle text-secondary ms-1 small">
+                            <i class="bi bi-lock me-1"></i>System
+                        </span>
+                        <?php endif; ?>
                     </div>
                     <?php if ($unbind_pending_col_id !== null && $unbind_pending_col_id === (int)$col['id']): ?>
                         <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>/settings" class="d-flex gap-2 align-items-center">
@@ -335,7 +407,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                             <input type="hidden" name="action" value="unbind_column">
                             <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
                             <input type="hidden" name="confirm" value="1">
-                            <span class="text-danger small me-2">Spalte aus dieser Liste entfernen? Alle Einträge dieser Spalte werden ebenfalls gelöscht.</span>
+                            <span class="text-danger small me-2">Einträge dieser Spalte löschen und entfernen?</span>
                             <button type="submit" class="btn btn-sm btn-danger min-touch">Ja, entfernen</button>
                             <a href="/coordinator/lists/<?= (int)$list['id'] ?>/settings" class="btn btn-sm btn-outline-secondary min-touch">Abbrechen</a>
                         </form>
@@ -351,6 +423,25 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                 </li>
                 <?php endforeach; ?>
             </ul>
+            <?php endif; ?>
+            <?php if (!empty($available_columns)): ?>
+            <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>/settings" class="d-flex gap-2 align-items-center flex-wrap">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="bind_column">
+                <select name="column_id" class="form-select form-select-sm" style="max-width: 260px;">
+                    <?php foreach ($available_columns as $col): ?>
+                    <option value="<?= (int)$col['id'] ?>">
+                        <?= e($col['name']) ?>
+                        (<?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>)
+                        <?= !empty($col['is_system']) ? ' · System' : '' ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-primary min-touch">
+                    <i class="bi bi-plus me-1"></i>Hinzufügen
+                </button>
+            </form>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
@@ -364,6 +455,11 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                 <button type="submit" class="btn btn-outline-danger min-touch">Liste löschen</button>
             </form>
         </div>
+    </div>
+    <div class="mt-4">
+        <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Zurück zur Liste
+        </a>
     </div>
     <?php
 });

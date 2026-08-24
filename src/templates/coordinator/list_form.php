@@ -100,13 +100,67 @@
             </div>
 
             <!-- Section 4: Global column selection with optional default values (member lists only) -->
-            <?php if (($list_type ?? 'member') === 'member' && !empty($global_columns)): ?>
+            <?php
+            $system_columns = $system_columns ?? [];
+            $has_any_columns = (($list_type ?? 'member') === 'member') && (!empty($global_columns) || !empty($system_columns));
+            ?>
+            <?php if ($has_any_columns): ?>
             <div class="mb-4">
                 <label class="form-label fw-semibold">Globale Spalten auswählen</label>
                 <div class="form-text mb-2">
                     Welche globalen Spalten sollen in dieser Liste erscheinen?
                     Optional: Standardwert vorausfüllen (gilt für alle Mitglieder beim Erstellen).
                 </div>
+
+                <?php if (!empty($system_columns)): ?>
+                <p class="text-muted small mb-2"><i class="bi bi-lock-fill me-1"></i>Systemspalten</p>
+                <?php foreach ($system_columns as $col): ?>
+                <?php $col_id = (int)$col['id']; ?>
+                <div class="mb-3">
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               style="width:3em;height:1.75em;cursor:pointer;"
+                               name="global_columns[]" value="<?= $col_id ?>"
+                               id="col_<?= $col_id ?>" checked>
+                        <label class="form-check-label mb-0" for="col_<?= $col_id ?>">
+                            <?= e($col['name']) ?>
+                            <span class="badge bg-light text-dark border ms-1">
+                                <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
+                            </span>
+                            <span class="badge bg-secondary-subtle text-secondary ms-1">
+                                <i class="bi bi-lock me-1"></i>System
+                            </span>
+                        </label>
+                    </div>
+                    <div class="ms-4 mt-1">
+                        <?php if ($col['data_type'] === 'boolean'): ?>
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   style="width:3em;height:1.75em;cursor:pointer;"
+                                   name="defaults[<?= $col_id ?>]" value="1"
+                                   id="default_<?= $col_id ?>">
+                            <label class="form-check-label mb-0 text-muted small" for="default_<?= $col_id ?>">
+                                Standardwert: Ja
+                            </label>
+                        </div>
+                        <?php else: ?>
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text text-muted small">Standard</span>
+                            <input type="number" step="any"
+                                   name="defaults[<?= $col_id ?>]"
+                                   class="form-control form-control-sm"
+                                   placeholder="leer lassen = kein Standardwert">
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
+
+                <?php if (!empty($global_columns)): ?>
+                <?php if (!empty($system_columns)): ?>
+                <p class="text-muted small mb-2 mt-3">Team-Spalten</p>
+                <?php endif; ?>
                 <?php foreach ($global_columns as $col): ?>
                 <?php $col_id = (int)$col['id']; ?>
                 <div class="mb-3">
@@ -146,6 +200,7 @@
                     </div>
                 </div>
                 <?php endforeach; ?>
+                <?php endif; ?>
             </div>
             <?php elseif (($list_type ?? 'member') === 'member'): ?>
             <div class="mb-4">

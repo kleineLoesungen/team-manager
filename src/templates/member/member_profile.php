@@ -14,9 +14,9 @@ declare(strict_types=1);
 <div class="card shadow-sm">
     <div class="card-body text-center py-5">
         <i class="bi bi-person-badge display-4 text-muted mb-3 d-block"></i>
-        <p class="mb-1 fw-semibold">Kein Spielerprofil verknüpft</p>
+        <p class="mb-1 fw-semibold">Kein Profil verknüpft</p>
         <p class="text-muted small mb-0">
-            Dein Konto ist noch nicht mit einem Spielerprofil verknüpft.
+            Dein Konto ist noch nicht mit einem Profil verknüpft.
             Bitte wende dich an deinen Koordinator.
         </p>
     </div>

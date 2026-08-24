@@ -126,7 +126,7 @@ $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id) {
+render_member_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/member/ticker_detail.php';
 });

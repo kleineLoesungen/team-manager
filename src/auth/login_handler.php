@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "SELECT u.id, u.team_id, u.role, p.first_name, p.last_name,
                             u.is_active, u.password_hash, u.confirmed_at
                      FROM users u
-                     JOIN players p ON p.id = u.player_id
+                     JOIN members p ON p.id = u.member_id
                      WHERE u.username = ?"
                 );
                 $stmt->execute([$username]);

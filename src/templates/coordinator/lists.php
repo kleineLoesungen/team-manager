@@ -325,4 +325,17 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <?php endif; // empty($items) ?>
 
 <?php endif; // $showCalendar / list view ?>
-<script>sessionStorage.setItem('coordinator_lists_url', location.href);</script>
+<script>
+(function() {
+    sessionStorage.setItem('coordinator_lists_url', location.href);
+    var saved = sessionStorage.getItem('coordinator_lists_scroll');
+    if (saved !== null) {
+        sessionStorage.removeItem('coordinator_lists_scroll');
+        window.scrollTo(0, parseInt(saved, 10));
+    }
+    document.addEventListener('click', function(e) {
+        var a = e.target.closest('a[href^="/coordinator/lists/"]');
+        if (a) sessionStorage.setItem('coordinator_lists_scroll', window.scrollY);
+    });
+})();
+</script>

@@ -15,9 +15,9 @@ $pdo = get_db();
 
 // Triple-constraint ownership check: id + role='member' + team_id
 $check = $pdo->prepare(
-    "SELECT u.id, u.player_id, p.first_name, p.last_name, p.email
+    "SELECT u.id, u.member_id, p.first_name, p.last_name, p.email
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.id = ? AND u.role = 'member' AND u.team_id = ?"
 );
 $check->execute([$member_id, $_SESSION['team_id']]);
@@ -42,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $email_val = $email_raw !== '' ? $email_raw : null;
 
-        // Write to players (canonical person table) — needs admin context
+        // Write to members (canonical person table) — needs admin context
         set_admin_context($pdo);
-        $pdo->prepare("UPDATE players SET email = ? WHERE id = ?")
-            ->execute([$email_val, (int)$member['player_id']]);
+        $pdo->prepare("UPDATE members SET email = ? WHERE id = ?")
+            ->execute([$email_val, (int)$member['member_id']]);
         reset_rls_context($pdo);
         set_team_context($pdo, (int)$_SESSION['team_id'], 'coordinator', (int)$_SESSION['user_id']);
 

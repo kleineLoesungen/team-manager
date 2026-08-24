@@ -13,17 +13,17 @@ $error   = '';
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-// Players not yet on this team — a player may be on multiple teams
+// Profiles not yet on this team — a profile may be on multiple teams
 set_admin_context($pdo);
 $lp_stmt = $pdo->prepare(
     "SELECT p.id, p.first_name, p.last_name, c.name AS club_name
-     FROM players p
+     FROM members p
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE NOT EXISTS (
-         SELECT 1 FROM users u WHERE u.player_id = p.id AND u.team_id = ?
+         SELECT 1 FROM users u WHERE u.member_id = p.id AND u.team_id = ?
      )
      AND NOT EXISTS (
-         SELECT 1 FROM users u WHERE u.player_id = p.id AND u.role = 'coordinator'
+         SELECT 1 FROM users u WHERE u.member_id = p.id AND u.role = 'coordinator'
      )
      ORDER BY p.first_name ASC, p.last_name ASC"
 );
@@ -38,26 +38,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $create_mode = $_POST['create_mode'] ?? 'new';
 
     if ($create_mode === 'link') {
-        $player_id = (int)($_POST['player_id_link'] ?? 0);
+        $member_profile_id = (int)($_POST['member_id_link'] ?? 0);
         $linked_player = null;
 
-        if ($player_id <= 0) {
-            $error = 'Bitte wähle einen Spieler aus.';
+        if ($member_profile_id <= 0) {
+            $error = 'Bitte wähle ein Profil aus.';
         } else {
             set_admin_context($pdo);
             $p_check = $pdo->prepare(
-                "SELECT id, first_name, last_name FROM players WHERE id = ?"
+                "SELECT id, first_name, last_name FROM members WHERE id = ?"
             );
-            $p_check->execute([$player_id]);
+            $p_check->execute([$member_profile_id]);
             $linked_player = $p_check->fetch();
 
             if (!$linked_player) {
-                $error = 'Spieler nicht gefunden.';
+                $error = 'Profil nicht gefunden.';
             } else {
-                $dup = $pdo->prepare("SELECT 1 FROM users WHERE player_id = ? AND team_id = ?");
-                $dup->execute([$player_id, $team_id]);
+                $dup = $pdo->prepare("SELECT 1 FROM users WHERE member_id = ? AND team_id = ?");
+                $dup->execute([$member_profile_id, $team_id]);
                 if ($dup->fetch()) {
-                    $error = 'Dieser Spieler ist bereits Mitglied in diesem Team.';
+                    $error = 'Dieses Profil ist bereits mit einem Mitglied in diesem Team verknüpft.';
                 }
             }
             reset_rls_context($pdo);
@@ -70,13 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $plain_password = generate_random_password();
                 $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
-                $pdo->prepare(
-                    "INSERT INTO users (team_id, role, username, password_hash, player_id)
-                     VALUES (?, 'member', ?, ?, ?)"
-                )->execute([
-                    $team_id,
-                    $username, $password_hash, $player_id,
-                ]);
+                $ins = $pdo->prepare(
+                    "INSERT INTO users (team_id, role, username, password_hash, member_id)
+                     VALUES (?, 'member', ?, ?, ?) RETURNING id"
+                );
+                $ins->execute([$team_id, $username, $password_hash, $member_profile_id]);
+                $new_user_id = (int)$ins->fetchColumn();
+                prefill_number_cells($pdo, $team_id, $new_user_id);
 
                 $credential_username = $username;
                 $credential_password = $plain_password;
@@ -106,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 set_admin_context($pdo);
                 $p_stmt = $pdo->prepare(
-                    "INSERT INTO players (first_name, last_name, email) VALUES (?, ?, ?) RETURNING id"
+                    "INSERT INTO members (first_name, last_name, email) VALUES (?, ?, ?) RETURNING id"
                 );
                 $p_stmt->execute([$first_name, $last_name, $email_raw !== '' ? $email_raw : null]);
-                $new_player_id = (int)$p_stmt->fetchColumn();
+                $new_member_id = (int)$p_stmt->fetchColumn();
                 reset_rls_context($pdo);
                 set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
 
@@ -117,10 +117,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $plain_password = generate_random_password();
                 $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
-                $pdo->prepare(
-                    "INSERT INTO users (team_id, role, username, password_hash, player_id)
-                     VALUES (?, 'member', ?, ?, ?)"
-                )->execute([$team_id, $username, $password_hash, $new_player_id]);
+                $ins = $pdo->prepare(
+                    "INSERT INTO users (team_id, role, username, password_hash, member_id)
+                     VALUES (?, 'member', ?, ?, ?) RETURNING id"
+                );
+                $ins->execute([$team_id, $username, $password_hash, $new_member_id]);
+                $new_user_id = (int)$ins->fetchColumn();
+                prefill_number_cells($pdo, $team_id, $new_user_id);
 
                 $credential_username = $username;
                 $credential_password = $plain_password;

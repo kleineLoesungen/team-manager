@@ -106,10 +106,10 @@ function require_coordinator(): void {
 }
 
 /**
- * Require a player session.
+ * Require a member session.
  * Checks $_SESSION['role'] === 'member', sets RLS team context with role + user_id, redirects on failure.
  */
-function require_player(): void {
+function require_member(): void {
     check_session_timeout();
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'member') {
         redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
@@ -119,11 +119,9 @@ function require_player(): void {
     set_team_context($pdo, (int)$_SESSION['team_id'], 'member', (int)$_SESSION['user_id']);
 }
 
-/**
- * Require a member session (canonical alias for require_player).
- */
-function require_member(): void {
-    require_player();
+/** @deprecated Use require_member() */
+function require_player(): void {
+    require_member();
 }
 
 /**

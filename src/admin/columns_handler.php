@@ -30,13 +30,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        $pdo->beginTransaction();
+
         $stmt = $pdo->prepare(
             "INSERT INTO columns (team_id, list_id, name, data_type, is_system, sort_order)
-             VALUES (NULL, NULL, ?, ?, TRUE, ?)"
+             VALUES (NULL, NULL, ?, ?, TRUE, ?) RETURNING id"
         );
         $stmt->execute([$name, $data_type, $sort_order]);
-        redirect('/admin/columns?success=1');
+        $new_id = (int)$stmt->fetchColumn();
+
+        // Promote any matching team global columns (same name + type) to this new system column
+        $conflict_stmt = $pdo->prepare(
+            "SELECT id FROM columns
+             WHERE name = ? AND data_type = ? AND is_system = FALSE AND list_id IS NULL"
+        );
+        $conflict_stmt->execute([$name, $data_type]);
+        $old_ids = $conflict_stmt->fetchAll(PDO::FETCH_COLUMN);
+        $promoted = count($old_ids);
+
+        foreach ($old_ids as $old_id) {
+            $old_id = (int)$old_id;
+
+            // Remap list_global_columns: old team column → new system column (skip conflicts)
+            $pdo->prepare(
+                "UPDATE list_global_columns SET column_id = ?
+                 WHERE column_id = ?
+                   AND NOT EXISTS (
+                       SELECT 1 FROM list_global_columns ex
+                       WHERE ex.list_id = list_global_columns.list_id AND ex.column_id = ?
+                   )"
+            )->execute([$new_id, $old_id, $new_id]);
+            $pdo->prepare("DELETE FROM list_global_columns WHERE column_id = ?")->execute([$old_id]);
+
+            // Remap cells: old team column → new system column (skip conflicts)
+            $pdo->prepare(
+                "UPDATE cells SET column_id = ?
+                 WHERE column_id = ?
+                   AND NOT EXISTS (
+                       SELECT 1 FROM cells ex
+                       WHERE ex.list_id = cells.list_id
+                         AND ex.column_id = ?
+                         AND ex.member_id = cells.member_id
+                   )"
+            )->execute([$new_id, $old_id, $new_id]);
+            $pdo->prepare("DELETE FROM cells WHERE column_id = ?")->execute([$old_id]);
+
+            $pdo->prepare("DELETE FROM columns WHERE id = ? AND is_system = FALSE")->execute([$old_id]);
+        }
+
+        $pdo->commit();
+        $qs = $promoted > 0 ? '?success=1&promoted=' . $promoted : '?success=1';
+        redirect('/admin/columns' . $qs);
     } catch (PDOException $e) {
+        $pdo->rollBack();
         error_log('Admin system column create error: ' . $e->getMessage());
         redirect('/admin/columns?error=' . urlencode('Ein Fehler ist aufgetreten.'));
     }

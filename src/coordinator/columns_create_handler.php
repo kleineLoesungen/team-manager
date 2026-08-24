@@ -25,6 +25,16 @@ if (!in_array($data_type, ['boolean', 'number'])) {
     redirect('/coordinator/columns?error=' . urlencode('Ungültiger Typ. Globale Spalten erlauben nur Ja/Nein oder Zahl.'));
 }
 
+// Block if a system column with same name + type already exists
+set_admin_context($pdo);
+$sys_check = $pdo->prepare(
+    "SELECT id FROM columns WHERE name = ? AND data_type = ? AND is_system = TRUE AND list_id IS NULL"
+);
+$sys_check->execute([$name, $data_type]);
+if ($sys_check->fetch()) {
+    redirect('/coordinator/columns?error=' . urlencode('Diese Spalte existiert bereits als systemweite Spalte und steht allen Teams zur Verfügung.'));
+}
+
 try {
     $stmt = $pdo->prepare(
         "INSERT INTO columns (team_id, list_id, name, data_type)

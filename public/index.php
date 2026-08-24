@@ -248,11 +248,11 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/list_column_create_handler.php';
         })(),
 
-    // /coordinator/lists/{id}/rows/{player_id}/edit — GET/POST: edit player row (CELL-02)
+    // /coordinator/lists/{id}/rows/{member_id}/edit — GET/POST: edit member row (CELL-02)
     (bool)preg_match('#^/coordinator/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id']   = (int)$matches[1];
-            $_REQUEST['player_id'] = (int)$matches[2];
+            $_REQUEST['member_id'] = (int)$matches[2];
             require ROOT_PATH . '/src/coordinator/list_row_edit_handler.php';
         })(),
 
@@ -350,7 +350,7 @@ match (true) {
     (bool)preg_match('#^/coordinator/players/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['player_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coordinator/player_profile_handler.php';
+            require ROOT_PATH . '/src/coordinator/member_profile_handler.php';
         })(),
 
     // ── Coordinator: Coordinators directory ───────────────────────────────────
@@ -425,19 +425,19 @@ match (true) {
     $path === '/member/profile/attributes/save'
         => require ROOT_PATH . '/src/member/profile_attributes_handler.php',
 
-    // ── Member: Player Profile ────────────────────────────────────────────
-    $path === '/member/player-profile'
-        => require ROOT_PATH . '/src/member/player_profile_handler.php',
+    // ── Member: Profile (Mitgliedsprofil) ─────────────────────────────────
+    $path === '/member/member-profile'
+        => require ROOT_PATH . '/src/member/member_profile_handler.php',
 
     // ── Member: Lists ─────────────────────────────────────────────────
     $path === '/member' || $path === '/member/lists'
         => require ROOT_PATH . '/src/member/lists_handler.php',
 
-    // /member/lists/{id}/rows/{player_id}/edit — GET/POST: edit own row (CELL-01)
+    // /member/lists/{id}/rows/{member_id}/edit — GET/POST: edit own row (CELL-01)
     (bool)preg_match('#^/member/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['list_id']   = (int)$matches[1];
-            $_REQUEST['player_id'] = (int)$matches[2];
+            $_REQUEST['member_id'] = (int)$matches[2];
             require ROOT_PATH . '/src/member/list_row_edit_handler.php';
         })(),
 

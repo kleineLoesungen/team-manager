@@ -69,10 +69,10 @@ function can_view_list(int $list_id): bool {
  * - Private lists: players cannot edit; coaches can edit
  *
  * @param int $list_id    The list containing the cells
- * @param int $player_id  The player whose cells are being edited
+ * @param int $member_id  The user_id of the member whose cells are being edited
  * @return bool
  */
-function can_edit_cell(int $list_id, int $player_id): bool {
+function can_edit_cell(int $list_id, int $member_id): bool {
     if (empty($_SESSION['team_id']) || empty($_SESSION['role']) || empty($_SESSION['user_id'])) {
         return false;
     }
@@ -110,8 +110,8 @@ function can_edit_cell(int $list_id, int $player_id): bool {
     }
 
     if ($role === 'member') {
-        // CELL-01: players can only edit their own row in public lists
-        $is_own_row = (int)$_SESSION['user_id'] === $player_id;
+        // CELL-01: members can only edit their own row in public lists
+        $is_own_row = (int)$_SESSION['user_id'] === $member_id;
         $is_public  = $visibility === 'public';
         return $is_own_row && $is_public;
     }

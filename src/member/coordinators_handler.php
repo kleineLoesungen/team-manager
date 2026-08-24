@@ -20,7 +20,7 @@ $stmt = $pdo->prepare(
     "SELECT u.id, p.first_name, p.last_name, p.phone, p.email, cl.name AS club_name
      FROM coordinator_teams ct
      JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      LEFT JOIN clubs cl ON cl.id = p.club_id
      WHERE ct.team_id = ? AND ct.left_at IS NULL
      ORDER BY p.first_name ASC, p.last_name ASC"
@@ -37,7 +37,7 @@ if ($show_all_teams) {
          FROM coordinator_teams ct
          JOIN teams t ON t.id = ct.team_id AND t.is_active = TRUE
          JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          LEFT JOIN clubs cl ON cl.id = p.club_id
          WHERE ct.team_id != ? AND ct.left_at IS NULL
          ORDER BY t.name ASC, p.first_name ASC, p.last_name ASC"
@@ -57,6 +57,6 @@ set_team_context($pdo, (int)$_SESSION['team_id'], 'member', (int)$_SESSION['user
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Koordinatoren', 'profile', function() use ($coordinators, $other_teams) {
+render_member_page('Koordinatoren', 'profile', function() use ($coordinators, $other_teams) {
     require ROOT_PATH . '/src/templates/member/coordinators.php';
 });

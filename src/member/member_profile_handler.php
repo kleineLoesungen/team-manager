@@ -1,6 +1,6 @@
 <?php
-// src/member/player_profile_handler.php — GET /member/player-profile
-// Shows the member's own player record (via users.player_id), attributes filtered
+// src/member/member_profile_handler.php — GET /member/member-profile
+// Shows the member's own profile record (via users.member_id), attributes filtered
 // by visible_to_player, team membership history, and cross-team stats.
 
 declare(strict_types=1);
@@ -9,43 +9,43 @@ require_member();
 
 $pdo = get_db();
 
-// Find this member's linked player record
-$link_stmt = $pdo->prepare("SELECT player_id FROM users WHERE id = ? LIMIT 1");
+// Find this member's linked profile record
+$link_stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ? LIMIT 1");
 $link_stmt->execute([(int)$_SESSION['user_id']]);
-$player_id = $link_stmt->fetchColumn();
+$member_id = $link_stmt->fetchColumn();
 
-// If no player is linked, render a "not linked" state (not an error)
+// If no profile is linked, render a "not linked" state (not an error)
 $player           = null;
 $attr_groups      = [];
 $system_stats     = [];
 $coordinator_stats = [];
 $history          = [];
 
-if ($player_id) {
-    $player_id = (int)$player_id;
+if ($member_id) {
+    $member_id = (int)$member_id;
 
-    // Fetch player record + club name
-    // RLS: members can read their own player via users.player_id subquery
+    // Fetch profile record + club name
+    // RLS: members can read their own profile via users.member_id subquery
     set_admin_context($pdo);
     $p_stmt = $pdo->prepare(
         "SELECT p.first_name, p.last_name, p.description,
                 c.name AS club_name
-         FROM players p
+         FROM members p
          LEFT JOIN clubs c ON c.id = p.club_id
          WHERE p.id = ?"
     );
-    $p_stmt->execute([$player_id]);
+    $p_stmt->execute([$member_id]);
     $player = $p_stmt->fetch();
 
-    // Team accounts: all user accounts linked to this player
+    // Team accounts: all user accounts linked to this profile
     $hist_stmt = $pdo->prepare(
         "SELECT t.name AS team_name, u.username, u.is_active, t.is_active AS team_active
          FROM users u
          JOIN teams t ON t.id = u.team_id
-         WHERE u.player_id = ?
+         WHERE u.member_id = ?
          ORDER BY t.name ASC"
     );
-    $hist_stmt->execute([$player_id]);
+    $hist_stmt->execute([$member_id]);
     $history = $hist_stmt->fetchAll();
 
     // Visible attributes only (WHERE visible_to_player = TRUE)
@@ -54,13 +54,13 @@ if ($player_id) {
                 pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_order,
                 pa.editable_by_player,
                 COALESCE(pav.value, '') AS value
-         FROM player_attribute_groups pag
-         JOIN player_attributes pa ON pa.group_id = pag.id
-         LEFT JOIN player_attribute_values pav ON pav.attribute_id = pa.id AND pav.player_id = ?
+         FROM member_attribute_groups pag
+         JOIN member_attributes pa ON pa.group_id = pag.id
+         LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
          WHERE pa.visible_to_player = TRUE
          ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
     );
-    $attr_stmt->execute([$player_id]);
+    $attr_stmt->execute([$member_id]);
     $raw_attrs = $attr_stmt->fetchAll();
 
     // Group by group_name for template
@@ -72,10 +72,10 @@ if ($player_id) {
         $attr_groups[$gname]['attrs'][] = $row;
     }
 
-    // Cross-team stats: aggregate cells across ALL user accounts linked to this player
+    // Cross-team stats: aggregate cells across ALL user accounts linked to this profile
     // Re-query user IDs since history has usernames not IDs
-    $uid_stmt = $pdo->prepare("SELECT id FROM users WHERE player_id = ?");
-    $uid_stmt->execute([$player_id]);
+    $uid_stmt = $pdo->prepare("SELECT id FROM users WHERE member_id = ?");
+    $uid_stmt->execute([$member_id]);
     $all_user_ids = array_column($uid_stmt->fetchAll(), 'id');
     // Ensure current user is included even if query returned 0 rows
     if (!in_array((int)$_SESSION['user_id'], $all_user_ids)) {
@@ -90,7 +90,7 @@ if ($player_id) {
          JOIN lists l ON l.id = ce.list_id
          JOIN teams t ON t.id = l.team_id
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL AND c.is_system = TRUE
-         WHERE ce.player_id IN ($placeholders)
+         WHERE ce.member_id IN ($placeholders)
            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
          ORDER BY c.sort_order ASC, c.name ASC, l.date DESC"
     );
@@ -104,7 +104,7 @@ if ($player_id) {
          JOIN lists l ON l.id = ce.list_id
          JOIN teams t ON t.id = l.team_id
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL AND c.is_system = FALSE
-         WHERE ce.player_id IN ($placeholders)
+         WHERE ce.member_id IN ($placeholders)
            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
          ORDER BY c.name ASC, c.data_type ASC, l.date DESC"
     );
@@ -118,6 +118,6 @@ if ($player_id) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Mein Verlauf', 'player_profile', function() use ($player, $player_id, $attr_groups, $system_stats, $coordinator_stats, $history) {
-    require ROOT_PATH . '/src/templates/member/player_profile.php';
+render_member_page('Mein Verlauf', 'member_profile', function() use ($player, $member_id, $attr_groups, $system_stats, $coordinator_stats, $history) {
+    require ROOT_PATH . '/src/templates/member/member_profile.php';
 });

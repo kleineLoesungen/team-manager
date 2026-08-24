@@ -10,24 +10,24 @@ require_once ROOT_PATH . '/src/db/visibility.php';
 require_coordinator();
 
 $list_id   = (int)($_REQUEST['list_id']   ?? 0);
-$player_id = (int)($_REQUEST['player_id'] ?? 0);
+$member_id = (int)($_REQUEST['member_id'] ?? 0);
 $pdo       = get_db();
 
 // Authorization check — must happen before any query or render
-if (!can_edit_cell($list_id, $player_id)) {
+if (!can_edit_cell($list_id, $member_id)) {
     http_response_code(403);
     echo '<h1>Nicht berechtigt</h1>';
     exit;
 }
 
-// Verify player belongs to this team
+// Verify member belongs to this team
 $player_stmt = $pdo->prepare(
     "SELECT u.id, p.first_name, p.last_name
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.id = ? AND u.team_id = ? AND u.role = 'member'"
 );
-$player_stmt->execute([$player_id, $_SESSION['team_id']]);
+$player_stmt->execute([$member_id, $_SESSION['team_id']]);
 $player = $player_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$player) {
@@ -42,13 +42,14 @@ $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Fetch columns: local + only global columns selected for this list (D-11)
+set_admin_context($pdo);
 $col_stmt = $pdo->prepare(
     "SELECT c.id, c.name, c.data_type, c.list_id
      FROM columns c
      WHERE c.is_active = TRUE
        AND (
          c.list_id = ?
-         OR (c.list_id IS NULL AND c.team_id = ?
+         OR (c.list_id IS NULL AND (c.team_id = ? OR c.is_system = TRUE)
              AND EXISTS (
                SELECT 1 FROM list_global_columns lgc
                WHERE lgc.list_id = ? AND lgc.column_id = c.id
@@ -59,11 +60,11 @@ $col_stmt = $pdo->prepare(
 $col_stmt->execute([$list_id, $_SESSION['team_id'], $list_id]);
 $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch existing cell values for this player in this list
+// Fetch existing cell values for this member in this list
 $cell_stmt = $pdo->prepare(
-    "SELECT column_id, value FROM cells WHERE list_id = ? AND player_id = ?"
+    "SELECT column_id, value FROM cells WHERE list_id = ? AND member_id = ?"
 );
-$cell_stmt->execute([$list_id, $player_id]);
+$cell_stmt->execute([$list_id, $member_id]);
 $existing_cells = [];
 foreach ($cell_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
     $existing_cells[(int)$cell['column_id']] = $cell['value'];
@@ -75,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
     // Re-check authorization on POST (defense-in-depth)
-    if (!can_edit_cell($list_id, $player_id)) {
+    if (!can_edit_cell($list_id, $member_id)) {
         redirect('/coordinator/lists/' . $list_id . '?error=' . urlencode('Nicht berechtigt.'));
     }
 
@@ -119,12 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // UPSERT cell — always save (even null clears the value)
             $upsert = $pdo->prepare(
-                "INSERT INTO cells (list_id, column_id, player_id, value)
+                "INSERT INTO cells (list_id, column_id, member_id, value)
                  VALUES (?, ?, ?, ?)
-                 ON CONFLICT (list_id, column_id, player_id)
+                 ON CONFLICT (list_id, column_id, member_id)
                  DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
             );
-            $upsert->execute([$list_id, $col_id, $player_id, $validated_value]);
+            $upsert->execute([$list_id, $col_id, $member_id, $validated_value]);
         }
 
         redirect('/coordinator/lists/' . $list_id . '?success=1');

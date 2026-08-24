@@ -4,17 +4,19 @@
 
 declare(strict_types=1);
 
-require_player();
+require_member();
 
 $pdo       = get_db();
 $team_id   = (int)$_SESSION['team_id'];
-$player_id = (int)$_SESSION['user_id'];
+$member_id = (int)$_SESSION['user_id'];
+// System columns (team_id = NULL) require admin context to bypass RLS
+set_admin_context($pdo);
 
-// ── Fetch global columns for this team ───────────────────────────────────────
+// ── Fetch global columns for this team (team-scoped + system columns) ────────
 $cols_stmt = $pdo->prepare(
     "SELECT id, name, data_type FROM columns
-     WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
-     ORDER BY sort_order, id"
+     WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
+     ORDER BY is_system DESC, sort_order, id"
 );
 $cols_stmt->execute([$team_id]);
 $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -67,10 +69,10 @@ if (!empty($global_columns)) {
         FROM (
             SELECT id, name, data_type, sort_order
             FROM columns
-            WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
+            WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
         ) c
         LEFT JOIN cells ON cells.column_id = c.id
-                       AND cells.player_id = ?
+                       AND cells.member_id = ?
         LEFT JOIN lists ON cells.list_id = lists.id
                        AND lists.visibility IN ('public', 'protected')
         WHERE (cells.id IS NULL OR lists.id IS NOT NULL)
@@ -79,7 +81,7 @@ if (!empty($global_columns)) {
     ";
 
     $agg_stmt = $pdo->prepare($agg_sql);
-    $agg_stmt->execute([$team_id, $player_id]);
+    $agg_stmt->execute([$team_id, $member_id]);
     $raw = $agg_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($raw as $row) {
@@ -108,7 +110,7 @@ if (!empty($global_columns)) {
         FROM lists l
         JOIN list_global_columns lgc ON lgc.list_id = l.id
         JOIN columns c ON c.id = lgc.column_id
-            AND c.team_id = :team_id AND c.list_id IS NULL AND c.is_active = TRUE
+            AND (c.team_id = :team_id OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         WHERE l.team_id = :team_id2
           AND l.visibility IN ('public', 'protected')
           AND (l.date IS NULL OR l.date <= CURRENT_DATE)
@@ -125,10 +127,10 @@ if (!empty($global_columns)) {
             AND l.team_id = :team_id AND l.visibility IN ('public', 'protected')
             AND (l.date IS NULL OR l.date <= CURRENT_DATE)
         JOIN columns c ON c.id = ce.column_id
-            AND c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
-        WHERE ce.player_id = :player_id
+            AND (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE ce.member_id = :member_id
     ");
-    $cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':player_id' => $player_id]);
+    $cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':member_id' => $member_id]);
     foreach ($cells_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
         $per_list_cells[(int)$cell['list_id']][(int)$cell['column_id']] = $cell['value'];
     }
@@ -141,7 +143,7 @@ if (!empty($global_columns)) {
         JOIN lists l ON l.id = lgc.list_id
             AND l.team_id = :team_id AND l.visibility IN ('public', 'protected')
             AND (l.date IS NULL OR l.date <= CURRENT_DATE)
-        WHERE c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         GROUP BY c.id
     ");
     $cnt_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
@@ -175,7 +177,7 @@ if (!empty($global_columns)) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page('Meine Statistik', 'stats', function() use (
+render_member_page('Meine Statistik', 'stats', function() use (
     $global_columns, $player_stats,
     $per_list_rows, $per_list_cells, $per_list_totals, $col_list_counts
 ) {

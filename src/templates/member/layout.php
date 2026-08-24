@@ -8,10 +8,10 @@ require_once dirname(__DIR__) . '/layout.php';
 /**
  * Render a full member page.
  * @param string   $title  Page title (German)
- * @param string   $active Active tab key: 'lists', 'ticker', 'stats', 'profile', 'player_profile'
+ * @param string   $active Active tab key: 'lists', 'ticker', 'stats', 'profile', 'member_profile'
  * @param callable $body   Outputs main content HTML
  */
-function render_player_page(string $title, string $active, callable $body): void {
+function render_member_page(string $title, string $active, callable $body): void {
     render_layout_head($title);
 
     $tab = match(true) {

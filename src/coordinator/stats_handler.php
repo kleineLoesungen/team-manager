@@ -8,6 +8,8 @@ require_coordinator();
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
+// System columns (team_id = NULL) require admin context to bypass RLS throughout this handler
+set_admin_context($pdo);
 
 // ── Filter parameters (STAT-02) ───────────────────────────────────────────────
 $filter_list_id         = isset($_GET['list_id']) && $_GET['list_id'] !== '' ? (int)$_GET['list_id'] : null;
@@ -30,11 +32,11 @@ $lists_stmt = $pdo->prepare(
 $lists_stmt->execute([$team_id]);
 $available_lists = $lists_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ── Fetch global columns for this team ───────────────────────────────────────
+// ── Fetch global columns for this team (team-scoped + system columns) ────────
 $cols_stmt = $pdo->prepare(
     "SELECT id, name, data_type FROM columns
-     WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
-     ORDER BY sort_order, id"
+     WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
+     ORDER BY is_system DESC, sort_order, id"
 );
 $cols_stmt->execute([$team_id]);
 $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -45,7 +47,7 @@ $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 // Coach sees ALL list types — no visibility filter (per D-02).
 $agg_sql = "
     SELECT
-        u.id           AS player_id,
+        u.id           AS member_id,
         p.first_name,
         p.last_name,
         c.id           AS column_id,
@@ -61,13 +63,13 @@ $agg_sql = "
             0
         ) AS aggregated_value
     FROM users u
-    JOIN players p ON p.id = u.player_id
+    JOIN members p ON p.id = u.member_id
     CROSS JOIN (
         SELECT id, name, data_type, sort_order
         FROM columns
         WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
     ) c
-    LEFT JOIN cells ON cells.player_id = u.id AND cells.column_id = c.id
+    LEFT JOIN cells ON cells.member_id = u.id AND cells.column_id = c.id
     LEFT JOIN lists ON cells.list_id = lists.id
     WHERE u.team_id = ?
       AND u.role = 'member'
@@ -110,11 +112,11 @@ $agg_stmt = $pdo->prepare($agg_sql);
 $agg_stmt->execute($agg_params);
 $raw_stats = $agg_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Reshape: $player_stats[player_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[column_id => value]]
+// Reshape: $player_stats[member_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[column_id => value]]
 $player_stats = [];
 $player_order = [];  // Preserve sort order from query
 foreach ($raw_stats as $row) {
-    $pid = (int)$row['player_id'];
+    $pid = (int)$row['member_id'];
     if (!isset($player_stats[$pid])) {
         $player_stats[$pid] = [
             'first_name' => $row['first_name'],
@@ -193,7 +195,7 @@ $ranking_params = array_merge(
 
 $ranking_sql = "
     SELECT
-        u.id           AS player_id,
+        u.id           AS member_id,
         p.first_name,
         p.last_name,
         c.id           AS column_id,
@@ -246,13 +248,13 @@ $ranking_sql = "
         COALESCE(SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN 1 ELSE NULL END), 0) AS count_8_12w
 
     FROM users u
-    JOIN players p ON p.id = u.player_id
+    JOIN members p ON p.id = u.member_id
     CROSS JOIN (
         SELECT id, name, data_type, sort_order
         FROM columns
         WHERE team_id = ? AND list_id IS NULL AND is_active = TRUE
     ) c
-    LEFT JOIN cells ON cells.player_id = u.id AND cells.column_id = c.id
+    LEFT JOIN cells ON cells.member_id = u.id AND cells.column_id = c.id
     LEFT JOIN lists ON cells.list_id = lists.id
     WHERE u.team_id = ?
       AND u.role = 'member'
@@ -273,12 +275,12 @@ $ranking_stmt = $pdo->prepare($ranking_sql);
 $ranking_stmt->execute($ranking_params);
 $raw_ranking  = $ranking_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Reshape: $ranking[player_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[col_id => [all,4w,4_8w,8_12w]]]
+// Reshape: $ranking[member_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[col_id => [all,4w,4_8w,8_12w]]]
 $ranking       = [];
 $ranking_order = [];
 
 foreach ($raw_ranking as $row) {
-    $pid = (int)$row['player_id'];
+    $pid = (int)$row['member_id'];
     $cid = (int)$row['column_id'];
     if (!isset($ranking[$pid])) {
         $ranking[$pid] = [
@@ -330,7 +332,7 @@ if ($sort_col_id > 0) {
 // Fetch all active members for the selector dropdown
 $members_stmt = $pdo->prepare(
     "SELECT u.id, p.first_name, p.last_name FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
      ORDER BY p.first_name, p.last_name"
 );
@@ -367,7 +369,7 @@ if ($selected_member_id === null && !empty($global_columns)) {
         FROM lists l
         JOIN list_global_columns lgc ON lgc.list_id = l.id
         JOIN columns c ON c.id = lgc.column_id
-            AND c.team_id = ? AND c.list_id IS NULL AND c.is_active = TRUE
+            AND (c.team_id = ? OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         LEFT JOIN cells ce ON ce.list_id = l.id AND ce.column_id = c.id
         WHERE l.team_id = ?
     ";
@@ -433,7 +435,7 @@ if ($selected_member_id !== null) {
         FROM lists l
         JOIN list_global_columns lgc ON lgc.list_id = l.id
         JOIN columns c ON c.id = lgc.column_id
-            AND c.team_id = :team_id AND c.list_id IS NULL AND c.is_active = TRUE
+            AND (c.team_id = :team_id OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         WHERE l.team_id = :team_id2
         ORDER BY l.date DESC NULLS LAST, l.name
     ");
@@ -446,8 +448,8 @@ if ($selected_member_id !== null) {
         FROM cells ce
         JOIN lists l ON l.id = ce.list_id AND l.team_id = :team_id
         JOIN columns c ON c.id = ce.column_id
-            AND c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
-        WHERE ce.player_id = :member_id
+            AND (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE ce.member_id = :member_id
     ");
     $mod_cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':member_id' => $selected_member_id]);
     foreach ($mod_cells_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
@@ -460,7 +462,7 @@ if ($selected_member_id !== null) {
         FROM columns c
         JOIN list_global_columns lgc ON lgc.column_id = c.id
         JOIN lists l ON l.id = lgc.list_id AND l.team_id = :team_id
-        WHERE c.team_id = :team_id2 AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         GROUP BY c.id
     ");
     $mod_cnt_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);

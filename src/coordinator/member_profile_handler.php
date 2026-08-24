@@ -1,41 +1,41 @@
 <?php
-// src/coordinator/player_profile_handler.php — GET+POST /coordinator/players/{id}
+// src/coordinator/member_profile_handler.php — GET+POST /coordinator/players/{id}
 
 declare(strict_types=1);
 
 require_coordinator();
 
-$player_id = (int)($_REQUEST['player_id'] ?? 0);
-if ($player_id <= 0) redirect('/coordinator/members');
+$member_id = (int)($_REQUEST['player_id'] ?? 0);
+if ($member_id <= 0) redirect('/coordinator/members');
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 $user_id = (int)$_SESSION['user_id'];
 
-// Admin context for player fetch — coordinator can view any player
+// Admin context for profile fetch — coordinator can view any profile
 set_admin_context($pdo);
 
 $p_stmt = $pdo->prepare(
     "SELECT p.*, c.name AS club_name
-     FROM players p
+     FROM members p
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE p.id = ?"
 );
-$p_stmt->execute([$player_id]);
-$player = $p_stmt->fetch();
-if (!$player) redirect('/coordinator/members');
+$p_stmt->execute([$member_id]);
+$profile = $p_stmt->fetch();
+if (!$profile) redirect('/coordinator/members');
 
 // All linked user accounts (every team)
 $al_stmt = $pdo->prepare(
     "SELECT u.id AS user_id, u.username, p.email AS user_email, u.is_active AS user_active,
             t.id AS team_id, t.name AS team_name, t.is_active AS team_active
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      JOIN teams t ON t.id = u.team_id
-     WHERE u.player_id = ? AND u.role = 'member'
+     WHERE u.member_id = ? AND u.role = 'member'
      ORDER BY t.name ASC, u.username ASC"
 );
-$al_stmt->execute([$player_id]);
+$al_stmt->execute([$member_id]);
 $all_linked = $al_stmt->fetchAll();
 
 // Cross-team stats: flat list for column-switcher view (≤ today only)
@@ -49,7 +49,7 @@ if (!empty($all_user_ids)) {
          JOIN lists l ON l.id = ce.list_id
          JOIN teams t ON t.id = l.team_id
          JOIN columns c ON c.id = ce.column_id AND c.list_id IS NULL
-         WHERE ce.player_id IN ($placeholders)
+         WHERE ce.member_id IN ($placeholders)
            AND (l.date IS NULL OR l.date <= CURRENT_DATE)
          ORDER BY l.date DESC"
     );
@@ -64,11 +64,12 @@ set_team_context($pdo, $team_id, 'coordinator', $user_id);
 
 $my_linked    = array_values(array_filter($all_linked, fn($u) => (int)$u['team_id'] === $team_id));
 $other_linked = array_values(array_filter($all_linked, fn($u) => (int)$u['team_id'] !== $team_id));
+$player = $profile; // alias for template compatibility
 
-// Members on my team not yet linked to any player (for add-link form)
+// Members on my team not yet linked to any profile (for add-link form)
 $ul_stmt = $pdo->prepare(
     "SELECT id, username FROM users
-     WHERE team_id = ? AND role = 'member' AND player_id IS NULL AND is_active = TRUE
+     WHERE team_id = ? AND role = 'member' AND member_id IS NULL AND is_active = TRUE
      ORDER BY username ASC"
 );
 $ul_stmt->execute([$team_id]);
@@ -80,12 +81,12 @@ $attr_stmt = $pdo->prepare(
             pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_order,
             pa.visible_to_player, pa.editable_by_player,
             COALESCE(pav.value, '') AS value
-     FROM player_attribute_groups pag
-     JOIN player_attributes pa ON pa.group_id = pag.id
-     LEFT JOIN player_attribute_values pav ON pav.attribute_id = pa.id AND pav.player_id = ?
+     FROM member_attribute_groups pag
+     JOIN member_attributes pa ON pa.group_id = pag.id
+     LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
      ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
 );
-$attr_stmt->execute([$player_id]);
+$attr_stmt->execute([$member_id]);
 $attr_groups = [];
 foreach ($attr_stmt->fetchAll() as $row) {
     $gname = $row['group_name'];
@@ -100,11 +101,11 @@ $success = !empty($_GET['success']);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Spielerprofil', 'members', function() use (
-    $player, $player_id, $clubs,
+render_coach_page('Mitgliedsprofil', 'members', function() use (
+    $player, $member_id, $clubs,
     $my_linked, $other_linked, $unlinked_my_members,
     $attr_groups, $cross_stats,
     $error, $success
 ) {
-    require ROOT_PATH . '/src/templates/coordinator/player_profile.php';
+    require ROOT_PATH . '/src/templates/coordinator/member_profile.php';
 });

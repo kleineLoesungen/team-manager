@@ -68,3 +68,20 @@ function generate_unique_username(PDO $pdo, string $first_name, string $last_nam
     $initials = strtolower(mb_substr($first_name, 0, 1)) . strtolower(mb_substr($last_name, 0, 1));
     return $initials . substr((string)time(), -4);
 }
+
+function prefill_number_cells(PDO $pdo, int $team_id, int $user_id): void {
+    $stmt = $pdo->prepare(
+        "INSERT INTO cells (list_id, column_id, member_id, value)
+         SELECT lgc.list_id, lgc.column_id, ?, '0'
+         FROM list_global_columns lgc
+         JOIN columns c ON c.id = lgc.column_id
+             AND c.data_type = 'number'
+             AND c.list_id IS NULL
+             AND c.is_active = TRUE
+             AND (c.team_id = ? OR c.is_system = TRUE)
+         JOIN lists l ON l.id = lgc.list_id
+             AND l.team_id = ?
+         ON CONFLICT (list_id, column_id, member_id) DO NOTHING"
+    );
+    $stmt->execute([$user_id, $team_id, $team_id]);
+}

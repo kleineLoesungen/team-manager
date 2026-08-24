@@ -6,7 +6,7 @@
 declare(strict_types=1);
 
 require_once ROOT_PATH . '/src/db/visibility.php';
-require_player();
+require_member();
 
 $list_id         = (int)($_REQUEST['list_id'] ?? 0);
 $pdo             = get_db();
@@ -28,7 +28,8 @@ $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 $list['show_all_rows'] = in_array($list['show_all_rows'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
 
 // Fetch columns: local + global columns selected for this list (D-11)
-// coach_only filter only added when column exists in DB (migration may not have run yet)
+// System columns (team_id = NULL, is_system = TRUE) need admin context to bypass RLS
+set_admin_context($pdo);
 $local_filter = DB_HAS_COACH_ONLY ? '(c.list_id = ? AND c.coach_only = FALSE)' : 'c.list_id = ?';
 $col_stmt = $pdo->prepare(
     "SELECT c.id, c.name, c.data_type, c.list_id
@@ -36,7 +37,7 @@ $col_stmt = $pdo->prepare(
      WHERE c.is_active = TRUE
        AND (
          {$local_filter}
-         OR (c.list_id IS NULL AND c.team_id = ?
+         OR (c.list_id IS NULL AND (c.team_id = ? OR c.is_system = TRUE)
              AND EXISTS (
                SELECT 1 FROM list_global_columns lgc
                WHERE lgc.list_id = ? AND lgc.column_id = c.id
@@ -52,7 +53,7 @@ if ($list['show_all_rows']) {
     $player_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
          ORDER BY p.first_name, p.last_name"
     );
@@ -61,31 +62,31 @@ if ($list['show_all_rows']) {
     $player_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          WHERE u.id = ? AND u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE"
     );
     $player_stmt->execute([$current_user_id, $_SESSION['team_id']]);
 }
 $players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch cells — only for visible player rows
+// Fetch cells — only for visible member rows
 if ($list['show_all_rows']) {
-    $cell_stmt = $pdo->prepare("SELECT player_id, column_id, value FROM cells WHERE list_id = ?");
+    $cell_stmt = $pdo->prepare("SELECT member_id, column_id, value FROM cells WHERE list_id = ?");
     $cell_stmt->execute([$list_id]);
 } else {
-    $cell_stmt = $pdo->prepare("SELECT player_id, column_id, value FROM cells WHERE list_id = ? AND player_id = ?");
+    $cell_stmt = $pdo->prepare("SELECT member_id, column_id, value FROM cells WHERE list_id = ? AND member_id = ?");
     $cell_stmt->execute([$list_id, $current_user_id]);
 }
 $cells = [];
 foreach ($cell_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
-    $cells[(int)$cell['player_id']][(int)$cell['column_id']] = $cell['value'];
+    $cells[(int)$cell['member_id']][(int)$cell['column_id']] = $cell['value'];
 }
 
 $success = !empty($_GET['success']) ? 'Gespeichert.' : '';
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $current_user_id, $success) {
+render_member_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $current_user_id, $success) {
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/member/list_detail.php';
 });

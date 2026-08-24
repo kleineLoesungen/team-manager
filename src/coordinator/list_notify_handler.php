@@ -42,13 +42,13 @@ $content_link = app_url($target_role === 'member'
 // Fetch all recipients in target role (active users in an active team, with or without email)
 // For member recipients also join linked player to get contact_email
 if ($target_role === 'member') {
-    // For members: canonical email is players.email (all users are linked after migration 024)
+    // For members: canonical email is members.email (all users are linked after migration 029)
     $rec_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name,
                 p.email,
                 p.contact_email
          FROM users u JOIN teams t ON t.id = u.team_id
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE AND t.is_active = TRUE
          ORDER BY p.first_name, p.last_name"
     );
@@ -57,7 +57,7 @@ if ($target_role === 'member') {
         "SELECT u.id, p.first_name, p.last_name, p.email, NULL AS contact_email
          FROM users u
          JOIN teams t ON t.id = u.team_id
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
          ORDER BY p.first_name, p.last_name"
     );
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         p.email,
                         p.contact_email
                  FROM users u JOIN teams t ON t.id = u.team_id
-                 JOIN players p ON p.id = u.player_id
+                 JOIN members p ON p.id = u.member_id
                  WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE AND t.is_active = TRUE
                    AND (p.email IS NOT NULL OR p.contact_email IS NOT NULL)"
             );
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "SELECT p.first_name, u.role, p.email, NULL AS contact_email
                  FROM users u
                  JOIN teams t ON t.id = u.team_id
-                 JOIN players p ON p.id = u.player_id
+                 JOIN members p ON p.id = u.member_id
                  WHERE u.team_id = ? AND u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
                    AND p.email IS NOT NULL"
             );

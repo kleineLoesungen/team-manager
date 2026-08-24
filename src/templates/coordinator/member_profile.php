@@ -14,7 +14,7 @@ $active_teams = array_filter(
 </div>
 
 <?php if ($error):   ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
-<?php if ($success): ?><div class="alert alert-success">Spielerdaten gespeichert.</div><?php endif; ?>
+<?php if ($success): ?><div class="alert alert-success">Profildaten gespeichert.</div><?php endif; ?>
 
 <!-- Header + inline edit -->
 <div class="card mb-4 shadow-sm">
@@ -109,7 +109,7 @@ $active_teams = array_filter(
                     </form>
                     <a href="/coordinator/members/<?= (int)$u['user_id'] ?>/change-player?from_player=<?= (int)$player_id ?>"
                        class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-arrow-left-right me-1"></i>Spieler
+                        <i class="bi bi-arrow-left-right me-1"></i>Profil
                     </a>
                     <?php if ($u['user_active']): ?>
                     <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/deactivate"
@@ -197,7 +197,7 @@ $active_teams = array_filter(
     <div class="card-body">
         <p class="text-muted mb-0">
             Keine Attributgruppen konfiguriert.
-            Der Admin kann Attribute unter Spielerattribute anlegen.
+            Der Admin kann Attribute unter Mitgliedsattribute anlegen.
         </p>
     </div>
 </div>

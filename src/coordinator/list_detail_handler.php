@@ -39,7 +39,7 @@ if (!$is_free_list) {
     $notify_target_role = ($list['visibility'] === 'private') ? 'coordinator' : 'member';
     $chk = $pdo->prepare(
         "SELECT 1 FROM users u
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND p.email IS NOT NULL
          LIMIT 1"
     );
@@ -68,13 +68,15 @@ if ($is_free_list) {
     $players = []; // Not used in free list path
 } else {
     // Member list: existing behaviour
+    // System columns (team_id = NULL) require admin context to bypass RLS
+    set_admin_context($pdo);
     $col_stmt = $pdo->prepare(
         "SELECT c.id, c.name, c.data_type, c.list_id, " . (DB_HAS_COACH_ONLY ? 'c.coach_only' : 'FALSE AS coach_only') . "
          FROM columns c
          WHERE c.is_active = TRUE
            AND (
              c.list_id = ?
-             OR (c.list_id IS NULL AND c.team_id = ?
+             OR (c.list_id IS NULL AND (c.team_id = ? OR c.is_system = TRUE)
                  AND EXISTS (
                    SELECT 1 FROM list_global_columns lgc
                    WHERE lgc.list_id = ? AND lgc.column_id = c.id
@@ -88,7 +90,7 @@ if ($is_free_list) {
     $player_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
-         JOIN players p ON p.id = u.player_id
+         JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
          ORDER BY p.first_name, p.last_name"
     );
@@ -98,12 +100,12 @@ if ($is_free_list) {
 
 // Fetch all cell values for this list and build map [row_id][column_id] => value
 $cell_stmt = $pdo->prepare(
-    "SELECT player_id, column_id, value FROM cells WHERE list_id = ?"
+    "SELECT member_id, column_id, value FROM cells WHERE list_id = ?"
 );
 $cell_stmt->execute([$list_id]);
 $cells = [];
 foreach ($cell_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
-    $cells[(int)$cell['player_id']][(int)$cell['column_id']] = $cell['value'];
+    $cells[(int)$cell['member_id']][(int)$cell['column_id']] = $cell['value'];
 }
 
 $post_error     = '';
@@ -158,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Confirmed — delete cells then row
             try {
                 $pdo->beginTransaction();
-                $pdo->prepare("DELETE FROM cells WHERE list_id = ? AND player_id = ?")
+                $pdo->prepare("DELETE FROM cells WHERE list_id = ? AND member_id = ?")
                     ->execute([$list_id, $row_id]);
                 $pdo->prepare("DELETE FROM free_list_rows WHERE id = ? AND list_id = ?")
                     ->execute([$row_id, $list_id]);
@@ -224,9 +226,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $upsert = $pdo->prepare(
-                        "INSERT INTO cells (list_id, column_id, player_id, value)
+                        "INSERT INTO cells (list_id, column_id, member_id, value)
                          VALUES (?, ?, ?, ?)
-                         ON CONFLICT (list_id, column_id, player_id)
+                         ON CONFLICT (list_id, column_id, member_id)
                          DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()"
                     );
                     $upsert->execute([$list_id, $col_id, $rid, $validated_value]);

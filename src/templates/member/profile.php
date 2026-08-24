@@ -162,7 +162,7 @@ foreach ($attr_groups as $g) {
         <span class="flex-grow-1">Koordinatoren</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
-    <a href="/member/player-profile" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+    <a href="/member/member-profile" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
         <i class="bi bi-clock-history fs-5"></i>
         <span class="flex-grow-1">Verlauf</span>
         <i class="bi bi-chevron-right text-muted small"></i>

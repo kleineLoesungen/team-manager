@@ -24,7 +24,7 @@ if (!$ticker) {
 $stmt = $pdo->prepare(
     "SELECT u.id, p.first_name, p.last_name
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
      ORDER BY p.first_name, p.last_name"
 );

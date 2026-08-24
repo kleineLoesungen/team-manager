@@ -34,7 +34,7 @@ $back_url = ($back_raw !== '' && $back_raw[0] === '/' && (!isset($back_raw[1]) |
 $check = $pdo->prepare(
     "SELECT u.id, u.username, u.is_active, p.first_name, p.last_name
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.id = ? AND u.team_id = ? AND u.role = 'member'"
 );
 $check->execute([$member_id, $team_id]);

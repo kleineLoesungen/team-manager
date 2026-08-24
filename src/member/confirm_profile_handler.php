@@ -11,8 +11,8 @@ $pdo     = get_db();
 $user_id = (int)$_SESSION['user_id'];
 $is_first_confirm = $_SESSION['confirmed_at'] === null;
 
-// Load linked player_id
-$link_stmt = $pdo->prepare("SELECT player_id FROM users WHERE id = ?");
+// Load linked member_id (profile)
+$link_stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
 $link_stmt->execute([$user_id]);
 $player_id = (int)($link_stmt->fetchColumn() ?: 0);
 
@@ -24,7 +24,7 @@ if ($player_id) {
     set_admin_context($pdo);
     $p_stmt = $pdo->prepare(
         "SELECT p.*, c.name AS club_name
-         FROM players p LEFT JOIN clubs c ON c.id = p.club_id
+         FROM members p LEFT JOIN clubs c ON c.id = p.club_id
          WHERE p.id = ?"
     );
     $p_stmt->execute([$player_id]);
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             set_admin_context($pdo);
             $pdo->prepare(
-                "UPDATE players SET first_name=?, last_name=?, email=?, phone=?,
+                "UPDATE members SET first_name=?, last_name=?, email=?, phone=?,
                   contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
             )->execute([
                 $first_name, $last_name,
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_player_page(
+render_member_page(
     $is_first_confirm ? 'Profil bestätigen' : 'Profil bearbeiten',
     'profile',
     function() use ($player, $clubs, $error, $is_first_confirm) {
