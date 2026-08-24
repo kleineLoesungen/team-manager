@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             // Create player record first (admin context already active via require_admin)
             $p_stmt = $pdo->prepare(
-                "INSERT INTO players (first_name, last_name, email) VALUES (?, ?, ?) RETURNING id"
+                "INSERT INTO members (first_name, last_name, email) VALUES (?, ?, ?) RETURNING id"
             );
             $p_stmt->execute([$first_name, $last_name, $email_raw !== '' ? $email_raw : null]);
             $player_id = (int)$p_stmt->fetchColumn();

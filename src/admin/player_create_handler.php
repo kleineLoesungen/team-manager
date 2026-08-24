@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $stmt = $pdo->prepare(
-                "INSERT INTO players (club_id, first_name, last_name, email, phone, contact_name, contact_phone, contact_email, description)
+                "INSERT INTO members (club_id, first_name, last_name, email, phone, contact_name, contact_phone, contact_email, description)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
             );
             $stmt->execute([

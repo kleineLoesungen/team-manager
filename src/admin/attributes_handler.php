@@ -11,8 +11,8 @@ $stmt = $pdo->query(
     "SELECT pag.id AS group_id, pag.name AS group_name, pag.sort_order AS group_sort,
             pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_sort,
             pa.visible_to_player, pa.editable_by_player
-     FROM player_attribute_groups pag
-     LEFT JOIN player_attributes pa ON pa.group_id = pag.id
+     FROM member_attribute_groups pag
+     LEFT JOIN member_attributes pa ON pa.group_id = pag.id
      ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
 );
 $rows = $stmt->fetchAll();

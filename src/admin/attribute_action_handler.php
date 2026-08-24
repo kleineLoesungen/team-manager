@@ -27,7 +27,7 @@ if ($action === 'create') {
         redirect('/admin/attributes?error=' . urlencode('Attributname erforderlich (max. 100 Zeichen).'));
     }
     $pdo->prepare(
-        "INSERT INTO player_attributes (group_id, name, visible_to_player, editable_by_player, sort_order)
+        "INSERT INTO member_attributes (group_id, name, visible_to_player, editable_by_player, sort_order)
          VALUES (?, ?, ?, ?, ?)"
     )->execute([$group_id, $name, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order]);
     redirect('/admin/attributes');
@@ -42,7 +42,7 @@ if ($action === 'create') {
         redirect('/admin/attributes?error=' . urlencode('Attributname erforderlich.'));
     }
     $pdo->prepare(
-        "UPDATE player_attributes SET name=?, visible_to_player=?, editable_by_player=?, sort_order=?
+        "UPDATE member_attributes SET name=?, visible_to_player=?, editable_by_player=?, sort_order=?
          WHERE id=?"
     )->execute([$name, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order, $attr_id]);
     redirect('/admin/attributes');
@@ -50,7 +50,7 @@ if ($action === 'create') {
 } elseif ($action === 'delete') {
     if ($attr_id <= 0) redirect('/admin/attributes');
     // ON DELETE CASCADE removes player_attribute_values for this attribute
-    $pdo->prepare("DELETE FROM player_attributes WHERE id=?")->execute([$attr_id]);
+    $pdo->prepare("DELETE FROM member_attributes WHERE id=?")->execute([$attr_id]);
     redirect('/admin/attributes');
 
 } else {
