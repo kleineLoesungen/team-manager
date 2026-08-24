@@ -21,7 +21,8 @@ $tickers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 set_admin_context($pdo);
 $other_stmt = $pdo->prepare(
     "SELECT DISTINCT t.id, t.name, t.description, t.status, t.created_at,
-            tm.name AS team_name
+            tm.name AS team_name,
+            (t.status = 'active') AS is_active_ticker
      FROM users u
      JOIN teams tm ON tm.id = u.team_id
      JOIN tickers t ON t.team_id = u.team_id

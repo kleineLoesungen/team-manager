@@ -70,6 +70,10 @@ $agg_sql = "
         WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
     ) c
     LEFT JOIN cells ON cells.member_id = u.id AND cells.column_id = c.id
+        AND EXISTS (
+            SELECT 1 FROM list_global_columns lgc
+            WHERE lgc.list_id = cells.list_id AND lgc.column_id = c.id
+        )
     LEFT JOIN lists ON cells.list_id = lists.id
     WHERE u.team_id = ?
       AND u.role = 'member'
@@ -255,6 +259,10 @@ $ranking_sql = "
         WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
     ) c
     LEFT JOIN cells ON cells.member_id = u.id AND cells.column_id = c.id
+        AND EXISTS (
+            SELECT 1 FROM list_global_columns lgc
+            WHERE lgc.list_id = cells.list_id AND lgc.column_id = c.id
+        )
     LEFT JOIN lists ON cells.list_id = lists.id
     WHERE u.team_id = ?
       AND u.role = 'member'
@@ -442,13 +450,14 @@ if ($selected_member_id !== null) {
     $mod_lists_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
     $mod_per_list_rows = $mod_lists_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Query B: cells for selected member (no visibility filter)
+    // Query B: cells for selected member (only from lists where the column is currently attached)
     $mod_cells_stmt = $pdo->prepare("
         SELECT ce.list_id, ce.column_id, ce.value
         FROM cells ce
         JOIN lists l ON l.id = ce.list_id AND l.team_id = :team_id
         JOIN columns c ON c.id = ce.column_id
             AND (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
+        JOIN list_global_columns lgc ON lgc.list_id = ce.list_id AND lgc.column_id = ce.column_id
         WHERE ce.member_id = :member_id
     ");
     $mod_cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':member_id' => $selected_member_id]);
