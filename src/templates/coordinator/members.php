@@ -104,7 +104,7 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                     <i class="bi bi-key me-1"></i>Passwort
                 </button>
             </form>
-            <a href="/coordinator/players/<?= (int)$m['member_profile_id'] ?>" data-save-scroll
+            <a href="/coordinator/member-profiles/<?= (int)$m['member_profile_id'] ?>" data-save-scroll
                class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-person me-1"></i>Profil
             </a>
@@ -145,7 +145,7 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                             Reaktivieren
                         </button>
                     </form>
-                    <a href="/coordinator/players/<?= (int)$m['member_profile_id'] ?>" data-save-scroll
+                    <a href="/coordinator/member-profiles/<?= (int)$m['member_profile_id'] ?>" data-save-scroll
                        class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-person me-1"></i>Profil
                     </a>

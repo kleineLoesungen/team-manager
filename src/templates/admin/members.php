@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/players.php — Admin player list
-// Variables: $players, $inactive_players, $clubs, $teams, $linked_users_map,
+// Variables: $profiles, $inactive_profiles, $clubs, $teams, $linked_users_map,
 //            $unlinked_by_team, $has_unlinked, $search, $filter_club_id, $filter_team_id
 ?>
 <?php if (!empty($_GET['error'])): ?>
@@ -11,14 +11,14 @@
 <?php endif; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <span class="text-muted"><?= count($players) ?> aktive Mitglieder</span>
-    <a href="/admin/players/create" class="btn btn-primary min-touch">
+    <span class="text-muted"><?= count($profiles) ?> aktive Mitglieder</span>
+    <a href="/admin/members/create" class="btn btn-primary min-touch">
         <i class="bi bi-plus-lg me-1"></i>Mitglied hinzufügen
     </a>
 </div>
 
 <!-- Search + filter -->
-<form method="GET" action="/admin/players" class="mb-4">
+<form method="GET" action="/admin/members" class="mb-4">
     <div class="row g-2">
         <div class="col-12">
             <div class="input-group input-group-sm">
@@ -55,7 +55,7 @@
     </div>
     <?php if ($search !== '' || $filter_club_id > 0 || $filter_team_id > 0): ?>
     <div class="mt-1">
-        <a href="/admin/players" class="small text-muted">Filter zurücksetzen</a>
+        <a href="/admin/members" class="small text-muted">Filter zurücksetzen</a>
     </div>
     <?php endif; ?>
 </form>
@@ -66,16 +66,16 @@
 </script>
 <?php endif; ?>
 
-<?php if (empty($players)): ?>
+<?php if (empty($profiles)): ?>
 <div class="alert alert-info">
     Keine aktiven Mitglieder gefunden.
     <?php if ($search === '' && $filter_club_id === 0 && $filter_team_id === 0): ?>
-    <a href="/admin/players/create" class="alert-link">Erstes Mitglied anlegen</a>.
+    <a href="/admin/members/create" class="alert-link">Erstes Mitglied anlegen</a>.
     <?php endif; ?>
 </div>
 <?php else: ?>
 <div class="list-group mb-4">
-    <?php foreach ($players as $p): ?>
+    <?php foreach ($profiles as $p): ?>
     <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
     <div class="list-group-item px-3 py-3">
 
@@ -141,7 +141,7 @@
 
         <!-- Add link: team → user two-step -->
         <?php if ($has_unlinked): ?>
-        <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/link-user"
+        <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/link-user"
               class="d-flex align-items-center gap-2 mb-2 js-link-form">
             <?= csrf_field() ?>
             <select class="form-select form-select-sm js-team-pick" style="max-width:150px">
@@ -164,11 +164,11 @@
 
         <!-- Bearbeiten + Deaktivieren -->
         <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
-            <a href="/admin/players/<?= (int)$p['id'] ?>/edit" data-save-scroll
+            <a href="/admin/members/<?= (int)$p['id'] ?>/edit" data-save-scroll
                class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-pencil me-1"></i>Bearbeiten
             </a>
-            <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/deactivate"
+            <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/deactivate"
                   onsubmit="return confirm('Mitglied deaktivieren?')">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-sm btn-outline-warning">
@@ -182,16 +182,16 @@
 </div>
 <?php endif; ?>
 
-<?php if (!empty($inactive_players)): ?>
+<?php if (!empty($inactive_profiles)): ?>
 <div class="mt-4">
     <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
             type="button" data-bs-toggle="collapse" data-bs-target="#inactivePlayers" aria-expanded="false">
         <i class="bi bi-chevron-down"></i>
-        Inaktiv (<?= count($inactive_players) ?>)
+        Inaktiv (<?= count($inactive_profiles) ?>)
     </button>
     <div class="collapse mt-2" id="inactivePlayers">
     <div class="list-group opacity-75">
-        <?php foreach ($inactive_players as $p): ?>
+        <?php foreach ($inactive_profiles as $p): ?>
         <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
         <div class="list-group-item px-3 py-3 opacity-75">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -232,18 +232,18 @@
 
             <!-- Reaktivieren + Bearbeiten + Löschen -->
             <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
-                <a href="/admin/players/<?= (int)$p['id'] ?>/edit"
+                <a href="/admin/members/<?= (int)$p['id'] ?>/edit"
                    class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-pencil me-1"></i>Bearbeiten
                 </a>
-                <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/reactivate">
+                <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/reactivate">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
                     </button>
                 </form>
                 <?php if (empty($linked)): ?>
-                <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/delete"
+                <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/delete"
                       onsubmit="return confirm('<?= e($p['last_name'] . ', ' . $p['first_name']) ?> endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-outline-danger">

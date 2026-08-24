@@ -1,18 +1,18 @@
 <?php
-// src/templates/admin/player_edit.php — Edit player form
-// Variables: $player (array), $clubs (array), $error (string), $can_delete (bool)
+// src/templates/admin/member_edit.php — Edit member profile form
+// Variables: $profile (array), $clubs (array), $error (string)
 ?>
 <?php if (!empty($error)): ?>
 <div class="alert alert-danger"><?= $error ?></div>
 <?php endif; ?>
 
 <div class="mb-3 d-flex align-items-center gap-2">
-    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
-    <?php if (!$player['is_active']): ?>
+    <?php if (!$profile['is_active']): ?>
     <span class="badge bg-secondary">Deaktiviert</span>
-    <form method="POST" action="/admin/players/<?= (int)$player['id'] ?>/reactivate">
+    <form method="POST" action="/admin/members/<?= (int)$profile['id'] ?>/reactivate">
         <?= csrf_field() ?>
         <button type="submit" class="btn btn-sm btn-outline-success">
             <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
@@ -21,7 +21,7 @@
     <?php endif; ?>
 </div>
 
-<form method="POST" action="/admin/players/<?= (int)$player['id'] ?>/edit">
+<form method="POST" action="/admin/members/<?= (int)$profile['id'] ?>/edit">
     <?= csrf_field() ?>
     <div class="row g-3">
         <div class="col-6">
@@ -30,7 +30,7 @@
                    id="first_name"
                    name="first_name"
                    class="form-control min-touch"
-                   value="<?= e($player['first_name']) ?>"
+                   value="<?= e($profile['first_name']) ?>"
                    required
                    autofocus>
         </div>
@@ -40,7 +40,7 @@
                    id="last_name"
                    name="last_name"
                    class="form-control min-touch"
-                   value="<?= e($player['last_name']) ?>"
+                   value="<?= e($profile['last_name']) ?>"
                    required>
         </div>
         <div class="col-12">
@@ -49,7 +49,7 @@
                 <option value="0">— kein Klub —</option>
                 <?php foreach ($clubs as $c): ?>
                 <option value="<?= (int)$c['id'] ?>"
-                    <?= (int)$player['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
+                    <?= (int)$profile['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
                     <?= e($c['name']) ?>
                 </option>
                 <?php endforeach; ?>
@@ -61,7 +61,7 @@
                    id="email"
                    name="email"
                    class="form-control min-touch"
-                   value="<?= e($player['email'] ?? '') ?>"
+                   value="<?= e($profile['email'] ?? '') ?>"
                    placeholder="optional">
         </div>
         <div class="col-12">
@@ -70,7 +70,7 @@
                    id="phone"
                    name="phone"
                    class="form-control min-touch"
-                   value="<?= e($player['phone'] ?? '') ?>"
+                   value="<?= e($profile['phone'] ?? '') ?>"
                    placeholder="optional">
         </div>
 
@@ -84,7 +84,7 @@
                    id="contact_name"
                    name="contact_name"
                    class="form-control min-touch"
-                   value="<?= e($player['contact_name'] ?? '') ?>"
+                   value="<?= e($profile['contact_name'] ?? '') ?>"
                    placeholder="optional">
         </div>
         <div class="col-12">
@@ -93,7 +93,7 @@
                    id="contact_phone"
                    name="contact_phone"
                    class="form-control min-touch"
-                   value="<?= e($player['contact_phone'] ?? '') ?>"
+                   value="<?= e($profile['contact_phone'] ?? '') ?>"
                    placeholder="optional">
         </div>
         <div class="col-12">
@@ -102,7 +102,7 @@
                    id="contact_email"
                    name="contact_email"
                    class="form-control min-touch"
-                   value="<?= e($player['contact_email'] ?? '') ?>"
+                   value="<?= e($profile['contact_email'] ?? '') ?>"
                    placeholder="optional">
         </div>
         <div class="col-12">
@@ -111,7 +111,7 @@
                       name="description"
                       class="form-control"
                       rows="3"
-                      placeholder="optional"><?= e($player['description'] ?? '') ?></textarea>
+                      placeholder="optional"><?= e($profile['description'] ?? '') ?></textarea>
         </div>
         <div class="col-12">
             <button type="submit" class="btn btn-primary min-touch">
@@ -122,8 +122,7 @@
 </form>
 
 <div class="mt-4">
-    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
 </div>
-

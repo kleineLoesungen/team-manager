@@ -103,26 +103,26 @@ match (true) {
             require ROOT_PATH . '/src/admin/club_action_handler.php';
         })(),
 
-    // ── Admin: Players ────────────────────────────────────────────────────
-    $path === '/admin/players'
-        => require ROOT_PATH . '/src/admin/players_handler.php',
+    // ── Admin: Members ────────────────────────────────────────────────────
+    $path === '/admin/members'
+        => require ROOT_PATH . '/src/admin/members_handler.php',
 
-    $path === '/admin/players/create'
-        => require ROOT_PATH . '/src/admin/player_create_handler.php',
+    $path === '/admin/members/create'
+        => require ROOT_PATH . '/src/admin/member_create_handler.php',
 
-    // /admin/players/{id}/edit — GET+POST: dedicated edit page
-    (bool)preg_match('#^/admin/players/(\d+)/edit$#', $path, $matches)
+    // /admin/members/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/admin/members/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/admin/player_edit_handler.php';
+            $_REQUEST['profile_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/member_edit_handler.php';
         })(),
 
-    // /admin/players/{id}/(link-user|unlink-user|deactivate|reactivate|delete) — POST actions
-    (bool)preg_match('#^/admin/players/(\d+)/(link-user|unlink-user|deactivate|reactivate|delete)$#', $path, $matches)
+    // /admin/members/{id}/(link-user|unlink-user|deactivate|reactivate|delete) — POST actions
+    (bool)preg_match('#^/admin/members/(\d+)/(link-user|unlink-user|deactivate|reactivate|delete)$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
-            $_REQUEST['action']    = $matches[2];
-            require ROOT_PATH . '/src/admin/player_action_handler.php';
+            $_REQUEST['profile_id'] = (int)$matches[1];
+            $_REQUEST['action']     = $matches[2];
+            require ROOT_PATH . '/src/admin/member_action_handler.php';
         })(),
 
     // /admin/coordinators/{id}/edit-email — GET+POST: edit coordinator contact data
@@ -213,11 +213,11 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/member_action_handler.php';
         })(),
 
-    // /coordinator/members/{id}/change-player — GET+POST: reassign player-user link
-    (bool)preg_match('#^/coordinator/members/(\d+)/change-player$#', $path, $matches)
+    // /coordinator/members/{id}/change-profile — GET+POST: reassign profile-user link
+    (bool)preg_match('#^/coordinator/members/(\d+)/change-profile$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['member_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coordinator/member_change_player_handler.php';
+            require ROOT_PATH . '/src/coordinator/member_change_profile_handler.php';
         })(),
 
     // ── Coordinator: Lists ─────────────────────────────────────────────
@@ -321,35 +321,35 @@ match (true) {
     $path === '/coordinator/logo'
         => require ROOT_PATH . '/src/coordinator/logo_handler.php',
 
-    // ── Coordinator: Players ──────────────────────────────────────────────────
-    $path === '/coordinator/players'
-        => (function() { header('Location: /coordinator/members', true, 301); exit; })(),
+    // ── Coordinator: Member Profiles ──────────────────────────────────────────────────
+    $path === '/coordinator/member-profiles'
+        => require ROOT_PATH . '/src/coordinator/member_profiles_handler.php',
 
-    // /coordinator/players/{id}/attributes/save — must come BEFORE the /{id} catch-all
-    (bool)preg_match('#^/coordinator/players/(\d+)/attributes/save$#', $path, $matches)
+    // /coordinator/member-profiles/{id}/attributes/save — must come BEFORE the /{id} catch-all
+    (bool)preg_match('#^/coordinator/member-profiles/(\d+)/attributes/save$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coordinator/player_attribute_edit_handler.php';
+            $_REQUEST['profile_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/member_profile_attribute_edit_handler.php';
         })(),
 
-    // /coordinator/players/{id}/link-user|unlink-user — must come BEFORE the /{id} catch-all
-    (bool)preg_match('#^/coordinator/players/(\d+)/(link-user|unlink-user)$#', $path, $matches)
+    // /coordinator/member-profiles/{id}/link-user|unlink-user — must come BEFORE the /{id} catch-all
+    (bool)preg_match('#^/coordinator/member-profiles/(\d+)/(link-user|unlink-user)$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
-            $_REQUEST['action']    = $matches[2];
-            require ROOT_PATH . '/src/coordinator/player_link_handler.php';
+            $_REQUEST['profile_id'] = (int)$matches[1];
+            $_REQUEST['action']     = $matches[2];
+            require ROOT_PATH . '/src/coordinator/member_profile_link_handler.php';
         })(),
 
-    // /coordinator/players/{id}/edit — GET+POST: dedicated edit page
-    (bool)preg_match('#^/coordinator/players/(\d+)/edit$#', $path, $matches)
+    // /coordinator/member-profiles/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/coordinator/member-profiles/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/coordinator/player_edit_handler.php';
+            $_REQUEST['profile_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/member_profile_edit_handler.php';
         })(),
 
-    (bool)preg_match('#^/coordinator/players/(\d+)$#', $path, $matches)
+    (bool)preg_match('#^/coordinator/member-profiles/(\d+)$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['player_id'] = (int)$matches[1];
+            $_REQUEST['profile_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/coordinator/member_profile_handler.php';
         })(),
 

@@ -1,12 +1,12 @@
 <?php
-// src/coordinator/player_edit_handler.php — GET+POST /coordinator/players/{id}/edit
+// src/coordinator/member_profile_edit_handler.php — GET+POST /coordinator/member-profiles/{id}/edit
 
 declare(strict_types=1);
 
 require_coordinator();
 
-$player_id = (int)($_REQUEST['player_id'] ?? 0);
-if ($player_id <= 0) redirect('/coordinator/members');
+$profile_id = (int)($_REQUEST['profile_id'] ?? 0);
+if ($profile_id <= 0) redirect('/coordinator/member-profiles');
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
@@ -49,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $contact_email !== '' ? $contact_email : null,
             $description !== '' ? $description : null,
             $club_id > 0 ? $club_id : null,
-            $player_id,
+            $profile_id,
         ]);
         reset_rls_context($pdo);
         set_team_context($pdo, $team_id, 'coordinator', $user_id);
 
-        redirect('/coordinator/players/' . $player_id . '?success=1');
+        redirect('/coordinator/member-profiles/' . $profile_id . '?success=1');
     }
 
     reset_rls_context($pdo);
@@ -69,9 +69,9 @@ $p_stmt = $pdo->prepare(
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE p.id = ?"
 );
-$p_stmt->execute([$player_id]);
-$player = $p_stmt->fetch();
-if (!$player) redirect('/coordinator/members');
+$p_stmt->execute([$profile_id]);
+$profile = $p_stmt->fetch();
+if (!$profile) redirect('/coordinator/member-profiles');
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
@@ -79,7 +79,7 @@ reset_rls_context($pdo);
 set_team_context($pdo, $team_id, 'coordinator', $user_id);
 
 if ($error) {
-    $player = array_merge($player, [
+    $profile = array_merge($profile, [
         'first_name'    => $_POST['first_name']    ?? '',
         'last_name'     => $_POST['last_name']     ?? '',
         'email'         => $_POST['email']         ?? '',
@@ -94,6 +94,6 @@ if ($error) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Mitglied bearbeiten', 'members', function() use ($player, $player_id, $clubs, $error) {
-    require ROOT_PATH . '/src/templates/coordinator/player_edit.php';
+render_coach_page('Mitglied bearbeiten', 'members', function() use ($profile, $profile_id, $clubs, $error) {
+    require ROOT_PATH . '/src/templates/coordinator/member_profile_edit.php';
 });

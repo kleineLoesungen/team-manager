@@ -22,11 +22,11 @@ $active_teams = array_filter(
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div>
                 <h2 class="card-title h5 fw-bold mb-1">
-                    <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                    <?= e($profile['first_name'] . ' ' . $profile['last_name']) ?>
                 </h2>
-                <?php if (!empty($player['club_name'])): ?>
+                <?php if (!empty($profile['club_name'])): ?>
                 <div class="text-muted small mb-1">
-                    <i class="bi bi-building me-1"></i><?= e($player['club_name']) ?>
+                    <i class="bi bi-building me-1"></i><?= e($profile['club_name']) ?>
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($active_teams)): ?>
@@ -38,36 +38,36 @@ $active_teams = array_filter(
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
-                <?php if (!empty($player['email'])): ?>
+                <?php if (!empty($profile['email'])): ?>
                 <div class="text-muted small mb-1">
-                    <i class="bi bi-envelope me-1"></i><?= e($player['email']) ?>
+                    <i class="bi bi-envelope me-1"></i><?= e($profile['email']) ?>
                 </div>
                 <?php endif; ?>
-                <?php if (!empty($player['phone'])): ?>
+                <?php if (!empty($profile['phone'])): ?>
                 <div class="text-muted small mb-1">
                     <i class="bi bi-telephone me-1"></i>
-                    <a href="tel:<?= e($player['phone']) ?>"><?= e($player['phone']) ?></a>
+                    <a href="tel:<?= e($profile['phone']) ?>"><?= e($profile['phone']) ?></a>
                 </div>
                 <?php endif; ?>
-                <?php if (!empty($player['description'])): ?>
-                <div class="text-muted small mb-1"><?= nl2br(e($player['description'])) ?></div>
+                <?php if (!empty($profile['description'])): ?>
+                <div class="text-muted small mb-1"><?= nl2br(e($profile['description'])) ?></div>
                 <?php endif; ?>
-                <?php if (!empty($player['contact_name']) || !empty($player['contact_phone']) || !empty($player['contact_email'])): ?>
+                <?php if (!empty($profile['contact_name']) || !empty($profile['contact_phone']) || !empty($profile['contact_email'])): ?>
                 <div class="text-muted small mb-1">
                     <i class="bi bi-person-lines-fill me-1"></i>
-                    Kontakt: <?= e($player['contact_name'] ?? '') ?>
-                    <?php if (!empty($player['contact_phone'])): ?>
-                    <?php if (!empty($player['contact_name'])): ?>, <?php endif; ?>
-                    <a href="tel:<?= e($player['contact_phone']) ?>"><?= e($player['contact_phone']) ?></a>
+                    Kontakt: <?= e($profile['contact_name'] ?? '') ?>
+                    <?php if (!empty($profile['contact_phone'])): ?>
+                    <?php if (!empty($profile['contact_name'])): ?>, <?php endif; ?>
+                    <a href="tel:<?= e($profile['contact_phone']) ?>"><?= e($profile['contact_phone']) ?></a>
                     <?php endif; ?>
-                    <?php if (!empty($player['contact_email'])): ?>
-                    <?php if (!empty($player['contact_name']) || !empty($player['contact_phone'])): ?>, <?php endif; ?>
-                    <?= e($player['contact_email']) ?>
+                    <?php if (!empty($profile['contact_email'])): ?>
+                    <?php if (!empty($profile['contact_name']) || !empty($profile['contact_phone'])): ?>, <?php endif; ?>
+                    <?= e($profile['contact_email']) ?>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>
-            <a href="/coordinator/players/<?= (int)$player_id ?>/edit"
+            <a href="/coordinator/member-profiles/<?= (int)$profile_id ?>/edit"
                class="btn btn-sm btn-outline-secondary flex-shrink-0">
                 <i class="bi bi-pencil"></i>
             </a>
@@ -82,7 +82,7 @@ $active_teams = array_filter(
 
         <!-- My team: actions -->
         <?php
-        $back = '/coordinator/players/' . $player_id;
+        $back = '/coordinator/member-profiles/' . $profile_id;
         ?>
         <div class="mb-3">
             <div class="small fw-medium text-muted mb-2">Mein Team</div>
@@ -107,7 +107,7 @@ $active_teams = array_filter(
                             <i class="bi bi-key me-1"></i>Passwort
                         </button>
                     </form>
-                    <a href="/coordinator/members/<?= (int)$u['user_id'] ?>/change-player?from_player=<?= (int)$player_id ?>"
+                    <a href="/coordinator/members/<?= (int)$u['user_id'] ?>/change-profile?from_profile=<?= (int)$profile_id ?>"
                        class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-arrow-left-right me-1"></i>Profil
                     </a>
@@ -160,7 +160,7 @@ $active_teams = array_filter(
 
 <!-- Attributes -->
 <?php if (!empty($attr_groups)): ?>
-<form method="POST" action="/coordinator/players/<?= (int)$player_id ?>/attributes/save">
+<form method="POST" action="/coordinator/member-profiles/<?= (int)$profile_id ?>/attributes/save">
     <?= csrf_field() ?>
     <h3 class="h6 fw-semibold mb-3">Attribute</h3>
     <?php foreach ($attr_groups as $group_name => $group): ?>

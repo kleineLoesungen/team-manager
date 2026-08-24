@@ -1,6 +1,6 @@
 <?php
-// src/templates/coordinator/member_change_player.php
-// Variables: $member, $current_member_profile_id, $linkable_players, $error
+// src/templates/coordinator/member_change_profile.php
+// Variables: $member, $current_profile_id, $linkable_profiles, $error, $cancel_url
 ?>
 <div class="mb-3">
     <a href="<?= e($cancel_url) ?>" class="btn btn-sm btn-outline-secondary">
@@ -16,16 +16,16 @@
     <div class="card-header fw-semibold">Aktuelles Profil</div>
     <div class="card-body">
         <div class="fw-semibold"><?= e($member['first_name'] . ' ' . $member['last_name']) ?></div>
-        <?php if (!empty($member['player_email'])): ?>
-        <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($member['player_email']) ?></div>
+        <?php if (!empty($member['profile_email'])): ?>
+        <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($member['profile_email']) ?></div>
         <?php endif; ?>
-        <a href="/coordinator/players/<?= (int)$current_member_profile_id ?>" class="btn btn-sm btn-outline-secondary mt-2">
+        <a href="/coordinator/member-profiles/<?= (int)$current_profile_id ?>" class="btn btn-sm btn-outline-secondary mt-2">
             <i class="bi bi-person-vcard me-1"></i>Profil ansehen
         </a>
     </div>
 </div>
 
-<form method="POST" action="/coordinator/members/<?= (int)$member['id'] ?>/change-player"
+<form method="POST" action="/coordinator/members/<?= (int)$member['id'] ?>/change-profile"
       class="row g-3" style="max-width:520px;">
     <?= csrf_field() ?>
     <input type="hidden" name="create_mode" id="create_mode" value="link">
@@ -34,15 +34,15 @@
         <div class="d-flex gap-3 flex-wrap">
             <div class="form-check">
                 <input type="radio" id="mode_new" name="_mode_radio" value="new" class="form-check-input"
-                       <?= empty($linkable_players) ? 'checked' : '' ?>>
+                       <?= empty($linkable_profiles) ? 'checked' : '' ?>>
                 <label for="mode_new" class="form-check-label fw-semibold">Neues Profil anlegen</label>
             </div>
             <div class="form-check">
                 <input type="radio" id="mode_link" name="_mode_radio" value="link" class="form-check-input"
-                       <?= !empty($linkable_players) ? 'checked' : 'disabled' ?>>
-                <label for="mode_link" class="form-check-label <?= empty($linkable_players) ? 'text-muted' : 'fw-semibold' ?>">
+                       <?= !empty($linkable_profiles) ? 'checked' : 'disabled' ?>>
+                <label for="mode_link" class="form-check-label <?= empty($linkable_profiles) ? 'text-muted' : 'fw-semibold' ?>">
                     Vorhandenes Profil wählen
-                    <?php if (empty($linkable_players)): ?>
+                    <?php if (empty($linkable_profiles)): ?>
                     <span class="small fw-normal">(keine verfügbar)</span>
                     <?php endif; ?>
                 </label>
@@ -53,10 +53,10 @@
     <!-- Link existing profile -->
     <div id="section_link" class="col-12">
         <label for="member_id_link" class="form-label">Profil auswählen</label>
-        <?php if (!empty($linkable_players)): ?>
+        <?php if (!empty($linkable_profiles)): ?>
         <select class="form-select" id="member_id_link" name="member_id_link">
             <option value="">— Profil wählen —</option>
-            <?php foreach ($linkable_players as $p): ?>
+            <?php foreach ($linkable_profiles as $p): ?>
             <option value="<?= (int)$p['id'] ?>"
                     <?= ((int)($_POST['member_id_link'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>>
                 <?= e($p['first_name'] . ' ' . $p['last_name']) ?>
@@ -70,7 +70,7 @@
         <?php endif; ?>
     </div>
 
-    <!-- New player fields -->
+    <!-- New profile fields -->
     <div id="section_new" class="col-12 row g-3" style="display:none">
         <div class="col-12">
             <label for="first_name" class="form-label">Vorname <span class="text-danger">*</span></label>
@@ -85,7 +85,7 @@
         <div class="col-12">
             <label for="email" class="form-label">E-Mail <span class="text-muted small">(optional)</span></label>
             <input type="email" class="form-control" id="email" name="email"
-                   value="<?= e($_POST['email'] ?? '') ?>" placeholder="spieler@email.de">
+                   value="<?= e($_POST['email'] ?? '') ?>" placeholder="mitglied@email.de">
         </div>
     </div>
 
@@ -129,7 +129,7 @@
     });
 
     <?php
-    $restore_mode = ($_POST['create_mode'] ?? '') ?: (empty($linkable_players) ? 'new' : 'link');
+    $restore_mode = ($_POST['create_mode'] ?? '') ?: (empty($linkable_profiles) ? 'new' : 'link');
     ?>
     switchMode('<?= $restore_mode === 'new' ? 'new' : 'link' ?>');
 }());

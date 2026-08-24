@@ -1,14 +1,14 @@
 <?php
-// src/admin/player_edit_handler.php — GET: show edit form; POST: update player
-// $_REQUEST['player_id'] set by router
+// src/admin/member_edit_handler.php — GET: show edit form; POST: update member profile
+// $_REQUEST['profile_id'] set by router
 
 declare(strict_types=1);
 
 require_admin();
 
-$player_id = (int)($_REQUEST['player_id'] ?? 0);
-if ($player_id <= 0) {
-    redirect('/admin/players');
+$profile_id = (int)($_REQUEST['profile_id'] ?? 0);
+if ($profile_id <= 0) {
+    redirect('/admin/members');
 }
 
 $pdo  = get_db();
@@ -18,11 +18,11 @@ $stmt = $pdo->prepare(
      FROM members p
      WHERE p.id = ?"
 );
-$stmt->execute([$player_id]);
-$player = $stmt->fetch();
+$stmt->execute([$profile_id]);
+$profile = $stmt->fetch();
 
-if (!$player) {
-    redirect('/admin/players');
+if (!$profile) {
+    redirect('/admin/members');
 }
 
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name ASC")->fetchAll();
@@ -42,13 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description   = trim($_POST['description']   ?? '');
 
     if (empty($first_name) || empty($last_name)) {
-        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Vor- und Nachname sind erforderlich.'));
+        redirect('/admin/members/' . $profile_id . '/edit?error=' . urlencode('Vor- und Nachname sind erforderlich.'));
     }
     if ($email_raw !== '' && !filter_var($email_raw, FILTER_VALIDATE_EMAIL)) {
-        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Ungültige E-Mail-Adresse.'));
+        redirect('/admin/members/' . $profile_id . '/edit?error=' . urlencode('Ungültige E-Mail-Adresse.'));
     }
     if ($contact_email !== '' && !filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
-        redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Ungültige Kontakt-E-Mail-Adresse.'));
+        redirect('/admin/members/' . $profile_id . '/edit?error=' . urlencode('Ungültige Kontakt-E-Mail-Adresse.'));
     }
 
     $pdo->prepare(
@@ -64,10 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contact_phone !== '' ? $contact_phone : null,
         $contact_email !== '' ? $contact_email : null,
         $description !== '' ? $description : null,
-        $player_id,
+        $profile_id,
     ]);
 
-    redirect('/admin/players?success=' . urlencode($first_name . ' ' . $last_name . ' gespeichert.'));
+    redirect('/admin/members?success=' . urlencode($first_name . ' ' . $last_name . ' gespeichert.'));
 }
 
 // GET: render edit form
@@ -75,6 +75,6 @@ $error = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Mitglied bearbeiten', 'players', function() use ($player, $clubs, $error) {
-    require ROOT_PATH . '/src/templates/admin/player_edit.php';
+render_admin_page('Mitglied bearbeiten', 'players', function() use ($profile, $clubs, $error) {
+    require ROOT_PATH . '/src/templates/admin/member_edit.php';
 });

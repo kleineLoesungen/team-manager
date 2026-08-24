@@ -1,9 +1,9 @@
 <?php
-// src/templates/admin/player_form.php — Create player form
+// src/templates/admin/member_form.php — Create member profile form
 // Variables: $clubs (array), $teams (array), $error (string), $form (array)
 ?>
 <div class="mb-3">
-    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
     </a>
 </div>
@@ -12,7 +12,7 @@
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
 
-<form method="POST" action="/admin/players/create">
+<form method="POST" action="/admin/members/create">
     <?= csrf_field() ?>
 
     <div class="mb-3">
@@ -31,7 +31,7 @@
         <label for="email" class="form-label fw-semibold">E-Mail <span class="text-muted fw-normal">(optional)</span></label>
         <input type="email" id="email" name="email" class="form-control"
                value="<?= e($form['email'] ?? '') ?>" maxlength="255"
-               placeholder="spieler@beispiel.de">
+               placeholder="mitglied@beispiel.de">
     </div>
 
     <div class="mb-3">
@@ -81,12 +81,12 @@
 
     <div class="d-flex gap-3 align-items-center">
         <button type="submit" class="btn btn-primary min-touch">Mitglied anlegen</button>
-        <a href="/admin/players" class="btn btn-outline-secondary">Abbrechen</a>
+        <a href="/admin/members" class="btn btn-outline-secondary">Abbrechen</a>
     </div>
 </form>
 
 <div class="mt-4">
-    <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
+    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
     </a>
 </div>

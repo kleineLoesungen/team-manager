@@ -52,7 +52,7 @@ function render_admin_page(string $title, string $active, callable $body): void 
                 <i class="bi bi-person-badge"></i>
                 <span class="tab-label">Koordinatoren</span>
             </a>
-            <a href="/admin/players"
+            <a href="/admin/members"
                class="tab-item <?= $tab === 'players' ? 'is-on' : '' ?>"
                aria-current="<?= $tab === 'players' ? 'page' : 'false' ?>">
                 <i class="bi bi-person-vcard"></i>

@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 require_coordinator();
 
-$member_id = (int)($_REQUEST['player_id'] ?? 0);
-if ($member_id <= 0) redirect('/coordinator/members');
+$profile_id = (int)($_REQUEST['profile_id'] ?? 0);
+if ($profile_id <= 0) redirect('/coordinator/member-profiles');
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
@@ -21,9 +21,9 @@ $p_stmt = $pdo->prepare(
      LEFT JOIN clubs c ON c.id = p.club_id
      WHERE p.id = ?"
 );
-$p_stmt->execute([$member_id]);
+$p_stmt->execute([$profile_id]);
 $profile = $p_stmt->fetch();
-if (!$profile) redirect('/coordinator/members');
+if (!$profile) redirect('/coordinator/member-profiles');
 
 // All linked user accounts (every team)
 $al_stmt = $pdo->prepare(
@@ -35,7 +35,7 @@ $al_stmt = $pdo->prepare(
      WHERE u.member_id = ? AND u.role = 'member'
      ORDER BY t.name ASC, u.username ASC"
 );
-$al_stmt->execute([$member_id]);
+$al_stmt->execute([$profile_id]);
 $all_linked = $al_stmt->fetchAll();
 
 // Cross-team stats: flat list for column-switcher view (≤ today only)
@@ -64,8 +64,6 @@ set_team_context($pdo, $team_id, 'coordinator', $user_id);
 
 $my_linked    = array_values(array_filter($all_linked, fn($u) => (int)$u['team_id'] === $team_id));
 $other_linked = array_values(array_filter($all_linked, fn($u) => (int)$u['team_id'] !== $team_id));
-$player = $profile; // alias for template compatibility
-
 // Members on my team not yet linked to any profile (for add-link form)
 $ul_stmt = $pdo->prepare(
     "SELECT id, username FROM users
@@ -86,7 +84,7 @@ $attr_stmt = $pdo->prepare(
      LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
      ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
 );
-$attr_stmt->execute([$member_id]);
+$attr_stmt->execute([$profile_id]);
 $attr_groups = [];
 foreach ($attr_stmt->fetchAll() as $row) {
     $gname = $row['group_name'];
@@ -102,7 +100,7 @@ $success = !empty($_GET['success']);
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Mitgliedsprofil', 'members', function() use (
-    $player, $member_id, $clubs,
+    $profile, $profile_id, $clubs,
     $my_linked, $other_linked, $unlinked_my_members,
     $attr_groups, $cross_stats,
     $error, $success

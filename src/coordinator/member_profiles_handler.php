@@ -1,5 +1,5 @@
 <?php
-// src/coordinator/players_handler.php — GET /coordinator/players
+// src/coordinator/member_profiles_handler.php — GET /coordinator/member-profiles
 
 declare(strict_types=1);
 
@@ -22,7 +22,7 @@ $stmt = $pdo->prepare(
      ORDER BY p.first_name ASC, p.last_name ASC"
 );
 $stmt->execute([$team_id]);
-$players = $stmt->fetchAll();
+$profiles = $stmt->fetchAll();
 
 // Unlinked active members (for the "add" form)
 $ul_stmt = $pdo->prepare(
@@ -33,8 +33,8 @@ $ul_stmt = $pdo->prepare(
 $ul_stmt->execute([$team_id]);
 $unlinked_members = $ul_stmt->fetchAll();
 
-// All players not yet linked to any member on this team (for the "add" form)
-$linkable_players = [];
+// All profiles not yet linked to any member on this team (for the "add" form)
+$linkable_profiles = [];
 if (!empty($unlinked_members)) {
     set_admin_context($pdo);
     $lp_stmt = $pdo->prepare(
@@ -48,15 +48,15 @@ if (!empty($unlinked_members)) {
          ORDER BY p.first_name ASC, p.last_name ASC"
     );
     $lp_stmt->execute([$team_id]);
-    $linkable_players = $lp_stmt->fetchAll();
+    $linkable_profiles = $lp_stmt->fetchAll();
     reset_rls_context($pdo);
     set_team_context($pdo, $team_id, 'coordinator', $uid);
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Mitglieder', 'players', function() use (
-    $players, $unlinked_members, $linkable_players, $error
+render_coach_page('Mitgliederprofile', 'players', function() use (
+    $profiles, $unlinked_members, $linkable_profiles, $error
 ) {
-    require ROOT_PATH . '/src/templates/coordinator/players.php';
+    require ROOT_PATH . '/src/templates/coordinator/member_profiles.php';
 });

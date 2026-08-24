@@ -1,5 +1,5 @@
 <?php
-// src/admin/player_create_handler.php — GET: show form; POST: create player with optional team assignment
+// src/admin/member_create_handler.php — GET: show form; POST: create member profile with optional team assignment
 
 declare(strict_types=1);
 
@@ -47,15 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $form['contact_email'] !== '' ? $form['contact_email'] : null,
                 $form['description'] !== '' ? $form['description'] : null,
             ]);
-            $player_id = (int)$stmt->fetchColumn();
-            redirect('/admin/players');
+            redirect('/admin/members');
         } catch (PDOException $e) {
-            error_log('Player create error: ' . $e->getMessage());
+            error_log('Member create error: ' . $e->getMessage());
             $error = 'Ein Fehler ist aufgetreten. Bitte versuch es später erneut.';
         }
     }
 }
 
 render_admin_page('Mitglied hinzufügen', 'players', function() use ($clubs, $error, $form) {
-    require ROOT_PATH . '/src/templates/admin/player_form.php';
+    require ROOT_PATH . '/src/templates/admin/member_form.php';
 });

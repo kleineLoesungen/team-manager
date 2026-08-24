@@ -39,18 +39,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "INSERT INTO members (first_name, last_name, email) VALUES (?, ?, ?) RETURNING id"
             );
             $p_stmt->execute([$first_name, $last_name, $email_raw !== '' ? $email_raw : null]);
-            $player_id = (int)$p_stmt->fetchColumn();
+            $profile_id = (int)$p_stmt->fetchColumn();
 
             $username       = generate_unique_username($pdo, $first_name, $last_name);
             $plain_password = generate_random_password();
             $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
             $stmt = $pdo->prepare(
-                "INSERT INTO users (team_id, role, username, password_hash, player_id)
+                "INSERT INTO users (team_id, role, username, password_hash, member_id)
                  VALUES (?, 'coordinator', ?, ?, ?)
                  RETURNING id"
             );
-            $stmt->execute([$team_id, $username, $password_hash, $player_id]);
+            $stmt->execute([$team_id, $username, $password_hash, $profile_id]);
             $new_user_id = (int)$stmt->fetchColumn();
 
             $pdo->prepare(
