@@ -16,7 +16,7 @@ $stmt = $pdo->query(
     "SELECT u.id, p.first_name, p.last_name, p.email
      FROM users u
      JOIN teams t ON t.id = u.team_id
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE
      ORDER BY p.last_name, p.first_name"
 );
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $re_stmt = $pdo->query(
             "SELECT p.email FROM users u
              JOIN teams t ON t.id = u.team_id
-             JOIN players p ON p.id = u.player_id
+             JOIN members p ON p.id = u.member_id
              WHERE u.role = 'coordinator' AND u.is_active = TRUE AND t.is_active = TRUE AND p.email IS NOT NULL"
         );
         $recipients = $re_stmt->fetchAll(PDO::FETCH_COLUMN);

@@ -15,10 +15,10 @@ $filter_team_id = (int)($_GET['team_id'] ?? 0);
 $sql    = "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.contact_email, p.description,
                   p.is_active,
                   c.id AS club_id, c.name AS club_name
-           FROM players p
+           FROM members p
            LEFT JOIN clubs c ON c.id = p.club_id
            WHERE NOT EXISTS (
-               SELECT 1 FROM users u WHERE u.player_id = p.id AND u.role = 'coordinator'
+               SELECT 1 FROM users u WHERE u.member_id = p.id AND u.role = 'coordinator'
            )";
 $params = [];
 
@@ -34,7 +34,7 @@ if ($filter_club_id > 0) {
 }
 if ($filter_team_id > 0) {
     // Team relation lives on users, not team_memberships
-    $sql     .= " AND EXISTS (SELECT 1 FROM users u WHERE u.player_id = p.id AND u.team_id = ? AND u.role = 'member')";
+    $sql     .= " AND EXISTS (SELECT 1 FROM users u WHERE u.member_id = p.id AND u.team_id = ? AND u.role = 'member')";
     $params[] = $filter_team_id;
 }
 $sql .= " ORDER BY p.last_name ASC, p.first_name ASC";
@@ -51,11 +51,11 @@ if (!empty($all_players)) {
     $player_ids   = array_column($all_players, 'id');
     $placeholders = implode(',', array_fill(0, count($player_ids), '?'));
     $u_stmt = $pdo->prepare(
-        "SELECT u.id, u.player_id, u.username, u.is_active,
+        "SELECT u.id, u.member_id, u.username, u.is_active,
                 t.id AS team_id, t.name AS team_name, t.is_active AS team_active
          FROM users u
          LEFT JOIN teams t ON t.id = u.team_id
-         WHERE u.player_id IN ({$placeholders}) AND u.role = 'member'
+         WHERE u.member_id IN ({$placeholders}) AND u.role = 'member'
          ORDER BY COALESCE(t.is_active, FALSE) DESC, t.name ASC, u.username ASC"
     );
     $u_stmt->execute($player_ids);

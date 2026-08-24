@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    SELECT 1 FROM cells ex
                    WHERE ex.list_id = cells.list_id
                      AND ex.column_id = ?
-                     AND ex.player_id = cells.player_id
+                     AND ex.member_id = cells.member_id
                )"
         )->execute([$target_id, $src_id, $target_id]);
 

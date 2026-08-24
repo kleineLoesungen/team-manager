@@ -12,7 +12,7 @@ $coordinators_stmt = $pdo->query(
     "SELECT u.id, p.first_name, p.last_name, u.username, u.is_active, p.email, p.phone,
             u.confirmed_at, cl.name AS club_name
      FROM users u
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      LEFT JOIN clubs cl ON cl.id = p.club_id
      WHERE u.role = 'coordinator'
      ORDER BY p.last_name, p.first_name"

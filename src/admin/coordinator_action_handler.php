@@ -117,8 +117,8 @@ if ($action === 'reset-password') {
 
     // Write club to players (canonical person table). admin context already active via require_admin().
     $pdo->prepare(
-        "UPDATE players SET club_id = ?
-         WHERE id = (SELECT player_id FROM users WHERE id = ? AND role = 'coordinator')"
+        "UPDATE members SET club_id = ?
+         WHERE id = (SELECT member_id FROM users WHERE id = ? AND role = 'coordinator')"
     )->execute([$club_id > 0 ? $club_id : null, $coordinator_id]);
 
     redirect($settings_url . '?success=' . urlencode('Verein gespeichert.'));

@@ -16,7 +16,7 @@ $coaches_stmt = $pdo->query(
     "SELECT u.id, ct.team_id, p.first_name, p.last_name, u.username, u.is_active
      FROM coordinator_teams ct
      JOIN users u ON u.id = ct.user_id
-     JOIN players p ON p.id = u.player_id
+     JOIN members p ON p.id = u.member_id
      WHERE ct.left_at IS NULL
      ORDER BY p.last_name, p.first_name"
 );

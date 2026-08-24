@@ -15,7 +15,7 @@ $pdo  = get_db();
 $stmt = $pdo->prepare(
     "SELECT p.id, p.first_name, p.last_name, p.club_id, p.email, p.phone,
             p.contact_name, p.contact_phone, p.contact_email, p.description, p.is_active
-     FROM players p
+     FROM members p
      WHERE p.id = ?"
 );
 $stmt->execute([$player_id]);
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $pdo->prepare(
-        "UPDATE players SET club_id = ?, first_name = ?, last_name = ?, email = ?,
+        "UPDATE members SET club_id = ?, first_name = ?, last_name = ?, email = ?,
                             phone = ?, contact_name = ?, contact_phone = ?, contact_email = ?, description = ?
          WHERE id = ?"
     )->execute([
