@@ -6,6 +6,59 @@ Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Lis
 
 ---
 
+## Datenmodell
+
+Die Anwendung gliedert sich in vier Bereiche: Teamverwaltung, Listen/Spalten/Zellen (EAV), Live-Ticker und Mitgliedsprofile.
+
+```mermaid
+erDiagram
+    teams ||--o{ lists : ""
+    teams ||--o{ columns : "global"
+    teams ||--o{ tickers : ""
+    teams ||--o{ ticker_tags : ""
+    teams ||--o{ users : ""
+    teams ||--o{ coordinator_teams : ""
+
+    users ||--o{ coordinator_teams : ""
+    users }o--o| members : ""
+    users ||--o{ ticker_members : ""
+
+    clubs ||--o{ members : ""
+    members ||--o{ member_attribute_values : ""
+
+    member_attribute_groups ||--o{ member_attributes : ""
+    member_attributes ||--o{ member_attribute_values : ""
+
+    lists ||--o{ columns : "lokal"
+    lists ||--o{ list_global_columns : ""
+    lists ||--o{ cells : ""
+
+    columns ||--o{ list_global_columns : ""
+    columns ||--o{ cells : ""
+
+    tickers ||--o{ ticker_messages : ""
+    tickers ||--o{ ticker_members : ""
+    ticker_tags }o--o{ ticker_messages : ""
+```
+
+| Relation | Beschreibung |
+|----------|-------------|
+| `teams → users` | Ein Team hat mehrere Koordinatoren und Mitglieder; `users.team_id` gibt das Ursprungsteam an. |
+| `teams → coordinator_teams ← users` | Koordinatoren können mehreren Teams zugeordnet sein; `coordinator_teams` ist die Wahrheitsquelle für aktive Zugehörigkeiten. |
+| `users → members` | Jeder Benutzeraccount ist mit einem dauerhaften Mitgliedsprofil verknüpft, das teamübergreifend gültig ist. |
+| `clubs → members` | Ein Verein bündelt Mitglieder; ein Mitglied gehört optional zu genau einem Verein. |
+| `teams → lists` | Ein Team verwaltet beliebig viele Listen (z. B. Trainings, Spiele). |
+| `lists → columns (lokal)` | Lokale Spalten (`columns.list_id IS NOT NULL`) gehören ausschließlich zu einer Liste und können vom Typ Text, Zahl oder Ja/Nein sein. |
+| `teams → columns (global)` | Globale Spalten (`list_id IS NULL`) stehen teamweit zur Verfügung; Systemspalten (`team_id IS NULL`, `is_system = TRUE`) gelten für alle Teams. |
+| `list_global_columns` | Steuert, welche globalen/System-Spalten in welcher Liste aktiv sind; Entfernen löscht die zugehörigen Zellen. |
+| `lists + columns → cells` | Speichert EAV-Werte: eine Zeile pro (Liste, Spalte, Mitglied); der Wert wird als `TEXT` abgelegt und per `data_type` interpretiert. |
+| `teams → tickers` | Ein Team kann mehrere Live-Ticker führen (z. B. pro Spiel). |
+| `tickers → ticker_messages` | Nachrichten werden chronologisch einem Ticker zugeordnet und können optional einen Tag tragen. |
+| `tickers → ticker_members ← users` | Steuert, welche Mitglieder Schreibzugriff auf einen Ticker haben. |
+| `member_attribute_groups → member_attributes → member_attribute_values ← members` | Flexible EAV-Erweiterung des Mitgliedsprofils: Attributgruppen fassen Felder zusammen; Werte werden pro Mitglied gespeichert. |
+
+---
+
 ## Dev-Umgebung (Docker)
 
 ### Voraussetzungen
