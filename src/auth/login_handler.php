@@ -88,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($role === 'mitglied')  $role = 'member';
 
                         // For coordinators: check active team memberships (multi-team flow)
+                        // coordinator_teams is the authority — users.team_id is historical only
                         if ($role === 'coordinator') {
                             set_admin_context($pdo);
                             $ct_stmt = $pdo->prepare(
@@ -100,6 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $ct_stmt->execute([$user['id']]);
                             $active_teams = $ct_stmt->fetchAll();
                             reset_rls_context($pdo);
+
+                            if (count($active_teams) === 0) {
+                                $error = 'Dein Team ist deaktiviert. Bitte wende dich an den Admin.';
+                                goto login_done;
+                            }
 
                             if (count($active_teams) > 1) {
                                 // Multi-team: store pending state, redirect to picker
@@ -114,31 +120,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ], $active_teams);
                                 redirect('/coordinator/select-team');
                             }
-                            // Single team or no coordinator_teams entry: fall through to existing setup
-                        }
 
-                        // Block users whose primary team is inactive
-                        if (!empty($user['team_id'])) {
-                            $team_check = $pdo->prepare("SELECT name, is_active FROM teams WHERE id = ?");
-                            $team_check->execute([$user['team_id']]);
-                            $team_row = $team_check->fetch();
-                            if (!$team_row || !$team_row['is_active']) {
-                                $error = 'Dein Team ist deaktiviert. Bitte wende dich an den Admin.';
-                                // Skip session setup — fall through to error display
-                                goto login_done;
-                            }
+                            // Exactly 1 active team: use it directly (may differ from users.team_id)
+                            $session_team_id   = (int)$active_teams[0]['team_id'];
+                            $session_team_name = $active_teams[0]['team_name'];
                         } else {
-                            $team_row = null;
+                            // Members: check users.team_id
+                            if (!empty($user['team_id'])) {
+                                $team_check = $pdo->prepare("SELECT name, is_active FROM teams WHERE id = ?");
+                                $team_check->execute([$user['team_id']]);
+                                $team_row = $team_check->fetch();
+                                if (!$team_row || !$team_row['is_active']) {
+                                    $error = 'Dein Team ist deaktiviert. Bitte wende dich an den Admin.';
+                                    goto login_done;
+                                }
+                            } else {
+                                $team_row = null;
+                            }
+                            $session_team_id   = (int)$user['team_id'];
+                            $session_team_name = $team_row['name'] ?? '';
                         }
 
                         // Set RLS context before any further queries
-                        set_team_context($pdo, (int)$user['team_id']);
+                        set_team_context($pdo, $session_team_id);
 
                         $_SESSION['user_id']       = $user['id'];
-                        $_SESSION['team_id']       = $user['team_id'];
+                        $_SESSION['team_id']       = $session_team_id;
                         $_SESSION['role']          = $role;
                         $_SESSION['display_name']  = $user['first_name'] . ' ' . $user['last_name'];
-                        $_SESSION['team_name']     = $team_row['name'] ?? '';
+                        $_SESSION['team_name']     = $session_team_name;
                         $_SESSION['confirmed_at']  = $user['confirmed_at'];
                         $_SESSION['last_activity'] = time();
 
