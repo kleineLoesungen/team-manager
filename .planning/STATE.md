@@ -13,7 +13,7 @@ progress:
 
 # Project State: Team Manager
 
-**Last Updated:** 2026-08-24 - Completed quick task 260823-pbq: rename player to member backend db UI  
+**Last Updated:** 2026-08-25 - Completed quick task 260825-0y5: update landing page like rfeasley.io  
 **Model Profile:** Budget (Claude Haiku)  
 **Workflow:** Research → Plan → Build → Verify → Transition
 
@@ -178,6 +178,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260825-0y5 | update landing page like rfeasley.io | 2026-08-25 | acc8f2f | [260825-0y5-update-landing-page-like-rfeasley-io](.planning/quick/260825-0y5-update-landing-page-like-rfeasley-io/) |
 | 260823-pbq | rename player to member backend db UI | 2026-08-24 | f8728d4 | [260823-pbq-rename-player-to-member-backend-db-ui](.planning/quick/260823-pbq-rename-player-to-member-backend-db-ui/) |
 | 260822-k76 | player-history column consistency for /member/player-profile | 2026-08-22 | 7ef59fd | [260822-k76-player-history-column-consistency-for-me](.planning/quick/260822-k76-player-history-column-consistency-for-me/) |
 | 260729-ijq | Share button for list/doc and one-click copy of user credentials | 2026-07-29 | 78b2e16 | [260729-ijq-share-button-for-list-doc-and-one-click-](.planning/quick/260729-ijq-share-button-for-list-doc-and-one-click-/) |
