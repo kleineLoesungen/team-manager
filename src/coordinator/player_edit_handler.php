@@ -94,6 +94,6 @@ if ($error) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Spieler bearbeiten', 'members', function() use ($player, $player_id, $clubs, $error) {
+render_coach_page('Mitglied bearbeiten', 'members', function() use ($player, $player_id, $clubs, $error) {
     require ROOT_PATH . '/src/templates/coordinator/player_edit.php';
 });

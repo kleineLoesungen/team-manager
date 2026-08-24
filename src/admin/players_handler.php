@@ -91,7 +91,7 @@ $has_unlinked = !empty($unlinked_by_team);
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $teams = $pdo->query("SELECT id, name, is_active FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
-render_admin_page('Spieler', 'players', function() use (
+render_admin_page('Mitglieder', 'players', function() use (
     $players, $inactive_players, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
     $search, $filter_club_id, $filter_team_id
 ) {

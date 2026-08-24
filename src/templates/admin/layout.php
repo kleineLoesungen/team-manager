@@ -56,7 +56,7 @@ function render_admin_page(string $title, string $active, callable $body): void 
                class="tab-item <?= $tab === 'players' ? 'is-on' : '' ?>"
                aria-current="<?= $tab === 'players' ? 'page' : 'false' ?>">
                 <i class="bi bi-person-vcard"></i>
-                <span class="tab-label">Spieler</span>
+                <span class="tab-label">Mitglieder</span>
             </a>
             <a href="/admin/clubs"
                class="tab-item <?= $tab === 'clubs' ? 'is-on' : '' ?>"

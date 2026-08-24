@@ -75,6 +75,6 @@ $error = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Spieler bearbeiten', 'players', function() use ($player, $clubs, $error) {
+render_admin_page('Mitglied bearbeiten', 'players', function() use ($player, $clubs, $error) {
     require ROOT_PATH . '/src/templates/admin/player_edit.php';
 });

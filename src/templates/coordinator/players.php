@@ -11,7 +11,7 @@ declare(strict_types=1);
 <!-- Add link form -->
 <div class="card mb-4">
     <div class="card-header fw-semibold">
-        <i class="bi bi-link-45deg me-1"></i>Spieler verknüpfen
+        <i class="bi bi-link-45deg me-1"></i>Mitglied verknüpfen
     </div>
     <div class="card-body">
         <form id="link-player-form" method="POST" action="#">
@@ -29,9 +29,9 @@ declare(strict_types=1);
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label fw-medium mb-1">Spieler</label>
+                <label class="form-label fw-medium mb-1">Mitglied</label>
                 <select id="link-player-sel" class="form-select" required>
-                    <option value="">Spieler wählen …</option>
+                    <option value="">Mitglied wählen …</option>
                     <?php foreach ($linkable_players as $lp): ?>
                     <option value="<?= (int)$lp['id'] ?>">
                         <?= e($lp['first_name'] . ' ' . $lp['last_name']) ?>
@@ -70,19 +70,19 @@ declare(strict_types=1);
 </script>
 <?php elseif (!empty($unlinked_members) && empty($linkable_players)): ?>
 <div class="alert alert-info mb-4">
-    Alle verfügbaren Spieler sind bereits verknüpft.
-    Der Admin kann weitere Spieler anlegen.
+    Alle verfügbaren Mitglieder sind bereits verknüpft.
+    Der Admin kann weitere Mitglieder anlegen.
 </div>
 <?php endif; ?>
 
 <!-- Linked players -->
 <?php if (empty($players)): ?>
 <div class="text-center py-5">
-    <p class="h5 text-muted">Keine verknüpften Spieler</p>
-    <p class="text-muted small">Verknüpfe ein Mitglied mit einem Spieler über das Formular oben.</p>
+    <p class="h5 text-muted">Keine verknüpften Mitglieder</p>
+    <p class="text-muted small">Verknüpfe ein Mitglied über das Formular oben.</p>
 </div>
 <?php else: ?>
-<p class="text-muted small mb-3"><?= count($players) ?> Spieler in diesem Team</p>
+<p class="text-muted small mb-3"><?= count($players) ?> Mitglieder in diesem Team</p>
 <div class="list-group">
     <?php foreach ($players as $p):
         $user_active = (bool)$p['user_active'];

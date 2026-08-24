@@ -11,9 +11,9 @@
 <?php endif; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <span class="text-muted"><?= count($players) ?> aktive Spieler</span>
+    <span class="text-muted"><?= count($players) ?> aktive Mitglieder</span>
     <a href="/admin/players/create" class="btn btn-primary min-touch">
-        <i class="bi bi-plus-lg me-1"></i>Spieler hinzufügen
+        <i class="bi bi-plus-lg me-1"></i>Mitglied hinzufügen
     </a>
 </div>
 
@@ -68,9 +68,9 @@
 
 <?php if (empty($players)): ?>
 <div class="alert alert-info">
-    Keine aktiven Spieler gefunden.
+    Keine aktiven Mitglieder gefunden.
     <?php if ($search === '' && $filter_club_id === 0 && $filter_team_id === 0): ?>
-    <a href="/admin/players/create" class="alert-link">Ersten Spieler anlegen</a>.
+    <a href="/admin/players/create" class="alert-link">Erstes Mitglied anlegen</a>.
     <?php endif; ?>
 </div>
 <?php else: ?>
@@ -169,7 +169,7 @@
                 <i class="bi bi-pencil me-1"></i>Bearbeiten
             </a>
             <form method="POST" action="/admin/players/<?= (int)$p['id'] ?>/deactivate"
-                  onsubmit="return confirm('Spieler deaktivieren?')">
+                  onsubmit="return confirm('Mitglied deaktivieren?')">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-sm btn-outline-warning">
                     <i class="bi bi-pause-circle me-1"></i>Deaktivieren

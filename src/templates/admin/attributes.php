@@ -25,7 +25,7 @@
             <div class="col-12 col-sm-6">
                 <label class="form-label mb-1 small">Gruppenname</label>
                 <input type="text" class="form-control" name="name" maxlength="100" required
-                       placeholder="z.B. Kontakt, Spielerprofil …">
+                       placeholder="z.B. Kontakt, Mitgliedsprofil …">
             </div>
             <div class="col-6 col-sm-3">
                 <label class="form-label mb-1 small">Reihenfolge</label>

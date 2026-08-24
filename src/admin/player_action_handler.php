@@ -102,7 +102,7 @@ if ($action === 'edit') {
 
 } elseif ($action === 'unlink-user') {
     // player_id is NOT NULL after migration 024 — every user must remain linked to a player.
-    redirect('/admin/players?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Spielerprofil.'));
+    redirect('/admin/players?error=' . urlencode('Verknüpfung kann nicht aufgehoben werden — jedes Mitglied benötigt ein Mitgliedsprofil.'));
 
 } elseif ($action === 'deactivate') {
     $pdo->prepare("UPDATE members SET is_active = FALSE WHERE id = ?")
@@ -112,7 +112,7 @@ if ($action === 'edit') {
 } elseif ($action === 'reactivate') {
     $pdo->prepare("UPDATE members SET is_active = TRUE WHERE id = ?")
         ->execute([$player_id]);
-    redirect('/admin/players?success=' . urlencode('Spieler reaktiviert.'));
+    redirect('/admin/players?success=' . urlencode('Mitglied reaktiviert.'));
 
 } elseif ($action === 'delete') {
     // Safety check: only deactivated profiles can be deleted
@@ -129,7 +129,7 @@ if ($action === 'edit') {
         redirect('/admin/players/' . $player_id . '/edit?error=' . urlencode('Dieses Profil ist noch mit Benutzerkonten verknüpft. Konten zuerst löschen.'));
     }
     $pdo->prepare("DELETE FROM members WHERE id = ? AND is_active = FALSE")->execute([$player_id]);
-    redirect('/admin/players?success=' . urlencode('Spieler gelöscht.'));
+    redirect('/admin/players?success=' . urlencode('Mitglied gelöscht.'));
 
 } else {
     redirect('/admin/players');

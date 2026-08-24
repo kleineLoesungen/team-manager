@@ -4,7 +4,7 @@
 ?>
 <div class="mb-3">
     <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Spieler
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
     </a>
 </div>
 
@@ -76,17 +76,17 @@
     <div class="mb-4">
         <label for="description" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
         <textarea id="description" name="description" class="form-control" rows="3"
-                  placeholder="Zusätzliche Informationen zum Spieler …"><?= e($form['description']) ?></textarea>
+                  placeholder="Zusätzliche Informationen zum Mitglied …"><?= e($form['description']) ?></textarea>
     </div>
 
     <div class="d-flex gap-3 align-items-center">
-        <button type="submit" class="btn btn-primary min-touch">Spieler anlegen</button>
+        <button type="submit" class="btn btn-primary min-touch">Mitglied anlegen</button>
         <a href="/admin/players" class="btn btn-outline-secondary">Abbrechen</a>
     </div>
 </form>
 
 <div class="mt-4">
     <a href="/admin/players" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Spieler
+        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
     </a>
 </div>

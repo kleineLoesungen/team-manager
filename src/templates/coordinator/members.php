@@ -150,7 +150,7 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                         <i class="bi bi-person me-1"></i>Profil
                     </a>
                     <form method="POST" action="/coordinator/members/<?= (int)$m['id'] ?>/delete"
-                          onsubmit="return confirm('<?= e('Benutzerkonto ' . $m['username'] . ' endgültig löschen? Das Spielerprofil bleibt erhalten.') ?>')">
+                          onsubmit="return confirm('<?= e('Benutzerkonto ' . $m['username'] . ' endgültig löschen? Das Mitgliedsprofil bleibt erhalten.') ?>')">
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-sm btn-outline-danger">
                             <i class="bi bi-trash me-1"></i>Löschen

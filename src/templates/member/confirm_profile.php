@@ -139,9 +139,9 @@
 <div class="card mb-4">
     <div class="card-body text-center py-5">
         <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
-        <p class="mb-1">Dein Konto ist noch keinem Spielerprofil zugeordnet.</p>
+        <p class="mb-1">Dein Konto ist noch keinem Mitgliedsprofil zugeordnet.</p>
         <p class="text-muted small mb-4">
-            Bitte wende dich an deinen Koordinator, um dein Spielerprofil zu verknüpfen.
+            Bitte wende dich an deinen Koordinator, um dein Mitgliedsprofil zu verknüpfen.
         </p>
         <form method="POST" action="/member/confirm-profile">
             <?= csrf_field() ?>

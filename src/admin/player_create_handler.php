@@ -56,6 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_admin_page('Spieler hinzufügen', 'players', function() use ($clubs, $error, $form) {
+render_admin_page('Mitglied hinzufügen', 'players', function() use ($clubs, $error, $form) {
     require ROOT_PATH . '/src/templates/admin/player_form.php';
 });
