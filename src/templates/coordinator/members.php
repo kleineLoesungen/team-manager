@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 $active_members   = array_values(array_filter($members, fn($m) => $m['is_active']));
 $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active']));
+
+$fmt_attr = function(array $a): string {
+    $val = $a['value'];
+    if (($a['data_type'] ?? 'text') === 'date' && $val !== '') {
+        try { $val = (new DateTime($val))->format('d.m.Y'); } catch (\Exception $e) {}
+    }
+    return e($a['name']) . ': ' . e($val);
+};
 ?>
 <?php if ($error):   ?><div class="alert alert-danger mb-3"><?= e($error) ?></div><?php endif; ?>
 <?php if ($success): ?><div class="alert alert-success mb-3"><?= e($success) ?></div><?php endif; ?>
@@ -84,14 +92,14 @@ $inactive_members = array_values(array_filter($members, fn($m) => !$m['is_active
                 <div class="info-mode mt-1 d-none" data-mode="attr-visible">
                     <?php $attrs = $player_attr_visible[$pid] ?? []; ?>
                     <?php if (!empty($attrs)): ?>
-                    <span class="text-muted small"><?= implode(' · ', array_map(fn($a) => e($a['name']) . ': ' . e($a['value']), $attrs)) ?></span>
+                    <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
                     <?php else: ?><span class="text-muted small">—</span><?php endif; ?>
                 </div>
 
                 <div class="info-mode mt-1 d-none" data-mode="attr-hidden">
                     <?php $attrs = $player_attr_hidden[$pid] ?? []; ?>
                     <?php if (!empty($attrs)): ?>
-                    <span class="text-muted small"><?= implode(' · ', array_map(fn($a) => e($a['name']) . ': ' . e($a['value']), $attrs)) ?></span>
+                    <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
                     <?php else: ?><span class="text-muted small">—</span><?php endif; ?>
                 </div>
             </div>

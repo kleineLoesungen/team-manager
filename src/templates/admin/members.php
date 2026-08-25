@@ -2,6 +2,13 @@
 // src/templates/admin/players.php — Admin player list
 // Variables: $profiles, $inactive_profiles, $clubs, $teams, $linked_users_map,
 //            $unlinked_by_team, $has_unlinked, $search, $filter_club_id, $filter_team_id
+$fmt_attr = function(array $a): string {
+    $val = $a['value'];
+    if (($a['data_type'] ?? 'text') === 'date' && $val !== '') {
+        try { $val = (new DateTime($val))->format('d.m.Y'); } catch (\Exception $e) {}
+    }
+    return e($a['name']) . ': ' . e($val);
+};
 ?>
 <?php if (!empty($_GET['error'])): ?>
 <div class="alert alert-danger"><?= e($_GET['error']) ?></div>
@@ -66,6 +73,15 @@
 </script>
 <?php endif; ?>
 
+<!-- Mode switcher -->
+<div class="d-flex gap-1 flex-wrap mb-3">
+    <button class="btn btn-sm" data-mode-btn="club">Verein</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="contact">Kontakt</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="description">Beschreibung</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="attr-visible">Attribute (sichtbar)</button>
+    <button class="btn btn-sm btn-outline-secondary" data-mode-btn="attr-hidden">Attribute (verborgen)</button>
+</div>
+
 <?php if (empty($profiles)): ?>
 <div class="alert alert-info">
     Keine aktiven Mitglieder gefunden.
@@ -79,38 +95,63 @@
     <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
     <div class="list-group-item px-3 py-3">
 
-        <!-- Name + club -->
+        <!-- Name + switchable info -->
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-            <div>
+            <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold"><?= e($p['last_name']) ?>, <?= e($p['first_name']) ?></div>
-                <?php if (!empty($p['club_name'])): ?>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle mt-1">
-                    <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>
-                </span>
-                <?php endif; ?>
-                <?php if (!empty($p['email'])): ?>
-                <div class="text-muted small mt-1"><i class="bi bi-envelope me-1"></i><?= e($p['email']) ?></div>
-                <?php endif; ?>
-                <?php if (!empty($p['phone'])): ?>
-                <div class="text-muted small"><i class="bi bi-telephone me-1"></i><?= e($p['phone']) ?></div>
-                <?php endif; ?>
-                <?php if (!empty($p['contact_name']) || !empty($p['contact_phone']) || !empty($p['contact_email'])): ?>
-                <div class="text-muted small">
-                    <i class="bi bi-person-lines-fill me-1"></i>
-                    Kontakt: <?= e($p['contact_name'] ?? '') ?>
-                    <?php if (!empty($p['contact_phone'])): ?>
-                    <?php if (!empty($p['contact_name'])): ?>, <?php endif; ?>
-                    <?= e($p['contact_phone']) ?>
-                    <?php endif; ?>
-                    <?php if (!empty($p['contact_email'])): ?>
-                    <?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>, <?php endif; ?>
-                    <?= e($p['contact_email']) ?>
+
+                <div class="info-mode mt-1" data-mode="club">
+                    <?php if (!empty($p['club_name'])): ?>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+                        <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>
+                    </span>
+                    <?php else: ?>
+                    <span class="text-muted small">—</span>
                     <?php endif; ?>
                 </div>
-                <?php endif; ?>
-                <?php if (!empty($p['description'])): ?>
-                <div class="text-muted small fst-italic mt-1"><?= e($p['description']) ?></div>
-                <?php endif; ?>
+
+                <div class="info-mode mt-1 d-none" data-mode="contact">
+                    <?php $has_contact = false; ?>
+                    <?php if (!empty($p['email'])): $has_contact = true; ?>
+                    <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($p['email']) ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($p['phone'])): $has_contact = true; ?>
+                    <div class="text-muted small"><i class="bi bi-telephone me-1"></i><?= e($p['phone']) ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($p['contact_name']) || !empty($p['contact_phone']) || !empty($p['contact_email'])): $has_contact = true; ?>
+                    <div class="text-muted small">
+                        <i class="bi bi-person-lines-fill me-1"></i>
+                        <?= e($p['contact_name'] ?? '') ?>
+                        <?php if (!empty($p['contact_phone'])): ?><?php if (!empty($p['contact_name'])): ?>, <?php endif; ?><?= e($p['contact_phone']) ?><?php endif; ?>
+                        <?php if (!empty($p['contact_email'])): ?><?php if (!empty($p['contact_name']) || !empty($p['contact_phone'])): ?>, <?php endif; ?><?= e($p['contact_email']) ?><?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!$has_contact): ?>
+                    <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                </div>
+
+                <div class="info-mode mt-1 d-none" data-mode="description">
+                    <span class="text-muted small"><?= !empty($p['description']) ? e($p['description']) : '—' ?></span>
+                </div>
+
+                <div class="info-mode mt-1 d-none" data-mode="attr-visible">
+                    <?php $attrs = $player_attr_visible[$p['id']] ?? []; ?>
+                    <?php if (!empty($attrs)): ?>
+                    <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
+                    <?php else: ?>
+                    <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                </div>
+
+                <div class="info-mode mt-1 d-none" data-mode="attr-hidden">
+                    <?php $attrs = $player_attr_hidden[$p['id']] ?? []; ?>
+                    <?php if (!empty($attrs)): ?>
+                    <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
+                    <?php else: ?>
+                    <span class="text-muted small">—</span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
@@ -258,6 +299,31 @@
     </div>
 </div>
 <?php endif; ?>
+
+<script>
+(function () {
+    var STORAGE_KEY = 'admin-members-info-mode';
+    var current = sessionStorage.getItem(STORAGE_KEY) || 'club';
+
+    function setMode(mode) {
+        current = mode;
+        sessionStorage.setItem(STORAGE_KEY, mode);
+        document.querySelectorAll('[data-mode-btn]').forEach(function (btn) {
+            var on = btn.dataset.modeBtn === mode;
+            btn.className = 'btn btn-sm ' + (on ? 'btn-primary' : 'btn-outline-secondary');
+        });
+        document.querySelectorAll('.info-mode').forEach(function (el) {
+            el.classList.toggle('d-none', el.dataset.mode !== mode);
+        });
+    }
+
+    document.querySelectorAll('[data-mode-btn]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setMode(this.dataset.modeBtn); });
+    });
+
+    setMode(current);
+}());
+</script>
 
 <?php if ($has_unlinked): ?>
 <script>

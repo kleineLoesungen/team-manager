@@ -71,8 +71,33 @@ $has_unlinked     = false;
 $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $teams = $pdo->query("SELECT id, name, is_active FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
+// Load attribute values for all profiles
+$player_attr_visible = [];
+$player_attr_hidden  = [];
+if (!empty($all_profiles)) {
+    $profile_ids  = array_column($all_profiles, 'id');
+    $placeholders = implode(',', array_fill(0, count($profile_ids), '?'));
+    $attr_stmt = $pdo->prepare(
+        "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_player, pav.value
+         FROM member_attribute_values pav
+         JOIN member_attributes pa ON pa.id = pav.attribute_id
+         WHERE pav.member_id IN ({$placeholders}) AND pav.value != ''
+         ORDER BY pa.visible_to_player DESC, pa.sort_order ASC, pa.name ASC"
+    );
+    $attr_stmt->execute($profile_ids);
+    foreach ($attr_stmt->fetchAll() as $row) {
+        $pid = (int)$row['member_id'];
+        if ($row['visible_to_player']) {
+            $player_attr_visible[$pid][] = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
+        } else {
+            $player_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
+        }
+    }
+}
+
 render_admin_page('Mitglieder', 'players', function() use (
     $profiles, $inactive_profiles, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
+    $player_attr_visible, $player_attr_hidden,
     $search, $filter_club_id, $filter_team_id
 ) {
     require ROOT_PATH . '/src/templates/admin/members.php';

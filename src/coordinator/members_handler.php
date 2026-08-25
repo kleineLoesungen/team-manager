@@ -36,7 +36,7 @@ if (!empty($linked_player_ids)) {
     set_admin_context($pdo);
     $ph = implode(',', array_fill(0, count($linked_player_ids), '?'));
     $attr_stmt = $pdo->prepare(
-        "SELECT pav.member_id, pa.name AS attr_name, pa.visible_to_player, pav.value
+        "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_player, pav.value
          FROM member_attribute_values pav
          JOIN member_attributes pa ON pa.id = pav.attribute_id
          WHERE pav.member_id IN ($ph) AND pav.value != ''
@@ -46,9 +46,9 @@ if (!empty($linked_player_ids)) {
     foreach ($attr_stmt->fetchAll() as $row) {
         $pid = (int)$row['member_id'];
         if ($row['visible_to_player']) {
-            $player_attr_visible[$pid][] = ['name' => $row['attr_name'], 'value' => $row['value']];
+            $player_attr_visible[$pid][] = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
         } else {
-            $player_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'value' => $row['value']];
+            $player_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
         }
     }
     reset_rls_context($pdo);
