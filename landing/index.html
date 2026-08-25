@@ -3,361 +3,395 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Manager – Teamkoordination ohne Chaos</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23111111'/><rect x='5' y='7' width='22' height='5' rx='2.5' fill='white'/><rect x='13' y='7' width='6' height='19' rx='2.5' fill='white'/></svg>" />
+  <title>Team Manager</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230d0d0d'/><rect x='5' y='7' width='22' height='5' rx='2.5' fill='white'/><rect x='13' y='7' width='6' height='18' rx='2.5' fill='white'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:     #fafaf9;
-      --fg:     #111111;
-      --muted:  #6b6b6b;
-      --border: #e0e0de;
-      --btn-bg: #111111;
-      --btn-fg: #fafaf9;
+      --bg:       #ffffff;
+      --fg:       #0d0d0d;
+      --muted:    #767676;
+      --faint:    #b0b0b0;
+      --border:   #e4e4e4;
+      --wrap:     680px;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg:     #111111;
-        --fg:     #f0f0ee;
-        --muted:  #9b9b9b;
-        --border: #2a2a28;
-        --btn-bg: #f0f0ee;
-        --btn-fg: #111111;
+        --bg:     #0d0d0d;
+        --fg:     #efefef;
+        --muted:  #888888;
+        --faint:  #555555;
+        --border: #232323;
       }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
+
     body {
       background: var(--bg);
       color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       font-size: 1rem;
-      line-height: 1.75;
+      line-height: 1.7;
       -webkit-font-smoothing: antialiased;
-      max-width: 100%;
     }
 
-    /* Layout */
-    .container {
-      max-width: 660px;
+    .wrap {
+      max-width: var(--wrap);
       margin: 0 auto;
-      padding: 0 1.5rem;
+      padding: 0 1.75rem;
     }
 
-    /* Nav */
+    /* ── Nav ─────────────────────────────────────────────────────── */
     nav {
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 0;
-      z-index: 100;
+      padding: 1.75rem 0;
     }
-    .nav-inner {
+    .nav-row {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: baseline;
     }
     .nav-brand {
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--fg);
       text-decoration: none;
-      font-size: 0.95rem;
+      letter-spacing: -0.01em;
     }
     .nav-link {
+      font-size: 0.85rem;
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.9rem;
     }
     .nav-link:hover { color: var(--fg); }
 
-    /* Section number label */
-    .sec-num {
-      display: block;
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.75rem;
-    }
-
-    /* Hero */
-    .hero {
-      padding: 7rem 0 5rem;
-      border-top: none;
-    }
-    h1 {
-      font-size: clamp(2rem, 5vw, 3.25rem);
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      line-height: 1.1;
-    }
-    .lead {
-      max-width: 520px;
-      color: var(--muted);
-      margin: 1.5rem 0 2.5rem;
-      font-size: 1.05rem;
-    }
-    .btn {
-      display: inline-block;
-      background: var(--btn-bg);
-      color: var(--btn-fg);
-      padding: 0.65rem 1.5rem;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .btn:hover { opacity: 0.8; }
-
-    /* Sections */
-    section {
-      padding: 5rem 0;
+    /* ── Site header ─────────────────────────────────────────────── */
+    .site-header {
+      padding: 4.5rem 0 6rem;
       border-top: 1px solid var(--border);
     }
-    h2 {
-      font-size: 1.35rem;
+    .product-name {
+      font-size: clamp(3.5rem, 10vw, 6rem);
       font-weight: 700;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      color: var(--fg);
       margin-bottom: 1.25rem;
     }
-
-    /* Feature list */
-    .feature-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .product-tagline {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 3rem;
     }
-    .feature-list li {
-      padding: 0.65rem 0;
-      border-bottom: 1px solid var(--border);
+    .site-desc {
+      font-size: 1.05rem;
+      line-height: 1.75;
       color: var(--fg);
-      font-size: 0.97rem;
+      max-width: 520px;
+      margin-bottom: 2rem;
     }
-    .feature-list li:last-child { border-bottom: none; }
+    .text-cta {
+      display: inline-block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--fg);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+    }
+    .text-cta:hover { color: var(--muted); }
 
-    /* Mock browser chrome */
-    .mock {
-      border: 1px solid var(--border);
-      border-radius: 6px;
+    /* ── Sections ────────────────────────────────────────────────── */
+    .section {
+      padding: 4.5rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .sec-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Feature entries (like rfeasley project cards) ───────────── */
+    .feature {
+      padding: 1.1rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .feature:last-child {
+      border-bottom: 1px solid var(--border);
+    }
+    .feature-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--fg);
+      margin-bottom: 0.2rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 560px;
+    }
+
+    /* ── Phone device mockup ─────────────────────────────────────── */
+    .device-wrap {
+      display: flex;
+      justify-content: center;
+    }
+    .device {
+      width: 260px;
+      background: #111;
+      border-radius: 46px;
+      padding: 12px;
+      box-shadow:
+        0 0 0 1px #2a2a2a,
+        inset 0 0 0 1px #3a3a3a,
+        0 28px 70px rgba(0,0,0,0.22);
+      position: relative;
+    }
+    .device-island {
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 88px;
+      height: 26px;
+      background: #111;
+      border-radius: 14px;
+      z-index: 10;
+    }
+    .device-screen {
+      background: #fafafa;
+      color: #1a1a1a;
+      border-radius: 34px;
       overflow: hidden;
       font-size: 11px;
-      line-height: 1.4;
-      background: #fff;
-      color: #212529;
+      line-height: 1.45;
     }
-    @media (prefers-color-scheme: dark) {
-      .mock { background: #1c1c1a; color: #e8e8e6; }
-    }
-    .mock-bar {
-      background: #f1f3f5;
-      padding: 7px 12px;
+    .device-status {
+      height: 52px;
       display: flex;
-      gap: 5px;
-      align-items: center;
-      border-bottom: 1px solid #dee2e6;
-    }
-    @media (prefers-color-scheme: dark) {
-      .mock-bar { background: #252522; border-color: #2a2a28; }
-    }
-    .mock-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .mock-body { padding: 14px 16px; background: #f8f9fa; }
-    @media (prefers-color-scheme: dark) {
-      .mock-body { background: #1e1e1c; }
-    }
-
-    /* Mock table */
-    .mock-table { width: 100%; border-collapse: collapse; }
-    .mock-table th {
-      padding: 4px 8px;
-      text-align: left;
-      font-weight: 700;
-      font-size: 10.5px;
-      border-bottom: 2px solid #dee2e6;
-      white-space: nowrap;
-    }
-    @media (prefers-color-scheme: dark) {
-      .mock-table th { border-color: #2a2a28; color: #c0c0be; }
-    }
-    .mock-table td {
-      padding: 4px 8px;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 10.5px;
-      white-space: nowrap;
-    }
-    @media (prefers-color-scheme: dark) {
-      .mock-table td { border-color: #252522; }
-    }
-    .mock-table tr:last-child td { border-bottom: none; }
-    .mock-table tr:nth-child(even) td { background: #f8f9fa; }
-    @media (prefers-color-scheme: dark) {
-      .mock-table tr:nth-child(even) td { background: #1a1a18; }
-    }
-    .mock-table .r { text-align: right; }
-
-    /* Mock status tags */
-    .mk-pub {
-      display: inline-block;
-      background: #198754;
-      color: #fff;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 18px 8px;
       font-size: 9.5px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
+      font-weight: 600;
+      color: #1a1a1a;
     }
-
-    /* Mock toggle */
+    .device-home {
+      height: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .device-home-bar {
+      width: 80px; height: 4px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      opacity: 0.18;
+    }
+    .mock-body { padding: 10px 16px 14px; }
+    .mk-title { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+    .mk-sub { font-size: 10px; color: #888; margin-bottom: 12px; }
+    .mk-table { width: 100%; border-collapse: collapse; }
+    .mk-table th {
+      padding: 4px 8px; text-align: left;
+      font-weight: 700; font-size: 10px;
+      border-bottom: 1px solid #e4e4e4;
+      color: #666; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .mk-table td {
+      padding: 5px 8px; font-size: 10.5px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .mk-table tr:last-child td { border-bottom: none; }
+    .mk-r { text-align: right; }
     .mk-toggle {
       display: inline-block;
-      width: 34px;
-      height: 20px;
-      background: #0d6efd;
-      border-radius: 10px;
-      position: relative;
-      vertical-align: middle;
+      width: 28px; height: 16px;
+      background: #0d0d0d;
+      border-radius: 8px;
+      position: relative; vertical-align: middle;
     }
     .mk-toggle::after {
       content: '';
       position: absolute;
-      width: 14px;
-      height: 14px;
-      background: #fff;
+      width: 10px; height: 10px;
+      background: #fafafa;
       border-radius: 50%;
-      top: 3px;
-      right: 3px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      top: 3px; right: 3px;
+    }
+    .mock-caption {
+      font-size: 0.78rem;
+      color: var(--faint);
+      margin-top: 0.85rem;
+      text-align: center;
     }
 
-    /* Caption */
-    .caption {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-top: 0.75rem;
+    /* ── Contact ─────────────────────────────────────────────────── */
+    .contact-links {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
     }
-
-    /* Contact */
     .contact-link {
+      font-size: 0.95rem;
+      font-weight: 500;
       color: var(--fg);
-      font-weight: 600;
-      text-decoration: none;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
     }
-    .contact-link:hover { text-decoration: underline; }
+    .contact-link:hover { color: var(--muted); }
 
-    /* Footer */
+    /* ── Footer ──────────────────────────────────────────────────── */
     footer {
       border-top: 1px solid var(--border);
-      padding: 1.5rem 0;
+      padding: 2rem 0;
+      margin-top: 0;
     }
-    footer p { color: var(--muted); font-size: 0.85rem; margin: 0; }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--fg); }
+    footer p {
+      font-size: 0.8rem;
+      color: var(--faint);
+    }
+    footer a { color: var(--faint); text-decoration: none; }
+    footer a:hover { color: var(--muted); }
 
-    /* Responsive */
-    @media (max-width: 640px) {
-      h1 { font-size: clamp(1.75rem, 6vw, 2.5rem); }
-      .hero { padding: 5rem 0 3rem; }
-      section { padding: 3rem 0; }
+    @media (max-width: 580px) {
+      .product-name { letter-spacing: -0.03em; }
+      .site-header  { padding: 3rem 0 4rem; }
+      .section      { padding: 3rem 0; }
     }
   </style>
 </head>
 <body>
 
+<div class="wrap">
+
   <!-- Nav -->
   <nav>
-    <div class="container nav-inner">
+    <div class="nav-row">
       <a href="#" class="nav-brand">Team Manager</a>
-      <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+      <a href="https://github.com/kleineLoesungen/team-manager"
+         target="_blank" rel="noopener" class="nav-link">GitHub</a>
     </div>
   </nav>
 
-  <!-- 01 Hero -->
-  <section class="hero">
-    <div class="container">
-      <span class="sec-num">01</span>
-      <h1>Wer spielt wann?<br>Endlich eine Antwort.</h1>
-      <p class="lead">Viele Mitglieder, viele Spiele — die Antworten stecken in WhatsApp-Chats und Excel-Tabellen. Team Manager bringt Anwesenheit, Statistik, Dokumente und Live-Ticker an einem Ort zusammen.</p>
-      <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener" class="btn">Auf GitHub ansehen</a>
+  <!-- Header -->
+  <header class="site-header">
+    <h1 class="product-name">Team<br>Manager</h1>
+    <p class="product-tagline">Listen &middot; Statistik &middot; Live-Ticker</p>
+    <p class="site-desc">
+      Viele Mitglieder, viele Spiele — die Antworten stecken in WhatsApp-Chats und
+      Excel-Tabellen. Team Manager bringt Anwesenheit, Statistik, Dokumente und
+      Live-Ticker an einem Ort zusammen.
+    </p>
+    <a href="https://github.com/kleineLoesungen/team-manager"
+       target="_blank" rel="noopener" class="text-cta">Auf GitHub ansehen →</a>
+  </header>
+
+  <!-- 01 Funktionen -->
+  <section class="section" id="funktionen">
+    <span class="sec-label">01 &mdash; Funktionen</span>
+
+    <div class="feature">
+      <p class="feature-name">Flexible Listen</p>
+      <p class="feature-desc">Eigene Spalten für jede Liste — Zahlen, Text, Ja/Nein. Mitglieder tragen ihre Daten selbst ein, Koordinatoren behalten den Überblick.</p>
+    </div>
+    <div class="feature">
+      <p class="feature-name">Globale Statistik</p>
+      <p class="feature-desc">Listenübergreifende Auswertung pro Mitglied, filterbar nach Zeitraum und Zeitfenstern. Wer ist wie oft dabei — auf einen Blick.</p>
+    </div>
+    <div class="feature">
+      <p class="feature-name">Live-Ticker</p>
+      <p class="feature-desc">Echtzeit-Updates direkt vom Spielfeld. Öffentlich abrufbar ohne Login — Tore, Karten, Auswechslungen für Familie und Fans.</p>
+    </div>
+    <div class="feature">
+      <p class="feature-name">Markdown-Dokumente</p>
+      <p class="feature-desc">Spielanalysen, Ankündigungen, taktische Hinweise — direkt im Team geteilt, kein externes Tool nötig.</p>
+    </div>
+    <div class="feature">
+      <p class="feature-name">Kalender &amp; ICS-Export</p>
+      <p class="feature-desc">Datierte Listen in der Wochenansicht. Alle Termine per ICS in Apple Kalender, Google oder Outlook abonnieren.</p>
+    </div>
+    <div class="feature">
+      <p class="feature-name">E-Mail-Benachrichtigungen</p>
+      <p class="feature-desc">Ein Klick informiert alle Mitglieder — direkt aus Liste oder Dokument, mit Link zum Inhalt.</p>
+    </div>
+    <div class="feature">
+      <p class="feature-name">Mehrere Teams, ein Admin</p>
+      <p class="feature-desc">Zentrale Verwaltung von Teams und Koordinatoren. Jedes Team arbeitet unabhängig, Daten bleiben sauber getrennt.</p>
     </div>
   </section>
 
-  <!-- 02 Funktionen -->
-  <section id="funktionen">
-    <div class="container">
-      <span class="sec-num">02</span>
-      <h2>Funktionen</h2>
-      <ul class="feature-list">
-        <li><strong>Flexible Listen</strong> — eigene Spalten für jede Liste; Mitglieder tragen ihre Daten selbst ein.</li>
-        <li><strong>Globale Statistik</strong> — listenübergreifende Auswertung pro Mitglied, filterbar nach Zeitraum.</li>
-        <li><strong>Live-Ticker</strong> — Echtzeit-Updates vom Spielfeld, öffentlich ohne Login.</li>
-        <li><strong>Markdown-Dokumente</strong> — Spielanalysen und Ankündigungen direkt im Team geteilt.</li>
-        <li><strong>Kalender &amp; ICS</strong> — datierte Listen in der Wochenansicht, Abonnement für Apple/Google/Outlook.</li>
-        <li><strong>E-Mail-Benachrichtigungen</strong> — ein Klick, alle Mitglieder informiert, mit Link zum Inhalt.</li>
-        <li><strong>Mehrere Teams, ein Admin</strong> — zentrale Verwaltung; jedes Team arbeitet unabhängig.</li>
-      </ul>
-    </div>
-  </section>
+  <!-- 02 Einblicke -->
+  <section class="section" id="einblicke">
+    <span class="sec-label">02 &mdash; Einblicke</span>
 
-  <!-- 03 Einblicke -->
-  <section id="einblicke">
-    <div class="container">
-      <span class="sec-num">03</span>
-      <h2>So sieht es aus</h2>
-      <div class="mock">
-        <div class="mock-bar">
-          <div class="mock-dot" style="background:#ff5f57"></div>
-          <div class="mock-dot" style="background:#febc2e"></div>
-          <div class="mock-dot" style="background:#28c840"></div>
-        </div>
-        <div class="mock-body">
-          <div style="font-weight:800;font-size:14px;margin-bottom:5px;">Training 18.07.26</div>
-          <div style="margin-bottom:12px;">
-            <span class="mk-pub">Öffentlich</span>
-            <span style="color:#6c757d;font-size:10px;margin-left:8px;">18.07.2026</span>
+    <div class="device-wrap">
+      <div class="device">
+        <div class="device-island"></div>
+        <div class="device-screen">
+          <div class="device-status">
+            <span>9:41</span>
+            <span style="letter-spacing:0.05em;font-size:8px;">&#9679;&#9679;&#9679;&#9679;</span>
           </div>
-          <table class="mock-table">
-            <thead>
-              <tr>
-                <th style="width:100%">Mitglied</th>
-                <th>Training</th>
-                <th>Tore</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Tobias B.</td><td><span class="mk-toggle"></span></td><td class="r">2</td></tr>
-              <tr><td>Felix W.</td><td><span class="mk-toggle"></span></td><td class="r">1</td></tr>
-              <tr><td>Stefan H.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
-              <tr><td>Lukas M.</td><td><span class="mk-toggle"></span></td><td class="r">1</td></tr>
-              <tr><td>Simon L.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
-              <tr><td>Jan P.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
-              <tr><td>Markus R.</td><td><span class="mk-toggle"></span></td><td class="r">3</td></tr>
-              <tr><td>Moritz T.</td><td><span class="mk-toggle"></span></td><td class="r">—</td></tr>
-            </tbody>
-          </table>
+          <div class="mock-body">
+            <p class="mk-title">Training 18.07.26</p>
+            <p class="mk-sub">Öffentlich &middot; 18.07.2026</p>
+            <table class="mk-table">
+              <thead>
+                <tr>
+                  <th style="width:52%">Mitglied</th>
+                  <th>Training</th>
+                  <th>Tore</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Tobias B.</td><td><span class="mk-toggle"></span></td><td class="mk-r">2</td></tr>
+                <tr><td>Felix W.</td><td><span class="mk-toggle"></span></td><td class="mk-r">1</td></tr>
+                <tr><td>Stefan H.</td><td><span class="mk-toggle"></span></td><td class="mk-r">—</td></tr>
+                <tr><td>Lukas M.</td><td><span class="mk-toggle"></span></td><td class="mk-r">1</td></tr>
+                <tr><td>Markus R.</td><td><span class="mk-toggle"></span></td><td class="mk-r">3</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="device-home"><div class="device-home-bar"></div></div>
         </div>
       </div>
-      <p class="caption">Listen — Mitglieder tragen ihre Daten selbst ein</p>
     </div>
+    <p class="mock-caption">Mitglieder tragen ihre Daten selbst ein — der Koordinator sieht alles auf einen Blick.</p>
   </section>
 
-  <!-- 04 Kontakt -->
-  <section id="kontakt">
-    <div class="container">
-      <span class="sec-num">04</span>
-      <h2>Fragen oder Unterstützung?</h2>
-      <p>Für Einrichtung, Fragen oder individuelle Anpassungen stehe ich gerne zur Verfügung.</p>
-      <br>
+  <!-- 03 Kontakt -->
+  <section class="section" id="kontakt">
+    <span class="sec-label">03 &mdash; Kontakt</span>
+    <p style="font-size:0.95rem; color:var(--muted); margin-bottom:1.5rem; max-width:420px;">
+      Für Einrichtung, Fragen oder individuelle Anpassungen — melde dich gerne.
+    </p>
+    <div class="contact-links">
       <a href="https://www.se-wi.com" target="_blank" rel="noopener" class="contact-link">se-wi.com</a>
+      <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener" class="contact-link">GitHub</a>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <p>&copy; 2026 Team Manager &middot; <a href="https://github.com/kleineLoesungen/team-manager" target="_blank" rel="noopener">Open Source</a></p>
-    </div>
-  </footer>
+</div><!-- /wrap -->
+
+<footer>
+  <div class="wrap">
+    <p>&copy; 2026 Team Manager &middot; Open Source &middot; PHP 8.3 &middot; PostgreSQL</p>
+  </div>
+</footer>
 
 </body>
 </html>
