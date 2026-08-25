@@ -135,6 +135,24 @@ foreach ($lists as $list) {
     }
     $out .= foldIcsLine("URL:{$list_url}") . "\r\n";
     $out .= foldIcsLine("DESCRIPTION:{$description_value}") . "\r\n";
+    if ($has_time) {
+        [$h, $m]    = explode(':', $ts);
+        $offset_min = 480 - ((int)$h * 60 + (int)$m);
+        if ($offset_min < 0) {
+            $list_trigger = 'TRIGGER:-PT' . abs($offset_min) . 'M';
+        } elseif ($offset_min > 0) {
+            $list_trigger = 'TRIGGER:PT' . $offset_min . 'M';
+        } else {
+            $list_trigger = 'TRIGGER:PT0S';
+        }
+    } else {
+        $list_trigger = 'TRIGGER:PT8H';
+    }
+    $out .= "BEGIN:VALARM\r\n";
+    $out .= "{$list_trigger}\r\n";
+    $out .= "ACTION:DISPLAY\r\n";
+    $out .= "DESCRIPTION:Erinnerung: " . escapeIcsField($list['name']) . "\r\n";
+    $out .= "END:VALARM\r\n";
     $out .= "END:VEVENT\r\n";
 }
 
