@@ -90,18 +90,18 @@ declare(strict_types=1);
     <div class="card-header fw-semibold"><?= e($group_name) ?></div>
     <div class="card-body">
         <?php foreach ($group['attrs'] as $attr): ?>
+        <?php
+            $is_date  = ($attr['data_type'] ?? 'text') === 'date';
+            $disp_val = $attr['value'];
+            if ($is_date && $disp_val !== '') {
+                try { $disp_val = (new DateTime($disp_val))->format('d.m.Y'); } catch (\Exception $ex) {}
+            }
+        ?>
         <div class="mb-3">
             <label class="form-label fw-medium mb-1"><?= e($attr['attr_name']) ?></label>
-            <?php if ($attr['editable_by_player']): ?>
-            <!-- TODO: member-editable attribute save is not in scope for this phase; shown read-only -->
-            <p class="form-control-plaintext py-0 mb-0 text-<?= $attr['value'] !== '' ? 'body' : 'muted' ?>">
-                <?= $attr['value'] !== '' ? e($attr['value']) : '—' ?>
+            <p class="form-control-plaintext py-0 mb-0 text-<?= $disp_val !== '' ? 'body' : 'muted' ?>">
+                <?= $disp_val !== '' ? e($disp_val) : '—' ?>
             </p>
-            <?php else: ?>
-            <p class="form-control-plaintext py-0 mb-0 text-<?= $attr['value'] !== '' ? 'body' : 'muted' ?>">
-                <?= $attr['value'] !== '' ? e($attr['value']) : '—' ?>
-            </p>
-            <?php endif; ?>
         </div>
         <?php endforeach; ?>
     </div>

@@ -87,9 +87,9 @@ $active_teams = array_filter(
         <div class="mb-3">
             <div class="small fw-medium text-muted mb-2">Mein Team</div>
             <?php if (!empty($my_linked)): ?>
-            <?php foreach ($my_linked as $u): ?>
-            <div class="d-flex justify-content-between align-items-center gap-2 py-1">
-                <div>
+            <?php foreach ($my_linked as $idx => $u): ?>
+            <div class="<?= $idx > 0 ? 'border-top pt-2 mt-1' : '' ?> pb-2">
+                <div class="mb-2">
                     <span class="fw-medium"><i class="bi bi-person me-1"></i><?= e($u['username']) ?></span>
                     <?php if (!$u['user_active']): ?>
                     <span class="badge bg-secondary ms-1">Inaktiv</span>
@@ -98,7 +98,7 @@ $active_teams = array_filter(
                     <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($u['user_email']) ?></div>
                     <?php endif; ?>
                 </div>
-                <div class="d-flex gap-1 flex-shrink-0 flex-wrap">
+                <div class="d-flex gap-1 flex-wrap">
                     <form method="POST" action="/coordinator/members/<?= (int)$u['user_id'] ?>/reset-password"
                           onsubmit="return confirm('Das Passwort wird zurückgesetzt und einmalig angezeigt.')">
                         <?= csrf_field() ?>
@@ -175,11 +175,21 @@ $active_teams = array_filter(
                     <span class="badge bg-secondary ms-1" style="font-size:0.65rem">Nur Koordinator</span>
                     <?php endif; ?>
                 </label>
+                <?php if (($attr['data_type'] ?? 'text') === 'date'): ?>
+                <input type="date"
+                       class="form-control form-control-sm"
+                       name="values[<?= (int)$attr['attr_id'] ?>]"
+                       value="<?= e($attr['value']) ?>">
+                <?php if ($attr['value'] !== ''): ?>
+                <div class="form-text"><?= e((new DateTime($attr['value']))->format('d.m.Y')) ?></div>
+                <?php endif; ?>
+                <?php else: ?>
                 <input type="text"
                        class="form-control form-control-sm"
                        name="values[<?= (int)$attr['attr_id'] ?>]"
                        value="<?= e($attr['value']) ?>"
                        placeholder="Kein Wert">
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>

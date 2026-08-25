@@ -23,13 +23,14 @@ if ($action === 'create') {
     $sort_order = (int)($_POST['sort_order'] ?? 0);
     $visible    = !empty($_POST['visible_to_player']);
     $editable   = !empty($_POST['editable_by_player']);
+    $data_type  = in_array($_POST['data_type'] ?? '', ['text', 'date']) ? $_POST['data_type'] : 'text';
     if (empty($name) || mb_strlen($name) > 100) {
         redirect('/admin/attributes?error=' . urlencode('Attributname erforderlich (max. 100 Zeichen).'));
     }
     $pdo->prepare(
-        "INSERT INTO member_attributes (group_id, name, visible_to_player, editable_by_player, sort_order)
-         VALUES (?, ?, ?, ?, ?)"
-    )->execute([$group_id, $name, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order]);
+        "INSERT INTO member_attributes (group_id, name, data_type, visible_to_player, editable_by_player, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?)"
+    )->execute([$group_id, $name, $data_type, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order]);
     redirect('/admin/attributes');
 
 } elseif ($action === 'edit') {
@@ -38,13 +39,14 @@ if ($action === 'create') {
     $sort_order = (int)($_POST['sort_order'] ?? 0);
     $visible    = !empty($_POST['visible_to_player']);
     $editable   = !empty($_POST['editable_by_player']);
+    $data_type  = in_array($_POST['data_type'] ?? '', ['text', 'date']) ? $_POST['data_type'] : 'text';
     if (empty($name) || mb_strlen($name) > 100) {
         redirect('/admin/attributes?error=' . urlencode('Attributname erforderlich.'));
     }
     $pdo->prepare(
-        "UPDATE member_attributes SET name=?, visible_to_player=?, editable_by_player=?, sort_order=?
+        "UPDATE member_attributes SET name=?, data_type=?, visible_to_player=?, editable_by_player=?, sort_order=?
          WHERE id=?"
-    )->execute([$name, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order, $attr_id]);
+    )->execute([$name, $data_type, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order, $attr_id]);
     redirect('/admin/attributes');
 
 } elseif ($action === 'delete') {

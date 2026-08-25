@@ -76,7 +76,7 @@ $unlinked_my_members = $ul_stmt->fetchAll();
 // Attribute groups + values
 $attr_stmt = $pdo->prepare(
     "SELECT pag.name AS group_name, pag.sort_order AS group_order,
-            pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_order,
+            pa.id AS attr_id, pa.name AS attr_name, pa.data_type, pa.sort_order AS attr_order,
             pa.visible_to_player, pa.editable_by_player,
             COALESCE(pav.value, '') AS value
      FROM member_attribute_groups pag

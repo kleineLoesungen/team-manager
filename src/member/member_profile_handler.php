@@ -52,7 +52,7 @@ if ($member_id) {
     $attr_stmt = $pdo->prepare(
         "SELECT pag.name AS group_name, pag.sort_order AS group_order,
                 pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_order,
-                pa.editable_by_player,
+                pa.editable_by_player, pa.data_type,
                 COALESCE(pav.value, '') AS value
          FROM member_attribute_groups pag
          JOIN member_attributes pa ON pa.group_id = pag.id

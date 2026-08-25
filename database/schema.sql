@@ -236,6 +236,8 @@ CREATE TABLE IF NOT EXISTS team_manager.member_attributes (
     id                 SERIAL PRIMARY KEY,
     group_id           INTEGER NOT NULL REFERENCES team_manager.member_attribute_groups(id) ON DELETE CASCADE,
     name               VARCHAR(100) NOT NULL,
+    data_type          VARCHAR(10)  NOT NULL DEFAULT 'text'
+                       CHECK (data_type IN ('text', 'date')),
     visible_to_player  BOOLEAN NOT NULL DEFAULT TRUE,
     editable_by_player BOOLEAN NOT NULL DEFAULT FALSE,
     sort_order         INTEGER NOT NULL DEFAULT 0,

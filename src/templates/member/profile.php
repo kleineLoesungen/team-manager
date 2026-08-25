@@ -123,13 +123,27 @@ foreach ($attr_groups as $g) {
         <?php foreach ($group['attrs'] as $attr): ?>
         <div class="mb-3">
             <label class="form-label fw-medium mb-1"><?= e($attr['attr_name']) ?></label>
+            <?php $is_date = ($attr['data_type'] ?? 'text') === 'date'; ?>
             <?php if ($attr['editable_by_player']): ?>
-            <input type="text" class="form-control"
-                   name="values[<?= (int)$attr['attr_id'] ?>]"
-                   value="<?= e($attr['value']) ?>">
+                <?php if ($is_date): ?>
+                <input type="date" class="form-control"
+                       name="values[<?= (int)$attr['attr_id'] ?>]"
+                       value="<?= e($attr['value']) ?>">
+                <?php if ($attr['value'] !== ''): ?>
+                <div class="form-text"><?= e((new DateTime($attr['value']))->format('d.m.Y')) ?></div>
+                <?php endif; ?>
+                <?php else: ?>
+                <input type="text" class="form-control"
+                       name="values[<?= (int)$attr['attr_id'] ?>]"
+                       value="<?= e($attr['value']) ?>">
+                <?php endif; ?>
             <?php else: ?>
             <p class="form-control-plaintext py-0 mb-0 <?= $attr['value'] !== '' ? '' : 'text-muted' ?>">
+                <?php if ($attr['value'] !== '' && $is_date): ?>
+                <?= e((new DateTime($attr['value']))->format('d.m.Y')) ?>
+                <?php else: ?>
                 <?= $attr['value'] !== '' ? e($attr['value']) : '—' ?>
+                <?php endif; ?>
             </p>
             <?php endif; ?>
         </div>

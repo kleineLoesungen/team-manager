@@ -10,7 +10,7 @@ $pdo = get_db();
 $stmt = $pdo->query(
     "SELECT pag.id AS group_id, pag.name AS group_name, pag.sort_order AS group_sort,
             pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_sort,
-            pa.visible_to_player, pa.editable_by_player
+            pa.visible_to_player, pa.editable_by_player, pa.data_type
      FROM member_attribute_groups pag
      LEFT JOIN member_attributes pa ON pa.group_id = pag.id
      ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
@@ -36,6 +36,7 @@ foreach ($rows as $row) {
             'sort_order'         => $row['attr_sort'],
             'visible_to_player'  => $row['visible_to_player'],
             'editable_by_player' => $row['editable_by_player'],
+            'data_type'          => $row['data_type'] ?? 'text',
         ];
     }
 }

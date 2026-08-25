@@ -82,6 +82,45 @@ if ($showCalendar) {
     $scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics?role=coordinator';
+
+    // Load date-type attribute entries (e.g. birthdays) for active members in this team
+    $attr_date_stmt = $pdo->prepare(
+        "SELECT m.first_name, m.last_name, ma.name AS attr_name, mav.value
+         FROM member_attribute_values mav
+         JOIN member_attributes ma ON ma.id = mav.attribute_id AND ma.data_type = 'date'
+         JOIN members m ON m.id = mav.member_id
+         JOIN users u ON u.member_id = m.id AND u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
+         WHERE mav.value != ''
+         ORDER BY m.last_name ASC, m.first_name ASC"
+    );
+    $attr_date_stmt->execute([$_SESSION['team_id']]);
+    $current_year = (int)$now->format('Y');
+    foreach ($attr_date_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        try {
+            $orig  = new DateTime($row['value']);
+            $month = (int)$orig->format('n');
+            $day   = (int)$orig->format('j');
+            // Feb 29 falls back to Feb 28 in non-leap years
+            if ($month === 2 && $day === 29 && !checkdate(2, 29, $current_year)) {
+                $day = 28;
+            }
+            $this_year_date = sprintf('%04d-%02d-%02d', $current_year, $month, $day);
+        } catch (\Exception $e) {
+            continue;
+        }
+        if ($this_year_date < $boundaries['start'] || $this_year_date > $boundaries['end']) {
+            continue;
+        }
+        $birth_year = (int)$orig->format('Y');
+        $datedItems[] = [
+            'date'      => $this_year_date,
+            'name'      => $row['first_name'] . ' ' . $row['last_name'],
+            'attr_name' => $row['attr_name'],
+            'age'       => $birth_year < $current_year ? $current_year - $birth_year : null,
+            'type'      => 'attr_date',
+        ];
+    }
+    usort($datedItems, fn($a, $b) => strcmp($a['date'], $b['date']));
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';

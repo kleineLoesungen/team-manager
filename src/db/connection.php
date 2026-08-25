@@ -1364,6 +1364,24 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 028 skipped — ' . $e->getMessage());
     }
 
+    // Migration 029: data_type column on member_attributes (text | date)
+    try {
+        $col_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema = '{$schema}' AND table_name = 'member_attributes' AND column_name = 'data_type'"
+        )->fetchColumn();
+        if (!$col_exists) {
+            $pdo->exec(
+                "ALTER TABLE {$schema}.member_attributes
+                 ADD COLUMN IF NOT EXISTS data_type VARCHAR(10) NOT NULL DEFAULT 'text'
+                 CHECK (data_type IN ('text', 'date'))"
+            );
+            error_log('team-manager: migration 029 member_attributes.data_type column added');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 029 skipped — ' . $e->getMessage());
+    }
+
 }
 
 /**

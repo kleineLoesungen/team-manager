@@ -84,6 +84,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Name</th>
+                        <th>Typ</th>
                         <th class="text-center">Sichtbar</th>
                         <th class="text-center">Editierbar</th>
                         <th>Reihenfolge</th>
@@ -101,6 +102,12 @@
                                 <input type="text" class="form-control form-control-sm" name="name"
                                        value="<?= e($attr['name']) ?>" maxlength="100" required
                                        style="min-width:120px">
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm" name="data_type" style="min-width:90px">
+                                    <option value="text" <?= ($attr['data_type'] ?? 'text') === 'text' ? 'selected' : '' ?>>Text</option>
+                                    <option value="date" <?= ($attr['data_type'] ?? 'text') === 'date' ? 'selected' : '' ?>>Datum</option>
+                                </select>
                             </td>
                             <td class="text-center">
                                 <div class="form-check form-switch d-flex justify-content-center mb-0">
@@ -150,10 +157,17 @@
             <form method="POST" action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/create"
                   class="row g-2 align-items-end">
                 <?= csrf_field() ?>
-                <div class="col-12 col-sm-4">
+                <div class="col-12 col-sm-3">
                     <label class="form-label mb-1 small">Name</label>
                     <input type="text" class="form-control form-control-sm" name="name"
-                           maxlength="100" required placeholder="z.B. Telefon, Geburtsdatum …">
+                           maxlength="100" required placeholder="z.B. Geburtsdatum …">
+                </div>
+                <div class="col-6 col-sm-2">
+                    <label class="form-label mb-1 small">Typ</label>
+                    <select class="form-select form-select-sm" name="data_type">
+                        <option value="text">Text</option>
+                        <option value="date">Datum</option>
+                    </select>
                 </div>
                 <div class="col-6 col-sm-2">
                     <label class="form-label mb-1 small">Reihenfolge</label>
@@ -175,9 +189,9 @@
                         <label class="form-check-label small" for="editable_new_<?= (int)$group['id'] ?>">Mitglied</label>
                     </div>
                 </div>
-                <div class="col-6 col-sm-2">
+                <div class="col-6 col-sm-1">
                     <button type="submit" class="btn btn-sm btn-primary w-100">
-                        <i class="bi bi-plus-lg me-1"></i>Hinzufügen
+                        <i class="bi bi-plus-lg"></i>
                     </button>
                 </div>
             </form>

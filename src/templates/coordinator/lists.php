@@ -121,6 +121,22 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
         </h6>
     <?php endif; ?>
 
+    <?php if ($item['type'] === 'attr_date'): ?>
+    <div class="card card-sm mb-2 border-0 bg-body-secondary">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-balloon-heart text-muted flex-shrink-0"></i>
+                <div class="flex-grow-1 min-w-0">
+                    <span class="fw-semibold"><?= e($item['name']) ?></span>
+                    <span class="text-muted small ms-1">· <?= e($item['attr_name']) ?></span>
+                    <?php if ($item['age'] !== null): ?>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1"><?= (int)$item['age'] ?> J.</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
     <?php
     $is_file    = ($item['type'] === 'file');
     $detail_url = $is_file
@@ -151,6 +167,7 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
             </div>
         </div>
     </div>
+    <?php endif; ?>
     <?php endforeach; ?>
     <?php if ($currentDate !== null): echo '</div>'; endif; ?>
 </div>
