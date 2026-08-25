@@ -22,15 +22,17 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    $title      = trim($_POST['title'] ?? '');
+    $title       = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
-    $icon       = trim($_POST['icon'] ?? 'bi-calendar-event');
-    $date       = trim($_POST['date'] ?? '');
-    $is_all_day = !empty($_POST['is_all_day']);
-    $time_start = trim($_POST['time_start'] ?? '');
-    $time_end   = trim($_POST['time_end'] ?? '');
-    $visibility = in_array($_POST['visibility'] ?? '', ['protected', 'private'], true)
+    $location    = trim($_POST['location'] ?? '');
+    $icon        = trim($_POST['icon'] ?? 'bi-calendar-event');
+    $date        = trim($_POST['date'] ?? '');
+    $is_all_day  = !empty($_POST['is_all_day']);
+    $time_start  = trim($_POST['time_start'] ?? '');
+    $time_end    = trim($_POST['time_end'] ?? '');
+    $visibility  = in_array($_POST['visibility'] ?? '', ['protected', 'private'], true)
         ? $_POST['visibility'] : 'protected';
+    $is_hidden   = isset($_POST['is_hidden']) && $_POST['is_hidden'] === '1';
 
     if ($title === '' || mb_strlen($title) > 200) {
         $error = 'Titel erforderlich (max. 200 Zeichen).';
@@ -38,21 +40,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Datum erforderlich.';
     } else {
         $pdo->prepare(
-            "UPDATE events SET title=?, description=?, icon=?, date=?, is_all_day=?, time_start=?, time_end=?, visibility=?
+            "UPDATE events SET title=?, description=?, location=?, icon=?, date=?, is_all_day=?, time_start=?, time_end=?, visibility=?, is_hidden=?
              WHERE id=? AND team_id=?"
         )->execute([
             $title,
             $description !== '' ? $description : null,
+            $location !== '' ? $location : null,
             $icon !== '' ? $icon : 'bi-calendar-event',
             $date,
             $is_all_day ? 'true' : 'false',
             (!$is_all_day && $time_start !== '') ? $time_start : null,
             (!$is_all_day && $time_end !== '') ? $time_end : null,
             $visibility,
+            $is_hidden ? 'true' : 'false',
             $event_id,
             $team_id,
         ]);
-        redirect('/coordinator/lists?success=1');
+        $back = $_POST['_back'] ?? '';
+        $back = preg_match('#^/coordinator/lists(\?[^<>"\']*)?$#', $back) ? $back : '/coordinator/lists';
+        redirect(str_contains($back, '?') ? $back . '&success=1' : $back . '?success=1');
     }
 }
 

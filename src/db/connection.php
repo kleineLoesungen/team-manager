@@ -1442,6 +1442,34 @@ function maybe_migrate_db(PDO $pdo): void {
     }
     define('DB_HAS_EVENTS', $events_exists);
 
+    // Migration 031: add location column to events table
+    try {
+        $col = $pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema = '{$schema}' AND table_name = 'events' AND column_name = 'location'"
+        )->fetchColumn();
+        if (!$col) {
+            $pdo->exec("ALTER TABLE {$schema}.events ADD COLUMN location VARCHAR(255) NULL");
+            error_log('team-manager: migration 031 events.location added');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 031 skipped — ' . $e->getMessage());
+    }
+
+    // Migration 032: add is_hidden column to events table (default true)
+    try {
+        $col = $pdo->query(
+            "SELECT 1 FROM information_schema.columns
+             WHERE table_schema = '{$schema}' AND table_name = 'events' AND column_name = 'is_hidden'"
+        )->fetchColumn();
+        if (!$col) {
+            $pdo->exec("ALTER TABLE {$schema}.events ADD COLUMN is_hidden BOOLEAN NOT NULL DEFAULT TRUE");
+            error_log('team-manager: migration 032 events.is_hidden added');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 032 skipped — ' . $e->getMessage());
+    }
+
 }
 
 /**

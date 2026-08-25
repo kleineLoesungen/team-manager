@@ -17,8 +17,14 @@ if ($team_id <= 0) {
 
 $pdo = get_db();
 
-// Set RLS context so public/protected lists are visible without auth (D-10)
-set_team_context($pdo, $team_id);
+// When role=coordinator, set coordinator context so private events are visible
+$role_param = $_REQUEST['role'] ?? '';
+$is_coordinator_feed = ($role_param === 'coordinator');
+if ($is_coordinator_feed) {
+    set_team_context($pdo, $team_id, 'coordinator');
+} else {
+    set_team_context($pdo, $team_id);
+}
 
 // Verify team exists and is active
 $team_stmt = $pdo->prepare(
@@ -57,10 +63,11 @@ $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Fetch protected events for this team (private events excluded — coordinator-only)
 $events = [];
 if (defined('DB_HAS_EVENTS') && DB_HAS_EVENTS) {
+    $vis_clause = $is_coordinator_feed ? "visibility IN ('protected', 'private')" : "visibility = 'protected'";
     $e_stmt = $pdo->prepare(
-        "SELECT id, title, description, icon, date, is_all_day, time_start, time_end
+        "SELECT id, title, description, location, icon, date, is_all_day, time_start, time_end
          FROM events
-         WHERE team_id = ? AND visibility = 'protected' AND date IS NOT NULL
+         WHERE team_id = ? AND {$vis_clause} AND date IS NOT NULL
          ORDER BY date ASC"
     );
     $e_stmt->execute([$team_id]);
@@ -156,8 +163,20 @@ foreach ($lists as $list) {
     $out .= "END:VEVENT\r\n";
 }
 
+$icon_emoji = [
+    'bi-calendar-event'       => '📅',
+    'bi-people-fill'          => '👥',
+    'bi-star-fill'            => '⭐',
+    'bi-gift-fill'            => '🎁',
+    'bi-chat-dots-fill'       => '💬',
+    'bi-flag-fill'            => '🚩',
+    'bi-question-circle-fill' => '❓',
+];
+
 foreach ($events as $ev) {
     $uid = md5('event-' . $team_id . '-' . $ev['id']) . '@team-manager.local';
+    $emoji  = $icon_emoji[$ev['icon'] ?? ''] ?? '📅';
+    $summary = $emoji . ' ' . $ev['title'];
 
     $dt_date = str_replace('-', '', $ev['date']);
 
@@ -203,14 +222,17 @@ foreach ($events as $ev) {
     $out .= "DTSTAMP:{$dtstamp}\r\n";
     $out .= foldIcsLine($dtstart_line) . "\r\n";
     $out .= foldIcsLine($dtend_line)   . "\r\n";
-    $out .= "SUMMARY:" . escapeIcsField($ev['title']) . "\r\n";
+    $out .= "SUMMARY:" . escapeIcsField($summary) . "\r\n";
+    if (!empty($ev['location'])) {
+        $out .= foldIcsLine("LOCATION:" . escapeIcsField($ev['location'])) . "\r\n";
+    }
     if ($description_value !== '') {
         $out .= foldIcsLine("DESCRIPTION:{$description_value}") . "\r\n";
     }
     $out .= "BEGIN:VALARM\r\n";
     $out .= "{$valarm_trigger}\r\n";
     $out .= "ACTION:DISPLAY\r\n";
-    $out .= "DESCRIPTION:Erinnerung: " . escapeIcsField($ev['title']) . "\r\n";
+    $out .= "DESCRIPTION:Erinnerung: " . escapeIcsField($summary) . "\r\n";
     $out .= "END:VALARM\r\n";
     $out .= "END:VEVENT\r\n";
 }

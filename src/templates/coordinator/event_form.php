@@ -14,28 +14,30 @@ $v_date       = $is_edit ? $event['date']         : '';
 $v_all_day    = $is_edit ? (bool)$event['is_all_day'] : true;
 $v_time_start = $is_edit ? (substr((string)($event['time_start'] ?? ''), 0, 5)) : '';
 $v_time_end   = $is_edit ? (substr((string)($event['time_end']   ?? ''), 0, 5)) : '';
+$v_location   = $is_edit ? ($event['location']    ?? '') : '';
+$v_hidden     = $is_edit ? (bool)$event['is_hidden'] : true;
 $v_visibility = $is_edit ? $event['visibility']   : 'protected';
 
 $icons = [
-    'bi-calendar-event'  => 'Termin',
-    'bi-people-fill'     => 'Team',
-    'bi-trophy-fill'     => 'Spiel / Turnier',
-    'bi-geo-alt-fill'    => 'Auswärtsspiel',
-    'bi-house-fill'      => 'Heimspiel',
-    'bi-lightning-fill'  => 'Training',
-    'bi-chat-dots-fill'  => 'Besprechung',
-    'bi-flag-fill'       => 'Wichtig',
+    'bi-calendar-event'       => 'Termin',
+    'bi-people-fill'          => 'Team',
+    'bi-star-fill'            => 'Veranstaltung',
+    'bi-gift-fill'            => 'Geburtstag',
+    'bi-chat-dots-fill'       => 'Besprechung',
+    'bi-flag-fill'            => 'Wichtig',
+    'bi-question-circle-fill' => 'Vorläufig',
 ];
 ?>
 
 <div class="mb-3">
-    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a href="/coordinator/lists" id="js-back-btn" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
 </div>
 
 <form method="POST" action="<?= e($action) ?>" novalidate>
     <?= csrf_field() ?>
+    <input type="hidden" name="_back" id="js-back-url" value="/coordinator/lists">
 
     <div class="card mb-3">
         <div class="card-header fw-semibold"><?= $is_edit ? 'Termin bearbeiten' : 'Neuer Termin' ?></div>
@@ -100,11 +102,29 @@ $icons = [
                 </div>
             </div>
 
+            <!-- Location -->
+            <div class="mb-3">
+                <label class="form-label">Ort <span class="text-muted small">(optional)</span></label>
+                <input type="text" class="form-control" name="location"
+                       value="<?= e($v_location) ?>" maxlength="255"
+                       placeholder="z. B. Sportplatz, Turnhalle …">
+            </div>
+
             <!-- Description -->
             <div class="mb-3">
                 <label class="form-label">Beschreibung <span class="text-muted small">(optional)</span></label>
                 <textarea class="form-control" name="description" rows="3"
-                          placeholder="Treffpunkt, Hinweise …"><?= e($v_desc) ?></textarea>
+                          placeholder="Hinweise, Infos …"><?= e($v_desc) ?></textarea>
+            </div>
+
+            <!-- Hidden in list view -->
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch"
+                           id="is_hidden" name="is_hidden" value="1"
+                           <?= $v_hidden ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="is_hidden">In Listenansicht verstecken</label>
+                </div>
             </div>
 
             <!-- Visibility -->
@@ -143,6 +163,7 @@ $icons = [
         <form method="POST" action="/coordinator/events/<?= (int)$event['id'] ?>/delete"
               onsubmit="return confirm('Termin «<?= e($event['title']) ?>» löschen?')">
             <?= csrf_field() ?>
+            <input type="hidden" name="_back" id="js-delete-back-url" value="/coordinator/lists">
             <button type="submit" class="btn btn-outline-danger min-touch">
                 <i class="bi bi-trash me-1"></i>Löschen
             </button>
@@ -169,5 +190,14 @@ $icons = [
             lbl.classList.add('btn-primary');
         });
     });
+
+    // Restore lists view state (view, offset, scroll) via sessionStorage
+    var listsUrl = sessionStorage.getItem('coordinator_lists_url');
+    if (listsUrl) {
+        document.getElementById('js-back-btn').href = listsUrl;
+        document.getElementById('js-back-url').value = listsUrl;
+        var delBack = document.getElementById('js-delete-back-url');
+        if (delBack) delBack.value = listsUrl;
+    }
 }());
 </script>

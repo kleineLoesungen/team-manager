@@ -140,6 +140,11 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
                         <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
                     </div>
                     <?php endif; ?>
+                    <?php if (!empty($item['location'])): ?>
+                    <div class="small text-muted mt-1">
+                        <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php if ($item['visibility'] === 'private'): ?>
                 <span class="badge bg-secondary flex-shrink-0">Privat</span>
@@ -277,7 +282,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
                 </span>
                 <?php endif; ?>
             </small>
-            <?php if (!$is_event && !empty($item['location'])): ?>
+            <?php if (!empty($item['location'])): ?>
             <small class="text-muted ms-3">
                 <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
             </small>
@@ -307,7 +312,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($items) ?> <?= count($items) === 1 ? 'Eintrag' : 'Einträge' ?></span>
     <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button"
+        <button class="btn btn-primary btn-sm dropdown-toggle" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-plus-lg me-1"></i>Neu
         </button>
@@ -325,6 +330,11 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
             <li>
                 <a class="dropdown-item" href="/coordinator/files/create">
                     <i class="bi bi-file-earmark-text me-2"></i>Datei
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="/coordinator/events/create">
+                    <i class="bi bi-calendar-event me-2"></i>Termin
                 </a>
             </li>
         </ul>
@@ -371,15 +381,15 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <?php endif; // $showCalendar / list view ?>
 <script>
 (function() {
-    sessionStorage.setItem('coordinator_lists_url', location.href);
+    var url = (location.pathname + location.search).replace(/[?&]success=1/, '').replace(/\?$/, '');
+    sessionStorage.setItem('coordinator_lists_url', url);
     var saved = sessionStorage.getItem('coordinator_lists_scroll');
     if (saved !== null) {
         sessionStorage.removeItem('coordinator_lists_scroll');
         window.scrollTo(0, parseInt(saved, 10));
     }
-    document.addEventListener('click', function(e) {
-        var a = e.target.closest('a[href^="/coordinator/lists/"]');
-        if (a) sessionStorage.setItem('coordinator_lists_scroll', window.scrollY);
+    window.addEventListener('beforeunload', function() {
+        sessionStorage.setItem('coordinator_lists_scroll', window.scrollY);
     });
 })();
 </script>

@@ -32,7 +32,7 @@ if (defined('DB_HAS_FILES') && DB_HAS_FILES) {
 $events = [];
 if (defined('DB_HAS_EVENTS') && DB_HAS_EVENTS) {
     $estmt = $pdo->prepare(
-        "SELECT id, title AS name, visibility, date, is_all_day, time_start, time_end, icon, created_at,
+        "SELECT id, title AS name, visibility, is_hidden, date, is_all_day, time_start, time_end, icon, location, created_at,
                 'event' AS type
          FROM events WHERE team_id = ?"
     );

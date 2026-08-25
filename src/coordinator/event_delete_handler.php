@@ -19,4 +19,6 @@ set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
 $pdo->prepare("DELETE FROM events WHERE id = ? AND team_id = ?")
     ->execute([$event_id, $team_id]);
 
-redirect('/coordinator/lists');
+$back = $_POST['_back'] ?? '';
+$back = preg_match('#^/coordinator/lists(\?[^<>"\']*)?$#', $back) ? $back : '/coordinator/lists';
+redirect($back);
