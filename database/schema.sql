@@ -260,3 +260,21 @@ CREATE INDEX IF NOT EXISTS idx_mav_member ON team_manager.member_attribute_value
 -- Migration for existing databases (Phase 8 — member & club management):
 -- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES team_manager.members(id) ON DELETE SET NULL;
 -- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS phone VARCHAR(50) NULL;
+
+-- Events — calendar events per team (migration 030)
+CREATE TABLE IF NOT EXISTS team_manager.events (
+    id          SERIAL PRIMARY KEY,
+    team_id     INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    title       VARCHAR(200) NOT NULL,
+    description TEXT NULL,
+    icon        VARCHAR(50) NULL DEFAULT 'bi-calendar-event',
+    date        DATE NOT NULL,
+    is_all_day  BOOLEAN NOT NULL DEFAULT TRUE,
+    time_start  TIME NULL,
+    time_end    TIME NULL,
+    visibility  VARCHAR(10) NOT NULL DEFAULT 'protected'
+                CHECK (visibility IN ('protected', 'private')),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_events_team_id ON team_manager.events(team_id);
+CREATE INDEX IF NOT EXISTS idx_events_date    ON team_manager.events(date);

@@ -54,6 +54,19 @@ if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) {
 $stmt->execute([$team_id]);
 $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch protected events for this team (private events excluded — coordinator-only)
+$events = [];
+if (defined('DB_HAS_EVENTS') && DB_HAS_EVENTS) {
+    $e_stmt = $pdo->prepare(
+        "SELECT id, title, description, icon, date, is_all_day, time_start, time_end
+         FROM events
+         WHERE team_id = ? AND visibility = 'protected' AND date IS NOT NULL
+         ORDER BY date ASC"
+    );
+    $e_stmt->execute([$team_id]);
+    $events = $e_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 // Send ICS headers — no caching (D-12: on-demand generation)
 header('Content-Type: text/calendar; charset=UTF-8');
 header('Content-Disposition: attachment; filename="team-' . $team_id . '.ics"');
@@ -122,6 +135,65 @@ foreach ($lists as $list) {
     }
     $out .= foldIcsLine("URL:{$list_url}") . "\r\n";
     $out .= foldIcsLine("DESCRIPTION:{$description_value}") . "\r\n";
+    $out .= "END:VEVENT\r\n";
+}
+
+foreach ($events as $ev) {
+    $uid = md5('event-' . $team_id . '-' . $ev['id']) . '@team-manager.local';
+
+    $dt_date = str_replace('-', '', $ev['date']);
+
+    if (!$ev['is_all_day'] && !empty($ev['time_start'])) {
+        $ts = substr((string)$ev['time_start'], 0, 5);
+        $dt_start = $dt_date . 'T' . str_replace(':', '', $ts) . '00';
+        if (!empty($ev['time_end'])) {
+            $te = substr((string)$ev['time_end'], 0, 5);
+            $dt_end = $dt_date . 'T' . str_replace(':', '', $te) . '00';
+        } else {
+            $end_dt = new DateTime($ev['date'] . ' ' . $ts);
+            $end_dt->modify('+1 hour');
+            $dt_end = $end_dt->format('Ymd\THis');
+        }
+        $dtstart_line = "DTSTART;TZID=Europe/Berlin:{$dt_start}";
+        $dtend_line   = "DTEND;TZID=Europe/Berlin:{$dt_end}";
+
+        // VALARM: fire at 8:00 on event day — compute offset from event start
+        [$h, $m] = explode(':', $ts);
+        $start_min  = (int)$h * 60 + (int)$m;
+        $offset_min = 480 - $start_min; // 8:00 = 480 min
+        if ($offset_min < 0) {
+            $valarm_trigger = 'TRIGGER:-PT' . abs($offset_min) . 'M';
+        } elseif ($offset_min > 0) {
+            $valarm_trigger = 'TRIGGER:PT' . $offset_min . 'M';
+        } else {
+            $valarm_trigger = 'TRIGGER:PT0S';
+        }
+    } else {
+        $dtstart_line   = "DTSTART;VALUE=DATE:{$dt_date}";
+        $dtend_line     = "DTEND;VALUE=DATE:{$dt_date}";
+        $valarm_trigger = 'TRIGGER:PT8H'; // 8 hours after midnight = 8am
+    }
+
+    $desc_parts = [];
+    if (!empty($ev['description'])) {
+        $desc_parts[] = escapeIcsField($ev['description']);
+    }
+    $description_value = implode('\\n', $desc_parts);
+
+    $out .= "BEGIN:VEVENT\r\n";
+    $out .= "UID:{$uid}\r\n";
+    $out .= "DTSTAMP:{$dtstamp}\r\n";
+    $out .= foldIcsLine($dtstart_line) . "\r\n";
+    $out .= foldIcsLine($dtend_line)   . "\r\n";
+    $out .= "SUMMARY:" . escapeIcsField($ev['title']) . "\r\n";
+    if ($description_value !== '') {
+        $out .= foldIcsLine("DESCRIPTION:{$description_value}") . "\r\n";
+    }
+    $out .= "BEGIN:VALARM\r\n";
+    $out .= "{$valarm_trigger}\r\n";
+    $out .= "ACTION:DISPLAY\r\n";
+    $out .= "DESCRIPTION:Erinnerung: " . escapeIcsField($ev['title']) . "\r\n";
+    $out .= "END:VALARM\r\n";
     $out .= "END:VEVENT\r\n";
 }
 

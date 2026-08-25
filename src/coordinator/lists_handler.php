@@ -29,7 +29,18 @@ if (defined('DB_HAS_FILES') && DB_HAS_FILES) {
     $files = $fstmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$items = array_merge($lists, $files);
+$events = [];
+if (defined('DB_HAS_EVENTS') && DB_HAS_EVENTS) {
+    $estmt = $pdo->prepare(
+        "SELECT id, title AS name, visibility, date, is_all_day, time_start, time_end, icon, created_at,
+                'event' AS type
+         FROM events WHERE team_id = ?"
+    );
+    $estmt->execute([$_SESSION['team_id']]);
+    $events = $estmt->fetchAll();
+}
+
+$items = array_merge($lists, $files, $events);
 usort($items, function(array $a, array $b): int {
     $ad = $a['date'];
     $bd = $b['date'];

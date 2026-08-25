@@ -295,6 +295,22 @@ match (true) {
             require ROOT_PATH . '/src/coordinator/file_detail_handler.php';
         })(),
 
+    // ── Coordinator: Events ────────────────────────────────────────────────
+    $path === '/coordinator/events/create'
+        => require ROOT_PATH . '/src/coordinator/event_create_handler.php',
+
+    (bool)preg_match('#^/coordinator/events/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['event_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/event_edit_handler.php';
+        })(),
+
+    (bool)preg_match('#^/coordinator/events/(\d+)/delete$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['event_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/coordinator/event_delete_handler.php';
+        })(),
+
     // ── Coordinator: Settings (Einstellungen) — replaces /coordinator/columns ──
     $path === '/coordinator/settings'
         => require ROOT_PATH . '/src/coordinator/settings_handler.php',

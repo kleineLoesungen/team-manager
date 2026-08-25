@@ -1382,6 +1382,66 @@ function maybe_migrate_db(PDO $pdo): void {
         error_log('team-manager: migration 029 skipped — ' . $e->getMessage());
     }
 
+    // Migration 030: events table — calendar events per team
+    $events_exists = false;
+    try {
+        $events_exists = (bool)$pdo->query(
+            "SELECT 1 FROM information_schema.tables
+             WHERE table_schema = '{$schema}' AND table_name = 'events'"
+        )->fetchColumn();
+        if (!$events_exists) {
+            $pdo->exec("CREATE TABLE {$schema}.events (
+                id          SERIAL PRIMARY KEY,
+                team_id     INTEGER NOT NULL REFERENCES {$schema}.teams(id) ON DELETE CASCADE,
+                title       VARCHAR(200) NOT NULL,
+                description TEXT NULL,
+                icon        VARCHAR(50) NULL DEFAULT 'bi-calendar-event',
+                date        DATE NOT NULL,
+                is_all_day  BOOLEAN NOT NULL DEFAULT TRUE,
+                time_start  TIME NULL,
+                time_end    TIME NULL,
+                visibility  VARCHAR(10) NOT NULL DEFAULT 'protected'
+                            CHECK (visibility IN ('protected', 'private')),
+                created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )");
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_events_team_id ON {$schema}.events(team_id)");
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_events_date    ON {$schema}.events(date)");
+            $pdo->exec("ALTER TABLE {$schema}.events ENABLE ROW LEVEL SECURITY");
+            $pdo->exec("ALTER TABLE {$schema}.events FORCE ROW LEVEL SECURITY");
+            $pdo->exec("CREATE POLICY events_select ON {$schema}.events FOR SELECT USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+                OR (visibility = 'protected'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("CREATE POLICY events_insert ON {$schema}.events FOR INSERT WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("CREATE POLICY events_update ON {$schema}.events FOR UPDATE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            ) WITH CHECK (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $pdo->exec("CREATE POLICY events_delete ON {$schema}.events FOR DELETE USING (
+                current_setting('app.is_admin', true) = 'true'
+                OR (current_setting('app.current_role', true) = 'coordinator'
+                    AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+            )");
+            $events_exists = true;
+            error_log('team-manager: migration 030 events table created');
+        }
+    } catch (PDOException $e) {
+        error_log('team-manager: migration 030 skipped — ' . $e->getMessage());
+    }
+    define('DB_HAS_EVENTS', $events_exists);
+
 }
 
 /**

@@ -73,6 +73,11 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
                     <i class="bi bi-file-earmark-text me-2"></i>Datei
                 </a>
             </li>
+            <li>
+                <a class="dropdown-item" href="/coordinator/events/create">
+                    <i class="bi bi-calendar-event me-2"></i>Termin
+                </a>
+            </li>
         </ul>
     </div>
 </div>
@@ -121,6 +126,28 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
         </h6>
     <?php endif; ?>
 
+    <?php if ($item['type'] === 'event'): ?>
+    <div class="card card-sm mb-2 border-0 bg-body-secondary">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div class="flex-grow-1 min-w-0">
+                    <a href="/coordinator/events/<?= (int)$item['id'] ?>/edit"
+                       class="text-decoration-none fw-semibold text-body">
+                        <i class="bi <?= e($item['icon'] ?? 'bi-calendar-event') ?> me-1 text-muted"></i><?= e($item['name']) ?>
+                    </a>
+                    <?php if (empty($item['is_all_day']) && !empty($item['time_start'])): ?>
+                    <div class="small text-muted mt-1">
+                        <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php if ($item['visibility'] === 'private'): ?>
+                <span class="badge bg-secondary flex-shrink-0">Privat</span>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
     <?php
     $is_file    = ($item['type'] === 'file');
     $detail_url = $is_file
@@ -151,6 +178,7 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
             </div>
         </div>
     </div>
+    <?php endif; ?>
     <?php endforeach; ?>
     <?php if ($currentDate !== null): echo '</div>'; endif; ?>
 </div>
@@ -208,38 +236,54 @@ $visible = array_filter($items, fn($i) => !$i['is_hidden']);
 $hidden  = array_filter($items, fn($i) =>  $i['is_hidden']);
 
 $render_card = function(array $item) use ($badge_class, $badge_label): void {
-    $is_file      = ($item['type'] === 'file');
-    $detail_url   = $is_file ? '/coordinator/files/' . (int)$item['id']
-                             : '/coordinator/lists/'  . (int)$item['id'];
-    $settings_url = $is_file ? null
-                             : '/coordinator/lists/'  . (int)$item['id'] . '/settings';
-    $icon = $is_file ? 'bi-file-earmark-text' : 'bi-table';
+    $is_event = ($item['type'] === 'event');
+    $is_file  = ($item['type'] === 'file');
+
+    if ($is_event) {
+        $detail_url   = '/coordinator/events/' . (int)$item['id'] . '/edit';
+        $settings_url = null;
+        $icon         = $item['icon'] ?? 'bi-calendar-event';
+    } else {
+        $detail_url   = $is_file ? '/coordinator/files/' . (int)$item['id']
+                                 : '/coordinator/lists/'  . (int)$item['id'];
+        $settings_url = $is_file ? null : '/coordinator/lists/' . (int)$item['id'] . '/settings';
+        $icon         = $is_file ? 'bi-file-earmark-text' : 'bi-table';
+    }
     ?>
 <div class="col">
-    <div class="card h-100 shadow-sm">
+    <div class="card h-100 <?= $is_event ? 'border-0 bg-body-secondary' : 'shadow-sm' ?>">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">
                 <i class="bi <?= $icon ?> me-1 text-muted"></i><?= e($item['name']) ?>
             </span>
+            <?php if ($is_event): ?>
+            <?php if ($item['visibility'] === 'private'): ?>
+            <span class="badge bg-secondary">Privat</span>
+            <?php else: ?>
+            <span class="badge bg-warning text-dark">Mitglieder</span>
+            <?php endif; ?>
+            <?php else: ?>
             <span class="badge <?= $badge_class($item['visibility']) ?>"><?= $badge_label($item['visibility']) ?></span>
+            <?php endif; ?>
         </div>
         <?php if ($item['date']): ?>
         <div class="card-body py-2 px-3">
             <small class="text-muted">
                 <i class="bi bi-calendar3 me-1"></i><?= (new DateTime($item['date']))->format('d.m.Y') ?>
-                <?php if (!empty($item['time_start'])): ?>
+                <?php $show_time = !$is_event || empty($item['is_all_day']); ?>
+                <?php if ($show_time && !empty($item['time_start'])): ?>
                 <span class="ms-2 text-muted small">
                     <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
                 </span>
                 <?php endif; ?>
             </small>
-            <?php if (!empty($item['location'])): ?>
+            <?php if (!$is_event && !empty($item['location'])): ?>
             <small class="text-muted ms-3">
                 <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
             </small>
             <?php endif; ?>
         </div>
-        <?php elseif (!empty($item['location'])): ?>
+        <?php elseif (!$is_event && !empty($item['location'])): ?>
         <div class="card-body py-2 px-3">
             <small class="text-muted">
                 <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
@@ -247,8 +291,8 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
         </div>
         <?php endif; ?>
         <div class="card-footer bg-transparent d-flex gap-2">
-            <a href="<?= $detail_url ?>" class="btn btn-sm btn-primary min-touch">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Öffnen
+            <a href="<?= $detail_url ?>" class="btn btn-sm <?= $is_event ? 'btn-outline-secondary' : 'btn-primary' ?> min-touch">
+                <i class="bi bi-<?= $is_event ? 'pencil' : 'box-arrow-in-right' ?> me-1"></i><?= $is_event ? 'Bearbeiten' : 'Öffnen' ?>
             </a>
             <?php if ($settings_url): ?>
             <a href="<?= $settings_url ?>" class="btn btn-sm btn-outline-secondary min-touch">
