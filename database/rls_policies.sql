@@ -562,3 +562,60 @@ CREATE POLICY mav_update ON team_manager.member_attribute_values FOR UPDATE USIN
         )
     )
 );
+
+-- ── Files RLS ────────────────────────────────────────────────────────────────
+
+ALTER TABLE team_manager.files ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.files FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY files_select ON team_manager.files FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (visibility IN ('public', 'protected')
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY files_insert ON team_manager.files FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY files_update ON team_manager.files FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY files_delete ON team_manager.files FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+
+-- ── Events RLS ───────────────────────────────────────────────────────────────
+
+ALTER TABLE team_manager.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.events FORCE ROW LEVEL SECURITY;
+
+-- Coordinators see all team events; members see protected events only; private = coordinator-only
+CREATE POLICY events_select ON team_manager.events FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (visibility = 'protected'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY events_insert ON team_manager.events FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY events_update ON team_manager.events FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY events_delete ON team_manager.events FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);

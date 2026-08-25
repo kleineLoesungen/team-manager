@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
 );
 
 -- Users table — coordinators and members only (admin is in config.php, per D-02)
+-- member_id: FK to members (canonical identity); club_id: coordinator's home club
 CREATE TABLE IF NOT EXISTS team_manager.users (
     id            SERIAL PRIMARY KEY,
     team_id       INTEGER REFERENCES team_manager.teams(id) ON DELETE SET NULL,
@@ -29,14 +30,11 @@ CREATE TABLE IF NOT EXISTS team_manager.users (
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
     confirmed_at  TIMESTAMPTZ          NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    -- member_id and club_id added via ALTER TABLE below (forward reference to members/clubs)
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON team_manager.users(username);
 CREATE INDEX IF NOT EXISTS idx_users_team_id  ON team_manager.users(team_id);
-
--- Migration for existing databases (Phase 5 — email notifications):
--- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL;
--- (No DB-level CHECK constraint — application validates via filter_var(FILTER_VALIDATE_EMAIL))
 
 -- ── Settings ──────────────────────────────────────────────────────────────────
 
@@ -59,20 +57,18 @@ CREATE TABLE IF NOT EXISTS team_manager.lists (
     name          VARCHAR(100) NOT NULL,
     visibility    VARCHAR(10)  NOT NULL DEFAULT 'public'
                   CHECK (visibility IN ('public', 'protected', 'private')),
+    list_type     VARCHAR(10)  NOT NULL DEFAULT 'member'
+                  CHECK (list_type IN ('member', 'free')),
     show_all_rows BOOLEAN      NOT NULL DEFAULT FALSE,
     is_hidden     BOOLEAN      NOT NULL DEFAULT FALSE,
     description   TEXT                     NULL,
     date          DATE                     NULL,
     location      VARCHAR(255)             NULL,
+    time_start    TIME                     NULL,
+    time_end      TIME                     NULL,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
--- Migration for existing databases:
--- ALTER TABLE lists ADD COLUMN IF NOT EXISTS show_all_rows BOOLEAN NOT NULL DEFAULT FALSE;
--- ALTER TABLE lists ADD COLUMN IF NOT EXISTS is_hidden     BOOLEAN NOT NULL DEFAULT FALSE;
--- ALTER TABLE lists ADD COLUMN IF NOT EXISTS description TEXT NULL;
--- ALTER TABLE lists ADD COLUMN IF NOT EXISTS date DATE NULL;
--- ALTER TABLE lists ADD COLUMN IF NOT EXISTS location VARCHAR(255) NULL;
 CREATE INDEX IF NOT EXISTS idx_lists_team_id    ON team_manager.lists(team_id);
 CREATE INDEX IF NOT EXISTS idx_lists_visibility ON team_manager.lists(visibility);
 
@@ -84,25 +80,16 @@ CREATE INDEX IF NOT EXISTS idx_lists_visibility ON team_manager.lists(visibility
 CREATE TABLE IF NOT EXISTS team_manager.columns (
     id          SERIAL PRIMARY KEY,
     team_id     INTEGER REFERENCES team_manager.teams(id) ON DELETE CASCADE,
-    -- team_id IS NULL for system columns (cross-team); team_id IS NOT NULL for team-scoped columns
     list_id     INTEGER REFERENCES team_manager.lists(id) ON DELETE CASCADE,
-    -- list_id IS NULL => global column; list_id IS NOT NULL => local column (belongs to list)
     name        VARCHAR(100) NOT NULL,
     data_type   VARCHAR(10)  NOT NULL
                 CHECK (data_type IN ('boolean', 'number', 'text')),
-    -- Application layer must enforce: data_type='text' only when list_id IS NOT NULL
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
     sort_order  INTEGER      NOT NULL DEFAULT 0,
     coach_only  BOOLEAN      NOT NULL DEFAULT FALSE,
     is_system   BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
--- Migration for existing databases:
--- ALTER TABLE columns ADD COLUMN IF NOT EXISTS coach_only BOOLEAN NOT NULL DEFAULT FALSE;
--- Migration 028:
--- ALTER TABLE team_manager.columns ALTER COLUMN team_id DROP NOT NULL;
--- ALTER TABLE team_manager.columns ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE;
--- UPDATE team_manager.columns SET is_system = TRUE, team_id = NULL WHERE list_id IS NULL AND is_system = FALSE;
 CREATE INDEX IF NOT EXISTS idx_columns_team_id  ON team_manager.columns(team_id);
 CREATE INDEX IF NOT EXISTS idx_columns_list_id  ON team_manager.columns(list_id);
 CREATE INDEX IF NOT EXISTS idx_columns_is_system ON team_manager.columns(is_system);
@@ -116,6 +103,16 @@ CREATE TABLE IF NOT EXISTS team_manager.list_global_columns (
 );
 CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON team_manager.list_global_columns(list_id);
 CREATE INDEX IF NOT EXISTS idx_lgc_column_id ON team_manager.list_global_columns(column_id);
+
+-- Free-list rows — custom row labels for 'free' type lists
+CREATE TABLE IF NOT EXISTS team_manager.free_list_rows (
+    id         SERIAL PRIMARY KEY,
+    list_id    INTEGER NOT NULL REFERENCES team_manager.lists(id) ON DELETE CASCADE,
+    label      TEXT NOT NULL,
+    position   INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_flr_list_id ON team_manager.free_list_rows(list_id);
 
 -- Cells — EAV values (value stored as TEXT; parsed by app layer per column.data_type)
 -- member_id has no FK to users — it also stores free_list_rows.id for free lists.
@@ -153,6 +150,8 @@ CREATE TABLE IF NOT EXISTS team_manager.tickers (
     name        VARCHAR(255) NOT NULL,
     description TEXT,
     status      VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+    event_date  DATE NULL,
+    start_time  TIME NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -199,7 +198,8 @@ CREATE TABLE IF NOT EXISTS team_manager.member_attribute_groups (
 
 -- Members — permanent identity layer, separate from users accounts
 -- A member may or may not have a linked users account (users.member_id is the FK)
--- email: shared across all teams (single profile); confirmed_at on users tracks GDPR consent
+-- is_active: soft-delete (FALSE = deactivated, hidden from team lists)
+-- confirmed_at: set on first GDPR-consent login
 CREATE TABLE IF NOT EXISTS team_manager.members (
     id           SERIAL PRIMARY KEY,
     club_id      INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL,
@@ -211,8 +211,9 @@ CREATE TABLE IF NOT EXISTS team_manager.members (
     contact_name  VARCHAR(100) NULL,
     contact_phone VARCHAR(50)  NULL,
     contact_email VARCHAR(254) NULL,
-    is_active    BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    confirmed_at  TIMESTAMPTZ NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_members_club ON team_manager.members(club_id);
 
@@ -257,11 +258,28 @@ CREATE TABLE IF NOT EXISTS team_manager.member_attribute_values (
 );
 CREATE INDEX IF NOT EXISTS idx_mav_member ON team_manager.member_attribute_values(member_id);
 
--- Migration for existing databases (Phase 8 — member & club management):
--- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES team_manager.members(id) ON DELETE SET NULL;
--- ALTER TABLE team_manager.users ADD COLUMN IF NOT EXISTS phone VARCHAR(50) NULL;
+-- Forward-reference columns on users (require members + clubs to exist first)
+ALTER TABLE team_manager.users
+    ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES team_manager.members(id) ON DELETE SET NULL;
+ALTER TABLE team_manager.users
+    ADD COLUMN IF NOT EXISTS club_id INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL;
 
--- Events — calendar events per team (migration 030)
+-- Files — Markdown documents (coordinator-authored, member-readable per visibility)
+CREATE TABLE IF NOT EXISTS team_manager.files (
+    id         SERIAL PRIMARY KEY,
+    team_id    INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    name       VARCHAR(255) NOT NULL,
+    content    TEXT NULL,
+    visibility VARCHAR(10)  NOT NULL DEFAULT 'public'
+               CHECK (visibility IN ('public', 'protected', 'private')),
+    is_hidden  BOOLEAN NOT NULL DEFAULT FALSE,
+    date       DATE NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_files_team_id ON team_manager.files(team_id);
+
+-- Events — calendar events per team (ICS export, optional VALARM reminder)
 CREATE TABLE IF NOT EXISTS team_manager.events (
     id          SERIAL PRIMARY KEY,
     team_id     INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
