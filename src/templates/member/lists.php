@@ -28,52 +28,32 @@ $base_url = '/member/lists';
 $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&offset=' . $off;
 ?>
 
-<!-- ── Tab-Switcher (D-06, D-07, D-08) ──────────────────────────────────── -->
-<ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-        <a class="nav-link <?= ($view !== 'list') ? 'active' : '' ?>"
-           href="<?= $cal_url('calendar', 0) ?>">
-            <i class="bi bi-calendar3 me-1"></i>Kalender
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= ($view === 'list') ? 'active' : '' ?>"
-           href="<?= $base_url . '?view=list' ?>">
-            <i class="bi bi-list-ul me-1"></i>Liste
-        </a>
-    </li>
-</ul>
+<!-- ── View switcher: Kalender / Liste ───────────────────────────────── -->
+<div class="seg-ctrl">
+    <a href="<?= $cal_url('calendar', 0) ?>" class="<?= ($view !== 'list') ? 'on' : '' ?>">
+        <i class="bi bi-calendar3 me-1"></i>Kalender
+    </a>
+    <a href="<?= $base_url . '?view=list' ?>" class="<?= ($view === 'list') ? 'on' : '' ?>">
+        <i class="bi bi-list-ul me-1"></i>Liste
+    </a>
+</div>
 
 <?php if ($showCalendar): ?>
 <!-- ════════════════════════════════════════════════════════════════════════════
      CALENDAR VIEW (D-08: public + protected only; D-04, D-05)
      ════════════════════════════════════════════════════════════════════════════ -->
 
-<!-- Week/Month toggle (D-02) -->
-<div class="btn-group btn-group-sm mb-3">
-    <a href="<?= $cal_url('week', 0) ?>"
-       class="btn <?= $periodView === 'week' ? 'btn-primary' : 'btn-outline-secondary' ?>">
-        Woche
-    </a>
-    <a href="<?= $cal_url('month', 0) ?>"
-       class="btn <?= $periodView === 'month' ? 'btn-primary' : 'btn-outline-secondary' ?>">
-        Monat
-    </a>
+<!-- Week/Month toggle ───────────────────────────────────────────────── -->
+<div class="seg-ctrl">
+    <a href="<?= $cal_url('week', 0) ?>" class="<?= $periodView === 'week' ? 'on' : '' ?>">Woche</a>
+    <a href="<?= $cal_url('month', 0) ?>" class="<?= $periodView === 'month' ? 'on' : '' ?>">Monat</a>
 </div>
 
-<!-- Period navigation: ◀ label ▶ (D-02) -->
-<div class="d-flex justify-content-between align-items-center mb-3 gap-2">
-    <a href="<?= $cal_url($periodView, $offset - 1) ?>"
-       class="btn btn-outline-secondary btn-sm min-touch">
-        <i class="bi bi-chevron-left me-1"></i><?= $periodView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat' ?>
-    </a>
-    <small class="text-muted text-center flex-shrink-0">
-        <?= $periodView === 'week' ? 'Woche: ' : '' ?><?= e($boundaries['label']) ?>
-    </small>
-    <a href="<?= $cal_url($periodView, $offset + 1) ?>"
-       class="btn btn-outline-secondary btn-sm min-touch">
-        <?= $periodView === 'week' ? 'Nächste Woche' : 'Nächster Monat' ?><i class="bi bi-chevron-right ms-1"></i>
-    </a>
+<!-- Period navigation: ‹ label › ────────────────────────────────────── -->
+<div class="period-nav">
+    <a href="<?= $cal_url($periodView, $offset - 1) ?>" title="<?= $periodView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat' ?>">‹</a>
+    <span class="period-label"><?= e($boundaries['label']) ?></span>
+    <a href="<?= $cal_url($periodView, $offset + 1) ?>" title="<?= $periodView === 'week' ? 'Nächste Woche' : 'Nächster Monat' ?>">›</a>
 </div>
 
 <!-- Dated entries timeline (D-04, D-05) -->
