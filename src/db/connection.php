@@ -97,6 +97,7 @@ function maybe_migrate_db(PDO $pdo): void {
     define('DB_HAS_FILES',      true);
     define('DB_HAS_LIST_TIMES', true);
     define('DB_HAS_EVENTS',     true);
+    define('DB_HAS_COACH_ONLY', true);
 
     // (Migration body removed 2026-08-25 — all 032 migrations applied to production.)
 }
