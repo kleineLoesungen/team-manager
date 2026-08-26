@@ -179,6 +179,62 @@ function render_layout_head(string $title = 'Team Manager'): void {
         .badge-bad  { background: var(--bad-bg)   !important; color: var(--bad)  !important; }
         .badge-dim  { background: var(--surface-2)!important; color: var(--t3)   !important; }
 
+        /* ── Segmented Control (iOS-style full-width toggle) ──────────────────── */
+        .seg-ctrl {
+            background: var(--surface-2);
+            border-radius: 9px;
+            display: flex;
+            padding: 2px;
+            margin-bottom: 12px;
+        }
+        .seg-ctrl a {
+            flex: 1;
+            text-align: center;
+            padding: 6px 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--t3);
+            border-radius: 7px;
+            text-decoration: none;
+            transition: color .12s;
+            white-space: nowrap;
+        }
+        .seg-ctrl a.on {
+            background: var(--surface);
+            color: var(--t1);
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+        }
+
+        /* ── Period navigation (‹ label ›) ─────────────────────────────────────── */
+        .period-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .period-nav a {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            line-height: 1;
+            color: var(--t2);
+            text-decoration: none;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .period-nav a:hover { background: var(--surface-2); }
+        .period-nav .period-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--t1);
+            text-align: center;
+            flex: 1;
+        }
+
         /* ── Buttons — one system, two weights ─────────────────────────────── */
         .btn {
             display: inline-flex !important;
