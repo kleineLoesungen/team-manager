@@ -78,6 +78,24 @@ Trainer können den Spielereinsatz und beliebige Kennzahlen über alle Listen hi
 - **Keine E-Mail**: Kein SMTP-Setup, kein Mailversand
 - **Einfachheit**: Modernes, schlichtes Design — keine Überladung mit Features
 
+### UI-Constraints (phasenübergreifend bindend)
+
+Die verbindliche Design-Grundlage ist `.planning/UI-BASELINE.md`. Sie gilt für jede
+Phase mit User-facing Components. Eine Phasen-UI-SPEC referenziert sie und verfeinert
+sie höchstens — sie trifft keine eigenen Entscheidungen zu Farbe, Abstand, Typografie,
+Navigation oder Seitenaufbau.
+
+- Ein einziges Layout für alle Rollen: `render_page(array $opts, callable $body)`.
+  Rollen-Layouts sind Wrapper, keine eigenen HTML-Dokumente.
+- Ein einziges Stylesheet: `public/css/app.css`. Alle Größen stehen dort als Tokens.
+  Templates enthalten keine Zahlen — kein `style=""`, keine Pixelwerte, keine `fs-*`.
+- Erlaubte Spacing-Utilities in Templates: nur `*-2`, `*-3`, `*-4`.
+- Wiederkehrende Elemente existieren genau einmal, als Partial in
+  `src/templates/components/`. Wer ein Element zum zweiten Mal baut, baut es falsch.
+- Formulare funktionieren ohne JavaScript. Keine Modals, kein JS-Confirm,
+  keine Toasts.
+- Jede neue Seite gehört zu einem Archetyp aus UI-BASELINE.md Abschnitt 4.
+
 ## Key Decisions
 
 | Decision | Rationale | Outcome |

@@ -148,9 +148,24 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - Bootstrap 5.3 via CDN (no build step)
 
 ### UI Patterns
-- Form switches (`form-switch`) for all boolean inputs (not plain checkboxes)
-- Two-step confirm (Gefahrenzone card + confirmation page) for destructive actions — no JS required
-- Scroll position restored via `sessionStorage` after GET filter forms submit
+
+**Verbindlich: `.planning/UI-BASELINE.md` vor jeder Frontend-Arbeit lesen.**
+Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
+
+- Ein Layout für alle Rollen (`render_page`), ein Stylesheet (`public/css/app.css`).
+- Größen nur als Token in `app.css`. In Templates ausschließlich `*-2`, `*-3`, `*-4`.
+- Formularfelder nie unter 1rem Schriftgröße (iOS zoomt sonst). Kein `form-control-sm`.
+- Alles Antippbare mindestens 44px hoch.
+- Sammlungen: gruppierte `list-group` mit Datums-Überschriften. Keine Card-Listen.
+- Eine Primäraktion pro Seite, in der klebenden Leiste über der Bottom-Nav.
+- Buttons heißen Verb + Objekt („Liste speichern"), nie nur „Speichern".
+- Booleans als `form-switch` (bestehend).
+- Destruktive Aktionen: Gefahrenzone-Card, dann eigene Bestätigungsseite (bestehend).
+- Nach GET-Filtern Scroll-Position wiederherstellen (bestehend).
+- Statusfarben: grün läuft/aktiv · grau beendet · gelb wartet · rot inaktiv.
+  Immer als `bg-*-subtle`.
+- Neues Element gebraucht? Erst in `src/templates/components/` nachsehen.
+  Existiert es nicht, dort anlegen — nicht im Seiten-Template.
 
 ### Database
 - `set_team_context()` called at session start — sets `app.current_role`, `app.current_user_id`, `app.current_team_id` for RLS
