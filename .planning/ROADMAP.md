@@ -14,6 +14,7 @@
 - [x] **Phase 6: Calendar — Lists with Date, Location & ICS Export** - Calendar timeline, location field, ICS export (completed 2026-07-14)
 - [x] **Phase 7: Live-Ticker** - Public event ticker, message posting, auto-reload, member freigabe (completed 2026-07-26)
 - [x] **Phase 8: Player & Club Management** - Clubs, multi-team coordinators, extended player profiles, additional admins, safe migration (completed 2026-08-02)
+- [ ] **Phase 9: UI-Vereinheitlichung** - Gemeinsames Layout, Token-Layer und Komponenten-Partials; alle Seiten über `render_page()` + `app.css`
 
 ## Phase Details
 
@@ -163,6 +164,8 @@ Plans:
 | 5. Email Notifications | 5/5 | Complete   | 2026-07-13 |
 | 6. Calendar — ICS Export | 4/4 | Complete   | 2026-07-14 |
 | 7. Live-Ticker | 5/5 | Complete   | 2026-07-26 |
+| 8. Player & Club Management | 7/7 | Complete | 2026-08-02 |
+| 9. UI-Vereinheitlichung | 0/? | Planned | |
 
 ---
 
@@ -171,6 +174,35 @@ Plans:
 - Authorization leakage is mitigated by centralizing visibility logic and enforcing PostgreSQL RLS from Phase 1
 - EAV (Entity-Attribute-Value) pattern used for dynamic columns to avoid schema migrations
 - Credential display is time-limited and never logged
+
+---
+
+### Phase 9: UI-Vereinheitlichung
+
+**Goal:** Alle Seiten aller Rollen rendern über ein einziges Layout und ein einziges Stylesheet, sodass Abstände, Schriftgrößen, Navigation und Komponenten überall konsistent sind.
+
+**Depends on:** Phase 1–8 (refactoring, no new features)
+
+**Scope:**
+1. `public/css/app.css` — Token-Layer als externes Stylesheet
+2. `render_page(array $opts, callable $body)` — einziges Layout für alle Rollen + öffentliche Ticker-Seiten
+3. `src/templates/components/` — Partials: Seitenkopf, Sammlungsliste, Matrix-Tabelle, Formularabschnitt, Formularfeld, Statusbadge, Flash-Alert, leerer Zustand, Gefahrenzone, Bestätigungsseite, Filter-Pills, Aktionsleiste
+4. `?success=` im PRG-Ablauf (analog bestehendem `?error=`)
+5. Alle bestehenden Seiten auf Layout + Partials umstellen (rollenweise)
+
+**Tracer:** Koordinator-Listenübersicht komplett über neues Layout + `app.css` + Partials
+
+**Not in scope:** Neue Funktionen, Datenmodelländerungen, Dark Mode
+
+**Success Criteria:**
+1. Kein Template außer `layout.php` gibt `<html>`, `<head>` oder `<body>` aus
+2. Keine `style=""`-Attribute, keine Pixelwerte, keine `fs-*`-Klassen in Templates
+3. Nur `*-2`, `*-3`, `*-4` als Spacing-Utilities in Templates
+4. Kein `form-control-sm` auf Formularseiten
+5. Jede Route rendert über `render_page`
+6. Alle Seiten bei 360 px Breite ohne horizontales Scrollen des Seitenrumpfs
+
+**Plans:** TBD
 
 ---
 

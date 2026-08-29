@@ -1,7 +1,8 @@
 ---
 phase: 9
 slug: ui-vereinheitlichung
-status: draft
+status: approved
+reviewed_at: 2026-08-29
 shadcn_initialized: false
 preset: none
 created: 2026-08-29
@@ -77,16 +78,14 @@ Declared from `public/css/app.css` lines 47–52 (canonical source).
 
 | Role | Class / Element | Size | Weight | Line Height |
 |------|----------------|------|--------|-------------|
-| Display | `h1`, `.h1` | 24px (1.5rem) | 600 | 1.2 |
-| Heading | `h2`, `.h2` | 20px (1.25rem) | 600 | 1.2 |
-| Subheading | `h3`, `.h3` | 18px (1.125rem) | 600 | 1.3 |
-| Body | `body`, `p`, `td` | 16px (1rem) | 400 | 1.5 |
-| Label | `.form-label` | 15px (0.9375rem) | 500 | 1.4 |
-| Small / secondary | `.small`, `small` | 14px (0.875rem) | 400 | 1.4 |
-| Group header | `.tm-group-label` | 12px (0.75rem) | 600 | 1.2 |
+| Display / page heading | `h1`, `h2`, `h3`, `.h1`, `.h2`, `.h3` | 20px (1.25rem) | 600 | 1.2 |
+| Body / default | `body`, `p`, `td` | 16px (1rem) | 400 | 1.5 |
+| Secondary / labels | `.form-label` (600), `.small`, `small` (400) | 14px (0.875rem) | 400 / 600 | 1.4 |
+| Micro / group header | `.tm-group-label` | 12px (0.75rem) | 600 | 1.2 |
 
-**Canonical weights:** 400 (regular) and 600 (semibold). Weight 500 is approved only for
-`.form-label` and `.tm-bottomnav a.active` — both defined in CSS, not in templates.
+**Canonical weights:** 400 (regular) and 600 (semibold). No other weights are permitted.
+`.form-label` uses weight 600; `.small` and all other secondary text use weight 400.
+`.tm-bottomnav a.active` uses weight 600. All weight assignments are defined in CSS — not in templates.
 
 **iOS zoom rule:** `form-control` and `form-select` font-size must remain at 1rem (16px).
 Never set to anything smaller. `form-control-sm` / `form-select-sm` are **banned on form
@@ -121,12 +120,20 @@ Design tokens consolidated from `src/templates/layout.php` (lines 44–88) and
 | Body text | `--t1` / `--bs-body-color` | `#000000` / `#12161c` | All primary text |
 | Secondary text | `--t2` / `--bs-secondary-color` | `rgba(60,60,67,.85)` / `#5b636b` | Metadata, dates, captions |
 | Tertiary text | `--t3` | `rgba(60,60,67,.65)` | Placeholders, dimmed labels |
-| Accent (10%) | `--brand` / `--bs-primary` | Admin-configurable (default `#2f3640`) | **Active tab indicator only** + primary action buttons |
+| Accent (10%) | `--brand` / `--bs-primary` | Admin-configurable (default `#2563eb`) | **Active tab indicator only** + primary action buttons |
 | Semantic ok | `--ok` / `--ok-bg` | `#1A7F3C` / `#E5F4EC` | Success badges, ok alerts |
 | Semantic warn | `--warn` / `--warn-bg` | `#92510A` / `#FEF0C7` | Protected-list badge, warning alerts |
 | Semantic bad | `--bad` / `--bad-bg` | `#B91C1C` / `#FEE2E2` | Error alerts, destructive actions |
 | Semantic blue | `--blue` / `--blue-bg` | `#1D4ED8` / `#DBEAFE` | Info alerts |
 | Destructive | `--bad` | `#B91C1C` | Danger-zone card, delete confirm buttons |
+
+**Brand default source:** `#2563eb` matches the `layout.php` line 13 code fallback
+(`$brand_color = $_ENV['BRAND_COLOR'] ?? '#2563eb'`). The previous spec incorrectly listed
+`#2f3640` as the default. The correct default is `#2563eb`.
+
+**Phase 9 migration — `.btn-primary` hardcoded color:** The current `app.css` contains a
+hardcoded `background-color: #4B5563` override on `.btn-primary`. This must be changed to
+`background-color: var(--brand)` in Phase 9 so the admin-configurable brand color is respected.
 
 ### Accent Reserved For
 
@@ -151,7 +158,7 @@ in Phase 9. Token transfer only.
 |----------|-------|----------|
 | 60% dominant | `--bg` + `--surface` (white page, gray shell) | Body background, all card surfaces |
 | 30% secondary | `--surface-2` (light gray fills) | Segmented controls, table stripes, tonal buttons, placeholder fills |
-| 10% accent | `--brand` (admin-set, dark gray default) | Active tab + primary button only |
+| 10% accent | `--brand` (admin-set, blue default `#2563eb`) | Active tab + primary button only |
 
 ---
 
@@ -183,6 +190,11 @@ All copy is German, Du-speech (informal second person). Sources: existing templa
 | Visibility label: public | "Öffentlich" (badge-ok) |
 | Visibility label: protected | "Geschützt" (badge-warn) |
 | Visibility label: private | "Privat" (badge-dim) |
+
+**`render_action_bar` label rule:** Callers must provide noun-qualified labels per context
+(e.g. "Änderungen speichern", "Mitglied hinzufügen"). Generic "Speichern" is permitted
+only where the page `<h1>` heading already provides sufficient noun context (e.g. the
+heading states "Mitglied bearbeiten"). When in doubt, qualify the noun.
 
 **PRG success flow (new in Phase 9):**
 
@@ -319,7 +331,7 @@ Card container for a form section. Replaces `<div class="card shadow-sm">` patte
 ```html
 <div class="card mb-3">
   <div class="card-header">
-    <h2 class="h3 mb-0">{heading}</h2>
+    <h2 class="mb-0">{heading}</h2>
   </div>
   <div class="card-body">
     {fields_body()}
@@ -468,6 +480,8 @@ These rules are the enforcement boundary for the acceptance criteria.
 ## Tracer: Coordinator List Overview
 
 The tracer verifies the full stack before mass migration. At tracer completion:
+
+**Focal point:** Primary focal point is the list-group row with the list name as the tappable target; the visibility badge is the secondary visual signal; render_empty component anchors the empty state.
 
 1. `render_page(['role' => 'coordinator', 'active' => 'lists', 'title' => 'Listen'], ...)` wraps the page
 2. `app.css` is the sole CSS source — no inline `<style>` block in the response
