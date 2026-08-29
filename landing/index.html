@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
     /* ── Tokens ──────────────────────────────────────── */
     :root {
@@ -88,152 +89,121 @@
 
     /* ── Phone mockup ────────────────────────────────── */
     .phone {
-      width: 268px;
-      background: #111110;
-      border-radius: 50px;
-      padding: 11px;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.05),
-        inset 0 0 0 1px rgba(255,255,255,0.07),
-        0 36px 90px rgba(25,25,23,0.28),
-        0 8px 28px rgba(25,25,23,0.16);
+      width: 310px; background: #111110; border-radius: 54px; padding: 12px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.07),
+                  0 40px 100px rgba(25,25,23,.30), 0 10px 32px rgba(25,25,23,.18);
       position: relative;
     }
     .phone-island {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 88px;
-      height: 27px;
-      background: #111110;
-      border-radius: 14px;
-      z-index: 10;
+      position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+      width: 96px; height: 28px; background: #111110; border-radius: 14px; z-index: 10;
     }
     .phone-screen {
-      background: #F8F7F2;
-      color: #191917;
-      border-radius: 39px;
-      overflow: hidden;
-      font-size: 11px;
-      line-height: 1.45;
-      font-family: 'DM Sans', system-ui, sans-serif;
-      min-height: 510px;
-      display: flex;
-      flex-direction: column;
+      background: #F2F2F7; border-radius: 42px; overflow: hidden; height: 560px;
+      display: flex; flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    .phone-status {
-      height: 54px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      padding: 0 22px 9px;
-      font-size: 10px;
-      font-weight: 600;
-      color: #191917;
-    }
-    .phone-status-icons { display: flex; gap: 4px; align-items: center; }
-    .phone-status-dot { width: 5px; height: 5px; border-radius: 50%; background: #191917; opacity: 0.5; }
-    .phone-body { flex: 1; overflow: hidden; }
+    .phone-slide { display: none; height: 100%; flex-direction: column; }
+    .phone-slide.active { display: flex; }
 
-    .phone-slide { display: none; height: 100%; }
-    .phone-slide.active { display: flex; flex-direction: column; }
+    /* App-like UI styles */
+    .ap-nav { background:#fff; border-bottom:1px solid rgba(60,60,67,.12); display:flex; align-items:center; justify-content:space-between; padding:42px 14px 10px; gap:8px; flex-shrink:0; }
+    .ap-nav-l { display:flex; align-items:center; gap:7px; flex:1; min-width:0; }
+    .ap-logo { width:26px; height:26px; border-radius:5px; flex-shrink:0; background:#C8102E; display:flex; align-items:center; justify-content:center; font-size:7px; font-weight:800; color:#fff; letter-spacing:-.5px; }
+    .ap-team { font-size:13px; font-weight:700; color:#1C1C1E; letter-spacing:-.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ap-nav-r { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .ap-page { font-size:11px; color:#8E8E93; white-space:nowrap; }
+    .ap-sub { background:#fff; padding:6px 14px 8px; border-bottom:1px solid rgba(60,60,67,.12); flex-shrink:0; }
+    .ap-toprow { display:flex; align-items:center; justify-content:space-between; }
+    .ap-dateline { font-size:11.5px; color:#1C1C1E; font-weight:500; }
+    .ap-sharelink { font-size:11px; color:#007AFF; }
+    .ap-scroll { flex:1; overflow:hidden; background:#F2F2F7; }
+    .ap-card { background:#fff; margin:8px 8px 0; border-radius:10px; overflow:hidden; }
+    .ap-card-head { display:flex; align-items:center; justify-content:space-between; padding:7px 12px; border-bottom:1px solid rgba(60,60,67,.10); }
+    .ap-th { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:#6D6D72; }
+    .ap-row { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-bottom:1px solid rgba(60,60,67,.06); gap:6px; }
+    .ap-row:last-child { border-bottom:none; }
+    .ap-name { font-size:12px; color:#1C1C1E; flex:1; min-width:0; }
+    .ap-bold { font-weight:700; }
+    .ap-check { color:#34C759; font-size:13px; font-weight:700; }
+    .ap-cross { color:#8E8E93; font-size:12px; }
+    .ap-ich { font-size:9px; font-weight:600; background:#E5F3FF; color:#0A5EB5; padding:1px 5px; border-radius:8px; margin-left:4px; }
+    .ap-edit-btn { font-size:10px; color:#1C1C1E; background:rgba(120,120,128,.15); padding:3px 9px; border-radius:7px; white-space:nowrap; flex-shrink:0; }
+    .ap-toggle { width:36px; height:21px; border-radius:11px; background:#007AFF; position:relative; flex-shrink:0; }
+    .ap-toggle::after { content:''; position:absolute; width:17px; height:17px; background:#fff; border-radius:50%; top:2px; right:2px; box-shadow:0 1px 4px rgba(0,0,0,.25); }
+    .ap-toggle.off { background:rgba(120,120,128,.32); }
+    .ap-toggle.off::after { right:auto; left:2px; }
+    .ap-badge { font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; }
+    .bg-gray   { background:rgba(120,120,128,.16); color:#6D6D72; }
+    .bg-green  { background:#E3F9E9; color:#1E7A3F; }
+    .bg-red    { background:#FFEBE9; color:#C62828; }
+    .bg-yellow { background:#FFF8E1; color:#B45300; }
+    .bg-blue   { background:#E5F3FF; color:#0A5EB5; }
+    /* stats */
+    .ap-dropdown { background:#fff; margin:8px; border-radius:10px; padding:8px 12px; display:flex; align-items:center; justify-content:space-between; }
+    .ap-dd-l { display:flex; align-items:center; gap:4px; }
+    .ap-dd-lbl { font-size:11px; color:#6D6D72; }
+    .ap-dd-val { font-size:12px; font-weight:600; color:#1C1C1E; }
+    .ap-stat-title { font-size:17px; font-weight:700; color:#1C1C1E; padding:8px 12px 4px; }
+    .ap-stat-hd { display:grid; grid-template-columns:1fr 68px 44px; padding:5px 12px; border-bottom:1px solid rgba(60,60,67,.10); }
+    .ap-stat-row { display:grid; grid-template-columns:1fr 68px 44px; padding:8px 12px; border-bottom:1px solid rgba(60,60,67,.06); align-items:center; }
+    .ap-stat-row:last-child { border-bottom:none; }
+    .ap-sname { font-size:12px; font-weight:600; color:#1C1C1E; }
+    .ap-sval { font-size:12px; font-weight:700; color:#1C1C1E; }
+    .ap-spct { font-size:10px; color:#8E8E93; }
+    .ap-szero { font-size:12px; color:#1C1C1E; text-align:right; }
+    /* ticker */
+    .ap-tkr-hd { background:#fff; border-bottom:1px solid rgba(60,60,67,.12); padding:42px 14px 10px; flex-shrink:0; }
+    .ap-tkr-top { display:flex; align-items:center; justify-content:space-between; }
+    .ap-tkr-back { font-size:12px; font-weight:600; color:#1C1C1E; margin-top:8px; }
+    .ap-tkr-info { font-size:11px; color:#8E8E93; margin-top:3px; }
+    .ap-tkr-count { font-size:12px; color:#1C1C1E; font-weight:500; margin-top:2px; }
+    .ap-msg { padding:10px 14px; border-bottom:1px solid rgba(60,60,67,.08); background:#fff; }
+    .ap-msg-meta { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+    .ap-msg-time { font-size:10.5px; color:#8E8E93; }
+    .ap-msg-text { font-size:12px; color:#1C1C1E; line-height:1.4; }
+    .ap-tkr-foot { padding:10px 14px; text-align:center; font-size:11px; color:#8E8E93; background:#F2F2F7; border-top:1px solid rgba(60,60,67,.08); margin-top:auto; }
+    /* calendar */
+    .ap-view-tabs { background:#fff; border-bottom:1px solid rgba(60,60,67,.12); display:flex; padding:0 14px; flex-shrink:0; }
+    .ap-vt { padding:8px 12px; font-size:12px; color:#8E8E93; border-bottom:2px solid transparent; margin-bottom:-1px; }
+    .ap-vt.on { color:#1C1C1E; border-bottom-color:#1C1C1E; font-weight:600; }
+    .ap-seg { background:rgba(120,120,128,.12); margin:8px; border-radius:9px; display:flex; padding:2px; }
+    .ap-seg-b { flex:1; text-align:center; padding:5px; font-size:12px; color:#8E8E93; border-radius:7px; }
+    .ap-seg-b.on { background:#fff; color:#1C1C1E; font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+    .ap-mnav { display:flex; align-items:center; justify-content:space-between; padding:4px 14px 6px; }
+    .ap-mprev, .ap-mnext { font-size:11px; color:#007AFF; }
+    .ap-mcur { font-size:12px; font-weight:600; color:#1C1C1E; }
+    .ap-dgrp { padding:4px 8px 0; }
+    .ap-dlbl { font-size:11px; color:#8E8E93; padding:0 4px 3px; }
+    .ap-ev { background:#fff; border-radius:10px; padding:10px 12px; display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:6px; }
+    .ap-ev-title { font-size:12px; font-weight:600; color:#1C1C1E; }
+    .ap-ev-meta { font-size:10px; color:#8E8E93; margin-top:2px; line-height:1.5; }
+    /* document */
+    .ap-doc-subnav { background:#fff; padding:6px 14px 8px; border-bottom:1px solid rgba(60,60,67,.12); flex-shrink:0; }
+    .ap-doc-links { display:flex; align-items:center; gap:14px; }
+    .ap-doc-lnk { font-size:11px; color:#007AFF; }
+    .ap-doc-card { background:#fff; margin:8px; border-radius:10px; overflow:hidden; }
+    .ap-doc-hd { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(60,60,67,.08); }
+    .ap-doc-ht { font-size:12px; font-weight:600; color:#1C1C1E; display:flex; align-items:center; gap:5px; }
+    .ap-doc-tabs { display:flex; border-bottom:1px solid rgba(60,60,67,.08); }
+    .ap-doc-tab { padding:7px 14px; font-size:12px; color:#8E8E93; border-bottom:2px solid transparent; margin-bottom:-1px; }
+    .ap-doc-tab.on { color:#1C1C1E; border-bottom-color:#1C1C1E; font-weight:600; }
+    .ap-doc-body { padding:10px 12px; }
+    .ap-mh1 { font-size:18px; font-weight:700; color:#1C1C1E; margin-bottom:4px; }
+    .ap-mh2 { font-size:13px; font-weight:700; color:#1C1C1E; margin:8px 0 3px; }
+    .ap-mli { font-size:11px; line-height:1.6; margin-left:8px; }
+    .ap-mlnk { color:#007AFF; }
+    .ap-mtxt { color:#1C1C1E; }
+    /* tab bar */
+    .ap-tabbar { background:rgba(255,255,255,.95); border-top:1px solid rgba(60,60,67,.12); display:flex; align-items:stretch; padding:4px 0 6px; flex-shrink:0; }
+    .ap-tab { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding-top:2px; }
+    .ap-tab-i { font-size:18px; line-height:1; color:#8E8E93; }
+    .ap-tab.on .ap-tab-i { color:#C8102E; }
+    .ap-tab-l { font-size:8.5px; color:#8E8E93; }
+    .ap-tab.on .ap-tab-l { color:#C8102E; }
 
-    /* Phone UI helpers */
-    .ph-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 18px 10px;
-      border-bottom: 1px solid rgba(25,25,23,0.08);
-    }
-    .ph-h1 { font-size: 14px; font-weight: 700; letter-spacing: -0.025em; }
-    .ph-badge {
-      font-size: 9px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 20px;
-    }
-    .ph-badge-pub   { background: #e8f3e8; color: #2d6b2d; }
-    .ph-badge-live  { background: #e8f3e8; color: #2d6b2d; }
-    .ph-badge-small { background: rgba(25,25,23,0.07); color: var(--muted); }
-
-    .ph-body { padding: 10px 18px 0; flex: 1; }
-    .ph-label {
-      font-size: 9px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.10em;
-      color: #9A9994;
-      margin-bottom: 6px;
-    }
-    .ph-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(25,25,23,0.06);
-      font-size: 10.5px;
-    }
-    .ph-row:last-child { border-bottom: none; }
-    .ph-name { font-weight: 500; }
-    .ph-val  { color: #9A9994; font-size: 10px; font-variant-numeric: tabular-nums; }
-
-    .ph-toggle {
-      display: inline-block;
-      width: 27px; height: 15px;
-      border-radius: 8px;
-      background: #191917;
-      position: relative; vertical-align: middle;
-      flex-shrink: 0;
-    }
-    .ph-toggle::after {
-      content: '';
-      position: absolute;
-      width: 9px; height: 9px;
-      background: #F8F7F2;
-      border-radius: 50%;
-      top: 3px; right: 3px;
-    }
-    .ph-toggle.off { background: #D8D7D2; }
-    .ph-toggle.off::after { right: auto; left: 3px; }
-
-    .ph-rank-num { font-size: 9px; color: #B0AFA9; width: 14px; flex-shrink: 0; }
-    .ph-ticker-time { font-size: 9px; color: #B0AFA9; width: 22px; flex-shrink: 0; padding-top: 1px; }
-
-    .ph-event {
-      padding: 7px 0;
-      border-bottom: 1px solid rgba(25,25,23,0.06);
-    }
-    .ph-event:last-child { border-bottom: none; }
-    .ph-event-date { font-size: 9px; color: #B0AFA9; margin-bottom: 2px; }
-    .ph-event-name { font-size: 10.5px; font-weight: 600; }
-    .ph-event-meta { font-size: 9px; color: #9A9994; margin-top: 1px; }
-
-    .ph-doc {
-      padding: 7px 0;
-      border-bottom: 1px solid rgba(25,25,23,0.06);
-    }
-    .ph-doc:last-child { border-bottom: none; }
-    .ph-doc-name { font-size: 10.5px; font-weight: 600; }
-    .ph-doc-meta { font-size: 9px; color: #9A9994; margin-top: 1px; }
-
-    .phone-home {
-      height: 28px;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .phone-home-bar {
-      width: 80px; height: 4px;
-      background: #191917;
-      border-radius: 2px;
-      opacity: 0.14;
-    }
-
-    /* ── Right panel ─────────────────────────────────── */
+    /* ── Right panel  ─────────────────────────────────── */
     .panel-right {
       grid-row: 1;
       padding: 52px 52px 52px 36px;
@@ -349,8 +319,8 @@
         padding: 20px 28px 12px;
         justify-content: center;
       }
-      .phone { width: 220px; }
-      .phone-screen { min-height: 420px; }
+      .phone { width: 240px; }
+      .phone-screen { height: 430px; }
       .ph-h1 { font-size: 12px; }
 
       .panel-right {
@@ -393,160 +363,192 @@
       <div class="phone-island"></div>
       <div class="phone-screen">
 
-        <div class="phone-status">
-          <span>9:41</span>
-          <div class="phone-status-icons">
-            <div class="phone-status-dot"></div>
-            <div class="phone-status-dot"></div>
-            <div class="phone-status-dot"></div>
+        <!-- Screen 0: Liste (coordinator edit) -->
+        <div class="phone-slide active" id="ps-0">
+          <div class="ap-nav">
+            <div class="ap-nav-l"><div class="ap-logo">FC</div><span class="ap-team">U13 26/27</span></div>
+            <div class="ap-nav-r"><span class="ap-page">Training 01.09.</span><span class="ap-tab-i" style="font-size:16px"><i class="bi bi-moon"></i></span></div>
+          </div>
+          <div class="ap-sub">
+            <div class="ap-toprow">
+              <span class="ap-dateline">01.09.2026 · 17:30 – 19:00</span>
+              <span class="ap-sharelink">⊹ Teilen</span>
+            </div>
+          </div>
+          <div class="ap-scroll">
+            <div class="ap-card">
+              <div class="ap-card-head">
+                <span class="ap-th">Mitglied</span>
+                <span class="ap-th">Training (Ferien)</span>
+              </div>
+              <div class="ap-row"><span class="ap-name">Lukas Müller</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name">Max Schmidt</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name">Tim Schneider</span><div class="ap-toggle off"></div></div>
+              <div class="ap-row"><span class="ap-name">Felix Wagner</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name">Ben Fischer</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name">Paul Bauer</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name">Nico Koch</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name">Marc Hoffmann</span><div class="ap-toggle off"></div></div>
+              <div class="ap-row"><span class="ap-name">Tom Richter</span><div class="ap-toggle"></div></div>
+              <div class="ap-row"><span class="ap-name ap-bold">Gesamt</span><span style="font-size:12px;font-weight:700;color:#1C1C1E;">11 / 13 (85%)</span></div>
+            </div>
+          </div>
+          <div class="ap-tabbar">
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-vcard"></i></span><span class="ap-tab-l">Mitglieder</span></div>
+            <div class="ap-tab on"><span class="ap-tab-i"><i class="bi bi-collection"></i></span><span class="ap-tab-l">Listen</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-megaphone"></i></span><span class="ap-tab-l">Ticker</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-graph-up"></i></span><span class="ap-tab-l">Statistik</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-circle"></i></span><span class="ap-tab-l">Profil</span></div>
           </div>
         </div>
 
-        <div class="phone-body">
-
-          <!-- Screen 0: Listen -->
-          <div class="phone-slide active" id="ps-0">
-            <div class="ph-header">
-              <span class="ph-h1">Training 18.07.</span>
-              <span class="ph-badge ph-badge-pub">Öffentlich</span>
+        <!-- Screen 1: Statistik -->
+        <div class="phone-slide" id="ps-1">
+          <div class="ap-nav">
+            <div class="ap-nav-l"><div class="ap-logo">FC</div><span class="ap-team">U13 26/27</span></div>
+            <div class="ap-nav-r"><span class="ap-page">Statistik</span><span class="ap-tab-i" style="font-size:16px"><i class="bi bi-moon"></i></span></div>
+          </div>
+          <div class="ap-scroll">
+            <div class="ap-dropdown">
+              <div class="ap-dd-l"><span class="ap-dd-lbl">Spalte:</span>&nbsp;<span class="ap-dd-val">Training</span></div>
+              <span style="font-size:11px;color:#8E8E93;">▾</span>
             </div>
-            <div class="ph-body">
-              <div class="ph-label">Mitglieder</div>
-              <div class="ph-row"><span class="ph-name">Tobias B.</span><span class="ph-toggle"></span></div>
-              <div class="ph-row"><span class="ph-name">Felix W.</span><span class="ph-toggle"></span></div>
-              <div class="ph-row"><span class="ph-name">Stefan H.</span><span class="ph-toggle off"></span></div>
-              <div class="ph-row"><span class="ph-name">Lukas M.</span><span class="ph-toggle"></span></div>
-              <div class="ph-row"><span class="ph-name">Markus R.</span><span class="ph-toggle"></span></div>
-              <div class="ph-row"><span class="ph-name">Jonas T.</span><span class="ph-toggle off"></span></div>
+            <div class="ap-card" style="margin-top:0">
+              <div class="ap-stat-title">Rangliste</div>
+              <div class="ap-stat-hd">
+                <span class="ap-th">Mitglied</span>
+                <span class="ap-th" style="color:#007AFF">Gesamt</span>
+                <span class="ap-th">L.4&nbsp;Wo.</span>
+              </div>
+              <div class="ap-stat-row"><span class="ap-sname">Lukas Müller</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
+              <div class="ap-stat-row"><span class="ap-sname">Max Schmidt</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
+              <div class="ap-stat-row"><span class="ap-sname">Tim Schneider</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
+              <div class="ap-stat-row"><span class="ap-sname">Felix Wagner</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
+              <div class="ap-stat-row"><span class="ap-sname">Ben Fischer</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
+              <div class="ap-stat-row"><span class="ap-sname">Paul Bauer</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
+              <div class="ap-stat-row"><span class="ap-sname">Nico Koch</span><span><span class="ap-sval">27</span>&nbsp;<span class="ap-spct">(100%)</span></span><span class="ap-szero">0</span></div>
             </div>
           </div>
-
-          <!-- Screen 1: Statistik -->
-          <div class="phone-slide" id="ps-1">
-            <div class="ph-header">
-              <span class="ph-h1">Statistik</span>
-              <span class="ph-badge ph-badge-small">Letzte 4 Wo.</span>
-            </div>
-            <div class="ph-body">
-              <div class="ph-label">Ranking — Anwesenheit</div>
-              <div class="ph-row">
-                <span style="display:flex;align-items:center;gap:5px;">
-                  <span class="ph-rank-num">1</span><span class="ph-name">Tobias B.</span>
-                </span>
-                <span class="ph-val">18 / 20</span>
-              </div>
-              <div class="ph-row">
-                <span style="display:flex;align-items:center;gap:5px;">
-                  <span class="ph-rank-num">2</span><span class="ph-name">Lukas M.</span>
-                </span>
-                <span class="ph-val">17 / 20</span>
-              </div>
-              <div class="ph-row">
-                <span style="display:flex;align-items:center;gap:5px;">
-                  <span class="ph-rank-num">3</span><span class="ph-name">Felix W.</span>
-                </span>
-                <span class="ph-val">14 / 20</span>
-              </div>
-              <div class="ph-row">
-                <span style="display:flex;align-items:center;gap:5px;">
-                  <span class="ph-rank-num">4</span><span class="ph-name">Markus R.</span>
-                </span>
-                <span class="ph-val">13 / 20</span>
-              </div>
-              <div class="ph-row">
-                <span style="display:flex;align-items:center;gap:5px;">
-                  <span class="ph-rank-num">5</span><span class="ph-name">Stefan H.</span>
-                </span>
-                <span class="ph-val">10 / 20</span>
-              </div>
-            </div>
+          <div class="ap-tabbar">
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-vcard"></i></span><span class="ap-tab-l">Mitglieder</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-collection"></i></span><span class="ap-tab-l">Listen</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-megaphone"></i></span><span class="ap-tab-l">Ticker</span></div>
+            <div class="ap-tab on"><span class="ap-tab-i"><i class="bi bi-graph-up"></i></span><span class="ap-tab-l">Statistik</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-circle"></i></span><span class="ap-tab-l">Profil</span></div>
           </div>
+        </div>
 
-          <!-- Screen 2: Ticker -->
-          <div class="phone-slide" id="ps-2">
-            <div class="ph-header">
-              <span class="ph-h1">Live-Ticker</span>
-              <span class="ph-badge ph-badge-live">● Live</span>
+        <!-- Screen 2: Ticker (public, no tab bar) -->
+        <div class="phone-slide" id="ps-2">
+          <div class="ap-tkr-hd">
+            <div class="ap-tkr-top">
+              <span style="font-size:13px;font-weight:700;color:#1C1C1E;">U13 26/27</span>
+              <div style="display:flex;align-items:center;gap:6px;"><span class="ap-page">Ticker</span><span class="ap-tab-i" style="font-size:16px"><i class="bi bi-moon"></i></span></div>
             </div>
-            <div class="ph-body">
-              <div class="ph-label">SV Musterbach · 2:1</div>
-              <div class="ph-row" style="align-items:flex-start;gap:6px;padding:7px 0;">
-                <span class="ph-ticker-time">78'</span>
-                <span style="font-size:10.5px;">⚽ Tor! Tobias B. trifft zum 2:1</span>
-              </div>
-              <div class="ph-row" style="align-items:flex-start;gap:6px;padding:7px 0;">
-                <span class="ph-ticker-time">65'</span>
-                <span style="font-size:10.5px;">🔄 Wechsel: Felix raus, Jonas rein</span>
-              </div>
-              <div class="ph-row" style="align-items:flex-start;gap:6px;padding:7px 0;">
-                <span class="ph-ticker-time">41'</span>
-                <span style="font-size:10.5px;">⚽ Tor! Lukas M. — 1:1</span>
-              </div>
-              <div class="ph-row" style="align-items:flex-start;gap:6px;padding:7px 0;">
-                <span class="ph-ticker-time">18'</span>
-                <span style="font-size:10.5px;color:#9A9994;">🟨 Gelbe Karte — Gegner</span>
-              </div>
-              <div class="ph-row" style="align-items:flex-start;gap:6px;padding:7px 0;border-bottom:none;">
-                <span class="ph-ticker-time">1'</span>
-                <span style="font-size:10.5px;color:#9A9994;">Anpfiff</span>
-              </div>
-            </div>
+            <div class="ap-tkr-back">← Alle Ticker</div>
+            <div class="ap-tkr-info">Geschlossen</div>
+            <div class="ap-tkr-count">6 Nachrichten</div>
           </div>
+          <div class="ap-scroll" style="background:#fff">
+            <div class="ap-msg"><div class="ap-msg-meta"><span class="ap-msg-time">19:45</span><span class="ap-badge bg-gray">Aktion</span></div><div class="ap-msg-text">Spiel beendet. Endstand 1:1.</div></div>
+            <div class="ap-msg"><div class="ap-msg-meta"><span class="ap-msg-time">19:35</span><span class="ap-badge bg-green">Tor für uns</span></div><div class="ap-msg-text">Jan hat ein Tor geschossen!</div></div>
+            <div class="ap-msg"><div class="ap-msg-meta"><span class="ap-msg-time">19:30</span><span class="ap-badge bg-red">Gegentor</span></div><div class="ap-msg-text">oh nein</div></div>
+            <div class="ap-msg"><div class="ap-msg-meta"><span class="ap-msg-time">19:00</span><span class="ap-badge bg-gray">Aktion</span></div><div class="ap-msg-text">Halbzeit</div></div>
+            <div class="ap-msg"><div class="ap-msg-meta"><span class="ap-msg-time">18:45</span><span class="ap-badge bg-blue">Karte</span></div><div class="ap-msg-text">Gelb für Nico</div></div>
+            <div class="ap-msg"><div class="ap-msg-meta"><span class="ap-msg-time">18:30</span><span class="ap-badge bg-gray">Aktion</span></div><div class="ap-msg-text">Spiel beginnt</div></div>
+          </div>
+          <div class="ap-tkr-foot">Anmelden · SV Musterbach</div>
+        </div>
 
-          <!-- Screen 3: Kalender -->
-          <div class="phone-slide" id="ps-3">
-            <div class="ph-header">
-              <span class="ph-h1">Kalender</span>
-              <span class="ph-badge ph-badge-small">KW 30</span>
+        <!-- Screen 3: Kalender -->
+        <div class="phone-slide" id="ps-3">
+          <div class="ap-nav">
+            <div class="ap-nav-l"><div class="ap-logo">FC</div><span class="ap-team">U13 26/27</span></div>
+            <div class="ap-nav-r"><span class="ap-page">Inhalte</span><span class="ap-tab-i" style="font-size:16px"><i class="bi bi-moon"></i></span></div>
+          </div>
+          <div class="ap-view-tabs">
+            <div class="ap-vt on">📅 Kalender</div>
+            <div class="ap-vt">≡ Liste</div>
+          </div>
+          <div class="ap-scroll">
+            <div class="ap-seg"><div class="ap-seg-b">Woche</div><div class="ap-seg-b on">Monat</div></div>
+            <div class="ap-mnav">
+              <span class="ap-mprev">‹ Vorheriger</span>
+              <span class="ap-mcur">September 2026</span>
+              <span class="ap-mnext">Nächster ›</span>
             </div>
-            <div class="ph-body">
-              <div class="ph-label">Diese Woche</div>
-              <div class="ph-event">
-                <div class="ph-event-date">Di, 22.07.</div>
-                <div class="ph-event-name">📋 Training</div>
-                <div class="ph-event-meta">18:00 – 19:30 &middot; Sportplatz</div>
+            <div class="ap-dgrp">
+              <div class="ap-dlbl">Dienstag, 01.09.2026</div>
+              <div class="ap-ev">
+                <div><div class="ap-ev-title">📅 Training 01.09.2026</div><div class="ap-ev-meta">📍 Musterbach<br>🕐 17:30 – 19:00</div></div>
+                <span class="ap-badge bg-green" style="white-space:nowrap">Öffentlich</span>
               </div>
-              <div class="ph-event">
-                <div class="ph-event-date">Sa, 26.07.</div>
-                <div class="ph-event-name">⭐ Heimspiel</div>
-                <div class="ph-event-meta">14:00 &middot; Hauptstadion</div>
-              </div>
-              <div class="ph-event" style="margin-top:8px;">
-                <div class="ph-event-date" style="color:#2d6b2d;font-weight:600;">ICS-Abo aktiv</div>
-                <div class="ph-event-meta">Apple &middot; Google &middot; Outlook</div>
+            </div>
+            <div class="ap-dgrp">
+              <div class="ap-dlbl">Freitag, 04.09.2026</div>
+              <div class="ap-ev"><div><div class="ap-ev-title">🎁 Geburtstag Paul</div></div><span class="ap-badge bg-gray">Privat</span></div>
+            </div>
+            <div class="ap-dgrp">
+              <div class="ap-dlbl">Dienstag, 08.09.2026</div>
+              <div class="ap-ev">
+                <div><div class="ap-ev-title">📅 Training 08.09.2026</div><div class="ap-ev-meta">📍 Musterbach<br>🕐 17:30 – 19:00</div></div>
+                <span class="ap-badge bg-green" style="white-space:nowrap">Öffentlich</span>
               </div>
             </div>
           </div>
+          <div class="ap-tabbar">
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-vcard"></i></span><span class="ap-tab-l">Mitglieder</span></div>
+            <div class="ap-tab on"><span class="ap-tab-i"><i class="bi bi-collection"></i></span><span class="ap-tab-l">Listen</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-megaphone"></i></span><span class="ap-tab-l">Ticker</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-graph-up"></i></span><span class="ap-tab-l">Statistik</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-circle"></i></span><span class="ap-tab-l">Profil</span></div>
+          </div>
+        </div>
 
-          <!-- Screen 4: Dokumente -->
-          <div class="phone-slide" id="ps-4">
-            <div class="ph-header">
-              <span class="ph-h1">Dokumente</span>
+        <!-- Screen 4: Dokument -->
+        <div class="phone-slide" id="ps-4">
+          <div class="ap-nav">
+            <div class="ap-nav-l"><div class="ap-logo">FC</div><span class="ap-team">U13 26/27</span></div>
+            <div class="ap-nav-r"><span class="ap-page" style="max-width:90px;overflow:hidden;text-overflow:ellipsis">Allg. Info</span><span class="ap-tab-i" style="font-size:16px"><i class="bi bi-moon"></i></span></div>
+          </div>
+          <div class="ap-doc-subnav">
+            <div class="ap-doc-links">
+              <span class="ap-doc-lnk">← Zurück</span>
+              <span class="ap-doc-lnk">⊹ Teilen</span>
+              <span class="ap-doc-lnk">✉ Benachrichtigung</span>
             </div>
-            <div class="ph-body">
-              <div class="ph-label">Zuletzt geändert</div>
-              <div class="ph-doc">
-                <div class="ph-doc-name">Spielanalyse KW 29</div>
-                <div class="ph-doc-meta">Geschützt &middot; 20.07.2026</div>
+          </div>
+          <div class="ap-scroll">
+            <div class="ap-doc-card">
+              <div class="ap-doc-hd">
+                <div class="ap-doc-ht"><span>📄</span> Allgemeine Informationen</div>
+                <span class="ap-badge bg-gray">Geschützt</span>
               </div>
-              <div class="ph-doc">
-                <div class="ph-doc-name">Saisonziele 2026/27</div>
-                <div class="ph-doc-meta">Öffentlich &middot; 15.07.2026</div>
+              <div class="ap-doc-tabs">
+                <div class="ap-doc-tab on">Vorschau</div>
+                <div class="ap-doc-tab">Bearbeiten</div>
               </div>
-              <div class="ph-doc">
-                <div class="ph-doc-name">Verhaltensregeln</div>
-                <div class="ph-doc-meta">Öffentlich &middot; 01.05.2026</div>
-              </div>
-              <div class="ph-doc">
-                <div class="ph-doc-name">Taktik Herbstrunde</div>
-                <div class="ph-doc-meta">Nur Koordinatoren &middot; 28.04.2026</div>
+              <div class="ap-doc-body">
+                <div class="ap-mh1">Unsere Liga</div>
+                <div class="ap-mli"><span class="ap-mlnk">U13 Kreisklasse A Herbstrunde</span></div>
+                <div class="ap-mh2">Trainingszeiten</div>
+                <div class="ap-mli ap-mtxt">Dienstag 17:30–19:00 Uhr in Nordstadt (Lars)</div>
+                <div class="ap-mli ap-mtxt">Donnerstag 17:30–19:00 Uhr in Musterbach (Basti)</div>
+                <div class="ap-mh2">Wichtige Links</div>
+                <div class="ap-mli"><span class="ap-mlnk">Verbandsordnung 2026</span></div>
+                <div class="ap-mli"><span class="ap-mlnk">Spielregeln Blaues Buch 2025</span></div>
+                <div class="ap-mli"><span class="ap-mlnk">Zusammenfassung Altersklasse</span></div>
               </div>
             </div>
           </div>
-
-        </div><!-- /phone-body -->
-
-        <div class="phone-home"><div class="phone-home-bar"></div></div>
+          <div class="ap-tabbar">
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-vcard"></i></span><span class="ap-tab-l">Mitglieder</span></div>
+            <div class="ap-tab on"><span class="ap-tab-i"><i class="bi bi-collection"></i></span><span class="ap-tab-l">Listen</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-megaphone"></i></span><span class="ap-tab-l">Ticker</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-graph-up"></i></span><span class="ap-tab-l">Statistik</span></div>
+            <div class="ap-tab"><span class="ap-tab-i"><i class="bi bi-person-circle"></i></span><span class="ap-tab-l">Profil</span></div>
+          </div>
+        </div>
 
       </div><!-- /phone-screen -->
     </div><!-- /phone -->
