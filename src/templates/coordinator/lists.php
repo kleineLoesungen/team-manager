@@ -3,20 +3,6 @@
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
 //            $datedItems, $undatedItems, $ics_url
 
-// ── Shared badge helpers ──────────────────────────────────────────────────────
-$badge_class = fn(string $v): string => match($v) {
-    'public'    => 'bg-success',
-    'protected' => 'bg-warning text-dark',
-    'private'   => 'bg-secondary',
-    default     => 'bg-secondary',
-};
-$badge_label = fn(string $v): string => match($v) {
-    'public'    => 'Öffentlich',
-    'protected' => 'Geschützt',
-    'private'   => 'Privat',
-    default     => e($v),
-};
-
 // ── German day name helper ────────────────────────────────────────────────────
 $de_days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
 $day_header = function(string $date) use ($de_days): string {
@@ -27,7 +13,16 @@ $day_header = function(string $date) use ($de_days): string {
 // ── URL builder helpers ───────────────────────────────────────────────────────
 $base_url  = '/coordinator/lists';
 $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&offset=' . $off;
+
+// ── Visibility badge helper ───────────────────────────────────────────────────
+$vis_badge = function(string $visibility): void {
+    $type  = match($visibility) { 'public' => 'ok', 'protected' => 'warn', 'private' => 'dim', default => 'dim' };
+    $label = match($visibility) { 'public' => 'Öffentlich', 'protected' => 'Geschützt', 'private' => 'Privat', default => htmlspecialchars($visibility, ENT_QUOTES) };
+    render_badge($type, $label);
+};
 ?>
+
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <!-- ── View switcher: Kalender / Liste ───────────────────────────────── -->
 <div class="seg-ctrl">
@@ -93,98 +88,88 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
 <?php if (!empty($datedItems)): ?>
 <div class="mb-4">
     <?php
-    $currentDate = null;
-    foreach ($datedItems as $item):
-        $itemDate = $item['date'];
-        if ($itemDate !== $currentDate):
-            if ($currentDate !== null): echo '</div>'; endif;
-            $currentDate = $itemDate;
-    ?>
+    // Group items by date, preserving order
+    $groups_by_date = [];
+    foreach ($datedItems as $_item) {
+        $groups_by_date[$_item['date']][] = $_item;
+    }
+    foreach ($groups_by_date as $date => $group_items): ?>
     <div class="mb-3">
-        <h6 class="text-muted border-bottom pb-1 mb-2">
-            <?= e($day_header($itemDate)) ?>
-        </h6>
-    <?php endif; ?>
-
-    <?php if ($item['type'] === 'event'): ?>
-    <div class="card card-sm mb-2 border-0 bg-body-secondary">
-        <div class="card-body py-2 px-3">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div class="flex-grow-1 min-w-0">
-                    <a href="/coordinator/events/<?= (int)$item['id'] ?>/edit"
-                       class="text-decoration-none fw-semibold text-body">
-                        <i class="bi <?= e($item['icon'] ?? 'bi-calendar-event') ?> me-1 text-muted"></i><?= e($item['name']) ?>
-                    </a>
-                    <?php if (empty($item['is_all_day']) && !empty($item['time_start'])): ?>
-                    <div class="small text-muted mt-1">
-                        <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
+    <?php render_collection_group($day_header($date), function() use ($group_items, $vis_badge): void {
+        foreach ($group_items as $item) {
+            if ($item['type'] === 'event') { ?>
+        <div class="card card-sm mb-2 border-0 bg-body-secondary">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="flex-grow-1 min-w-0">
+                        <a href="/coordinator/events/<?= (int)$item['id'] ?>/edit"
+                           class="text-decoration-none fw-semibold text-body">
+                            <i class="bi <?= e($item['icon'] ?? 'bi-calendar-event') ?> me-1 text-muted"></i><?= e($item['name']) ?>
+                        </a>
+                        <?php if (empty($item['is_all_day']) && !empty($item['time_start'])): ?>
+                        <div class="small text-muted mt-1">
+                            <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($item['location'])): ?>
+                        <div class="small text-muted mt-1">
+                            <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
-                    <?php if (!empty($item['location'])): ?>
-                    <div class="small text-muted mt-1">
-                        <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                <?php if ($item['visibility'] === 'private'): ?>
-                <span class="badge bg-secondary flex-shrink-0">Privat</span>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-    <?php else: ?>
-    <?php
-    $is_file    = ($item['type'] === 'file');
-    $detail_url = $is_file
-        ? '/coordinator/files/' . (int)$item['id']
-        : '/coordinator/lists/' . (int)$item['id'];
-    ?>
-    <div class="card card-sm mb-2 shadow-sm">
-        <div class="card-body py-2 px-3">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div class="flex-grow-1 min-w-0">
-                    <a href="<?= e($detail_url) ?>" class="text-decoration-none fw-semibold text-body">
-                        <i class="bi <?= $is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($item['name']) ?>
-                    </a>
-                    <?php if (!empty($item['location'])): ?>
-                    <div class="small text-muted mt-1">
-                        <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
-                    </div>
-                    <?php endif; ?>
-                    <?php if (!empty($item['time_start'])): ?>
-                    <div class="small text-muted mt-1">
-                        <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
-                    </div>
+                    <?php if ($item['visibility'] === 'private'): ?>
+                    <?php render_badge('dim', 'Privat'); ?>
                     <?php endif; ?>
                 </div>
-                <span class="badge <?= $badge_class($item['visibility']) ?> flex-shrink-0">
-                    <?= $badge_label($item['visibility']) ?>
-                </span>
             </div>
         </div>
+            <?php } else {
+                $is_file    = ($item['type'] === 'file');
+                $detail_url = $is_file
+                    ? '/coordinator/files/' . (int)$item['id']
+                    : '/coordinator/lists/' . (int)$item['id']; ?>
+        <div class="card card-sm mb-2">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="flex-grow-1 min-w-0">
+                        <a href="<?= e($detail_url) ?>" class="text-decoration-none fw-semibold text-body">
+                            <i class="bi <?= $is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($item['name']) ?>
+                        </a>
+                        <?php if (!empty($item['location'])): ?>
+                        <div class="small text-muted mt-1">
+                            <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (!empty($item['time_start'])): ?>
+                        <div class="small text-muted mt-1">
+                            <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php $vis_badge($item['visibility']); ?>
+                </div>
+            </div>
+        </div>
+            <?php }
+        }
+    }); ?>
     </div>
-    <?php endif; ?>
     <?php endforeach; ?>
-    <?php if ($currentDate !== null): echo '</div>'; endif; ?>
 </div>
 <?php else: ?>
-<div class="text-center py-4 text-muted">
-    <i class="bi bi-calendar3 d-block mb-2" style="font-size:2rem;"></i>
-    Noch keine Einträge mit Datum in diesem Zeitraum
-</div>
+<?php render_empty('calendar3', 'Noch keine Einträge', 'Kein Eintrag mit Datum in diesem Zeitraum.'); ?>
 <?php endif; ?>
 
 <!-- Undated section (D-04) -->
 <?php if (!empty($undatedItems)): ?>
 <div class="mt-4">
-    <h6 class="text-muted border-bottom pb-1 mb-3">Ohne Datum</h6>
-    <?php foreach ($undatedItems as $item):
+<?php render_collection_group('Ohne Datum', function() use ($undatedItems, $vis_badge): void {
+    foreach ($undatedItems as $item) {
         $is_file    = ($item['type'] === 'file');
         $detail_url = $is_file
             ? '/coordinator/files/' . (int)$item['id']
-            : '/coordinator/lists/' . (int)$item['id'];
-    ?>
-    <div class="card card-sm mb-2 shadow-sm">
+            : '/coordinator/lists/' . (int)$item['id']; ?>
+    <div class="card card-sm mb-2">
         <div class="card-body py-2 px-3">
             <div class="d-flex justify-content-between align-items-start gap-2">
                 <div class="flex-grow-1 min-w-0">
@@ -192,13 +177,12 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
                         <i class="bi <?= $is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($item['name']) ?>
                     </a>
                 </div>
-                <span class="badge <?= $badge_class($item['visibility']) ?> flex-shrink-0">
-                    <?= $badge_label($item['visibility']) ?>
-                </span>
+                <?php $vis_badge($item['visibility']); ?>
             </div>
         </div>
     </div>
-    <?php endforeach; ?>
+    <?php }
+}); ?>
 </div>
 <?php endif; ?>
 
@@ -220,7 +204,7 @@ $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '
 $visible = array_filter($items, fn($i) => !$i['is_hidden']);
 $hidden  = array_filter($items, fn($i) =>  $i['is_hidden']);
 
-$render_card = function(array $item) use ($badge_class, $badge_label): void {
+$render_card = function(array $item) use ($vis_badge): void {
     $is_event = ($item['type'] === 'event');
     $is_file  = ($item['type'] === 'file');
 
@@ -236,19 +220,19 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
     }
     ?>
 <div class="col">
-    <div class="card h-100 <?= $is_event ? 'border-0 bg-body-secondary' : 'shadow-sm' ?>">
+    <div class="card h-100 <?= $is_event ? 'border-0 bg-body-secondary' : '' ?>">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold">
                 <i class="bi <?= $icon ?> me-1 text-muted"></i><?= e($item['name']) ?>
             </span>
             <?php if ($is_event): ?>
             <?php if ($item['visibility'] === 'private'): ?>
-            <span class="badge bg-secondary">Privat</span>
+            <?php render_badge('dim', 'Privat'); ?>
             <?php else: ?>
-            <span class="badge bg-warning text-dark">Mitglieder</span>
+            <?php render_badge('info', 'Mitglieder'); ?>
             <?php endif; ?>
             <?php else: ?>
-            <span class="badge <?= $badge_class($item['visibility']) ?>"><?= $badge_label($item['visibility']) ?></span>
+            <?php $vis_badge($item['visibility']); ?>
             <?php endif; ?>
         </div>
         <?php if ($item['date']): ?>
@@ -322,10 +306,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 </div>
 
 <?php if (empty($items)): ?>
-<div class="text-center py-5">
-    <p class="h5 text-muted">Noch keine Einträge</p>
-    <p class="text-muted">Lege die erste Liste oder Datei an.</p>
-</div>
+<?php render_empty('collection', 'Noch keine Einträge', 'Lege die erste Liste oder Datei an.'); ?>
 
 <?php else: ?>
 
@@ -362,6 +343,7 @@ $render_card = function(array $item) use ($badge_class, $badge_label): void {
 <script>
 (function() {
     var url = (location.pathname + location.search).replace(/[?&]success=1/, '').replace(/\?$/, '');
+    if (url !== location.pathname + location.search) history.replaceState(null, '', url);
     sessionStorage.setItem('coordinator_lists_url', url);
     var saved = sessionStorage.getItem('coordinator_lists_scroll');
     if (saved !== null) {
