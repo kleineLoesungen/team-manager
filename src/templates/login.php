@@ -3,8 +3,8 @@
 // Included by render_login_page() in layout.php
 // Variables available: $error (string), $message (string)
 ?>
-<div class="d-flex justify-content-center align-items-center" style="min-height: 100dvh;">
-    <div class="card shadow" style="width: 100%; max-width: 400px; margin: 1rem;">
+<div class="d-flex justify-content-center align-items-center login-wrapper">
+    <div class="card shadow login-card-wrap">
         <div class="card-body p-4">
             <h1 class="h4 fw-semibold mb-4 text-center">Anmelden</h1>
 
@@ -28,7 +28,7 @@
                 <?php endif; ?>
 
                 <div class="mb-3">
-                    <label for="username" class="form-label fw-semibold" style="font-size: 0.875rem;">
+                    <label for="username" class="form-label fw-semibold">
                         Benutzername
                     </label>
                     <input
@@ -44,7 +44,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="password" class="form-label fw-semibold" style="font-size: 0.875rem;">
+                    <label for="password" class="form-label fw-semibold">
                         Passwort
                     </label>
                     <input
@@ -67,7 +67,7 @@
             <a href="/ticker" class="btn btn-outline-secondary w-100 min-touch">
                 <i class="bi bi-megaphone me-2"></i>Live-Ticker anzeigen
             </a>
-            <p class="text-muted text-center mb-0 mt-2" style="font-size: 0.75rem;">Verfolge Live-Events ohne Anmeldung</p>
+            <p class="text-muted text-center mb-0 mt-2 text-xs">Verfolge Live-Events ohne Anmeldung</p>
         </div>
     </div><!-- /card -->
 </div><!-- /outer d-flex -->
