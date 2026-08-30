@@ -3,6 +3,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/components/partials.php';
+
 function render_layout_head(string $title = 'Team Manager'): void {
     static $brand_color = null;
     if ($brand_color === null) {
@@ -94,6 +96,85 @@ function render_layout_foot(): void {
     <?php
 }
 
+
+/**
+ * Unified layout for all roles. Replaces render_coach_page(), render_member_page(),
+ * render_admin_page() as the canonical layout function.
+ *
+ * @param array    $opts  Keys: 'title' (string), 'role' (admin|coordinator|member|public),
+ *                        'active' (string — active tab key), 'back' (string|null — back URL)
+ * @param callable $body  Outputs the main content HTML
+ */
+function render_page(array $opts, callable $body): void {
+    $title  = $opts['title']  ?? 'Team Manager';
+    $role   = $opts['role']   ?? 'coordinator';
+    $active = $opts['active'] ?? '';
+    $back   = $opts['back']   ?? null;
+
+    render_layout_head($title);
+
+    $tab_maps = [
+        'coordinator' => [
+            'members' => ['href' => '/coordinator/members', 'icon' => 'bi-person-vcard',  'label' => 'Mitglieder'],
+            'lists'   => ['href' => '/coordinator/lists',   'icon' => 'bi-collection',     'label' => 'Listen'],
+            'ticker'  => ['href' => '/coordinator/ticker',  'icon' => 'bi-megaphone',      'label' => 'Ticker'],
+            'stats'   => ['href' => '/coordinator/stats',   'icon' => 'bi-graph-up',       'label' => 'Statistik'],
+            'profile' => ['href' => '/coordinator/profile', 'icon' => 'bi-person-circle',  'label' => 'Profil'],
+        ],
+        'member' => [
+            'lists'   => ['href' => '/member/lists',   'icon' => 'bi-collection',   'label' => 'Listen'],
+            'ticker'  => ['href' => '/member/ticker',  'icon' => 'bi-megaphone',     'label' => 'Ticker'],
+            'stats'   => ['href' => '/member/stats',   'icon' => 'bi-graph-up',      'label' => 'Statistik'],
+            'profile' => ['href' => '/member/profile', 'icon' => 'bi-person-circle', 'label' => 'Profil'],
+        ],
+        'admin' => [
+            'teams'        => ['href' => '/admin/teams',        'icon' => 'bi-people-fill',  'label' => 'Teams'],
+            'coordinators' => ['href' => '/admin/coordinators', 'icon' => 'bi-person-badge', 'label' => 'Koordinatoren'],
+            'players'      => ['href' => '/admin/members',      'icon' => 'bi-person-vcard', 'label' => 'Mitglieder'],
+            'clubs'        => ['href' => '/admin/clubs',        'icon' => 'bi-building',     'label' => 'Klubs'],
+            'settings'     => ['href' => '/admin/settings',     'icon' => 'bi-gear-fill',    'label' => 'Einstellungen'],
+        ],
+    ];
+
+    $team_name = htmlspecialchars($_SESSION['team_name'] ?? 'Team Manager', ENT_QUOTES);
+    ?>
+    <div class="app">
+        <header class="topbar">
+            <img src="/logo" alt="" class="topbar-logo" onerror="this.style.display='none'" loading="eager">
+            <span class="topbar-title"><?= $team_name ?></span>
+            <?php if ($back): ?>
+            <a href="<?= htmlspecialchars($back, ENT_QUOTES) ?>" class="topbar-context text-decoration-none">
+                <i class="bi bi-chevron-left"></i> Zurück
+            </a>
+            <?php else: ?>
+            <span class="topbar-context"><?= e($title) ?></span>
+            <?php endif; ?>
+            <button class="btn-theme" id="theme-toggle" aria-label="Dunkelmodus">
+                <i class="bi bi-moon"></i>
+            </button>
+        </header>
+
+        <main class="app-content">
+            <?php $body(); ?>
+        </main>
+
+        <?php if ($role !== 'public' && isset($tab_maps[$role])): ?>
+        <nav class="tabbar" aria-label="Hauptnavigation">
+            <?php foreach ($tab_maps[$role] as $key => $tab): ?>
+            <a href="<?= $tab['href'] ?>"
+               class="tab-item <?= $active === $key ? 'is-on' : '' ?>"
+               aria-current="<?= $active === $key ? 'page' : 'false' ?>">
+                <i class="bi <?= $tab['icon'] ?>"></i>
+                <span class="tab-label"><?= $tab['label'] ?></span>
+            </a>
+            <?php endforeach; ?>
+        </nav>
+        <?php endif; ?>
+    </div>
+    <?php
+    render_layout_foot();
+    exit;
+}
 
 function render_login_page(string $error = '', string $message = ''): void {
     render_layout_head('Anmelden');
