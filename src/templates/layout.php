@@ -42,7 +42,7 @@ function render_layout_head(string $title = 'Team Manager'): void {
           crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
           rel="stylesheet"
-          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          integrity="sha384-QuGBSgV5Im3DzL2z+8Ko9/hqNy/N0O7zwvXAtfd1MvPKWa/UbeLV65cfm4BV5Wgq"
           crossorigin="anonymous">
     <link rel="stylesheet" href="/css/app.css">
     <style>:root{--brand:<?= $safe_color ?>;}</style>
