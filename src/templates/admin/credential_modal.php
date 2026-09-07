@@ -5,8 +5,6 @@
 
 // SECURITY: Never log $credential_password. Display only in this modal.
 // Per design decision: 60-second auto-close, no persistence beyond this render.
-header('Cache-Control: no-store, no-cache, must-revalidate');
-header('Pragma: no-cache');
 ?>
 <div class="modal show d-block" id="credentialModal" tabindex="-1"
      style="background: rgba(0,0,0,0.5);">

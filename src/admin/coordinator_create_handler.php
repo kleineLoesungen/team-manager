@@ -61,6 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $credential_password = $plain_password;
             $redirect_url        = '/admin/coordinators';
 
+            header('Cache-Control: no-store, no-cache, must-revalidate');
+            header('Pragma: no-cache');
             render_layout_head('Neue Anmeldedaten');
             require ROOT_PATH . '/src/templates/admin/credential_modal.php';
             render_layout_foot();
