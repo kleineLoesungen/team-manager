@@ -83,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $redirect_url        = '/coordinator/members';
 
                 render_layout_head('Neue Anmeldedaten');
-                render_navbar();
                 require ROOT_PATH . '/src/templates/admin/credential_modal.php';
                 render_layout_foot();
                 exit;
@@ -130,7 +129,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $redirect_url        = '/coordinator/members';
 
                 render_layout_head('Neue Anmeldedaten');
-                render_navbar();
                 require ROOT_PATH . '/src/templates/admin/credential_modal.php';
                 render_layout_foot();
                 exit;
