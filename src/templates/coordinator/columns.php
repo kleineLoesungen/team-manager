@@ -2,6 +2,9 @@
 // src/templates/coordinator/columns.php — Global columns overview (LIST-02)
 // Variables: $columns (array of team global column rows), $system_columns (array of system column rows)
 ?>
+
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <div class="mb-3">
     <a href="/coordinator/settings" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
@@ -19,14 +22,10 @@
             <tr class="text-muted">
                 <td><?= e($col['name']) ?></td>
                 <td>
-                    <span class="badge bg-light text-dark border">
-                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
-                    </span>
+                    <?php render_badge('dim', $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl'); ?>
                 </td>
                 <td class="text-end">
-                    <span class="badge bg-secondary-subtle text-secondary">
-                        <i class="bi bi-lock me-1"></i>Systemspalte
-                    </span>
+                    <?php render_badge('dim', 'Systemspalte'); ?>
                 </td>
             </tr>
             <?php endforeach; ?>
@@ -41,9 +40,7 @@
 </div>
 
 <?php if (empty($columns)): ?>
-<div class="text-center py-4 text-muted mb-4">
-    <p class="mb-0">Noch keine eigenen globalen Spalten für dieses Team.</p>
-</div>
+<?php render_empty('table', 'Noch keine Team-Spalten', 'Leg globale Spalten an, um sie in allen Listen zu verwenden.'); ?>
 <?php else: ?>
 <div class="table-responsive mb-4">
     <table class="table table-hover align-middle">
@@ -59,9 +56,7 @@
             <tr>
                 <td><?= e($col['name']) ?></td>
                 <td>
-                    <span class="badge bg-light text-dark border">
-                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
-                    </span>
+                    <?php render_badge('dim', $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl'); ?>
                 </td>
                 <td class="text-muted small"><?= e(date('d.m.Y', strtotime($col['created_at']))) ?></td>
             </tr>
@@ -72,7 +67,7 @@
 <?php endif; ?>
 
 <!-- Create global column form (inline at bottom of page) -->
-<div class="card shadow-sm" style="max-width: 500px;">
+<div class="card">
     <div class="card-header fw-semibold">Neue Team-Spalte anlegen</div>
     <div class="card-body">
         <form method="POST" action="/coordinator/columns/create">

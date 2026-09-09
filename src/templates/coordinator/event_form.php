@@ -29,6 +29,8 @@ $icons = [
 ];
 ?>
 
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <div class="mb-3">
     <a href="/coordinator/lists" id="js-back-btn" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück

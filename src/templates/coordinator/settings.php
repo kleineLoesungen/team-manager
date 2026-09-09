@@ -1,9 +1,14 @@
 <?php
 // src/templates/coordinator/settings.php — Einstellungen page
 // Variables: $columns (array), $system_columns (array), $ticker_tags (array), $error (string), $success (string)
+// Also: $delete_pending_col_id (int|null) — set when a column delete awaits confirmation
 
 // ── Section 1: Globale Spalten (preserved from columns.php) ──────────────────
 ?>
+
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+<?php if (!empty($error)): render_flash('error', $error); endif; ?>
+
 <div class="mb-3">
     <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
@@ -29,14 +34,12 @@
             <tr>
                 <td>
                     <?= e($col['name']) ?>
-                    <span class="badge bg-light text-dark border ms-2">
+                    <span class="badge bg-secondary-subtle text-secondary ms-2">
                         <i class="bi bi-lock-fill me-1"></i>System
                     </span>
                 </td>
                 <td>
-                    <span class="badge bg-light text-dark border">
-                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
-                    </span>
+                    <?php render_badge('dim', $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl'); ?>
                 </td>
                 <td class="text-muted small"><?= (int)$col['sort_order'] ?></td>
             </tr>
@@ -51,10 +54,7 @@
 <?php endif; ?>
 
 <?php if (empty($columns)): ?>
-<div class="text-center py-4 mb-4">
-    <p class="h5 text-muted">Noch keine eigenen globalen Spalten</p>
-    <p class="text-muted">Team-eigene globale Spalten erscheinen in allen Listen deines Teams.</p>
-</div>
+<?php render_empty('table', 'Noch keine globalen Spalten', 'Team-eigene globale Spalten erscheinen in allen Listen deines Teams.'); ?>
 <?php else: ?>
 <h6 class="fw-semibold text-muted mb-2">Team-eigene Spalten</h6>
 <div class="table-responsive mb-4">
@@ -71,21 +71,11 @@
             <tr>
                 <td><?= e($col['name']) ?></td>
                 <td>
-                    <span class="badge bg-light text-dark border">
-                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
-                    </span>
+                    <?php render_badge('dim', $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl'); ?>
                 </td>
                 <td class="text-end">
                     <?php if ($delete_pending_col_id !== null && $delete_pending_col_id === (int)$col['id']): ?>
-                    <form method="POST" action="/coordinator/settings" class="d-inline-flex gap-2 align-items-center">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="action" value="delete_column">
-                        <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
-                        <input type="hidden" name="confirm" value="1">
-                        <span class="text-danger small">Spalte und alle Einträge löschen?</span>
-                        <button type="submit" class="btn btn-sm btn-danger">Ja</button>
-                        <a href="/coordinator/settings" class="btn btn-sm btn-outline-secondary">Nein</a>
-                    </form>
+                    <span class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>Ausstehend</span>
                     <?php else: ?>
                     <form method="POST" action="/coordinator/settings" class="d-inline">
                         <?= csrf_field() ?>
@@ -93,6 +83,7 @@
                         <input type="hidden" name="column_id" value="<?= (int)$col['id'] ?>">
                         <input type="hidden" name="confirm" value="0">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Löschen</button>
+                        <!-- btn-sm: table action column, exception per UI-SPEC -->
                     </form>
                     <?php endif; ?>
                 </td>
@@ -104,7 +95,7 @@
 <?php endif; ?>
 
 <!-- Create global column form — action updated for new URL in Phase 7 -->
-<div class="card shadow-sm mb-5" style="max-width: 500px;">
+<div class="card mb-4">
     <div class="card-header fw-semibold">Neue globale Spalte anlegen</div>
     <div class="card-body">
         <form method="POST" action="/coordinator/settings/columns/create">
@@ -135,7 +126,38 @@
     </div>
 </div>
 
-<hr class="my-5">
+<?php if ($delete_pending_col_id !== null): ?>
+<?php
+    $pending_col_name = '';
+    foreach ($columns as $col) {
+        if ((int)$col['id'] === $delete_pending_col_id) {
+            $pending_col_name = $col['name'];
+            break;
+        }
+    }
+    ob_start();
+    ?>
+    <form method="POST" action="/coordinator/settings">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="delete_column">
+        <input type="hidden" name="column_id" value="<?= (int)$delete_pending_col_id ?>">
+        <input type="hidden" name="confirm" value="1">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <button type="submit" class="btn btn-outline-danger">Spalte löschen</button>
+            <a href="/coordinator/settings" class="btn btn-outline-secondary">Abbrechen</a>
+        </div>
+    </form>
+    <?php
+    $delete_form_html = ob_get_clean();
+    render_danger_zone(
+        'Spalte löschen',
+        'Löscht die Spalte "' . htmlspecialchars($pending_col_name, ENT_QUOTES) . '" und alle Einträge in allen Listen unwiderruflich.',
+        $delete_form_html
+    );
+?>
+<?php endif; ?>
+
+<hr class="my-4">
 
 <?php
 // ── Section 2: Ticker-Tags (new in Phase 7) ───────────────────────────────────
@@ -151,9 +173,7 @@ $color_labels = [
 <p class="text-muted mb-3">Team-weit verfügbare Tags für Nachrichten. Koordinator definiert Tags hier; Nachrichten können optional mit einem Tag versehen werden.</p>
 
 <?php if (empty($ticker_tags)): ?>
-<div class="text-center py-4 mb-4">
-    <p class="text-muted">Noch keine Tags konfiguriert. Leg einen Tag an, um Ticker-Nachrichten zu kategorisieren.</p>
-</div>
+<?php render_empty('tag', 'Noch keine Tags', 'Leg einen Tag an, um Ticker-Nachrichten zu kategorisieren.'); ?>
 <?php else: ?>
 <div class="table-responsive mb-4">
     <table class="table table-hover align-middle">
@@ -180,6 +200,7 @@ $color_labels = [
                                 onclick="return confirm('Tag «<?= e(addslashes($tag['label'])) ?>» löschen?')">
                             Löschen
                         </button>
+                        <!-- btn-sm: table action column, exception per UI-SPEC -->
                     </form>
                 </td>
             </tr>
@@ -190,7 +211,7 @@ $color_labels = [
 <?php endif; ?>
 
 <!-- Create ticker tag form -->
-<div class="card shadow-sm" style="max-width: 500px;">
+<div class="card">
     <div class="card-header fw-semibold">Neues Tag anlegen</div>
     <div class="card-body">
         <form method="POST" action="/coordinator/settings">
