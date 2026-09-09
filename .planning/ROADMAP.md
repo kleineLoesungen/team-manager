@@ -207,7 +207,7 @@ Plans:
 Plans:
 - [x] 09-01-PLAN.md — Infrastructure: CSS migration, render_page(), 12 partials, thin wrappers
 - [x] 09-02-PLAN.md — Tracer: coordinator/lists.php migration + human verify
-- [ ] 09-03-PLAN.md — Coordinator: list & column templates (8 files)
+- [x] 09-03-PLAN.md — Coordinator: list & column templates (8 files)
 - [ ] 09-04-PLAN.md — Coordinator: member & profile templates (10 files)
 - [ ] 09-05-PLAN.md — Coordinator: ticker, files & stats templates (9 files)
 - [ ] 09-06-PLAN.md — Member: all 11 member templates
