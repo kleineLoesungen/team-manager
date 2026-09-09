@@ -359,7 +359,7 @@ body.has-actionbar {
         .badge-ok   { background: var(--ok-bg)    !important; color: var(--ok)  !important; }
         .badge-warn { background: var(--warn-bg)  !important; color: var(--warn) !important; }
         .badge-bad  { background: var(--bad-bg)   !important; color: var(--bad)  !important; }
-        .badge-dim  { background: var(--surface-2)!important; color: var(--t3)   !important; }
+        .badge-dim  { background: rgba(60,60,67,.12) !important; color: rgba(60,60,67,.75) !important; }
 
         /* ── Segmented Control (iOS-style full-width toggle) ──────────────────── */
         .seg-ctrl {
