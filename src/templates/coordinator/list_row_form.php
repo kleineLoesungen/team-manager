@@ -4,20 +4,22 @@
 //            $columns (array of column metadata), $existing_cells ([column_id => value])
 ?>
 
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <div class="mb-3">
     <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Liste
     </a>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-header">
         <span class="fw-semibold">
             <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
         </span>
     </div>
     <div class="card-body">
-        <form method="POST"
+        <form method="POST" id="row-edit-form"
               action="/coordinator/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit">
             <?= csrf_field() ?>
 
@@ -43,7 +45,6 @@
                     <!-- Checkbox: checked if current value is '1' -->
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="cells[<?= $col_id ?>]" value="1"
                                id="cell_<?= $col_id ?>"
                                <?= $current_val === '1' ? 'checked' : '' ?>>
@@ -70,17 +71,16 @@
             </div>
             <?php endforeach; ?>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary min-touch">Speichern</button>
-                <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary min-touch">
-                    Abbrechen
-                </a>
-            </div>
+            <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary min-touch">
+                Abbrechen
+            </a>
 
             <?php endif; ?>
         </form>
     </div>
 </div>
+
+<?php render_action_bar('Zeile speichern', 'row-edit-form'); ?>
 
 <div class="mt-4">
     <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">

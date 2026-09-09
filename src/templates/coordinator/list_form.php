@@ -8,11 +8,12 @@
     </a>
 </div>
 
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
 
-<div class="card shadow-sm" style="max-width: 600px;">
+<div class="card">
     <div class="card-body">
         <form method="POST" action="/coordinator/lists/create">
             <?= csrf_field() ?>
@@ -88,7 +89,6 @@
                 <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
                 <div class="form-check form-switch d-flex align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" role="switch"
-                           style="width:3em;height:1.75em;cursor:pointer;"
                            name="show_all_rows" id="show_all_rows" value="1">
                     <label class="form-check-label mb-0" for="show_all_rows">
                         Mitglieder sehen Einträge anderer Mitglieder
@@ -119,7 +119,6 @@
                 <div class="mb-3">
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="global_columns[]" value="<?= $col_id ?>"
                                id="col_<?= $col_id ?>" checked>
                         <label class="form-check-label mb-0" for="col_<?= $col_id ?>">
@@ -136,7 +135,6 @@
                         <?php if ($col['data_type'] === 'boolean'): ?>
                         <div class="form-check form-switch d-flex align-items-center gap-2">
                             <input class="form-check-input" type="checkbox" role="switch"
-                                   style="width:3em;height:1.75em;cursor:pointer;"
                                    name="defaults[<?= $col_id ?>]" value="1"
                                    id="default_<?= $col_id ?>">
                             <label class="form-check-label mb-0 text-muted small" for="default_<?= $col_id ?>">
@@ -144,11 +142,11 @@
                             </label>
                         </div>
                         <?php else: ?>
-                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                        <div class="input-group">
                             <span class="input-group-text text-muted small">Standard</span>
                             <input type="number" step="any"
                                    name="defaults[<?= $col_id ?>]"
-                                   class="form-control form-control-sm"
+                                   class="form-control"
                                    placeholder="leer lassen = kein Standardwert">
                         </div>
                         <?php endif; ?>
@@ -166,7 +164,6 @@
                 <div class="mb-3">
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="global_columns[]" value="<?= $col_id ?>"
                                id="col_<?= $col_id ?>" checked>
                         <label class="form-check-label mb-0" for="col_<?= $col_id ?>">
@@ -181,7 +178,6 @@
                         <?php if ($col['data_type'] === 'boolean'): ?>
                         <div class="form-check form-switch d-flex align-items-center gap-2">
                             <input class="form-check-input" type="checkbox" role="switch"
-                                   style="width:3em;height:1.75em;cursor:pointer;"
                                    name="defaults[<?= $col_id ?>]" value="1"
                                    id="default_<?= $col_id ?>">
                             <label class="form-check-label mb-0 text-muted small" for="default_<?= $col_id ?>">
@@ -189,11 +185,11 @@
                             </label>
                         </div>
                         <?php else: ?>
-                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                        <div class="input-group">
                             <span class="input-group-text text-muted small">Standard</span>
                             <input type="number" step="any"
                                    name="defaults[<?= $col_id ?>]"
-                                   class="form-control form-control-sm"
+                                   class="form-control"
                                    placeholder="leer lassen = kein Standardwert">
                         </div>
                         <?php endif; ?>

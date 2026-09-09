@@ -584,6 +584,9 @@ body.has-actionbar {
 .cell-number { min-width: 70px; max-width: 100px; }
 .cell-text   { min-width: 100px; }
 
+/* Mail preview pre element — replaces inline style in list_notify.php */
+.tm-mail-preview { white-space: pre-wrap; font-family: inherit; }
+
 /* Login page layout — used by src/templates/login.php */
 .login-wrapper   { min-height: 100dvh; }
 .login-card-wrap { width: 100%; max-width: 400px; margin: 1rem; }

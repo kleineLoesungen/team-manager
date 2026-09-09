@@ -5,6 +5,8 @@
 // visibility warning (if private), send button.
 ?>
 
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <!-- Back link -->
 <div class="mb-3">
     <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
@@ -19,11 +21,11 @@
         <p class="mb-0 fw-medium"><?= e($list['name']) ?></p>
         <p class="mb-0 small text-muted mt-1">
             <?php
-            $badge_class = match($list['visibility']) {
-                'public'    => 'bg-success',
-                'protected' => 'bg-warning text-dark',
-                'private'   => 'bg-secondary',
-                default     => 'bg-secondary',
+            $badge_type = match($list['visibility']) {
+                'public'    => 'ok',
+                'protected' => 'warn',
+                'private'   => 'dim',
+                default     => 'dim',
             };
             $badge_label = match($list['visibility']) {
                 'public'    => 'Öffentlich',
@@ -31,8 +33,8 @@
                 'private'   => 'Privat',
                 default     => e($list['visibility']),
             };
+            render_badge($badge_type, $badge_label);
             ?>
-            <span class="badge <?= $badge_class ?>"><?= $badge_label ?></span>
             <?php if (!empty($list['date'])): ?>
             &nbsp;·&nbsp;<?= e((new DateTime($list['date']))->format('d.m.Y')) ?>
             <?php endif; ?>
@@ -83,7 +85,7 @@
                 <span class="text-muted small">Betreff:</span> <?= e($subject_prefilled) ?>
             </p>
             <hr class="my-2">
-            <pre class="mb-0 small" style="white-space:pre-wrap; font-family:inherit;">Hallo {Vorname},
+            <pre class="mb-0 small tm-mail-preview">Hallo {Vorname},
 
 (Deine Nachricht erscheint hier)
 

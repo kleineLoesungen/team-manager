@@ -16,6 +16,8 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
              . ' - ' . $_share_url;
 ?>
 
+<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <div class="mb-3">
     <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
@@ -23,11 +25,11 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 </div>
 
 <?php
-    $badge_class = match($list['visibility']) {
-        'public'    => 'bg-success',
-        'protected' => 'bg-warning text-dark',
-        'private'   => 'bg-secondary',
-        default     => 'bg-secondary',
+    $badge_type = match($list['visibility']) {
+        'public'    => 'ok',
+        'protected' => 'warn',
+        'private'   => 'dim',
+        default     => 'dim',
     };
     $badge_label = match($list['visibility']) {
         'public'    => 'Öffentlich',
@@ -38,7 +40,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 ?>
 <div class="mb-3">
     <div class="d-flex align-items-center gap-2 mb-2">
-        <span class="badge <?= $badge_class ?>"><?= $badge_label ?></span>
+        <?php render_badge($badge_type, $badge_label); ?>
         <?php if (!empty($list['date'])): ?>
         <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
         <?php endif; ?>
@@ -82,10 +84,11 @@ $show_full_form = $is_free_list
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save_description">
     <div class="d-flex gap-2 align-items-start">
-        <textarea name="description" class="form-control form-control-sm"
+        <textarea name="description" class="form-control"
                   rows="2" maxlength="500"
                   placeholder="Beschreibung hinzufügen (optional)…"><?= e($list['description'] ?? '') ?></textarea>
         <button type="submit" class="btn btn-sm btn-outline-secondary min-touch text-nowrap">Speichern</button>
+        <!-- btn-sm: table action column, exception per UI-SPEC -->
     </div>
 </form>
 <?php endif; ?>
@@ -94,20 +97,20 @@ $show_full_form = $is_free_list
 
 <!-- FREE LIST: add row form -->
 <details class="mb-3">
-    <summary class="text-muted small" style="cursor:pointer; list-style:none;">
+    <summary class="text-muted small">
         <i class="bi bi-plus-circle me-1"></i>Zeile hinzufügen
     </summary>
-    <div class="card card-body mt-2" style="max-width: 400px;">
+    <div class="card card-body mt-2">
         <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="add_row">
             <div class="row g-2">
                 <div class="col">
-                    <input type="text" name="row_label" class="form-control form-control-sm"
+                    <input type="text" name="row_label" class="form-control"
                            placeholder="Zeilenbezeichnung" required maxlength="200">
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-sm btn-outline-primary min-touch">Hinzufügen</button>
+                    <button type="submit" class="btn btn-outline-primary min-touch">Hinzufügen</button>
                 </div>
             </div>
         </form>
@@ -116,33 +119,32 @@ $show_full_form = $is_free_list
 
 <!-- FREE LIST: add local column form -->
 <details class="mb-3">
-    <summary class="text-muted small" style="cursor:pointer; list-style:none;">
+    <summary class="text-muted small">
         <i class="bi bi-plus-circle me-1"></i>Lokale Spalte hinzufügen
     </summary>
-    <div class="card card-body mt-2" style="max-width: 400px;">
+    <div class="card card-body mt-2">
         <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>/columns/create">
             <?= csrf_field() ?>
             <div class="row g-2">
                 <div class="col">
-                    <input type="text" name="name" class="form-control form-control-sm"
+                    <input type="text" name="name" class="form-control"
                            placeholder="Spaltenname" maxlength="100" required>
                 </div>
                 <div class="col-auto">
-                    <select name="data_type" class="form-select form-select-sm">
+                    <select name="data_type" class="form-select">
                         <option value="boolean">Ja/Nein</option>
                         <option value="number">Zahl</option>
                         <option value="text">Text</option>
                     </select>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-sm btn-outline-primary min-touch">Hinzufügen</button>
+                    <button type="submit" class="btn btn-outline-primary min-touch">Hinzufügen</button>
                 </div>
             </div>
             <div class="row g-2 mt-1">
                 <div class="col-12">
-                    <div class="form-check form-switch" style="min-height:1.75em;">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="coach_only" value="1" id="coach_only_free_chk">
                         <label class="form-check-label small" for="coach_only_free_chk">
                             Nur für Koordinatoren
@@ -166,16 +168,16 @@ $show_full_form = $is_free_list
             <input type="hidden" name="row_id" value="<?= (int)$confirm_delete['id'] ?>">
             <input type="hidden" name="confirm" value="1">
             <button type="submit" class="btn btn-sm btn-danger">Ja, löschen</button>
+            <!-- btn-sm: table action column, exception per UI-SPEC -->
         </form>
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">Abbrechen</a>
+        <!-- btn-sm: table action column, exception per UI-SPEC -->
     </div>
 </div>
 <?php endif; ?>
 
 <?php if (empty($free_rows) && empty($columns)): ?>
-<div class="text-center py-5">
-    <p class="text-muted">Noch keine Zeilen und Spalten definiert.</p>
-</div>
+<?php render_empty('table', 'Noch keine Zeilen und Spalten', 'Füge oben eine Zeile und eine Spalte hinzu, um die Liste zu nutzen.'); ?>
 <?php elseif (empty($free_rows)): ?>
 <div class="alert alert-info">Noch keine Zeilen definiert. Füge oben eine Zeile hinzu.</div>
 <?php elseif (empty($columns)): ?>
@@ -197,6 +199,7 @@ $show_full_form = $is_free_list
                         <input type="hidden" name="action" value="delete_row">
                         <input type="hidden" name="row_id" value="<?= (int)$row['id'] ?>">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Löschen</button>
+                        <!-- btn-sm: table action column, exception per UI-SPEC -->
                     </form>
                 </td>
             </tr>
@@ -216,118 +219,100 @@ $show_full_form = $is_free_list
 </form>
 <?php endforeach; ?>
 
-<form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>">
+<form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>" id="save-all-form">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save_all">
 
     <div class="mb-3">
-        <textarea name="description" class="form-control form-control-sm"
+        <textarea name="description" class="form-control"
                   rows="2" maxlength="500"
                   placeholder="Beschreibung hinzufügen (optional)…"><?= e($list['description'] ?? '') ?></textarea>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th class="text-nowrap">Zeile</th>
-                    <?php foreach ($columns as $col): ?>
-                    <th class="text-nowrap">
-                        <?= e($col['name']) ?>
-                        <?php if (!empty($col['coach_only'])): ?>
-                            <span class="badge bg-danger ms-1" title="Nur für Koordinatoren">T</span>
-                        <?php endif; ?>
-                    </th>
-                    <?php endforeach; ?>
-                    <th class="text-nowrap">Aktion</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($free_rows as $row): ?>
-                <tr>
-                    <td class="text-nowrap fw-medium"><?= e($row['label']) ?></td>
-                    <?php foreach ($columns as $col): ?>
-                    <td>
-                        <?php
-                            $val = $cells[(int)$row['id']][(int)$col['id']] ?? null;
-                            if ($col['data_type'] === 'boolean') {
-                                $checked = ($val === '1') ? 'checked' : '';
-                                echo '<div class="form-check form-switch mb-0" style="min-height:1.75em;">'
-                                    . '<input class="form-check-input" type="checkbox" role="switch"'
-                                    . ' style="width:3em;height:1.75em;cursor:pointer;"'
-                                    . ' name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"'
-                                    . ' value="1" ' . $checked . '>'
-                                    . '</div>';
-                            } elseif ($col['data_type'] === 'number') {
-                                $escaped = ($val !== null && $val !== '') ? e($val) : '';
-                                echo '<input type="number" class="form-control form-control-sm"
-                                      style="min-width:70px; max-width:100px"
-                                      name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"
-                                      value="' . $escaped . '">';
-                            } else {
-                                $escaped = ($val !== null) ? e($val) : '';
-                                echo '<input type="text" class="form-control form-control-sm"
-                                      style="min-width:100px"
-                                      name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"
-                                      value="' . $escaped . '" maxlength="255">';
-                            }
-                        ?>
-                    </td>
-                    <?php endforeach; ?>
-                    <td>
-                        <button type="submit" form="delete-row-<?= (int)$row['id'] ?>"
-                                class="btn btn-sm btn-outline-danger">Löschen</button>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-            <?php
-                // Totals row for free lists
-                $col_totals = [];
-                foreach ($columns as $col) {
-                    $cid = (int)$col['id'];
-                    if ($col['data_type'] === 'number') {
-                        $sum = 0;
-                        foreach ($free_rows as $row) {
-                            $v = $cells[(int)$row['id']][$cid] ?? null;
-                            if ($v !== null && $v !== '' && is_numeric($v)) {
-                                $sum += (float)$v;
-                            }
-                        }
-                        $col_totals[$cid] = ($sum == floor($sum))
-                            ? (int)$sum
-                            : number_format($sum, 2, ',', '.');
-                    } elseif ($col['data_type'] === 'boolean') {
-                        $count = 0;
-                        foreach ($free_rows as $row) {
-                            if (($cells[(int)$row['id']][$cid] ?? null) === '1') {
-                                $count++;
-                            }
-                        }
-                        $total_rows = count($free_rows);
-                        $pct = $total_rows > 0 ? round($count / $total_rows * 100) : 0;
-                        $col_totals[$cid] = $count . ' / ' . $total_rows . ' (' . $pct . '%)';
-                    } else {
-                        $col_totals[$cid] = '';
+    <?php
+        // Pre-compute totals before render_matrix_table
+        $col_totals = [];
+        foreach ($columns as $col) {
+            $cid = (int)$col['id'];
+            if ($col['data_type'] === 'number') {
+                $sum = 0;
+                foreach ($free_rows as $row) {
+                    $v = $cells[(int)$row['id']][$cid] ?? null;
+                    if ($v !== null && $v !== '' && is_numeric($v)) {
+                        $sum += (float)$v;
                     }
                 }
-            ?>
-            <tfoot class="table-light">
-                <tr>
-                    <td class="text-nowrap fw-bold">Gesamt</td>
-                    <?php foreach ($columns as $col): ?>
-                    <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
-                    <?php endforeach; ?>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
+                $col_totals[$cid] = ($sum == floor($sum))
+                    ? (int)$sum
+                    : number_format($sum, 2, ',', '.');
+            } elseif ($col['data_type'] === 'boolean') {
+                $count = 0;
+                foreach ($free_rows as $row) {
+                    if (($cells[(int)$row['id']][$cid] ?? null) === '1') {
+                        $count++;
+                    }
+                }
+                $total_rows = count($free_rows);
+                $pct = $total_rows > 0 ? round($count / $total_rows * 100) : 0;
+                $col_totals[$cid] = $count . ' / ' . $total_rows . ' (' . $pct . '%)';
+            } else {
+                $col_totals[$cid] = '';
+            }
+        }
+        $matrix_cols = ['Zeile'];
+        foreach ($columns as $col) { $matrix_cols[] = $col['name']; }
+        $matrix_cols[] = 'Aktion';
+    ?>
 
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary min-touch">Speichern</button>
-    </div>
+    <?php render_matrix_table($matrix_cols, function() use ($free_rows, $columns, $cells) { ?>
+        <?php foreach ($free_rows as $row): ?>
+        <tr>
+            <td class="text-nowrap fw-medium"><?= e($row['label']) ?></td>
+            <?php foreach ($columns as $col): ?>
+            <td>
+                <?php
+                    $val = $cells[(int)$row['id']][(int)$col['id']] ?? null;
+                    if ($col['data_type'] === 'boolean') {
+                        $checked = ($val === '1') ? 'checked' : '';
+                        echo '<div class="form-check form-switch mb-0">'
+                            . '<input class="form-check-input" type="checkbox" role="switch"'
+                            . ' name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' value="1" ' . $checked . '>'
+                            . '</div>';
+                    } elseif ($col['data_type'] === 'number') {
+                        $escaped = ($val !== null && $val !== '') ? e($val) : '';
+                        echo '<input type="number" class="form-control cell-number"'
+                            . ' name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' value="' . $escaped . '">';
+                    } else {
+                        $escaped = ($val !== null) ? e($val) : '';
+                        echo '<input type="text" class="form-control cell-text"'
+                            . ' name="cells[' . (int)$row['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' value="' . $escaped . '" maxlength="255">';
+                    }
+                ?>
+            </td>
+            <?php endforeach; ?>
+            <td>
+                <button type="submit" form="delete-row-<?= (int)$row['id'] ?>"
+                        class="btn btn-sm btn-outline-danger">Löschen</button>
+                <!-- btn-sm: table action column, exception per UI-SPEC -->
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    <?php }, function() use ($columns, $col_totals) { ?>
+        <tr>
+            <td class="text-nowrap fw-bold">Gesamt</td>
+            <?php foreach ($columns as $col): ?>
+            <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
+            <?php endforeach; ?>
+            <td></td>
+        </tr>
+    <?php }); ?>
+
 </form>
+
+<?php render_action_bar('Änderungen speichern', 'save-all-form'); ?>
 
 <?php endif; // free list: rows/columns states ?>
 
@@ -336,33 +321,32 @@ $show_full_form = $is_free_list
 
 <!-- Add local column form — inline at top (D-10) -->
 <details class="mb-3">
-    <summary class="text-muted small" style="cursor:pointer; list-style:none;">
+    <summary class="text-muted small">
         <i class="bi bi-plus-circle me-1"></i>Lokale Spalte hinzufügen
     </summary>
-    <div class="card card-body mt-2" style="max-width: 400px;">
+    <div class="card card-body mt-2">
         <form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>/columns/create">
             <?= csrf_field() ?>
             <div class="row g-2">
                 <div class="col">
-                    <input type="text" name="name" class="form-control form-control-sm"
+                    <input type="text" name="name" class="form-control"
                            placeholder="Spaltenname" maxlength="100" required>
                 </div>
                 <div class="col-auto">
-                    <select name="data_type" class="form-select form-select-sm">
+                    <select name="data_type" class="form-select">
                         <option value="boolean">Ja/Nein</option>
                         <option value="number">Zahl</option>
                         <option value="text">Text</option>
                     </select>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-sm btn-outline-primary min-touch">Hinzufügen</button>
+                    <button type="submit" class="btn btn-outline-primary min-touch">Hinzufügen</button>
                 </div>
             </div>
             <div class="row g-2 mt-1">
                 <div class="col-12">
-                    <div class="form-check form-switch" style="min-height:1.75em;">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="coach_only" value="1" id="coach_only_member_chk">
                         <label class="form-check-label small" for="coach_only_member_chk">
                             Nur für Koordinatoren
@@ -375,9 +359,7 @@ $show_full_form = $is_free_list
 </details>
 
 <?php if (empty($players)): ?>
-<div class="text-center py-5">
-    <p class="text-muted">Keine aktiven Mitglieder im Team.</p>
-</div>
+<?php render_empty('people', 'Keine aktiven Mitglieder', 'Füge Mitglieder zum Team hinzu, um die Liste zu befüllen.'); ?>
 <?php elseif (empty($columns)): ?>
 <div class="alert alert-info">
     Noch keine Spalten definiert.
@@ -385,116 +367,94 @@ $show_full_form = $is_free_list
 </div>
 <?php else: ?>
 
-<form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>">
+<form method="POST" action="/coordinator/lists/<?= (int)$list['id'] ?>" id="save-all-form">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save_all">
 
     <div class="mb-3">
-        <textarea name="description" class="form-control form-control-sm"
+        <textarea name="description" class="form-control"
                   rows="2" maxlength="500"
                   placeholder="Beschreibung hinzufügen (optional)…"><?= e($list['description'] ?? '') ?></textarea>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th class="text-nowrap">Mitglied</th>
-                    <?php foreach ($columns as $col): ?>
-                    <th class="text-nowrap">
-                        <?= e($col['name']) ?>
-                        <?php if ($col['list_id'] === null): ?>
-                            <span class="badge bg-light text-dark border ms-1" title="Globale Spalte">G</span>
-                        <?php endif; ?>
-                        <?php if ($col['list_id'] !== null && !empty($col['coach_only'])): ?>
-                            <span class="badge bg-danger ms-1" title="Nur für Koordinatoren">T</span>
-                        <?php endif; ?>
-                    </th>
-                    <?php endforeach; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($players as $player): ?>
-                <tr>
-                    <td class="text-nowrap fw-medium">
-                        <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
-                    </td>
-                    <?php foreach ($columns as $col): ?>
-                    <td>
-                        <?php
-                            $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
-                            if ($col['data_type'] === 'boolean') {
-                                $checked = ($val === '1') ? 'checked' : '';
-                                echo '<div class="form-check form-switch mb-0" style="min-height:1.75em;">'
-                                    . '<input class="form-check-input" type="checkbox" role="switch"'
-                                    . ' style="width:3em;height:1.75em;cursor:pointer;"'
-                                    . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
-                                    . ' value="1" ' . $checked . '>'
-                                    . '</div>';
-                            } elseif ($col['data_type'] === 'number') {
-                                $escaped = ($val !== null && $val !== '') ? e($val) : '';
-                                echo '<input type="number" class="form-control form-control-sm"'
-                                    . ' style="min-width:70px; max-width:100px"'
-                                    . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
-                                    . ' value="' . $escaped . '">';
-                            } else {
-                                $escaped = ($val !== null) ? e($val) : '';
-                                echo '<input type="text" class="form-control form-control-sm"'
-                                    . ' style="min-width:100px"'
-                                    . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
-                                    . ' value="' . $escaped . '" maxlength="255">';
-                            }
-                        ?>
-                    </td>
-                    <?php endforeach; ?>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-            <?php
-                $total_members = count($players);
-                $col_totals    = [];
-                foreach ($columns as $col) {
-                    $cid = (int)$col['id'];
-                    if ($col['data_type'] === 'number') {
-                        $sum = 0;
-                        foreach ($players as $player) {
-                            $v = $cells[(int)$player['id']][$cid] ?? null;
-                            if ($v !== null && $v !== '' && is_numeric($v)) {
-                                $sum += (float)$v;
-                            }
-                        }
-                        $col_totals[$cid] = ($sum == floor($sum))
-                            ? (int)$sum
-                            : number_format($sum, 2, ',', '.');
-                    } elseif ($col['data_type'] === 'boolean') {
-                        $count = 0;
-                        foreach ($players as $player) {
-                            if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
-                                $count++;
-                            }
-                        }
-                        $pct = $total_members > 0 ? round($count / $total_members * 100) : 0;
-                        $col_totals[$cid] = $count . ' / ' . $total_members . ' (' . $pct . '%)';
-                    } else {
-                        $col_totals[$cid] = '';
+    <?php
+        $total_members = count($players);
+        $col_totals    = [];
+        foreach ($columns as $col) {
+            $cid = (int)$col['id'];
+            if ($col['data_type'] === 'number') {
+                $sum = 0;
+                foreach ($players as $player) {
+                    $v = $cells[(int)$player['id']][$cid] ?? null;
+                    if ($v !== null && $v !== '' && is_numeric($v)) {
+                        $sum += (float)$v;
                     }
                 }
-            ?>
-            <tfoot class="table-light">
-                <tr>
-                    <td class="text-nowrap fw-bold">Gesamt</td>
-                    <?php foreach ($columns as $col): ?>
-                    <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
-                    <?php endforeach; ?>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
+                $col_totals[$cid] = ($sum == floor($sum))
+                    ? (int)$sum
+                    : number_format($sum, 2, ',', '.');
+            } elseif ($col['data_type'] === 'boolean') {
+                $count = 0;
+                foreach ($players as $player) {
+                    if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
+                        $count++;
+                    }
+                }
+                $pct = $total_members > 0 ? round($count / $total_members * 100) : 0;
+                $col_totals[$cid] = $count . ' / ' . $total_members . ' (' . $pct . '%)';
+            } else {
+                $col_totals[$cid] = '';
+            }
+        }
+        $matrix_cols = ['Mitglied'];
+        foreach ($columns as $col) { $matrix_cols[] = $col['name']; }
+    ?>
 
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary min-touch">Speichern</button>
-    </div>
+    <?php render_matrix_table($matrix_cols, function() use ($players, $columns, $cells) { ?>
+        <?php foreach ($players as $player): ?>
+        <tr>
+            <td class="text-nowrap fw-medium">
+                <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+            </td>
+            <?php foreach ($columns as $col): ?>
+            <td>
+                <?php
+                    $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
+                    if ($col['data_type'] === 'boolean') {
+                        $checked = ($val === '1') ? 'checked' : '';
+                        echo '<div class="form-check form-switch mb-0">'
+                            . '<input class="form-check-input" type="checkbox" role="switch"'
+                            . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' value="1" ' . $checked . '>'
+                            . '</div>';
+                    } elseif ($col['data_type'] === 'number') {
+                        $escaped = ($val !== null && $val !== '') ? e($val) : '';
+                        echo '<input type="number" class="form-control cell-number"'
+                            . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' value="' . $escaped . '">';
+                    } else {
+                        $escaped = ($val !== null) ? e($val) : '';
+                        echo '<input type="text" class="form-control cell-text"'
+                            . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' value="' . $escaped . '" maxlength="255">';
+                    }
+                ?>
+            </td>
+            <?php endforeach; ?>
+        </tr>
+        <?php endforeach; ?>
+    <?php }, function() use ($columns, $col_totals) { ?>
+        <tr>
+            <td class="text-nowrap fw-bold">Gesamt</td>
+            <?php foreach ($columns as $col): ?>
+            <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
+            <?php endforeach; ?>
+        </tr>
+    <?php }); ?>
+
 </form>
+
+<?php render_action_bar('Änderungen speichern', 'save-all-form'); ?>
 
 <?php endif; // member list: players/columns states ?>
 
