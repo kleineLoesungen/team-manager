@@ -165,7 +165,7 @@ Plans:
 | 6. Calendar — ICS Export | 4/4 | Complete   | 2026-07-14 |
 | 7. Live-Ticker | 5/5 | Complete   | 2026-07-26 |
 | 8. Player & Club Management | 7/7 | Complete | 2026-08-02 |
-| 9. UI-Vereinheitlichung | 2/9 | In Progress|  |
+| 9. UI-Vereinheitlichung | 4/9 | In Progress|  |
 
 ---
 
@@ -202,13 +202,13 @@ Plans:
 5. Jede Route rendert über `render_page`
 6. Alle Seiten bei 360 px Breite ohne horizontales Scrollen des Seitenrumpfs
 
-**Plans:** 2/9 plans executed
+**Plans:** 4/9 plans executed
 
 Plans:
 - [x] 09-01-PLAN.md — Infrastructure: CSS migration, render_page(), 12 partials, thin wrappers
 - [x] 09-02-PLAN.md — Tracer: coordinator/lists.php migration + human verify
 - [x] 09-03-PLAN.md — Coordinator: list & column templates (8 files)
-- [ ] 09-04-PLAN.md — Coordinator: member & profile templates (10 files)
+- [x] 09-04-PLAN.md — Coordinator: member & profile templates (10 files)
 - [ ] 09-05-PLAN.md — Coordinator: ticker, files & stats templates (9 files)
 - [ ] 09-06-PLAN.md — Member: all 11 member templates
 - [ ] 09-07-PLAN.md — Admin: all 19 admin templates (credential_modal excluded)
