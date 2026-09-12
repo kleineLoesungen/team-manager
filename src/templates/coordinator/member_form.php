@@ -13,7 +13,7 @@
 <div class="alert alert-danger"><?= e($error) ?></div>
 <?php endif; ?>
 
-<form method="POST" action="/coordinator/members/create" class="row g-3" style="max-width: 520px;">
+<form method="POST" action="/coordinator/members/create" class="row g-3">
     <?= csrf_field() ?>
     <input type="hidden" name="create_mode" id="create_mode" value="new">
 
@@ -69,7 +69,7 @@
     </div>
 
     <!-- Link existing profile fields -->
-    <div id="section_link" class="col-12" style="display:none">
+    <div id="section_link" class="col-12 d-none">
         <?php if (!empty($linkable_players)): ?>
         <label for="member_id_link" class="form-label">Profil auswählen</label>
         <select class="form-select form-select-lg" id="member_id_link" name="member_id_link">
@@ -117,14 +117,14 @@
     function switchMode(mode) {
         modeInput.value = mode;
         if (mode === 'link') {
-            sectionNew.style.display  = 'none';
-            sectionLink.style.display = '';
+            sectionNew.classList.add('d-none');
+            sectionLink.classList.remove('d-none');
             fnFirst.removeAttribute('required');
             fnLast.removeAttribute('required');
             if (fnLink) fnLink.setAttribute('required', '');
         } else {
-            sectionNew.style.display  = '';
-            sectionLink.style.display = 'none';
+            sectionNew.classList.remove('d-none');
+            sectionLink.classList.add('d-none');
             fnFirst.setAttribute('required', '');
             fnLast.setAttribute('required', '');
             if (fnLink) fnLink.removeAttribute('required');

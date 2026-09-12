@@ -77,10 +77,7 @@ declare(strict_types=1);
 
 <!-- Linked profiles -->
 <?php if (empty($profiles)): ?>
-<div class="text-center py-5">
-    <p class="h5 text-muted">Keine verknüpften Mitglieder</p>
-    <p class="text-muted small">Verknüpfe ein Mitglied über das Formular oben.</p>
-</div>
+<?php render_empty('person-vcard', 'Keine verknüpften Mitglieder', 'Verknüpfe ein Mitglied über das Formular oben.'); ?>
 <?php else: ?>
 <p class="text-muted small mb-3"><?= count($profiles) ?> Mitglieder in diesem Team</p>
 <div class="list-group">
@@ -121,7 +118,7 @@ declare(strict_types=1);
                 </div>
                 <?php endif; ?>
                 <div class="mt-1">
-                    <span class="badge <?= $user_active ? 'bg-success-subtle text-success-emphasis border border-success-subtle' : 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle' ?>">
+                    <span class="badge <?= $user_active ? 'badge-ok' : 'badge-dim' ?>">
                         <i class="bi bi-person me-1"></i><?= e($p['linked_username']) ?>
                         <?= $user_active ? '' : '<span class="opacity-75">(inaktiv)</span>' ?>
                     </span>

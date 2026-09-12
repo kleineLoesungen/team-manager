@@ -17,7 +17,7 @@ $active_teams = array_filter(
 <?php if ($success): ?><div class="alert alert-success">Profildaten gespeichert.</div><?php endif; ?>
 
 <!-- Header + inline edit -->
-<div class="card mb-4 shadow-sm">
+<div class="card mb-4">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div>
@@ -172,12 +172,12 @@ $active_teams = array_filter(
                 <label class="form-label fw-medium mb-1">
                     <?= e($attr['attr_name']) ?>
                     <?php if (!$attr['visible_to_player']): ?>
-                    <span class="badge bg-secondary ms-1" style="font-size:0.65rem">Nur Koordinator</span>
+                    <span class="badge badge-dim ms-1">Nur Koordinator</span>
                     <?php endif; ?>
                 </label>
                 <?php if (($attr['data_type'] ?? 'text') === 'date'): ?>
                 <input type="date"
-                       class="form-control form-control-sm"
+                       class="form-control"
                        name="values[<?= (int)$attr['attr_id'] ?>]"
                        value="<?= e($attr['value']) ?>">
                 <?php if ($attr['value'] !== ''): ?>
@@ -185,7 +185,7 @@ $active_teams = array_filter(
                 <?php endif; ?>
                 <?php else: ?>
                 <input type="text"
-                       class="form-control form-control-sm"
+                       class="form-control"
                        name="values[<?= (int)$attr['attr_id'] ?>]"
                        value="<?= e($attr['value']) ?>"
                        placeholder="Kein Wert">

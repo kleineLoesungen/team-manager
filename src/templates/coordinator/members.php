@@ -24,10 +24,7 @@ $fmt_attr = function(array $a): string {
 </div>
 
 <?php if (empty($active_members) && empty($inactive_members)): ?>
-<div class="text-center py-5">
-    <p class="h5 text-muted">Noch keine Mitglieder</p>
-    <p class="text-muted small">Lege das erste Mitglied an.</p>
-</div>
+<?php render_empty('person-vcard', 'Noch keine Mitglieder', 'Lege das erste Mitglied an.', '<a href="/coordinator/members/create" class="btn btn-primary mt-3 min-touch"><i class="bi bi-plus-lg me-1"></i>Neues Mitglied anlegen</a>'); ?>
 <?php else: ?>
 
 <!-- Mode switcher -->
