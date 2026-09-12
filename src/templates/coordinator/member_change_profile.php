@@ -26,7 +26,7 @@
 </div>
 
 <form method="POST" action="/coordinator/members/<?= (int)$member['id'] ?>/change-profile"
-      class="row g-3" style="max-width:520px;">
+      class="row g-3">
     <?= csrf_field() ?>
     <input type="hidden" name="create_mode" id="create_mode" value="link">
 
@@ -71,7 +71,7 @@
     </div>
 
     <!-- New profile fields -->
-    <div id="section_new" class="col-12 row g-3" style="display:none">
+    <div id="section_new" class="col-12 row g-3 d-none">
         <div class="col-12">
             <label for="first_name" class="form-label">Vorname <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="first_name" name="first_name"
@@ -110,14 +110,14 @@
     function switchMode(mode) {
         modeInput.value = mode;
         if (mode === 'new') {
-            sectionLink.style.display = 'none';
-            sectionNew.style.display  = '';
+            sectionLink.classList.add('d-none');
+            sectionNew.classList.remove('d-none');
             fnFirst.setAttribute('required', '');
             fnLast.setAttribute('required', '');
             if (fnLink) fnLink.removeAttribute('required');
         } else {
-            sectionLink.style.display = '';
-            sectionNew.style.display  = 'none';
+            sectionLink.classList.remove('d-none');
+            sectionNew.classList.add('d-none');
             fnFirst.removeAttribute('required');
             fnLast.removeAttribute('required');
             if (fnLink) fnLink.setAttribute('required', '');

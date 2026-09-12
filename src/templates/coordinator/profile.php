@@ -6,7 +6,7 @@ $action = $is_confirm_route ? '/coordinator/confirm-profile' : '/coordinator/pro
 
 <?php if ($is_confirm_route && $is_first_confirm): ?>
 <div class="alert alert-info d-flex gap-2 mb-4">
-    <i class="bi bi-shield-check flex-shrink-0 fs-5"></i>
+    <i class="bi bi-shield-check flex-shrink-0"></i>
     <div>
         <strong>Willkommen!</strong> Bitte überprüfe und bestätige deine Kontaktdaten, bevor du fortfährst.
         Deine Bestätigung ist nach §&nbsp;6 DSGVO für die Verarbeitung personenbezogener Daten
@@ -57,7 +57,7 @@ $action = $is_confirm_route ? '/coordinator/confirm-profile' : '/coordinator/pro
     <?php if ($is_confirm_route && $is_first_confirm): ?>
     <div class="card border-primary mb-4">
         <div class="card-body d-flex gap-2">
-            <i class="bi bi-info-circle-fill text-primary flex-shrink-0 fs-5 mt-1"></i>
+            <i class="bi bi-info-circle-fill text-primary flex-shrink-0 mt-1"></i>
             <p class="mb-0 small">
                 Nach §&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b DSGVO ist die Verarbeitung deiner Daten zur
                 Erfüllung des Mitgliedschaftsverhältnisses zulässig. Du kannst deine Angaben jederzeit
@@ -87,29 +87,29 @@ $action = $is_confirm_route ? '/coordinator/confirm-profile' : '/coordinator/pro
 
 <div class="list-group mt-4">
     <a href="/coordinator/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-person-badge fs-5"></i>
+        <i class="bi bi-person-badge"></i>
         <span class="flex-grow-1">Koordinatoren</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
     <a href="/coordinator/settings" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-gear fs-5"></i>
+        <i class="bi bi-gear"></i>
         <span class="flex-grow-1">Einstellungen</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
     <a href="/coordinator/logo" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-image fs-5"></i>
+        <i class="bi bi-image"></i>
         <span class="flex-grow-1">Team-Logo</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
     <?php if (!empty($_SESSION['coordinator_teams']) && count($_SESSION['coordinator_teams']) > 1): ?>
     <a href="/coordinator/switch-team" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-arrow-left-right fs-5"></i>
+        <i class="bi bi-arrow-left-right"></i>
         <span class="flex-grow-1">Team wechseln</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
     <?php endif; ?>
     <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
-        <i class="bi bi-box-arrow-right fs-5"></i>
+        <i class="bi bi-box-arrow-right"></i>
         <span class="flex-grow-1">Abmelden</span>
     </a>
 </div>

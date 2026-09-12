@@ -18,21 +18,19 @@
 <div class="alert alert-success">Logo gelöscht.</div>
 <?php endif; ?>
 
-<div class="card shadow-sm">
+<div class="card">
     <div class="card-body">
         <?php if ($current_logo): ?>
         <div class="mb-4">
             <p class="fw-semibold mb-2">Aktuelles Logo</p>
-            <img src="/logo?t=<?= time() ?>" alt="Team-Logo"
-                 style="max-height:96px; max-width:200px; object-fit:contain;">
+            <img src="/logo?t=<?= time() ?>" alt="Team-Logo" class="img-fluid">
         </div>
         <?php endif; ?>
         <?php if (!$current_logo && $default_logo): ?>
         <div class="mb-4">
             <p class="fw-semibold mb-1">Standard-Logo (vom Admin)</p>
             <p class="text-muted small mb-2">Dieses Logo wird angezeigt, solange dein Team kein eigenes Logo hochgeladen hat.</p>
-            <img src="/logo?t=<?= time() ?>" alt="Standard-Logo"
-                 style="max-height:96px; max-width:200px; object-fit:contain;">
+            <img src="/logo?t=<?= time() ?>" alt="Standard-Logo" class="img-fluid">
         </div>
         <?php endif; ?>
         <?php if ($current_logo): ?>
