@@ -64,7 +64,7 @@ $form_action  = $form_action ?? '/coordinator/ticker/new';
     <?php endif; ?>
 
     <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Speichern</button>
+        <button type="submit" class="btn btn-primary">Ticker speichern</button>
         <a href="<?= isset($cancel_url) ? e($cancel_url) : '/coordinator/ticker' ?>"
            class="btn btn-outline-secondary">Abbrechen</a>
     </div>

@@ -11,11 +11,7 @@ $other_tickers ??= [];
 </div>
 
 <?php if (empty($tickers)): ?>
-<div class="text-center py-5 text-muted">
-    <i class="bi bi-megaphone d-block mb-2" style="font-size:2rem;"></i>
-    <p class="mb-1">Noch keine Ticker erstellt</p>
-    <p class="small mb-0">Leg einen Ticker an, um Events live zu dokumentieren.</p>
-</div>
+<?php render_empty('megaphone', 'Noch keine Ticker', 'Erstelle den ersten Ticker für ein Event.'); ?>
 <?php else: ?>
 <div class="list-group mb-4">
     <?php foreach ($tickers as $t): ?>
@@ -26,9 +22,9 @@ $other_tickers ??= [];
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
                     <?php if ($t['status'] === 'active'): ?>
-                        <span class="badge bg-success">Aktiv</span>
+                        <?php render_badge('ok', 'Aktiv'); ?>
                     <?php else: ?>
-                        <span class="badge bg-secondary">Geschlossen</span>
+                        <?php render_badge('dim', 'Beendet'); ?>
                     <?php endif; ?>
                 </div>
                 <?php if ($t['description']): ?>
@@ -52,7 +48,7 @@ $other_tickers ??= [];
 <?php endif; ?>
 
 <?php if (!empty($other_tickers)): ?>
-<h2 class="h6 fw-semibold text-muted mt-4 mb-2">Weitere Teams</h2>
+<?php render_collection_group('Weitere Teams', function() use ($other_tickers): void { ?>
 <div class="list-group mb-4">
     <?php foreach ($other_tickers as $t): ?>
     <a href="/coordinator/ticker/<?= (int)$t['id'] ?>"
@@ -62,9 +58,9 @@ $other_tickers ??= [];
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
                     <?php if ($t['status'] === 'active'): ?>
-                        <span class="badge bg-success">Aktiv</span>
+                        <?php render_badge('ok', 'Aktiv'); ?>
                     <?php else: ?>
-                        <span class="badge bg-secondary">Geschlossen</span>
+                        <?php render_badge('dim', 'Beendet'); ?>
                     <?php endif; ?>
                 </div>
                 <p class="mb-1 text-muted small"><?= e($t['team_name']) ?></p>
@@ -86,4 +82,5 @@ $other_tickers ??= [];
     </a>
     <?php endforeach; ?>
 </div>
+<?php }); ?>
 <?php endif; ?>

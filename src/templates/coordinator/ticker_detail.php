@@ -14,16 +14,15 @@
 
 <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
     <?php if ($ticker['status'] === 'active'): ?>
-    <span class="badge bg-success">Aktiv</span>
+    <?php render_badge('ok', 'Aktiv'); ?>
     <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/close" class="d-inline">
         <?= csrf_field() ?>
-        <button type="submit" class="btn btn-sm btn-outline-warning"
-                onclick="return confirm('Ticker wirklich schließen?')">
-            <i class="bi bi-x-circle me-1"></i>Schließen
+        <button type="submit" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-x-circle me-1"></i>Ticker schließen
         </button>
     </form>
     <?php else: ?>
-    <span class="badge bg-secondary">Geschlossen</span>
+    <?php render_badge('dim', 'Beendet'); ?>
     <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/reopen" class="d-inline">
         <?= csrf_field() ?>
         <button type="submit" class="btn btn-sm btn-outline-success">
@@ -81,7 +80,7 @@
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Speichern</button>
+                <button type="submit" class="btn btn-primary">Nachricht speichern</button>
                 <a href="/coordinator/ticker/<?= (int)$ticker_id ?>"
                    class="btn btn-outline-secondary">Abbrechen</a>
             </div>
@@ -118,7 +117,7 @@
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-send me-1"></i>Posten
+                <i class="bi bi-send me-1"></i>Nachricht posten
             </button>
         </form>
     </div>
@@ -141,10 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </p>
 
 <?php if (empty($messages)): ?>
-<div class="text-center py-5 text-muted">
-    <i class="bi bi-chat-dots d-block mb-2" style="font-size:2rem;"></i>
-    Noch keine Nachrichten
-</div>
+<?php render_empty('chat-dots', 'Noch keine Nachrichten', 'Poste die erste Nachricht für diesen Ticker.'); ?>
 <?php else: ?>
 <div class="list-group mb-4">
     <?php foreach ($messages as $msg): ?>
@@ -167,8 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="delete_message">
                 <input type="hidden" name="message_id" value="<?= (int)$msg['id'] ?>">
-                <button type="submit" class="btn btn-outline-danger btn-sm"
-                        onclick="return confirm('Nachricht löschen?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
                     <i class="bi bi-trash"></i>
                 </button>
             </form>

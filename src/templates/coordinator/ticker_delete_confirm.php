@@ -8,19 +8,14 @@
     </a>
 </div>
 
-<div class="alert alert-danger mb-4" role="alert">
-    <i class="bi bi-exclamation-triangle me-2"></i>
-    <strong><?= e($ticker['name']) ?></strong> und alle Nachrichten werden dauerhaft gelöscht.
-    Diese Aktion kann nicht rückgängig gemacht werden.
-</div>
+<h1 class="h2 mb-3">Möchtest du diesen Ticker wirklich löschen?</h1>
+<p class="text-body-secondary mb-2"><strong><?= e($ticker['name']) ?></strong> und alle Nachrichten werden dauerhaft gelöscht.</p>
+<p class="text-body-secondary mb-4">Diese Aktion kann nicht rückgängig gemacht werden.</p>
 
 <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/delete">
     <?= csrf_field() ?>
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-danger">
-            <i class="bi bi-trash me-1"></i>Jetzt löschen
-        </button>
-        <a href="/coordinator/ticker/<?= (int)$ticker['id'] ?>"
-           class="btn btn-outline-secondary">Abbrechen</a>
-    </div>
+    <button type="submit" class="btn btn-danger w-100 mb-2">
+        <i class="bi bi-trash me-1"></i>Ja, löschen
+    </button>
 </form>
+<a href="/coordinator/ticker" class="btn btn-outline-secondary w-100">Abbrechen</a>
