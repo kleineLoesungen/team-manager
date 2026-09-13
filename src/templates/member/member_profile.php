@@ -1,7 +1,8 @@
 <?php
-// src/templates/member/player_profile.php — Member-facing player profile
+// src/templates/member/member_profile.php — Member-facing player profile
 declare(strict_types=1);
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3">
     <a href="/member/profile" class="btn btn-sm btn-outline-secondary">
@@ -11,21 +12,12 @@ declare(strict_types=1);
 
 <?php if ($player === null): ?>
 <!-- Not linked state: member has no linked player record -->
-<div class="card shadow-sm">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-person-badge display-4 text-muted mb-3 d-block"></i>
-        <p class="mb-1 fw-semibold">Kein Profil verknüpft</p>
-        <p class="text-muted small mb-0">
-            Dein Konto ist noch nicht mit einem Profil verknüpft.
-            Bitte wende dich an deinen Koordinator.
-        </p>
-    </div>
-</div>
+<?php render_empty('person-badge', 'Kein Profil verknüpft', 'Dein Konto ist noch nicht mit einem Profil verknüpft. Bitte wende dich an deinen Koordinator.'); ?>
 
 <?php else: ?>
 
 <!-- Player header card -->
-<div class="card mb-4 shadow-sm">
+<div class="card mb-4">
     <div class="card-body">
         <h2 class="card-title h5 fw-bold mb-1">
             <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
@@ -65,11 +57,11 @@ declare(strict_types=1);
                     <td><code class="small"><?= e($h['username']) ?></code></td>
                     <td>
                         <?php if ($h['team_active'] && $h['is_active']): ?>
-                        <span class="badge bg-success">Aktiv</span>
+                        <?php render_badge('ok', 'Aktiv'); ?>
                         <?php elseif (!$h['team_active']): ?>
-                        <span class="badge bg-secondary">Team inaktiv</span>
+                        <?php render_badge('dim', 'Team inaktiv'); ?>
                         <?php else: ?>
-                        <span class="badge bg-warning text-dark">Konto inaktiv</span>
+                        <?php render_badge('warn', 'Konto inaktiv'); ?>
                         <?php endif; ?>
                     </td>
                 </tr>

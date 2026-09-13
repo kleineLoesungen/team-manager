@@ -3,6 +3,8 @@
 // Variables: $coordinators (array), $other_teams (array — team_name => coordinator rows)
 $other_teams ??= [];
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <div class="mb-3">
     <a href="/member/profile" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
@@ -10,10 +12,7 @@ $other_teams ??= [];
 </div>
 
 <?php if (empty($coordinators)): ?>
-<div class="text-center py-5 text-muted">
-    <i class="bi bi-person-badge d-block mb-2" style="font-size:2rem;"></i>
-    Keine Koordinatoren in deinem Team.
-</div>
+<?php render_empty('person-badge', 'Keine Koordinatoren', 'Noch keine Koordinatoren in deinem Team.'); ?>
 <?php else: ?>
 <div class="list-group mb-4">
     <?php foreach ($coordinators as $c): ?>

@@ -1,15 +1,9 @@
 <?php
-// src/templates/member/profile.php — Full player data edit page
+// src/templates/member/profile.php — Full member data edit page
 // Variables (via use()): $player (array|null), $clubs (array), $attr_groups (array), $error (string), $success (bool)
 ?>
-
-<?php if ($error): ?>
-<div class="alert alert-danger mb-3"><?= e($error) ?></div>
-<?php endif; ?>
-
-<?php if ($success): ?>
-<div class="alert alert-success mb-3">Deine Daten wurden gespeichert.</div>
-<?php endif; ?>
+<?php if ($error): render_flash('error', $error); endif; ?>
+<?php if ($success): render_flash('success', 'Deine Daten wurden gespeichert.'); endif; ?>
 
 <?php if ($player): ?>
 <form method="POST" action="/member/profile" novalidate>
@@ -161,13 +155,7 @@ foreach ($attr_groups as $g) {
 <?php endif; ?>
 
 <?php else: ?>
-<div class="card mb-4">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
-        <p class="mb-1">Dein Konto ist noch keinem Mitgliedsprofil zugeordnet.</p>
-        <p class="text-muted small">Bitte wende dich an deinen Koordinator.</p>
-    </div>
-</div>
+<?php render_empty('person-x', 'Kein Mitgliedsprofil', 'Dein Konto ist noch keinem Mitgliedsprofil zugeordnet. Bitte wende dich an deinen Koordinator.'); ?>
 <?php endif; ?>
 
 <div class="list-group mt-4">

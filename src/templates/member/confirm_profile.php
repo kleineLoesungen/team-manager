@@ -2,6 +2,8 @@
 // src/templates/member/confirm_profile.php
 // Variables (via use()): $player (array|null), $clubs (array), $error (string), $is_first_confirm (bool)
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
+<?php if ($error): render_flash('error', $error); endif; ?>
 
 <?php if ($is_first_confirm): ?>
 <div class="alert alert-info d-flex gap-2 mb-4">
@@ -12,10 +14,6 @@
         durch den Verein erforderlich.
     </div>
 </div>
-<?php endif; ?>
-
-<?php if ($error): ?>
-<div class="alert alert-danger mb-3"><?= e($error) ?></div>
 <?php endif; ?>
 
 <?php if ($player): ?>
@@ -136,19 +134,14 @@
 </form>
 <?php else: ?>
 <!-- No linked player — just stamp confirmation so member can proceed -->
-<div class="card mb-4">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-person-x display-4 text-muted mb-3 d-block"></i>
-        <p class="mb-1">Dein Konto ist noch keinem Mitgliedsprofil zugeordnet.</p>
-        <p class="text-muted small mb-4">
-            Bitte wende dich an deinen Koordinator, um dein Mitgliedsprofil zu verknüpfen.
-        </p>
-        <form method="POST" action="/member/confirm-profile">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-outline-primary min-touch">
-                Trotzdem fortfahren
-            </button>
-        </form>
-    </div>
-</div>
+<?php
+$_confirm_action = '<form method="POST" action="/member/confirm-profile">'
+    . csrf_field()
+    . '<button type="submit" class="btn btn-outline-primary mt-3 min-touch">Trotzdem fortfahren</button>'
+    . '</form>';
+render_empty('person-x', 'Kein Mitgliedsprofil',
+    'Dein Konto ist noch keinem Mitgliedsprofil zugeordnet. Bitte wende dich an deinen Koordinator, um dein Mitgliedsprofil zu verknüpfen.',
+    $_confirm_action
+);
+?>
 <?php endif; ?>
