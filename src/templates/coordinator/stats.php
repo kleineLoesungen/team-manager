@@ -3,8 +3,8 @@
 <!-- Filter form: list dropdown + date range, GET method (PRG pattern) -->
 <form method="get" action="/coordinator/stats" class="row g-2 mb-4 align-items-end">
     <div class="col-auto">
-        <label for="list_filter" class="form-label form-label-sm mb-1">Liste</label>
-        <select name="list_id" id="list_filter" class="form-select form-select-sm" style="max-width: 200px;">
+        <label for="list_filter" class="form-label mb-1">Liste</label>
+        <select name="list_id" id="list_filter" class="form-select">
             <option value="">Alle Listen</option>
             <?php foreach ($available_lists as $list): ?>
                 <option value="<?= (int)$list['id'] ?>"
@@ -18,19 +18,18 @@
         </select>
     </div>
     <div class="col-auto">
-        <label for="date_from" class="form-label form-label-sm mb-1">Listendatum von</label>
-        <input type="date" name="date_from" id="date_from" class="form-control form-control-sm"
+        <label for="date_from" class="form-label mb-1">Listendatum von</label>
+        <input type="date" name="date_from" id="date_from" class="form-control"
                value="<?= e($filter_date_from ?? '') ?>">
     </div>
     <div class="col-auto">
-        <label for="date_to" class="form-label form-label-sm mb-1">bis</label>
-        <input type="date" name="date_to" id="date_to" class="form-control form-control-sm"
+        <label for="date_to" class="form-label mb-1">bis</label>
+        <input type="date" name="date_to" id="date_to" class="form-control"
                value="<?= e($filter_date_to ?? '') ?>">
     </div>
     <div class="col-auto d-flex align-items-end pb-1">
         <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
             <input class="form-check-input" type="checkbox" role="switch"
-                   style="width:3em;height:1.75em;cursor:pointer;"
                    name="include_undated" id="include_undated" value="1"
                    <?= $filter_include_undated ? 'checked' : '' ?>>
             <label class="form-check-label mb-0" for="include_undated">Ohne Datum einschließen</label>
@@ -51,7 +50,7 @@
     <div class="alert alert-info">Keine aktiven Mitglieder im Team.</div>
 <?php else: ?>
     <h5 class="mb-3">Mitgliederstatistiken</h5>
-    <div class="table-responsive mb-5">
+    <div class="table-responsive mb-4">
         <table class="table table-sm table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
@@ -98,23 +97,33 @@
     </div>
 
     <!-- ── Rangliste mit Zeitfenstern (STAT-03) ───────────────────────── -->
-    <!-- Spalten-Dropdown: filtert nur die Rangliste auf eine globale Spalte -->
-    <form method="get" action="/coordinator/stats" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
-        <?php if ($filter_list_id): ?><input type="hidden" name="list_id" value="<?= (int)$filter_list_id ?>"><?php endif; ?>
-        <?php if ($filter_date_from): ?><input type="hidden" name="date_from" value="<?= e($filter_date_from) ?>"><?php endif; ?>
-        <?php if ($filter_date_to): ?><input type="hidden" name="date_to" value="<?= e($filter_date_to) ?>"><?php endif; ?>
-        <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1"><?php endif; ?>
-        <input type="hidden" name="sort_col" value="<?= (int)$sort_col_id ?>">
-        <input type="hidden" name="sort_win" value="<?= e($sort_win) ?>">
-        <label for="col_filter_select" class="form-label mb-0 small fw-medium">Spalte:</label>
-        <select name="col_filter" id="col_filter_select" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
-            <?php foreach ($global_columns as $col): ?>
-                <option value="<?= (int)$col['id'] ?>" <?= $col_filter === (int)$col['id'] ? 'selected' : '' ?>>
-                    <?= e($col['name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </form>
+    <!-- Column filter pills: one pill per global column -->
+    <?php
+    $base_filter_params = [];
+    if ($filter_list_id) $base_filter_params['list_id'] = (string)$filter_list_id;
+    if (!empty($filter_date_from)) $base_filter_params['date_from'] = $filter_date_from;
+    if (!empty($filter_date_to)) $base_filter_params['date_to'] = $filter_date_to;
+    if ($filter_include_undated) $base_filter_params['include_undated'] = '1';
+    if ($sort_col_id > 0) $base_filter_params['sort_col'] = (string)$sort_col_id;
+    if ($sort_win !== 'all') $base_filter_params['sort_win'] = $sort_win;
+
+    $col_pills = [];
+    $col_pills[] = [
+        'label'  => 'Alle Spalten',
+        'url'    => '/coordinator/stats' . (!empty($base_filter_params) ? '?' . http_build_query($base_filter_params) : ''),
+        'active' => $col_filter === 0,
+    ];
+    foreach ($global_columns as $col) {
+        $pill_params = $base_filter_params;
+        $pill_params['col_filter'] = (string)(int)$col['id'];
+        $col_pills[] = [
+            'label'  => $col['name'],
+            'url'    => '/coordinator/stats?' . http_build_query($pill_params),
+            'active' => $col_filter === (int)$col['id'],
+        ];
+    }
+    render_filter_pills($col_pills, '/coordinator/stats');
+    ?>
 
     <h5 class="mb-3">Rangliste</h5>
     <p class="text-muted small mb-3">
@@ -219,7 +228,7 @@
         <?php if ($filter_date_to): ?><input type="hidden" name="date_to" value="<?= e($filter_date_to) ?>"><?php endif; ?>
         <?php if ($filter_include_undated): ?><input type="hidden" name="include_undated" value="1"><?php endif; ?>
         <label for="member_selector" class="form-label mb-0 small fw-medium">Mitglied:</label>
-        <select name="member_id" id="member_selector" class="form-select form-select-sm" style="max-width:220px;">
+        <select name="member_id" id="member_selector" class="form-select">
             <option value="">Alle Mitglieder</option>
             <?php foreach ($all_members as $m): ?>
                 <option value="<?= (int)$m['id'] ?>" <?= $selected_member_id === (int)$m['id'] ? 'selected' : '' ?>>

@@ -35,7 +35,6 @@
 
     <div class="mb-4 form-check form-switch d-flex align-items-center gap-2">
         <input type="checkbox" class="form-check-input" id="is_hidden" name="is_hidden"
-               style="width:3em;height:1.75em;cursor:pointer;"
                <?= isset($_POST['is_hidden']) ? 'checked' : '' ?>>
         <label class="form-check-label" for="is_hidden">Versteckt (in Übersicht einklappen)</label>
     </div>

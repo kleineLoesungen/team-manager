@@ -37,20 +37,23 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 </div>
 
 <!-- Content editor -->
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
         <span><i class="bi bi-file-earmark-text me-2"></i><?= e($file['name']) ?></span>
-        <span class="badge <?= match($file['visibility']) {
-            'public'    => 'bg-success',
-            'protected' => 'bg-warning text-dark',
-            'private'   => 'bg-secondary',
-            default     => 'bg-secondary',
-        } ?>"><?= match($file['visibility']) {
-            'public'    => 'Öffentlich',
-            'protected' => 'Geschützt',
-            'private'   => 'Privat',
-            default     => e($file['visibility']),
-        } ?></span>
+        <?php render_badge(
+            match($file['visibility']) {
+                'public'    => 'ok',
+                'protected' => 'warn',
+                'private'   => 'dim',
+                default     => 'dim',
+            },
+            match($file['visibility']) {
+                'public'    => 'Öffentlich',
+                'protected' => 'Geschützt',
+                'private'   => 'Privat',
+                default     => htmlspecialchars($file['visibility'], ENT_QUOTES),
+            }
+        ); ?>
     </div>
     <div class="card-body">
 
@@ -75,12 +78,11 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="preview-pane" role="tabpanel">
-                    <div id="preview-output" class="border rounded p-3 bg-white"
-                         style="min-height: 200px;"></div>
+                    <div id="preview-output" class="border rounded p-3 bg-white"></div>
                 </div>
                 <div class="tab-pane fade" id="edit-pane" role="tabpanel">
                     <textarea id="content-editor" name="content" class="form-control font-monospace"
-                              rows="20" style="resize: vertical;"><?= e($file['content']) ?></textarea>
+                              rows="20"><?= e($file['content']) ?></textarea>
                 </div>
             </div>
 
@@ -95,7 +97,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 </div>
 
 <!-- Settings card -->
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-header fw-semibold">Einstellungen</div>
     <div class="card-body">
         <form method="POST" action="/coordinator/files/<?= (int)$file['id'] ?>">
@@ -125,7 +127,6 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 
             <div class="mb-4 form-check form-switch d-flex align-items-center gap-2">
                 <input type="checkbox" class="form-check-input" id="is_hidden" name="is_hidden"
-                       style="width:3em;height:1.75em;cursor:pointer;"
                        <?= $file['is_hidden'] ? 'checked' : '' ?>>
                 <label class="form-check-label" for="is_hidden">Versteckt (in Übersicht einklappen)</label>
             </div>
@@ -137,19 +138,15 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
     </div>
 </div>
 
-<!-- Gefahrenzone -->
-<div class="card border-danger mb-4">
-    <div class="card-header text-danger fw-semibold">Gefahrenzone</div>
-    <div class="card-body">
-        <p class="text-muted mb-3">Löscht diese Datei unwiderruflich.</p>
-        <form method="POST" action="/coordinator/files/<?= (int)$file['id'] ?>/delete">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-outline-danger min-touch">
-                <i class="bi bi-trash me-1"></i>Datei löschen
-            </button>
-        </form>
-    </div>
-</div>
+<?php
+ob_start(); ?>
+<form method="POST" action="/coordinator/files/<?= (int)$file['id'] ?>/delete">
+    <?= csrf_field() ?>
+    <button type="submit" class="btn btn-outline-danger min-touch">
+        <i class="bi bi-trash me-1"></i>Datei löschen
+    </button>
+</form>
+<?php render_danger_zone('Datei löschen', 'Löscht diese Datei unwiderruflich.', ob_get_clean()); ?>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
@@ -164,7 +161,8 @@ function shareItem(btn) {
 }
 function shareFallback(text, btn) {
     var ta = document.createElement('textarea');
-    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    ta.style.cssText = 'position:fixed;opacity:0';
+    ta.value = text;
     document.body.appendChild(ta); ta.focus(); ta.select();
     try { document.execCommand('copy'); btn.textContent = 'Kopiert!';
           setTimeout(function(){ btn.innerHTML = '<i class="bi bi-share me-1"></i>Teilen'; }, 2000); }

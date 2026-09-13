@@ -17,21 +17,20 @@
         <p class="mb-1 small text-muted">Inhalt</p>
         <p class="mb-0 fw-medium"><?= e($file['name']) ?></p>
         <p class="mb-0 small text-muted mt-1">
-            <?php
-            $badge_class = match($file['visibility']) {
-                'public'    => 'bg-success',
-                'protected' => 'bg-warning text-dark',
-                'private'   => 'bg-secondary',
-                default     => 'bg-secondary',
-            };
-            $badge_label = match($file['visibility']) {
-                'public'    => 'Öffentlich',
-                'protected' => 'Geschützt',
-                'private'   => 'Privat',
-                default     => e($file['visibility']),
-            };
-            ?>
-            <span class="badge <?= $badge_class ?>"><?= $badge_label ?></span>
+            <?php render_badge(
+                match($file['visibility']) {
+                    'public'    => 'ok',
+                    'protected' => 'warn',
+                    'private'   => 'dim',
+                    default     => 'dim',
+                },
+                match($file['visibility']) {
+                    'public'    => 'Öffentlich',
+                    'protected' => 'Geschützt',
+                    'private'   => 'Privat',
+                    default     => htmlspecialchars($file['visibility'], ENT_QUOTES),
+                }
+            ); ?>
         </p>
     </div>
 </div>
@@ -79,7 +78,7 @@
                 <span class="text-muted small">Betreff:</span> <?= e($subject_prefilled) ?>
             </p>
             <hr class="my-2">
-            <pre class="mb-0 small" style="white-space:pre-wrap; font-family:inherit;">Hallo {Vorname},
+            <pre class="mb-0 small">Hallo {Vorname},
 
 (Deine Nachricht erscheint hier)
 
