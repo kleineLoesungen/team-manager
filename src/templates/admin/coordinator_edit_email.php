@@ -9,13 +9,8 @@
     </a>
 </div>
 
-<?php if ($error): ?>
-<div class="alert alert-danger mb-3"><?= e($error) ?></div>
-<?php endif; ?>
-
-<?php if ($success): ?>
-<div class="alert alert-success mb-3"><?= e($success) ?></div>
-<?php endif; ?>
+<?php if ($error):   render_flash('error',   $error);   endif; ?>
+<?php if ($success): render_flash('success', $success); endif; ?>
 
 <div class="card mb-4">
     <div class="card-body">

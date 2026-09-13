@@ -8,43 +8,27 @@
     </a>
 </div>
 
-<?php if ($error): ?>
-<div class="alert alert-danger"><?= $error ?></div>
-<?php endif; ?>
+<?php if ($error):   render_flash('error',   $error); endif; ?>
 <?php if ($success): ?>
 <?php if (!empty($_GET['promoted'])): ?>
-<div class="alert alert-success">
-    Systemspalte erfolgreich angelegt. <?= (int)$_GET['promoted'] ?> bestehende Team-Spalte(n) wurden automatisch übernommen und zusammengeführt.
-</div>
+<?php render_flash('success', 'Systemspalte erfolgreich angelegt. ' . (int)$_GET['promoted'] . ' bestehende Team-Spalte(n) wurden automatisch übernommen und zusammengeführt.'); ?>
 <?php else: ?>
-<div class="alert alert-success">Systemspalte erfolgreich angelegt.</div>
+<?php render_flash('success', 'Systemspalte erfolgreich angelegt.'); ?>
 <?php endif; ?>
 <?php endif; ?>
-<?php if ($deleted): ?>
-<div class="alert alert-success">Systemspalte erfolgreich gelöscht.</div>
-<?php endif; ?>
-<?php if (!empty($_GET['converted'])): ?>
-<div class="alert alert-success">
-    Systemspalte gelöscht. Daten wurden in <?= (int)$_GET['converted'] ?> teambezogene Koordinatorspalte(n) überführt.
-</div>
-<?php endif; ?>
-<?php if (!empty($_GET['renamed'])): ?>
-<div class="alert alert-success">Systemspalte erfolgreich umbenannt.</div>
-<?php endif; ?>
-<?php if (!empty($_GET['merged'])): ?>
-<div class="alert alert-success">Spalten erfolgreich zusammengeführt.</div>
-<?php endif; ?>
+<?php if ($deleted): render_flash('success', 'Systemspalte erfolgreich gelöscht.'); endif; ?>
+<?php if (!empty($_GET['converted'])): render_flash('success', 'Systemspalte gelöscht. Daten wurden in ' . (int)$_GET['converted'] . ' teambezogene Koordinatorspalte(n) überführt.'); endif; ?>
+<?php if (!empty($_GET['renamed'])): render_flash('success', 'Systemspalte erfolgreich umbenannt.'); endif; ?>
+<?php if (!empty($_GET['merged'])): render_flash('success', 'Spalten erfolgreich zusammengeführt.'); endif; ?>
 
-<h4 class="fw-semibold mb-1">Systemspalten</h4>
+<h4 class="fw-semibold mb-2">Systemspalten</h4>
 <p class="text-muted mb-3">
     Systemspalten sind teamübergreifend und können von Koordinatoren nur gelesen, nicht bearbeitet werden.
     Sie erscheinen auf der Mitglieder-Verlaufsseite als Hauptbereich.
 </p>
 
 <?php if (empty($columns)): ?>
-<div class="text-center py-4 mb-4">
-    <p class="text-muted">Noch keine Systemspalten angelegt.</p>
-</div>
+<?php render_empty('table', 'Noch keine Systemspalten', 'Füge die erste globale Spalte hinzu.'); ?>
 <?php else: ?>
 <div class="table-responsive mb-4">
     <table class="table table-hover align-middle">
@@ -62,9 +46,7 @@
             <tr>
                 <td><?= e($col['name']) ?></td>
                 <td>
-                    <span class="badge bg-light text-dark border">
-                        <?= $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>
-                    </span>
+                    <?php render_badge('dim', $col['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl'); ?>
                 </td>
                 <td class="text-muted small"><?= (int)$col['sort_order'] ?></td>
                 <td class="text-muted small"><?= e(date('d.m.Y', strtotime($col['created_at']))) ?></td>
@@ -86,7 +68,7 @@
 <?php endif; ?>
 
 <!-- Create system column form -->
-<div class="card shadow-sm mb-4" style="max-width: 500px;">
+<div class="card mb-4">
     <div class="card-header fw-semibold">Neue Systemspalte anlegen</div>
     <div class="card-body">
         <form method="POST" action="/admin/columns">
@@ -116,7 +98,7 @@
             <div class="mb-3">
                 <label for="sort_order" class="form-label">Reihenfolge</label>
                 <input type="number" id="sort_order" name="sort_order"
-                       class="form-control" value="0" style="max-width: 120px;">
+                       class="form-control" value="0">
                 <div class="form-text">Kleinere Zahlen erscheinen zuerst.</div>
             </div>
             <button type="submit" class="btn btn-primary">Spalte anlegen</button>

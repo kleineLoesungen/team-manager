@@ -8,11 +8,11 @@
     </a>
 </div>
 
-<div class="card shadow-sm" style="max-width: 480px;">
+<div class="card mb-4">
     <div class="card-body text-center py-4">
         <i class="bi bi-exclamation-triangle-fill text-danger display-5 mb-3 d-block"></i>
         <h5 class="fw-bold mb-2">Systemspalte löschen?</h5>
-        <p class="mb-1">
+        <p class="mb-2">
             Bist du sicher, dass du die Systemspalte
             <strong><?= e($column['name']) ?></strong>
             (<?= $column['data_type'] === 'boolean' ? 'Ja/Nein' : 'Zahl' ?>)
@@ -32,12 +32,12 @@
             Die Spalte enthält keine Daten und kann direkt gelöscht werden.
         </p>
         <?php endif; ?>
-        <form method="POST" action="/admin/columns/<?= (int)$column['id'] ?>/delete" class="d-inline me-2">
+        <form method="POST" action="/admin/columns/<?= (int)$column['id'] ?>/delete">
             <?= csrf_field() ?>
-            <button type="submit" class="btn btn-danger">
+            <button type="submit" class="btn btn-danger w-100 mb-2">
                 <i class="bi bi-trash me-1"></i>Ja, löschen
             </button>
         </form>
-        <a href="/admin/columns" class="btn btn-outline-secondary">Abbrechen</a>
+        <a href="/admin/columns" class="btn btn-outline-secondary w-100">Abbrechen</a>
     </div>
 </div>

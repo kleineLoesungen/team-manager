@@ -8,12 +8,10 @@
     </a>
 </div>
 
-<?php if ($error): ?>
-<div class="alert alert-danger">Zusammenführen fehlgeschlagen. Bitte versuche es erneut.</div>
-<?php endif; ?>
+<?php if ($error): render_flash('error', 'Zusammenführen fehlgeschlagen. Bitte versuche es erneut.'); endif; ?>
 
-<div class="card border-warning mb-4">
-    <div class="card-header fw-semibold" style="color: var(--warn); background: var(--warn-bg);">
+<div class="card border-danger mb-4">
+    <div class="card-header fw-semibold text-danger-emphasis">
         <i class="bi bi-arrow-left-right me-1"></i>Spalten zusammenführen
     </div>
     <div class="card-body">
@@ -62,9 +60,10 @@
 
         <form method="POST" action="/admin/columns/<?= (int)$src['id'] ?>/merge/<?= (int)$target['id'] ?>">
             <?= csrf_field() ?>
-            <button type="submit" class="btn btn-warning">
+            <button type="submit" class="btn btn-danger w-100 mb-2">
                 <i class="bi bi-arrow-left-right me-1"></i>Zusammenführen bestätigen
             </button>
         </form>
+        <a href="/admin/columns" class="btn btn-outline-secondary w-100">Abbrechen</a>
     </div>
 </div>

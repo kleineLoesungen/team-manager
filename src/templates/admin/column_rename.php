@@ -8,11 +8,9 @@
     </a>
 </div>
 
-<?php if ($error): ?>
-<div class="alert alert-danger"><?= $error ?></div>
-<?php endif; ?>
+<?php if ($error): render_flash('error', $error); endif; ?>
 
-<div class="card mb-4" style="max-width: 500px;">
+<div class="card mb-4">
     <div class="card-header">
         <span class="fw-semibold">Spalte umbenennen</span>
     </div>
