@@ -3,12 +3,10 @@
 // Variables: $tickers (array), $other_tickers (array)
 $other_tickers ??= [];
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
+
 <?php if (empty($tickers)): ?>
-<div class="text-center py-5 text-muted">
-    <i class="bi bi-megaphone d-block mb-2" style="font-size:2rem;"></i>
-    <p class="mb-1">Keine Ticker verfügbar</p>
-    <p class="small mb-0">Noch keine Ticker in deinem Team.</p>
-</div>
+<?php render_empty('megaphone', 'Keine Ticker verfügbar', 'Noch keine Ticker in deinem Team.'); ?>
 <?php else: ?>
 <div class="list-group mb-4">
     <?php foreach ($tickers as $t): ?>
@@ -18,11 +16,7 @@ $other_tickers ??= [];
             <div class="flex-grow-1 me-2 min-w-0">
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
-                    <?php if ($t['status'] === 'active'): ?>
-                        <span class="badge bg-success">Aktiv</span>
-                    <?php else: ?>
-                        <span class="badge bg-secondary">Geschlossen</span>
-                    <?php endif; ?>
+                    <?php $t['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
                 </div>
                 <?php if ($t['description']): ?>
                 <p class="mb-0 text-muted small text-truncate"><?= e($t['description']) ?></p>
@@ -45,11 +39,7 @@ $other_tickers ??= [];
             <div class="flex-grow-1 me-2 min-w-0">
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
-                    <?php if ($t['status'] === 'active'): ?>
-                        <span class="badge bg-success">Aktiv</span>
-                    <?php else: ?>
-                        <span class="badge bg-secondary">Geschlossen</span>
-                    <?php endif; ?>
+                    <?php $t['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
                 </div>
                 <p class="mb-1 text-muted small"><?= e($t['team_name']) ?></p>
                 <?php if ($t['description']): ?>

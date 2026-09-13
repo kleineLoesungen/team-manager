@@ -1,8 +1,9 @@
 <?php
-// src/templates/player/list_row_form.php — Player row edit form (CELL-01)
+// src/templates/member/list_row_form.php — Member row edit form (CELL-01)
 // Variables: $list (id, name), $player (id, first_name, last_name),
 //            $columns, $existing_cells ([column_id => value])
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3">
     <a href="/member/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
@@ -10,15 +11,15 @@
     </a>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-header">
         <span class="fw-semibold">
             <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
         </span>
-        <span class="badge bg-primary ms-2">Meine Zeile</span>
+        <?php render_badge('info', 'Meine Zeile'); ?>
     </div>
     <div class="card-body">
-        <form method="POST"
+        <form method="POST" id="row-form"
               action="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit">
             <?= csrf_field() ?>
 
@@ -38,7 +39,6 @@
                 <?php if ($col['data_type'] === 'boolean'): ?>
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
                                name="cells[<?= $col_id ?>]" value="1"
                                id="cell_<?= $col_id ?>"
                                <?= $current_val === '1' ? 'checked' : '' ?>>
@@ -62,7 +62,6 @@
             <?php endforeach; ?>
 
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary min-touch">Speichern</button>
                 <a href="/member/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary min-touch">
                     Abbrechen
                 </a>
@@ -78,3 +77,5 @@
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Liste
     </a>
 </div>
+
+<?php render_action_bar('Zeile speichern', 'row-form'); ?>

@@ -2,6 +2,9 @@
 // src/templates/member/ticker_detail.php
 // Variables: $ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
+<?php if (!empty($error)): render_flash('error', $error); endif; ?>
+
 <div class="mb-3">
     <a href="/member/ticker" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
@@ -13,11 +16,7 @@
 <?php endif; ?>
 
 <div class="mb-4">
-    <?php if ($ticker['status'] === 'active'): ?>
-    <span class="badge bg-success">Aktiv</span>
-    <?php else: ?>
-    <span class="badge bg-secondary">Geschlossen</span>
-    <?php endif; ?>
+    <?php $ticker['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
 </div>
 
 <script>
@@ -65,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Speichern</button>
+                <button type="submit" class="btn btn-primary">Nachricht speichern</button>
                 <a href="/member/ticker/<?= (int)$ticker_id ?>"
                    class="btn btn-outline-secondary">Abbrechen</a>
             </div>
@@ -102,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-send me-1"></i>Posten
+                <i class="bi bi-send me-1"></i>Nachricht posten
             </button>
         </form>
     </div>
@@ -116,10 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </p>
 
 <?php if (empty($messages)): ?>
-<div class="text-center py-5 text-muted">
-    <i class="bi bi-chat-dots d-block mb-2" style="font-size:2rem;"></i>
-    Noch keine Nachrichten
-</div>
+<?php render_empty('chat-dots', 'Noch keine Nachrichten', 'Nachrichten erscheinen hier, sobald jemand postet.'); ?>
 <?php else: ?>
 <div class="list-group mb-4">
     <?php foreach ($messages as $msg): ?>

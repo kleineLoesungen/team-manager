@@ -1,5 +1,5 @@
 <?php
-// src/templates/player/list_detail.php — List table for player
+// src/templates/member/list_detail.php — List table for member
 // Variables: $list (with visibility + show_all_rows), $columns, $players, $cells, $current_user_id
 // edit button only shown for public lists + own row; protected = read-only
 ?>
@@ -11,6 +11,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
              . ($list['name'] ?? '')
              . ' - ' . $_share_url;
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3">
     <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
@@ -36,107 +37,103 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 <?php if (empty($columns)): ?>
 <div class="alert alert-info">Diese Liste hat noch keine Spalten.</div>
 <?php elseif (empty($players)): ?>
-<div class="text-center py-5"><p class="text-muted">Keine Mitglieder im Team.</p></div>
+<?php render_empty('people', 'Keine Mitglieder', 'Keine Mitglieder im Team.'); ?>
 <?php else: ?>
 
 <?php $can_edit = $list['visibility'] === 'public'; ?>
 
-<div class="table-responsive">
-    <table class="table table-sm table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <?php if ($list['show_all_rows']): ?>
-                <th class="text-nowrap">Mitglied</th>
-                <?php endif; ?>
-                <?php foreach ($columns as $col): ?>
-                <th class="text-nowrap"><?= e($col['name']) ?></th>
-                <?php endforeach; ?>
-                <?php if ($can_edit): ?><th></th><?php endif; ?>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($players as $player): ?>
-            <?php $is_own_row = (int)$player['id'] === $current_user_id; ?>
-            <tr <?= $is_own_row ? 'class="table-primary"' : '' ?>>
-                <?php if ($list['show_all_rows']): ?>
-                <td class="text-nowrap fw-medium">
-                    <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
-                    <?php if ($is_own_row): ?>
-                    <span class="badge bg-primary ms-1 small">Ich</span>
-                    <?php endif; ?>
-                </td>
-                <?php endif; ?>
-                <?php foreach ($columns as $col): ?>
-                <td>
-                    <?php
-                        $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
-                        if ($val === null || $val === '') {
-                            echo '';
-                        } elseif ($col['data_type'] === 'boolean') {
-                            echo $val === '1'
-                                ? '<i class="bi bi-check-lg text-success"></i>'
-                                : '<i class="bi bi-x-lg text-muted"></i>';
-                        } else {
-                            echo e($val);
-                        }
-                    ?>
-                </td>
-                <?php endforeach; ?>
-                <?php if ($can_edit): ?>
-                <td>
-                    <?php if ($is_own_row): ?>
-                    <a href="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
-                       class="btn btn-sm btn-outline-primary min-touch">
-                        Bearbeiten
-                    </a>
-                    <?php endif; ?>
-                </td>
-                <?php endif; ?>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-        <?php
-            // Build totals per column over visible $players
-            $col_totals = [];
-            foreach ($columns as $col) {
-                $cid = (int)$col['id'];
-                if ($col['data_type'] === 'number') {
-                    $sum = 0;
-                    foreach ($players as $player) {
-                        $v = $cells[(int)$player['id']][$cid] ?? null;
-                        if ($v !== null && $v !== '' && is_numeric($v)) {
-                            $sum += (float)$v;
-                        }
-                    }
-                    $col_totals[$cid] = ($sum == floor($sum))
-                        ? (int)$sum
-                        : number_format($sum, 2, ',', '.');
-                } elseif ($col['data_type'] === 'boolean') {
-                    $count = 0;
-                    foreach ($players as $player) {
-                        if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
-                            $count++;
-                        }
-                    }
-                    $col_totals[$cid] = $count;
-                } else {
-                    $col_totals[$cid] = '';
-                }
+<?php
+// Build column headers for render_matrix_table
+$_headers = [];
+if ($list['show_all_rows']) $_headers[] = 'Mitglied';
+foreach ($columns as $col) $_headers[] = $col['name'];
+if ($can_edit) $_headers[] = '';
+
+// Pre-compute totals per column over visible $players
+$col_totals = [];
+foreach ($columns as $col) {
+    $cid = (int)$col['id'];
+    if ($col['data_type'] === 'number') {
+        $sum = 0;
+        foreach ($players as $player) {
+            $v = $cells[(int)$player['id']][$cid] ?? null;
+            if ($v !== null && $v !== '' && is_numeric($v)) {
+                $sum += (float)$v;
             }
+        }
+        $col_totals[$cid] = ($sum == floor($sum))
+            ? (int)$sum
+            : number_format($sum, 2, ',', '.');
+    } elseif ($col['data_type'] === 'boolean') {
+        $count = 0;
+        foreach ($players as $player) {
+            if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
+                $count++;
+            }
+        }
+        $col_totals[$cid] = $count;
+    } else {
+        $col_totals[$cid] = '';
+    }
+}
+?>
+
+<?php render_matrix_table(
+    $_headers,
+    function() use ($players, $columns, $cells, $list, $can_edit, $current_user_id) {
+        foreach ($players as $player):
+            $is_own_row = (int)$player['id'] === $current_user_id;
         ?>
-        <tfoot class="table-light">
-            <tr>
-                <?php if ($list['show_all_rows']): ?>
-                <td class="text-nowrap fw-bold">Gesamt</td>
+        <tr class="<?= $is_own_row ? 'table-primary' : '' ?>">
+            <?php if ($list['show_all_rows']): ?>
+            <td class="text-nowrap fw-medium">
+                <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                <?php if ($is_own_row): render_badge('info', 'Ich'); endif; ?>
+            </td>
+            <?php endif; ?>
+            <?php foreach ($columns as $col): ?>
+            <td>
+                <?php
+                    $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
+                    if ($val === null || $val === '') {
+                        echo '';
+                    } elseif ($col['data_type'] === 'boolean') {
+                        echo $val === '1'
+                            ? '<i class="bi bi-check-lg text-success"></i>'
+                            : '<i class="bi bi-x-lg text-muted"></i>';
+                    } else {
+                        echo e($val);
+                    }
+                ?>
+            </td>
+            <?php endforeach; ?>
+            <?php if ($can_edit): ?>
+            <td>
+                <?php if ($is_own_row): ?>
+                <a href="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
+                   class="btn btn-sm btn-outline-primary min-touch">
+                    Bearbeiten
+                </a>
                 <?php endif; ?>
-                <?php foreach ($columns as $col): ?>
-                <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
-                <?php endforeach; ?>
-                <?php if ($can_edit): ?><td></td><?php endif; ?>
-            </tr>
-        </tfoot>
-    </table>
-</div>
+            </td>
+            <?php endif; ?>
+        </tr>
+        <?php endforeach;
+    },
+    function() use ($columns, $col_totals, $list, $can_edit) {
+        ?>
+        <tr>
+            <?php if ($list['show_all_rows']): ?>
+            <td class="text-nowrap fw-bold">Gesamt</td>
+            <?php endif; ?>
+            <?php foreach ($columns as $col): ?>
+            <td class="text-nowrap fw-bold"><?= $col_totals[(int)$col['id']] ?></td>
+            <?php endforeach; ?>
+            <?php if ($can_edit): ?><td></td><?php endif; ?>
+        </tr>
+        <?php
+    }
+); ?>
 
 <?php endif; ?>
 

@@ -10,6 +10,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
              . ($file['name'] ?? '')
              . ' - ' . $_share_url;
 ?>
+<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3 d-flex gap-2 flex-wrap">
     <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
@@ -23,14 +24,12 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
     </button>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card mb-4">
     <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
         <span><i class="bi bi-file-earmark-text me-2"></i><?= e($file['name']) ?></span>
-        <?php if ($file['visibility'] === 'protected'): ?>
-            <span class="badge bg-secondary">Nur lesen</span>
-        <?php else: ?>
-            <span class="badge bg-success">Öffentlich</span>
-        <?php endif; ?>
+        <?php $file['visibility'] === 'protected'
+            ? render_badge('warn', 'Nur lesen')
+            : render_badge('ok', 'Öffentlich'); ?>
     </div>
     <div class="card-body">
 
@@ -55,18 +54,17 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="preview-pane" role="tabpanel">
-                    <div id="preview-output" class="border rounded p-3 bg-white"
-                         style="min-height: 150px;"></div>
+                    <div id="preview-output" class="border rounded p-3 bg-white"></div>
                 </div>
                 <div class="tab-pane fade" id="edit-pane" role="tabpanel">
                     <textarea id="content-editor" name="content" class="form-control font-monospace"
-                              rows="16" style="resize: vertical;"><?= e($file['content']) ?></textarea>
+                              rows="16"><?= e($file['content']) ?></textarea>
                 </div>
             </div>
 
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary min-touch">
-                    <i class="bi bi-save me-1"></i>Speichern
+                    <i class="bi bi-save me-1"></i>Datei speichern
                 </button>
             </div>
         </form>
