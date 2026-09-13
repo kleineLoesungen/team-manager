@@ -2,9 +2,7 @@
 // src/templates/admin/team_edit.php — Edit team form
 // Variables: $team (array with id, name, sort_order), $error (string)
 ?>
-<?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= $error ?></div>
-<?php endif; ?>
+<?php if (!empty($error)): render_flash('error', $error); endif; ?>
 
 <div class="mb-3">
     <a href="/admin/teams" class="btn btn-sm btn-outline-secondary">

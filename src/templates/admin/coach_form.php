@@ -8,9 +8,7 @@
     </a>
 </div>
 
-<?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= e($error) ?></div>
-<?php endif; ?>
+<?php if (!empty($error)): render_flash('error', $error); endif; ?>
 <form method="POST" action="/admin/coordinators/create">
     <?= csrf_field() ?>
     <div class="mb-3">
