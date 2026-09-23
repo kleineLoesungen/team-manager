@@ -212,7 +212,7 @@ Plans:
 - [x] 09-05-PLAN.md — Coordinator: ticker, files & stats templates (9 files)
 - [x] 09-06-PLAN.md — Member: all 11 member templates
 - [x] 09-07-PLAN.md — Admin: all 19 admin templates (credential_modal excluded)
-- [ ] 09-08-PLAN.md — Public templates + final violation scan
+- [x] 09-08-PLAN.md — Public templates + final violation scan
 
 ---
 
