@@ -73,6 +73,10 @@ if (!empty($global_columns)) {
         ) c
         LEFT JOIN cells ON cells.column_id = c.id
                        AND cells.member_id = ?
+                       AND EXISTS (
+                           SELECT 1 FROM list_global_columns lgc
+                           WHERE lgc.list_id = cells.list_id AND lgc.column_id = c.id
+                       )
         LEFT JOIN lists ON cells.list_id = lists.id
                        AND lists.visibility IN ('public', 'protected')
         WHERE (cells.id IS NULL OR lists.id IS NOT NULL)
