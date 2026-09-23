@@ -2,8 +2,11 @@
 // src/templates/admin/member_edit.php — Edit member profile form
 // Variables: $profile (array), $clubs (array), $error (string)
 ?>
+<?php if (!empty($_GET['success'])): ?>
+<?php render_flash('success', 'Änderungen gespeichert.'); ?>
+<?php endif; ?>
 <?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= $error ?></div>
+<?php render_flash('error', $error); ?>
 <?php endif; ?>
 
 <div class="mb-3 d-flex align-items-center gap-2">
@@ -11,7 +14,7 @@
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
     <?php if (!$profile['is_active']): ?>
-    <span class="badge bg-secondary">Deaktiviert</span>
+    <?php render_badge('dim', 'Deaktiviert'); ?>
     <form method="POST" action="/admin/members/<?= (int)$profile['id'] ?>/reactivate">
         <?= csrf_field() ?>
         <button type="submit" class="btn btn-sm btn-outline-success">
@@ -115,14 +118,8 @@
         </div>
         <div class="col-12">
             <button type="submit" class="btn btn-primary min-touch">
-                <i class="bi bi-check-lg me-1"></i>Speichern
+                <i class="bi bi-check-lg me-1"></i>Änderungen speichern
             </button>
         </div>
     </div>
 </form>
-
-<div class="mt-4">
-    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück
-    </a>
-</div>

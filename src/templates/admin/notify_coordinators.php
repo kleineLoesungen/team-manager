@@ -4,25 +4,20 @@
 // Per UI spec Screen 4.
 ?>
 
-<div class="mb-3">
-    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Koordinatoren
-    </a>
-</div>
+<?php render_page_header('Koordinatoren benachrichtigen', '/admin/coordinators'); ?>
 
 <?php if ($error): ?>
-<div class="alert alert-danger mb-3"><?= e($error) ?></div>
+<?php render_flash('error', $error); ?>
 <?php endif; ?>
 
 <?php if ($success): ?>
-<div class="alert alert-success mb-3"><?= $success ?></div>
+<?php render_flash('success', $success); ?>
 <?php endif; ?>
 
 <?php if (empty($with_email)): ?>
-<div class="alert alert-info">
-    Keine Koordinatoren mit hinterlegter E-Mail-Adresse vorhanden.
-    Füge E-Mail-Adressen in der <a href="/admin/coordinators">Koordinatorenverwaltung</a> hinzu.
-</div>
+<?php render_empty('envelope-x', 'Keine E-Mail-Adressen hinterlegt',
+    'Koordinatoren haben noch keine E-Mail-Adresse eingetragen.',
+    '<a href="/admin/coordinators" class="btn btn-outline-primary mt-3">Zu Koordinatoren</a>'); ?>
 <?php else: ?>
 
 <?php if (!empty($without_email)): ?>
@@ -70,9 +65,3 @@
 </div>
 
 <?php endif; ?>
-
-<div class="mt-4">
-    <a href="/admin/coordinators" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Koordinatoren
-    </a>
-</div>

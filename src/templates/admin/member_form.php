@@ -2,15 +2,14 @@
 // src/templates/admin/member_form.php — Create member profile form
 // Variables: $clubs (array), $teams (array), $error (string), $form (array)
 ?>
-<div class="mb-3">
-    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
-    </a>
-</div>
-
-<?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= e($error) ?></div>
+<?php if (!empty($_GET['success'])): ?>
+<?php render_flash('success', 'Mitglied erfolgreich angelegt.'); ?>
 <?php endif; ?>
+<?php if (!empty($error)): ?>
+<?php render_flash('error', $error); ?>
+<?php endif; ?>
+
+<?php render_page_header('Mitglied anlegen', '/admin/members'); ?>
 
 <form method="POST" action="/admin/members/create">
     <?= csrf_field() ?>
@@ -79,14 +78,8 @@
                   placeholder="Zusätzliche Informationen zum Mitglied …"><?= e($form['description']) ?></textarea>
     </div>
 
-    <div class="d-flex gap-3 align-items-center">
+    <div class="d-grid gap-3">
         <button type="submit" class="btn btn-primary min-touch">Mitglied anlegen</button>
-        <a href="/admin/members" class="btn btn-outline-secondary">Abbrechen</a>
+        <a href="/admin/members" class="btn btn-outline-secondary min-touch">Abbrechen</a>
     </div>
 </form>
-
-<div class="mt-4">
-    <a href="/admin/members" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Mitglieder
-    </a>
-</div>

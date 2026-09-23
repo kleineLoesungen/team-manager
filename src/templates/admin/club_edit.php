@@ -2,15 +2,14 @@
 // src/templates/admin/club_edit.php — Edit club form
 // Variables: $club (array with id, name), $error (string)
 ?>
+<?php if (!empty($_GET['success'])): ?>
+<?php render_flash('success', 'Änderungen gespeichert.'); ?>
+<?php endif; ?>
 <?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= $error ?></div>
+<?php render_flash('error', $error); ?>
 <?php endif; ?>
 
-<div class="mb-3">
-    <a href="/admin/clubs" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück
-    </a>
-</div>
+<?php render_page_header('Klub bearbeiten', '/admin/clubs'); ?>
 
 <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/edit">
     <?= csrf_field() ?>
@@ -25,13 +24,10 @@
                maxlength="100"
                autofocus>
     </div>
-    <button type="submit" class="btn btn-primary min-touch">
-        <i class="bi bi-check-lg me-1"></i>Speichern
-    </button>
+    <div class="d-grid gap-3">
+        <button type="submit" class="btn btn-primary min-touch">
+            <i class="bi bi-check-lg me-1"></i>Klub speichern
+        </button>
+        <a href="/admin/clubs" class="btn btn-outline-secondary min-touch">Abbrechen</a>
+    </div>
 </form>
-
-<div class="mt-4">
-    <a href="/admin/clubs" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück
-    </a>
-</div>

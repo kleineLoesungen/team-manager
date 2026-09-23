@@ -11,10 +11,10 @@ $fmt_attr = function(array $a): string {
 };
 ?>
 <?php if (!empty($_GET['error'])): ?>
-<div class="alert alert-danger"><?= e($_GET['error']) ?></div>
+<?php render_flash('error', $_GET['error']); ?>
 <?php endif; ?>
 <?php if (!empty($_GET['success'])): ?>
-<div class="alert alert-success"><?= e($_GET['success']) ?></div>
+<?php render_flash('success', 'Aktion erfolgreich.'); ?>
 <?php endif; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -28,7 +28,7 @@ $fmt_attr = function(array $a): string {
 <form method="GET" action="/admin/members" class="mb-4">
     <div class="row g-2">
         <div class="col-12">
-            <div class="input-group input-group-sm">
+            <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" name="q" class="form-control"
                        placeholder="Name suchen …"
@@ -37,7 +37,7 @@ $fmt_attr = function(array $a): string {
             </div>
         </div>
         <div class="col-6">
-            <select name="club_id" class="form-select form-select-sm">
+            <select name="club_id" class="form-select">
                 <option value="0">Alle Klubs</option>
                 <?php foreach ($clubs as $c): ?>
                 <option value="<?= (int)$c['id'] ?>" <?= $filter_club_id === (int)$c['id'] ? 'selected' : '' ?>>
@@ -47,7 +47,7 @@ $fmt_attr = function(array $a): string {
             </select>
         </div>
         <div class="col-4">
-            <select name="team_id" class="form-select form-select-sm">
+            <select name="team_id" class="form-select">
                 <option value="0">Alle Teams</option>
                 <?php foreach ($teams as $t): ?>
                 <option value="<?= (int)$t['id'] ?>" <?= $filter_team_id === (int)$t['id'] ? 'selected' : '' ?>>
@@ -83,12 +83,12 @@ $fmt_attr = function(array $a): string {
 </div>
 
 <?php if (empty($profiles)): ?>
-<div class="alert alert-info">
-    Keine aktiven Mitglieder gefunden.
-    <?php if ($search === '' && $filter_club_id === 0 && $filter_team_id === 0): ?>
-    <a href="/admin/members/create" class="alert-link">Erstes Mitglied anlegen</a>.
-    <?php endif; ?>
-</div>
+<?php
+$empty_action = ($search === '' && $filter_club_id === 0 && $filter_team_id === 0)
+    ? '<a href="/admin/members/create" class="btn btn-outline-primary mt-3">Mitglied hinzufügen</a>'
+    : null;
+render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitglied an, um loszulegen.', $empty_action);
+?>
 <?php else: ?>
 <div class="list-group mb-4">
     <?php foreach ($profiles as $p): ?>
@@ -185,7 +185,7 @@ $fmt_attr = function(array $a): string {
         <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/link-user"
               class="d-flex align-items-center gap-2 mb-2 js-link-form">
             <?= csrf_field() ?>
-            <select class="form-select form-select-sm js-team-pick" style="max-width:150px">
+            <select class="form-select js-team-pick">
                 <option value="">Team …</option>
                 <?php foreach ($unlinked_by_team as $tid => $tdata): ?>
                 <option value="<?= (int)$tid ?>">
@@ -193,8 +193,7 @@ $fmt_attr = function(array $a): string {
                 </option>
                 <?php endforeach; ?>
             </select>
-            <select name="user_id" class="form-select form-select-sm js-user-pick"
-                    style="max-width:180px" disabled>
+            <select name="user_id" class="form-select js-user-pick" disabled>
                 <option value="">Mitglied …</option>
             </select>
             <button type="submit" class="btn btn-sm btn-outline-primary" disabled>
@@ -209,9 +208,9 @@ $fmt_attr = function(array $a): string {
                class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-pencil me-1"></i>Bearbeiten
             </a>
-            <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/deactivate"
-                  onsubmit="return confirm('Mitglied deaktivieren?')">
+            <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/deactivate">
                 <?= csrf_field() ?>
+                <input type="hidden" name="confirm_deactivate" value="1">
                 <button type="submit" class="btn btn-sm btn-outline-warning">
                     <i class="bi bi-pause-circle me-1"></i>Deaktivieren
                 </button>
@@ -237,9 +236,9 @@ $fmt_attr = function(array $a): string {
         <div class="list-group-item px-3 py-3 opacity-75">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                 <div>
-                    <div class="fw-semibold text-muted">
+                    <div class="fw-semibold text-muted d-flex align-items-center gap-1">
                         <?= e($p['last_name']) ?>, <?= e($p['first_name']) ?>
-                        <span class="badge bg-secondary ms-1">Inaktiv</span>
+                        <?php render_badge('dim', 'Inaktiv'); ?>
                     </div>
                     <?php if (!empty($p['club_name'])): ?>
                     <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle mt-1">
@@ -284,9 +283,9 @@ $fmt_attr = function(array $a): string {
                     </button>
                 </form>
                 <?php if (empty($linked)): ?>
-                <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/delete"
-                      onsubmit="return confirm('<?= e($p['last_name'] . ', ' . $p['first_name']) ?> endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+                <form method="POST" action="/admin/members/<?= (int)$p['id'] ?>/delete">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="confirm_delete" value="1">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash me-1"></i>Löschen
                     </button>

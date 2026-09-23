@@ -2,15 +2,14 @@
 // src/templates/admin/attributes.php — Admin: Player attribute groups + nested attributes
 // Variables: $groups (array keyed by group_id), $error (string)
 ?>
-<div class="mb-3">
-    <a href="/admin/settings" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
-    </a>
-</div>
-
-<?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= $error ?></div>
+<?php if (!empty($_GET['success'])): ?>
+<?php render_flash('success', 'Aktion erfolgreich.'); ?>
 <?php endif; ?>
+<?php if (!empty($error)): ?>
+<?php render_flash('error', $error); ?>
+<?php endif; ?>
+
+<?php render_page_header('Attribute', '/admin/settings'); ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted"><?= count($groups) ?> Gruppe<?= count($groups) !== 1 ? 'n' : '' ?></span>
@@ -23,12 +22,12 @@
         <form method="POST" action="/admin/attributes/groups/create" class="row g-2 align-items-end">
             <?= csrf_field() ?>
             <div class="col-12 col-sm-6">
-                <label class="form-label mb-1 small">Gruppenname</label>
+                <label class="form-label mb-1">Gruppenname</label>
                 <input type="text" class="form-control" name="name" maxlength="100" required
                        placeholder="z.B. Kontakt, Mitgliedsprofil …">
             </div>
             <div class="col-6 col-sm-3">
-                <label class="form-label mb-1 small">Reihenfolge</label>
+                <label class="form-label mb-1">Reihenfolge</label>
                 <input type="number" class="form-control" name="sort_order" value="0" min="0">
             </div>
             <div class="col-6 col-sm-3">
@@ -41,9 +40,7 @@
 </div>
 
 <?php if (empty($groups)): ?>
-<div class="alert alert-info">
-    Noch keine Gruppen vorhanden. Erstelle oben eine neue Gruppe.
-</div>
+<?php render_empty('list-task', 'Noch keine Attributgruppen', 'Erstelle oben eine neue Gruppe, um Attribute zu verwalten.'); ?>
 <?php else: ?>
 
 <?php foreach ($groups as $group): ?>
@@ -57,17 +54,16 @@
                 <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/edit"
                       class="d-flex gap-2 align-items-center">
                     <?= csrf_field() ?>
-                    <input type="text" class="form-control form-control-sm" name="name"
-                           value="<?= e($group['name']) ?>" maxlength="100" required
-                           style="min-width:140px">
-                    <input type="number" class="form-control form-control-sm" name="sort_order"
-                           value="<?= (int)$group['sort_order'] ?>" min="0" style="width:70px">
+                    <input type="text" class="form-control" name="name"
+                           value="<?= e($group['name']) ?>" maxlength="100" required>
+                    <input type="number" class="form-control" name="sort_order"
+                           value="<?= (int)$group['sort_order'] ?>" min="0">
                     <button type="submit" class="btn btn-sm btn-outline-primary">Speichern</button>
                 </form>
                 <!-- Delete group -->
-                <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/delete"
-                      onsubmit="return confirm('Gruppe und alle ihre Attribute löschen?')">
+                <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/delete">
                     <?= csrf_field() ?>
+                    <input type="hidden" name="confirm_delete" value="1">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -99,12 +95,11 @@
                               action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/edit">
                             <?= csrf_field() ?>
                             <td>
-                                <input type="text" class="form-control form-control-sm" name="name"
-                                       value="<?= e($attr['name']) ?>" maxlength="100" required
-                                       style="min-width:120px">
+                                <input type="text" class="form-control" name="name"
+                                       value="<?= e($attr['name']) ?>" maxlength="100" required>
                             </td>
                             <td>
-                                <select class="form-select form-select-sm" name="data_type" style="min-width:90px">
+                                <select class="form-select" name="data_type">
                                     <option value="text" <?= ($attr['data_type'] ?? 'text') === 'text' ? 'selected' : '' ?>>Text</option>
                                     <option value="date" <?= ($attr['data_type'] ?? 'text') === 'date' ? 'selected' : '' ?>>Datum</option>
                                 </select>
@@ -124,8 +119,8 @@
                                 </div>
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm" name="sort_order"
-                                       value="<?= (int)$attr['sort_order'] ?>" min="0" style="width:70px">
+                                <input type="number" class="form-control" name="sort_order"
+                                       value="<?= (int)$attr['sort_order'] ?>" min="0">
                             </td>
                             <td>
                                 <div class="d-flex gap-1">
@@ -133,9 +128,9 @@
                         </form>
                                     <!-- Delete attribute (separate form) -->
                                     <form method="POST"
-                                          action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/delete"
-                                          onsubmit="return confirm('Attribut \"<?= e($attr['name']) ?>\" löschen?')">
+                                          action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/delete">
                                         <?= csrf_field() ?>
+                                        <input type="hidden" name="confirm_delete" value="1">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -158,23 +153,23 @@
                   class="row g-2 align-items-end">
                 <?= csrf_field() ?>
                 <div class="col-12 col-sm-3">
-                    <label class="form-label mb-1 small">Name</label>
-                    <input type="text" class="form-control form-control-sm" name="name"
+                    <label class="form-label mb-1">Name</label>
+                    <input type="text" class="form-control" name="name"
                            maxlength="100" required placeholder="z.B. Geburtsdatum …">
                 </div>
                 <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1 small">Typ</label>
-                    <select class="form-select form-select-sm" name="data_type">
+                    <label class="form-label mb-1">Typ</label>
+                    <select class="form-select" name="data_type">
                         <option value="text">Text</option>
                         <option value="date">Datum</option>
                     </select>
                 </div>
                 <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1 small">Reihenfolge</label>
-                    <input type="number" class="form-control form-control-sm" name="sort_order" value="0" min="0">
+                    <label class="form-label mb-1">Reihenfolge</label>
+                    <input type="number" class="form-control" name="sort_order" value="0" min="0">
                 </div>
                 <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1 small">Sichtbar</label>
+                    <label class="form-label mb-1">Sichtbar</label>
                     <div class="form-check form-switch mt-1">
                         <input class="form-check-input" type="checkbox" name="visible_to_player"
                                role="switch" id="visible_new_<?= (int)$group['id'] ?>" checked>
@@ -182,7 +177,7 @@
                     </div>
                 </div>
                 <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1 small">Editierbar</label>
+                    <label class="form-label mb-1">Editierbar</label>
                     <div class="form-check form-switch mt-1">
                         <input class="form-check-input" type="checkbox" name="editable_by_player"
                                role="switch" id="editable_new_<?= (int)$group['id'] ?>">
@@ -201,9 +196,3 @@
 <?php endforeach; ?>
 
 <?php endif; ?>
-
-<div class="mt-4">
-    <a href="/admin/settings" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Einstellungen
-    </a>
-</div>

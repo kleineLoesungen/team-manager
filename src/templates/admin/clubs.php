@@ -3,10 +3,10 @@
 // Variables: $active_clubs (array), $inactive_clubs (array), $error (string)
 ?>
 <?php if (!empty($error)): ?>
-<div class="alert alert-danger"><?= $error ?></div>
+<?php render_flash('error', $error); ?>
 <?php endif; ?>
 <?php if (!empty($_GET['success'])): ?>
-<div class="alert alert-success"><?= e($_GET['success']) ?></div>
+<?php render_flash('success', 'Aktion erfolgreich.'); ?>
 <?php endif; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -17,32 +17,37 @@
 </div>
 
 <?php if (empty($active_clubs) && empty($inactive_clubs)): ?>
-<div class="alert alert-info">
-    Noch keine Klubs vorhanden. <a href="/admin/clubs/create" class="alert-link">Ersten Klub anlegen</a>.
-</div>
+<?php render_empty('building', 'Noch keine Klubs', 'Erstelle den ersten Klub, um Mitglieder Vereinen zuzuordnen.',
+    '<a href="/admin/clubs/create" class="btn btn-outline-primary mt-3">Klub hinzufügen</a>'); ?>
 <?php else: ?>
 
-<?php if (!empty($active_clubs)): ?>
-<div class="list-group">
-    <?php foreach ($active_clubs as $club): ?>
-    <div class="list-group-item px-3 py-3">
-        <div class="fw-semibold mb-2"><?= e($club['name']) ?></div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a href="/admin/clubs/<?= (int)$club['id'] ?>/edit" data-save-scroll
-               class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-pencil me-1"></i>Bearbeiten
-            </a>
-            <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/deactivate">
-                <?= csrf_field() ?>
-                <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-pause-circle me-1"></i>Deaktivieren</button>
-            </form>
+<?php render_collection_group('Aktiv', function() use ($active_clubs) {
+    if (empty($active_clubs)) {
+        echo '<p class="text-muted small mb-3">Keine aktiven Klubs vorhanden.</p>';
+        return;
+    }
+    ?>
+    <div class="list-group mb-4">
+        <?php foreach ($active_clubs as $club): ?>
+        <div class="list-group-item px-3 py-3">
+            <div class="fw-semibold mb-2"><?= e($club['name']) ?></div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/admin/clubs/<?= (int)$club['id'] ?>/edit" data-save-scroll
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil me-1"></i>Bearbeiten
+                </a>
+                <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/deactivate">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-pause-circle me-1"></i>Deaktivieren
+                    </button>
+                </form>
+            </div>
         </div>
+        <?php endforeach; ?>
     </div>
-    <?php endforeach; ?>
-</div>
-<?php else: ?>
-<div class="alert alert-secondary">Noch keine aktiven Klubs vorhanden.</div>
-<?php endif; ?>
+    <?php
+}); ?>
 
 <?php if (!empty($inactive_clubs)): ?>
 <div class="mt-4">
@@ -52,22 +57,26 @@
         Inaktiv (<?= count($inactive_clubs) ?>)
     </button>
     <div class="collapse mt-2" id="inactiveClubs">
-    <div class="list-group opacity-75">
-        <?php foreach ($inactive_clubs as $club): ?>
-        <div class="list-group-item px-3 py-3">
-            <div class="fw-semibold text-muted mb-1"><?= e($club['name']) ?></div>
-            <span class="badge bg-secondary mb-2">Deaktiviert</span>
-            <div class="d-flex gap-2 flex-wrap">
-                <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/reactivate">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
-                    </button>
-                </form>
+        <?php render_collection_group('Inaktiv', function() use ($inactive_clubs) { ?>
+        <div class="list-group opacity-75">
+            <?php foreach ($inactive_clubs as $club): ?>
+            <div class="list-group-item px-3 py-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="fw-semibold text-muted"><?= e($club['name']) ?></span>
+                    <?php render_badge('dim', 'Inaktiv'); ?>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <form method="POST" action="/admin/clubs/<?= (int)$club['id'] ?>/reactivate">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reaktivieren
+                        </button>
+                    </form>
+                </div>
             </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
-    </div>
+        <?php }); ?>
     </div>
 </div>
 <?php endif; ?>
