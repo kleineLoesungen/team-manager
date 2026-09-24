@@ -551,10 +551,6 @@ match (true) {
     $path === '/coordinator/calendar-reset'
         => require ROOT_PATH . '/src/coordinator/calendar_reset_handler.php',
 
-    // Calendar token reset — member
-    $path === '/member/calendar-reset'
-        => require ROOT_PATH . '/src/member/calendar_reset_handler.php',
-
     // ── Public: Ticker (no auth) ─────────────────────────────────────────────
     $path === '/ticker'
         => require ROOT_PATH . '/src/public/ticker_handler.php',
