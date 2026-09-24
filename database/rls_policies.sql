@@ -12,11 +12,16 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users FORCE ROW LEVEL SECURITY;
 
 -- SELECT: admin sees all rows; others see only their own team
+-- A user must always be able to read their own row: users.team_id is the ORIGIN team,
+-- while app.current_team_id is the team being worked in. For a coordinator active in any
+-- other team the two differ, which otherwise hides their own row — blanking the profile
+-- page and, via members_select's subquery on users, their own member record too.
 CREATE POLICY team_isolation_users_select ON users
     FOR SELECT
     USING (
         current_setting('app.is_admin', true) = 'true'
         OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        OR id      = NULLIF(current_setting('app.current_user_id', true), '')::integer
     );
 
 -- INSERT: admin can insert into any team; others only into current team context
