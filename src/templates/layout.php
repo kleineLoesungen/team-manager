@@ -35,6 +35,8 @@ function render_layout_head(string $title = 'Team Manager'): void {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Team Manager">
+    <meta name="theme-color" content="#2f3640">
     <title><?= $full_title ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet"
@@ -47,6 +49,8 @@ function render_layout_head(string $title = 'Team Manager'): void {
     <link rel="stylesheet" href="/css/app.css">
     <style>:root{--brand:<?= $safe_color ?>;}</style>
     <link rel="icon" href="/logo">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png">
 </head>
 <body>
 <?php

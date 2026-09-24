@@ -10,6 +10,11 @@
     RewriteRule ^uploads/ - [F,L]
 </IfModule>
 
+# MIME type for the PWA manifest (some Apache configs lack this by default)
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
 # Front controller
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
