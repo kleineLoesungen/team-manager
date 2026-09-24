@@ -28,8 +28,9 @@ CREATE TABLE IF NOT EXISTS team_manager.users (
     password_hash VARCHAR(255) NOT NULL,
     email         VARCHAR(255)     NULL,
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
-    confirmed_at  TIMESTAMPTZ          NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    confirmed_at   TIMESTAMPTZ          NULL,
+    calendar_token VARCHAR(64)  UNIQUE   NULL,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     -- member_id and club_id added via ALTER TABLE below (forward reference to members/clubs)
 );
 

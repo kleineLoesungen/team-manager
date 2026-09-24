@@ -14,7 +14,7 @@ $is_first_confirm = $_SESSION['confirmed_at'] === null;
 
 // Load coordinator's member record (member_id is NOT NULL after migration 029)
 $stmt = $pdo->prepare(
-    "SELECT u.member_id, u.confirmed_at,
+    "SELECT u.member_id, u.confirmed_at, u.calendar_token,
             p.first_name, p.last_name, p.email, p.phone
      FROM users u
      JOIN members p ON p.id = u.member_id
@@ -22,9 +22,11 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$user_id]);
 $self = $stmt->fetch();
-$player_id = (int)$self['member_id'];
+$player_id      = (int)$self['member_id'];
+$calendar_token = $self['calendar_token'] ?? null;
 
-$error = '';
+$error   = '';
+$success = !empty($_GET['success']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -62,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['confirmed_at'] = $_SESSION['confirmed_at'] ?? date('c');
         }
 
-        redirect($is_confirm_route && $is_first_confirm ? '/coordinator/members' : '/coordinator/profile');
+        redirect($is_confirm_route && $is_first_confirm ? '/coordinator/members' : '/coordinator/profile?success=1');
     }
 
     // On validation error, keep submitted values for re-display
@@ -80,7 +82,7 @@ require ROOT_PATH . '/src/templates/coordinator/layout.php';
 render_coach_page(
     ($is_confirm_route && $is_first_confirm) ? 'Profil bestätigen' : 'Mein Profil',
     'profile',
-    function() use ($self, $error, $is_confirm_route, $is_first_confirm) {
+    function() use ($self, $error, $success, $is_confirm_route, $is_first_confirm, $calendar_token) {
         require ROOT_PATH . '/src/templates/coordinator/profile.php';
     }
 );

@@ -11,10 +11,12 @@ $pdo     = get_db();
 $user_id = (int)$_SESSION['user_id'];
 $error   = '';
 
-// Load linked member_id (profile record)
-$link_stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
+// Load linked member_id (profile record) and calendar token
+$link_stmt = $pdo->prepare("SELECT member_id, calendar_token FROM users WHERE id = ?");
 $link_stmt->execute([$user_id]);
-$player_id = (int)($link_stmt->fetchColumn() ?: 0);
+$link_row       = $link_stmt->fetch(PDO::FETCH_ASSOC);
+$player_id      = (int)($link_row['member_id'] ?? 0);
+$calendar_token = $link_row['calendar_token'] ?? null;
 
 $player      = null;
 $clubs       = [];
@@ -120,6 +122,6 @@ $success = !empty($_GET['success']);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Mein Profil', 'profile', function() use ($player, $player_id, $clubs, $attr_groups, $error, $success) {
+render_member_page('Mein Profil', 'profile', function() use ($player, $player_id, $clubs, $attr_groups, $error, $success, $calendar_token) {
     require ROOT_PATH . '/src/templates/member/profile.php';
 });

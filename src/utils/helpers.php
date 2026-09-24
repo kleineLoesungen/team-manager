@@ -69,6 +69,10 @@ function generate_unique_username(PDO $pdo, string $first_name, string $last_nam
     return $initials . substr((string)time(), -4);
 }
 
+function generate_calendar_token(): string {
+    return bin2hex(random_bytes(32));
+}
+
 function prefill_number_cells(PDO $pdo, int $team_id, int $user_id): void {
     $stmt = $pdo->prepare(
         "INSERT INTO cells (list_id, column_id, member_id, value)

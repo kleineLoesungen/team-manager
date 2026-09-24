@@ -180,14 +180,22 @@ match (true) {
             require ROOT_PATH . '/src/admin/attribute_group_action_handler.php';
         })(),
 
-    (bool)preg_match('#^/admin/attributes/(\d+)/attributes/(create|(\d+)/(edit|delete))$#', $path, $matches)
+    // /admin/attributes/{group_id}/attributes/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/admin/attributes/(\d+)/attributes/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['group_id'] = (int)$matches[1];
+            $_REQUEST['attr_id']  = (int)$matches[2];
+            require ROOT_PATH . '/src/admin/attribute_edit_handler.php';
+        })(),
+
+    (bool)preg_match('#^/admin/attributes/(\d+)/attributes/(create|(\d+)/delete)$#', $path, $matches)
         => (function() use ($path, $matches) {
             $_REQUEST['group_id'] = (int)$matches[1];
             if ($matches[2] === 'create') {
                 $_REQUEST['action'] = 'create';
             } else {
                 $_REQUEST['attr_id'] = (int)$matches[3];
-                $_REQUEST['action']  = $matches[4];
+                $_REQUEST['action']  = 'delete';
             }
             require ROOT_PATH . '/src/admin/attribute_action_handler.php';
         })(),
@@ -539,6 +547,21 @@ match (true) {
             $_REQUEST['team_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/ics_handler.php';
         })(),
+
+    // Token-authenticated ICS feed — per-user personal calendar (Option 1: token URL)
+    (bool)preg_match('#^/ics/([0-9a-f]{64})\.ics$#', $path, $matches)
+        => (function() use ($matches): void {
+            $_REQUEST['cal_token'] = $matches[1];
+            require ROOT_PATH . '/src/ics_token_handler.php';
+        })(),
+
+    // Calendar token reset — coordinator
+    $path === '/coordinator/calendar-reset'
+        => require ROOT_PATH . '/src/coordinator/calendar_reset_handler.php',
+
+    // Calendar token reset — member
+    $path === '/member/calendar-reset'
+        => require ROOT_PATH . '/src/member/calendar_reset_handler.php',
 
     // ── Public: Ticker (no auth) ─────────────────────────────────────────────
     $path === '/ticker'

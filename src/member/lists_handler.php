@@ -54,8 +54,6 @@ $offset       = max(-120, min(120, (int)($_GET['offset'] ?? 0))); // clamp offse
 $datedItems   = [];
 $undatedItems = [];
 $boundaries   = ['start' => '', 'end' => '', 'label' => ''];
-$ics_url      = '';
-
 if ($showCalendar) {
     require_once ROOT_PATH . '/src/utils/calendar.php';
     $now = new DateTime('now', new DateTimeZone('Europe/Berlin'));
@@ -77,15 +75,12 @@ if ($showCalendar) {
     // Undated items: all items without a date
     $undatedItems = array_values(array_filter($items, fn($i) => $i['date'] === null));
 
-    // ICS URL for member's team (D-11, D-14)
-    $scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics?role=member';
+    // ICS URL moved to /member/profile (personal token-based feed)
 }
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url) {
+render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems) {
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/member/lists.php';
 });

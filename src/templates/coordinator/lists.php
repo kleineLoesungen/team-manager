@@ -187,13 +187,14 @@ $vis_badge = function(string $visibility): void {
 <?php endif; ?>
 
 <!-- ICS info box (D-14) — bottom of calendar tab -->
-<?php if (!empty($ics_url)): ?>
-<div class="alert alert-info py-2 mt-4 small">
-    <strong>In Kalender-App abonnieren:</strong>
-    Kopiere den Link um die Termine in deiner Kalender-App zu abonnieren.<br>
-    <code class="user-select-all"><?= e($ics_url) ?></code>
+<div class="alert alert-info py-2 mt-4 small d-flex align-items-center gap-2">
+    <i class="bi bi-calendar2-check flex-shrink-0"></i>
+    <span>
+        <strong>Kalender abonnieren:</strong>
+        Deinen persönlichen Kalender-Link findest du unter
+        <a href="/coordinator/profile" class="alert-link">Mein Profil</a>.
+    </span>
 </div>
-<?php endif; ?>
 
 <?php else: ?>
 <!-- ════════════════════════════════════════════════════════════════════════════

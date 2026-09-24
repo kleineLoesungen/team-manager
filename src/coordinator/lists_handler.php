@@ -66,7 +66,6 @@ $offset       = max(-120, min(120, (int)($_GET['offset'] ?? 0))); // clamp offse
 $datedItems   = [];
 $undatedItems = [];
 $boundaries   = ['start' => '', 'end' => '', 'label' => ''];
-$ics_url      = '';
 
 if ($showCalendar) {
     require_once ROOT_PATH . '/src/utils/calendar.php';
@@ -89,17 +88,14 @@ if ($showCalendar) {
     // Undated items: all items without a date (sorted created_at DESC from existing $items order)
     $undatedItems = array_values(array_filter($items, fn($i) => $i['date'] === null));
 
-    // Build ICS URL for coordinator's team (D-11, D-14)
-    $scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $ics_url = $scheme . '://' . $host . '/ics/' . (int)$_SESSION['team_id'] . '.ics?role=coordinator';
+    // ICS URL moved to /coordinator/profile (personal token-based feed)
 
     usort($datedItems, fn($a, $b) => strcmp($a['date'], $b['date']));
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url) {
+render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/lists.php';

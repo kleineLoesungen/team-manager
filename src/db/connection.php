@@ -100,6 +100,26 @@ function maybe_migrate_db(PDO $pdo): void {
     define('DB_HAS_COACH_ONLY', true);
 
     // (Migration body removed 2026-08-25 — all 032 migrations applied to production.)
+
+    // Migration 033 — teams.logo_path, users.email (ALTER TABLE applied manually by DB owner if needed)
+    // These are DDL — skipped here since app user lacks ownership; applied via psql on each env.
+
+    // Migration 033 — calendar_token backfill (ALTER TABLE must be applied manually by DB owner)
+    // Only runs if column exists. Uses admin context to bypass RLS on users table.
+    $s = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
+    $has_col = $pdo->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = '{$s}' AND table_name = 'users' AND column_name = 'calendar_token'"
+    )->fetchColumn();
+    if ($has_col) {
+        set_admin_context($pdo);
+        $missing = $pdo->query("SELECT id FROM {$s}.users WHERE calendar_token IS NULL")->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($missing as $uid) {
+            $pdo->prepare("UPDATE {$s}.users SET calendar_token = ? WHERE id = ?")
+                ->execute([bin2hex(random_bytes(32)), $uid]);
+        }
+        reset_rls_context($pdo);
+    }
 }
 
 
@@ -120,16 +140,17 @@ function db_init_schema(PDO $pdo, string $s): void {
     )");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
-        id            SERIAL PRIMARY KEY,
-        team_id       INTEGER REFERENCES {$s}.teams(id) ON DELETE SET NULL,
-        role          VARCHAR(20) NOT NULL CHECK (role IN ('coordinator', 'member')),
-        first_name    VARCHAR(100) NOT NULL,
-        last_name     VARCHAR(100) NOT NULL,
-        username      VARCHAR(50) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        is_active     BOOLEAN NOT NULL DEFAULT TRUE,
-        confirmed_at  TIMESTAMPTZ NULL,
-        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        id             SERIAL PRIMARY KEY,
+        team_id        INTEGER REFERENCES {$s}.teams(id) ON DELETE SET NULL,
+        role           VARCHAR(20) NOT NULL CHECK (role IN ('coordinator', 'member')),
+        first_name     VARCHAR(100) NULL,
+        last_name      VARCHAR(100) NULL,
+        username       VARCHAR(50)  NOT NULL UNIQUE,
+        password_hash  VARCHAR(255) NOT NULL,
+        is_active      BOOLEAN NOT NULL DEFAULT TRUE,
+        confirmed_at   TIMESTAMPTZ NULL,
+        calendar_token VARCHAR(64)  UNIQUE NULL,
+        created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_username ON {$s}.users(username)");
@@ -337,6 +358,14 @@ function db_init_schema(PDO $pdo, string $s): void {
         ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES {$s}.members(id) ON DELETE SET NULL");
     $pdo->exec("ALTER TABLE {$s}.users
         ADD COLUMN IF NOT EXISTS club_id INTEGER REFERENCES {$s}.clubs(id) ON DELETE SET NULL");
+    $pdo->exec("ALTER TABLE {$s}.users
+        ADD COLUMN IF NOT EXISTS calendar_token VARCHAR(64) UNIQUE NULL");
+    // Backfill tokens for existing users (safe to re-run; only fills NULL rows)
+    $missing = $pdo->query("SELECT id FROM {$s}.users WHERE calendar_token IS NULL")->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($missing as $uid) {
+        $pdo->prepare("UPDATE {$s}.users SET calendar_token = ? WHERE id = ?")
+            ->execute([bin2hex(random_bytes(32)), $uid]);
+    }
 
     // files — Markdown documents visible to team members
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.files (
