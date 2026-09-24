@@ -16,7 +16,8 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
              . ' - ' . $_share_url;
 ?>
 
-<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+<?php if ($error):   render_flash('error',   $error);   endif; ?>
+<?php if ($success): render_flash('success', $success); endif; ?>
 
 <div class="mb-3">
     <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">

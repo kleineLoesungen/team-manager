@@ -257,15 +257,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$error   = $post_error !== '' ? $post_error : (!empty($_GET['error']) ? e($_GET['error']) : '');
+// Kept raw — render_flash() escapes when it renders.
+$error   = $post_error !== '' ? $post_error : (string)($_GET['error'] ?? '');
 $success = !empty($_GET['notify_success'])
-    ? e($_GET['notify_success'])
+    ? (string)$_GET['notify_success']
     : (!empty($_GET['success']) ? 'Gespeichert.' : '');
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients) {
-    if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
-    if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/list_detail.php';
 });
