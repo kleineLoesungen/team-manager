@@ -540,14 +540,6 @@ match (true) {
             exit;
         })(),
 
-    // ── Public: ICS calendar export ──────────────────────────────────────
-    // No auth required — intentionally public endpoint (D-10, D-11)
-    (bool)preg_match('#^/ics/(\d+)\.ics$#', $path, $matches)
-        => (function() use ($matches): void {
-            $_REQUEST['team_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/ics_handler.php';
-        })(),
-
     // Token-authenticated ICS feed — per-user personal calendar (Option 1: token URL)
     (bool)preg_match('#^/ics/([0-9a-f]{64})\.ics$#', $path, $matches)
         => (function() use ($matches): void {
