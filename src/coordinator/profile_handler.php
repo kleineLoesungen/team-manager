@@ -13,16 +13,19 @@ $is_confirm_route = str_ends_with($_SERVER['REQUEST_URI'] ?? '', 'confirm-profil
 $is_first_confirm = $_SESSION['confirmed_at'] === null;
 
 // Load coordinator's member record (member_id is NOT NULL after migration 029)
+// Tokens come from the ACTIVE team, not users.team_id — that column is the origin team
+// and is null or stale for coordinators who work across several teams. LEFT JOIN so a
+// missing team row costs the calendar card, not the whole profile.
 $stmt = $pdo->prepare(
     "SELECT u.member_id, u.confirmed_at,
             t.calendar_token_coordinator, t.calendar_token_member,
             p.first_name, p.last_name, p.email, p.phone
      FROM users u
      JOIN members p ON p.id = u.member_id
-     JOIN teams t ON t.id = u.team_id
+     LEFT JOIN teams t ON t.id = ?
      WHERE u.id = ?"
 );
-$stmt->execute([$user_id]);
+$stmt->execute([(int)($_SESSION['team_id'] ?? 0), $user_id]);
 $self = $stmt->fetch();
 $player_id                  = (int)$self['member_id'];
 $calendar_token_coordinator = $self['calendar_token_coordinator'] ?? null;
