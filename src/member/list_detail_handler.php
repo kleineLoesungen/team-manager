@@ -19,7 +19,7 @@ if (!can_view_list($list_id)) {
 }
 
 // Fetch list metadata including show_all_rows
-$list_time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ", time_start, time_end" : "";
+$list_time_cols = ", time_start, time_end";
 $list_stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, date, description{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
@@ -30,7 +30,7 @@ $list['show_all_rows'] = in_array($list['show_all_rows'] ?? false, [true, 1, '1'
 // Fetch columns: local + global columns selected for this list (D-11)
 // System columns (team_id = NULL, is_system = TRUE) need admin context to bypass RLS
 set_admin_context($pdo);
-$local_filter = DB_HAS_COACH_ONLY ? '(c.list_id = ? AND c.coach_only = FALSE)' : 'c.list_id = ?';
+$local_filter = '(c.list_id = ? AND c.coach_only = FALSE)';
 $col_stmt = $pdo->prepare(
     "SELECT c.id, c.name, c.data_type, c.list_id
      FROM columns c

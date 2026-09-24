@@ -7,7 +7,7 @@ require_coordinator();
 
 $pdo = get_db();
 
-$time_col = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? 'time_start, time_end' : 'NULL AS time_start, NULL AS time_end';
+$time_col = 'time_start, time_end';
 $stmt = $pdo->prepare(
     "SELECT id, name, visibility, is_hidden, date, location, {$time_col}, created_at,
             'list' AS type
@@ -17,28 +17,22 @@ $stmt = $pdo->prepare(
 $stmt->execute([$_SESSION['team_id']]);
 $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$files = [];
-if (defined('DB_HAS_FILES') && DB_HAS_FILES) {
-    $fstmt = $pdo->prepare(
-        "SELECT id, name, visibility, is_hidden, date, NULL AS location, created_at,
-                'file' AS type
-         FROM files
-         WHERE team_id = ?"
-    );
-    $fstmt->execute([$_SESSION['team_id']]);
-    $files = $fstmt->fetchAll(PDO::FETCH_ASSOC);
-}
+$fstmt = $pdo->prepare(
+    "SELECT id, name, visibility, is_hidden, date, NULL AS location, created_at,
+            'file' AS type
+     FROM files
+     WHERE team_id = ?"
+);
+$fstmt->execute([$_SESSION['team_id']]);
+$files = $fstmt->fetchAll(PDO::FETCH_ASSOC);
 
-$events = [];
-if (defined('DB_HAS_EVENTS') && DB_HAS_EVENTS) {
-    $estmt = $pdo->prepare(
-        "SELECT id, title AS name, visibility, is_hidden, date, is_all_day, time_start, time_end, icon, location, created_at,
-                'event' AS type
-         FROM events WHERE team_id = ?"
-    );
-    $estmt->execute([$_SESSION['team_id']]);
-    $events = $estmt->fetchAll();
-}
+$estmt = $pdo->prepare(
+    "SELECT id, title AS name, visibility, is_hidden, date, is_all_day, time_start, time_end, icon, location, created_at,
+            'event' AS type
+     FROM events WHERE team_id = ?"
+);
+$estmt->execute([$_SESSION['team_id']]);
+$events = $estmt->fetchAll();
 
 $items = array_merge($lists, $files, $events);
 usort($items, function(array $a, array $b): int {

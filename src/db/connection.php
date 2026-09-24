@@ -24,7 +24,6 @@ function get_db(): PDO {
     $pdo->exec("SET search_path TO {$schema}, public");
 
     maybe_init_db($pdo);
-    maybe_migrate_db($pdo);
 
     return $pdo;
 }
@@ -51,75 +50,6 @@ function maybe_init_db(PDO $pdo): void {
 
     db_init_schema($pdo, $schema);
     db_init_rls($pdo, $schema);
-}
-
-/**
- * All incremental migrations (001–032) were applied to production on 2026-08-25.
- * Fresh installs receive the complete schema via db_init_schema() + db_init_rls().
- *
- * Migration history summary:
- *  001  coach_only flag on columns; RLS updated to respect it
- *  002  lists_delete RLS policy (was missing from initial schema)
- *  003  app_color setting
- *  004  Roles renamed: coach → coordinator, player → member; all RLS policies recreated
- *  005  Role value 'mitglied' consolidated to 'member'
- *  006  list_type column (member | free) + free_list_rows table; cells.player_id FK dropped
- *  007  columns_delete RLS policy
- *  008  Role value 'moderator' renamed to 'coordinator'
- *  009  files table (Markdown content type) + RLS policies
- *  010  teams.logo_path + default_team_logo setting
- *  011  lists.time_start / time_end for ICS calendar export
- *  012  clubs, members, coordinator_teams, member_attribute groups/attributes/values + RLS
- *  013  users_delete RLS policy
- *  014  users.club_id (coordinator ↔ club relation)
- *  015  member_attribute_values RLS policies fixed (table rename from player_attribute_values)
- *  016  members_select RLS fixed; team_memberships table dropped
- *  017  members.confirmed_at + users.confirmed_at (GDPR first-login confirmation)
- *  018  members.contact_phone
- *  019  mav_select coordinator arm widened
- *  020  teams.sort_order
- *  021  members.contact_email
- *  022  members.email backfilled from users.email
- *  023  users first/last name synced from members (members is canonical)
- *  024  users.member_id backfilled + NOT NULL enforced
- *  025a members.is_active (soft-delete); 025b deprecated personal columns dropped from users
- *  026  members_delete RLS policy
- *  027  members_select widened (all team roles can see team member records)
- *  028  columns_update + lgc_update RLS policies; is_system flag on columns
- *  029  member_attributes.data_type (text | date)
- *  030  events table + RLS (calendar events per team, ICS export with VALARM)
- *  031  events.location
- *  032  events.is_hidden (default true, hidden in list view by default)
- */
-function maybe_migrate_db(PDO $pdo): void {
-    // All migrations applied — no-op for existing installs.
-    // These constants are always true: production and fresh installs both have all tables.
-    define('DB_HAS_FILES',      true);
-    define('DB_HAS_LIST_TIMES', true);
-    define('DB_HAS_EVENTS',     true);
-    define('DB_HAS_COACH_ONLY', true);
-
-    // (Migration body removed 2026-08-25 — all 032 migrations applied to production.)
-
-    // Migration 033 — teams.logo_path, users.email (ALTER TABLE applied manually by DB owner if needed)
-    // These are DDL — skipped here since app user lacks ownership; applied via psql on each env.
-
-    // Migration 033 — calendar_token backfill (ALTER TABLE must be applied manually by DB owner)
-    // Only runs if column exists. Uses admin context to bypass RLS on users table.
-    $s = preg_replace('/[^a-zA-Z0-9_]/', '', DB_SCHEMA);
-    $has_col = $pdo->query(
-        "SELECT 1 FROM information_schema.columns
-         WHERE table_schema = '{$s}' AND table_name = 'users' AND column_name = 'calendar_token'"
-    )->fetchColumn();
-    if ($has_col) {
-        set_admin_context($pdo);
-        $missing = $pdo->query("SELECT id FROM {$s}.users WHERE calendar_token IS NULL")->fetchAll(PDO::FETCH_COLUMN);
-        foreach ($missing as $uid) {
-            $pdo->prepare("UPDATE {$s}.users SET calendar_token = ? WHERE id = ?")
-                ->execute([bin2hex(random_bytes(32)), $uid]);
-        }
-        reset_rls_context($pdo);
-    }
 }
 
 

@@ -19,8 +19,8 @@ if (!can_view_list($list_id)) {
 }
 
 // Fetch list metadata (include list_type if available)
-$list_type_col = (defined('DB_HAS_LIST_TYPE') && DB_HAS_LIST_TYPE) ? ", list_type" : "";
-$list_time_cols = (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) ? ", time_start, time_end" : "";
+$list_type_col = "";
+$list_time_cols = ", time_start, time_end";
 $list_stmt = $pdo->prepare("SELECT id, name, visibility, date, description{$list_type_col}{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
@@ -57,7 +57,7 @@ if ($is_free_list) {
 
     // Local columns only (no global columns for free lists)
     $col_stmt = $pdo->prepare(
-        "SELECT c.id, c.name, c.data_type, c.list_id, " . (DB_HAS_COACH_ONLY ? 'c.coach_only' : 'FALSE AS coach_only') . "
+        "SELECT c.id, c.name, c.data_type, c.list_id, c.coach_only
          FROM columns c
          WHERE c.is_active = TRUE AND c.list_id = ?
          ORDER BY c.sort_order, c.created_at"
@@ -71,7 +71,7 @@ if ($is_free_list) {
     // System columns (team_id = NULL) require admin context to bypass RLS
     set_admin_context($pdo);
     $col_stmt = $pdo->prepare(
-        "SELECT c.id, c.name, c.data_type, c.list_id, " . (DB_HAS_COACH_ONLY ? 'c.coach_only' : 'FALSE AS coach_only') . "
+        "SELECT c.id, c.name, c.data_type, c.list_id, c.coach_only
          FROM columns c
          WHERE c.is_active = TRUE
            AND (

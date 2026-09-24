@@ -35,7 +35,6 @@
             </div>
 
             <!-- Section: Start and end time (optional) — shown when date is set -->
-            <?php if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES): ?>
             <div class="mb-4">
                 <label class="form-label fw-semibold">Uhrzeit <span class="text-muted fw-normal">(optional)</span></label>
                 <div class="d-flex align-items-center gap-2">
@@ -53,7 +52,6 @@
                 </div>
                 <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
             </div>
-            <?php endif; ?>
 
             <!-- Section: Location (optional) — per D-15, D-16 -->
             <div class="mb-4">

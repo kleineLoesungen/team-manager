@@ -52,15 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $time_start = '';
     $time_end   = '';
-    if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) {
-        $raw_ts = trim($_POST['time_start'] ?? '');
-        if (preg_match('/^\d{2}:\d{2}$/', $raw_ts)) {
-            $time_start = $raw_ts . ':00';   // Store as HH:MM:SS for PostgreSQL TIME type
-        }
-        $raw_te = trim($_POST['time_end'] ?? '');
-        if (preg_match('/^\d{2}:\d{2}$/', $raw_te)) {
-            $time_end = $raw_te . ':00';
-        }
+    $raw_ts = trim($_POST['time_start'] ?? '');
+    if (preg_match('/^\d{2}:\d{2}$/', $raw_ts)) {
+        $time_start = $raw_ts . ':00';   // Store as HH:MM:SS for PostgreSQL TIME type
+    }
+    $raw_te = trim($_POST['time_end'] ?? '');
+    if (preg_match('/^\d{2}:\d{2}$/', $raw_te)) {
+        $time_end = $raw_te . ':00';
     }
 
     if (empty($name)) {
@@ -71,34 +69,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // Build INSERT dynamically to handle DB_HAS_LIST_TYPE and DB_HAS_LIST_TIMES guards
-            $cols   = "team_id, name, visibility, list_type, show_all_rows, date, description, location";
-            $vals   = "?, ?, ?, ?, ?, ?, ?, ?";
+            // list_type intentionally omitted from this INSERT - pre-existing behavior,
+            // unrelated to this migration-guard cleanup (its feature-flag constant was never defined).
+            $cols = "team_id, name, visibility, show_all_rows, date, description, location, time_start, time_end";
+            $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?";
             $params = [
-                $_SESSION['team_id'], $name, $visibility, $list_type, $show_all_rows,
+                $_SESSION['team_id'], $name, $visibility, $show_all_rows,
                 $date !== '' ? $date : null,
                 $description !== '' ? $description : null,
                 $location !== '' ? $location : null,
+                $time_start !== '' ? $time_start : null,
+                $time_end   !== '' ? $time_end   : null,
             ];
-
-            if (!defined('DB_HAS_LIST_TYPE') || !DB_HAS_LIST_TYPE) {
-                // Remove list_type from columns/values/params
-                $cols   = "team_id, name, visibility, show_all_rows, date, description, location";
-                $vals   = "?, ?, ?, ?, ?, ?, ?";
-                $params = [
-                    $_SESSION['team_id'], $name, $visibility, $show_all_rows,
-                    $date !== '' ? $date : null,
-                    $description !== '' ? $description : null,
-                    $location !== '' ? $location : null,
-                ];
-            }
-
-            if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) {
-                $cols   .= ", time_start, time_end";
-                $vals   .= ", ?, ?";
-                $params[] = $time_start !== '' ? $time_start : null;
-                $params[] = $time_end   !== '' ? $time_end   : null;
-            }
 
             $stmt = $pdo->prepare("INSERT INTO lists ({$cols}) VALUES ({$vals}) RETURNING id");
             $stmt->execute($params);
