@@ -121,7 +121,7 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
             <?= csrf_field() ?>
             <input type="hidden" name="token_type" value="coordinator">
             <button type="submit" class="btn btn-sm btn-outline-danger min-touch"
-                    onclick="return confirm('Link wirklich erneuern? Dein bisheriges Abo hört auf zu funktionieren.')">
+                    onclick="return confirm('Link wirklich erneuern? Das bisherige Abo hört für alle Koordinatoren dieses Teams auf zu funktionieren.')">
                 <i class="bi bi-arrow-clockwise me-1"></i>Link erneuern
             </button>
         </form>
