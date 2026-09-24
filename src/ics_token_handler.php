@@ -1,6 +1,6 @@
 <?php
-// src/ics_token_handler.php — GET /ics/{token}.ics — Authenticated ICS feed per user token
-// Token identifies user → role + team are resolved from DB. No session required.
+// src/ics_token_handler.php - GET /ics/{token}.ics - Team-scoped ICS feed (coordinator or member token)
+// Token identifies a TEAM + ROLE scope (2 tokens per team, not per user). No session required.
 
 declare(strict_types=1);
 
@@ -16,77 +16,54 @@ if (!preg_match('/^[0-9a-f]{64}$/', $raw_token)) {
 
 $pdo = get_db();
 
-// Resolve user by token — use admin context to bypass RLS (token lookup is credential verification)
+// Resolve team + role by token - admin context bypasses RLS (token lookup is credential verification)
 set_admin_context($pdo);
-$user_stmt = $pdo->prepare(
-    "SELECT u.id, u.team_id, u.role
-     FROM users u
-     WHERE u.calendar_token = ? AND u.is_active = TRUE"
+$team_stmt = $pdo->prepare(
+    "SELECT id, 'coordinator' AS role FROM teams WHERE calendar_token_coordinator = ? AND is_active = TRUE
+     UNION ALL
+     SELECT id, 'member' AS role FROM teams WHERE calendar_token_member = ? AND is_active = TRUE
+     LIMIT 1"
 );
-$user_stmt->execute([$raw_token]);
-$cal_user = $user_stmt->fetch(PDO::FETCH_ASSOC);
+$team_stmt->execute([$raw_token, $raw_token]);
+$cal_team = $team_stmt->fetch(PDO::FETCH_ASSOC);
 reset_rls_context($pdo);
 
-if (!$cal_user) {
+if (!$cal_team) {
     http_response_code(404);
     exit;
 }
 
-$team_id = (int)$cal_user['team_id'];
-$role    = $cal_user['role']; // 'coordinator' or 'member'
+$team_id = (int)$cal_team['id'];
+$role    = $cal_team['role']; // 'coordinator' or 'member'
 
-// Verify team is active
-set_admin_context($pdo);
-$team_stmt = $pdo->prepare("SELECT id FROM teams WHERE id = ? AND is_active = TRUE");
-$team_stmt->execute([$team_id]);
-if (!$team_stmt->fetch()) {
-    reset_rls_context($pdo);
-    http_response_code(404);
-    exit;
-}
-reset_rls_context($pdo);
-
-// Set scoped context for data fetches
-set_team_context($pdo, $team_id, $role, (int)$cal_user['id']);
+// Set scoped context for data fetches - team-wide token, no individual user
+set_team_context($pdo, $team_id, $role);
 
 $is_coordinator = ($role === 'coordinator');
 
 // Lists: coordinators see all; members see public + protected only
-if (defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES) {
-    $vis_clause = $is_coordinator ? "visibility IN ('public','protected','private')" : "visibility IN ('public','protected')";
-    $stmt = $pdo->prepare(
-        "SELECT id, name, date, location, description, time_start, time_end
-         FROM lists
-         WHERE team_id = ? AND date IS NOT NULL AND {$vis_clause}
-         ORDER BY date ASC"
-    );
-} else {
-    $vis_clause = $is_coordinator ? "visibility IN ('public','protected','private')" : "visibility IN ('public','protected')";
-    $stmt = $pdo->prepare(
-        "SELECT id, name, date, location, description
-         FROM lists
-         WHERE team_id = ? AND date IS NOT NULL AND {$vis_clause}
-         ORDER BY date ASC"
-    );
-}
+$vis_clause = $is_coordinator ? "visibility IN ('public','protected','private')" : "visibility IN ('public','protected')";
+$stmt = $pdo->prepare(
+    "SELECT id, name, date, location, description, time_start, time_end
+     FROM lists
+     WHERE team_id = ? AND date IS NOT NULL AND {$vis_clause}
+     ORDER BY date ASC"
+);
 $stmt->execute([$team_id]);
 $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Events: coordinators see protected + private; members see protected only
-$events = [];
-if (defined('DB_HAS_EVENTS') && DB_HAS_EVENTS) {
-    $ev_vis = $is_coordinator ? "visibility IN ('protected','private')" : "visibility = 'protected'";
-    $e_stmt = $pdo->prepare(
-        "SELECT id, title, description, location, icon, date, is_all_day, time_start, time_end
-         FROM events
-         WHERE team_id = ? AND {$ev_vis} AND date IS NOT NULL
-         ORDER BY date ASC"
-    );
-    $e_stmt->execute([$team_id]);
-    $events = $e_stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+$ev_vis = $is_coordinator ? "visibility IN ('protected','private')" : "visibility = 'protected'";
+$e_stmt = $pdo->prepare(
+    "SELECT id, title, description, location, icon, date, is_all_day, time_start, time_end
+     FROM events
+     WHERE team_id = ? AND {$ev_vis} AND date IS NOT NULL
+     ORDER BY date ASC"
+);
+$e_stmt->execute([$team_id]);
+$events = $e_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ICS output — identical rendering to ics_handler.php
+// ICS output - identical rendering to before
 header('Content-Type: text/calendar; charset=UTF-8');
 header('Content-Disposition: attachment; filename="team-' . $team_id . '.ics"');
 header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -106,7 +83,7 @@ $out .= "METHOD:PUBLISH\r\n";
 foreach ($lists as $list) {
     $uid      = md5((string)$team_id . '-' . (string)$list['id']) . '@team-manager.local';
     $list_url = $base_url . '/' . $role_path . '/lists/' . (int)$list['id'];
-    $has_time = !empty($list['time_start']) && defined('DB_HAS_LIST_TIMES') && DB_HAS_LIST_TIMES;
+    $has_time = !empty($list['time_start']);
 
     if ($has_time) {
         $ts       = substr((string)$list['time_start'], 0, 5);
