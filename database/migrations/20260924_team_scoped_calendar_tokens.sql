@@ -27,13 +27,19 @@ ALTER TABLE manager.teams
 ALTER TABLE manager.teams
     ADD COLUMN IF NOT EXISTS calendar_token_member      VARCHAR(64) UNIQUE NULL;
 
--- [DDL] Safety net - columns previously flagged as "apply manually if needed" in
--- connection.php (pre-this-migration comment). Idempotent, so including them is free;
--- production state for these two was unconfirmed before this script.
+-- [DDL] Safety net - teams.logo_path was previously flagged as "apply manually if
+-- needed" in connection.php. Idempotent, so including it is free.
 ALTER TABLE manager.teams
     ADD COLUMN IF NOT EXISTS logo_path VARCHAR(500) NULL;
-ALTER TABLE manager.users
-    ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL;
+
+-- NOTE: an earlier version of this script also did
+--   ALTER TABLE manager.users ADD COLUMN IF NOT EXISTS email VARCHAR(255) NULL;
+-- That line was REMOVED. It failed on production with SQLSTATE 54011 ("tables can
+-- have at most 1600 columns") because manager.users has exhausted its column slots -
+-- dropped columns keep their pg_attribute slot forever and still count toward the cap.
+-- The column is also unnecessary: the app reads email from members.email, never from
+-- users.email (see src/admin/notify_coordinators_handler.php - it JOINs members p for
+-- p.email). See the column-exhaustion note at the bottom of this file.
 
 -- [DML] Backfill both tokens for every existing team.
 -- gen_random_uuid() is built into PostgreSQL 13+ - pgcrypto is NOT required.
@@ -68,3 +74,30 @@ ORDER BY id;
 SELECT column_name FROM information_schema.columns
 WHERE table_schema = 'manager' AND table_name = 'users' AND column_name = 'calendar_token';
 -- Expect ZERO rows from the query above - confirms the old column is gone.
+
+
+-- ---------------------------------------------------------------------------
+-- KNOWN ISSUE: manager.users has exhausted its 1600-column limit
+-- ---------------------------------------------------------------------------
+-- PostgreSQL caps a table at 1600 columns, and a DROPped column keeps its
+-- pg_attribute slot forever (attisdropped = true) - the slot is NEVER reused.
+-- manager.users has burned through the cap, so NO new column can be added to it
+-- until the table is physically rebuilt. Adding one fails with SQLSTATE 54011.
+--
+-- Check current usage:
+--   SELECT count(*) FILTER (WHERE NOT attisdropped) AS live_cols,
+--          count(*) FILTER (WHERE attisdropped)     AS dropped_cols,
+--          count(*)                                  AS slots_used
+--   FROM pg_attribute
+--   WHERE attrelid = 'manager.users'::regclass AND attnum > 0;
+--
+-- For reference, the Docker/dev team_manager.users sits at 14 slots, so this is
+-- purely a production artifact - almost certainly from maybe_migrate_db() running
+-- ADD/DROP column cycles on every request before its body was removed (2026-08-25).
+-- That code path no longer exists, so the count is stable and not still growing.
+--
+-- Nothing in the current app needs a new users column, so this is NOT urgent - but
+-- it IS a hard blocker for any future feature that adds one. Fixing it requires
+-- rebuilding the table (recreate + copy + re-apply FKs, indexes, RLS policies,
+-- sequence ownership), which is delicate and should be planned separately with a
+-- verified backup, not bolted onto a feature migration.
