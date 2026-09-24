@@ -46,7 +46,13 @@ function render_layout_head(string $title = 'Team Manager'): void {
           rel="stylesheet"
           integrity="sha384-QuGBSgV5Im3DzL2z+8Ko9/hqNy/N0O7zwvXAtfd1MvPKWa/UbeLV65cfm4BV5Wgq"
           crossorigin="anonymous">
-    <link rel="stylesheet" href="/css/app.css">
+    <?php
+    // Cache-bust on file mtime: no build step means no hashed filenames, so without
+    // this a changed stylesheet stays cached in browsers and proxies indefinitely.
+    $_css = ROOT_PATH . '/public/css/app.css';
+    $_cssv = is_file($_css) ? filemtime($_css) : '';
+    ?>
+    <link rel="stylesheet" href="/css/app.css<?= $_cssv ? '?v=' . $_cssv : '' ?>">
     <style>:root{--brand:<?= $safe_color ?>;}</style>
     <link rel="icon" href="/logo">
     <link rel="manifest" href="/manifest.webmanifest">
