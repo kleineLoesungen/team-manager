@@ -55,6 +55,19 @@ if [[ -z "$FTP_PASS" ]]; then
     exit 1
 fi
 
+# A file that is not world-readable uploads with that mode and the web server then
+# returns 403 for it — silently, and only for that one file. A mode-600 app.css once
+# served the whole site unstyled while every other asset worked fine.
+UNREADABLE="$(find public src database bin -type f ! -perm -o=r 2>/dev/null || true)"
+if [[ -n "$UNREADABLE" ]]; then
+    echo "==> Fixing files the web server could not read:"
+    printf '%s\n' "$UNREADABLE" | sed 's/^/    /'
+    # Bump mtime too: lftp mirror compares size and timestamp, so a chmod alone
+    # would not cause the file to be re-uploaded.
+    printf '%s\n' "$UNREADABLE" | while IFS= read -r f; do chmod a+r "$f"; touch "$f"; done
+    echo ""
+fi
+
 echo "==> Deploying to ${FTP_HOST}:${FTP_DIR} ..."
 
 # Credentials go over stdin via `open`, not on the lftp command line, so they
