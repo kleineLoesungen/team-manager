@@ -1,6 +1,6 @@
 # Team Manager
 
-Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen. Listen mit Datum, Uhrzeit und Ort erscheinen in einer Kalenderansicht (Woche/Monat/Liste) — inklusive ICS-Export für Gerätekalender.
+Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen. Listen mit Datum, Uhrzeit und Ort erscheinen in einer Kalenderansicht (Woche/Monat/Liste) — inklusive Token-geschütztem ICS-Abo für Gerätekalender.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
 
@@ -190,23 +190,114 @@ define('MAIL_USERNAME', 'ihr-smtp-benutzer');
 define('MAIL_PASSWORD', 'ihr-smtp-passwort');
 ```
 
-**3. Dateien hochladen:**
+**3. Deployment konfigurieren** — `deploy.sh` liest seine Einstellungen ausschließlich aus
+Umgebungsvariablen, niemals aus Kommandozeilen-Argumenten. Argumente wären für andere
+Benutzer des Rechners via `ps` sichtbar und landen in der Shell-History.
+
+Am einfachsten über eine Datei `.env.deploy` im Projektverzeichnis (ist in `.gitignore`
+und wird nicht mit hochgeladen):
 
 ```bash
-./deploy.sh ftp.ihre-domain.de benutzername passwort
+FTP_HOST=ftp.ihre-domain.de
+FTP_USER=ihr-benutzer
+FTP_DIR=public_html/team-manager
+# FTP_PASS=...   # optional — ohne Eintrag wird verdeckt abgefragt
+```
+
+**4. Dateien hochladen:**
+
+```bash
+./deploy.sh
 ```
 
 Erfordert `lftp`: `brew install lftp` (macOS) oder `apt install lftp` (Linux).
 
-**4. Erste Anfrage** — beim ersten Seitenaufruf werden Datenbanktabellen automatisch angelegt.
+**5. Erste Anfrage** — beim ersten Seitenaufruf wird das Datenbankschema automatisch
+angelegt (nur bei einer leeren Datenbank).
 
 ### Folge-Deployments
 
 ```bash
-./deploy.sh ftp.ihre-domain.de benutzername passwort
+./deploy.sh
 ```
 
-`config.php` wird nie überschrieben. Datenbanktabellen werden nicht erneut angelegt (idempotente Prüfung).
+`config.php` wird nie überschrieben.
+
+> **Wichtig:** Schema-Änderungen werden **nicht** mehr automatisch angewendet. Die App
+> führt zur Laufzeit keine Migrationen aus. Liegt in `database/migrations/` ein Skript,
+> das noch nicht eingespielt wurde, muss es **vor** dem Deployment einmalig von Hand
+> gegen die Produktionsdatenbank ausgeführt werden — sonst greifen die neuen Handler auf
+> Spalten zu, die es noch nicht gibt. Details unter [Datenbank-Migrationen](#datenbank-migrationen).
+
+---
+
+## Datenbank-Migrationen
+
+Die App führt zur Laufzeit **keine** Migrationen aus. Beim ersten Seitenaufruf gegen eine
+leere Datenbank wird das Schema aus `db_init_schema()` angelegt — das ist alles. Bestehende
+Datenbanken werden nie automatisch verändert.
+
+Schema-Änderungen liegen als nummerierte SQL-Skripte in `database/migrations/` und werden
+einmalig von Hand eingespielt, **bevor** die zugehörige Code-Version deployed wird:
+
+```bash
+psql -h <host> -U <eigentümer> -d <datenbank> -f database/migrations/<skript>.sql
+```
+
+Zu beachten:
+
+- **Schema-Name:** In Produktion heißt das Schema `manager`, in Docker/Dev `team_manager`.
+  Die Skripte sind auf `manager` geschrieben — für lokal entsprechend anpassen.
+- **RLS:** Jede Tabelle hat Row-Level-Security-Richtlinien, die
+  `current_setting('app.is_admin', true) = 'true'` prüfen. Ohne ein einleitendes
+  `SET app.is_admin = true;` betreffen `UPDATE`/`DELETE` kommentarlos 0 Zeilen.
+- **Rechte:** `ALTER`/`DROP` benötigen den Tabelleneigentümer; der App-Datenbankbenutzer
+  hat diese Rechte nicht.
+- **Reihenfolge:** Erst migrieren, dann deployen. Umgekehrt greifen die neuen Handler auf
+  Spalten zu, die noch nicht existieren — das Ergebnis sind HTTP 500 auf den betroffenen Seiten.
+
+---
+
+## Kalender-Abo (ICS)
+
+Termine lassen sich in Apple Kalender, Google Calendar oder Outlook abonnieren. Der Feed ist
+**nicht öffentlich**, sondern über ein Token in der URL geschützt: `/ics/{token}.ics`.
+
+Pro Team existieren genau **zwei** Tokens, gespeichert auf der Tabelle `teams`:
+
+| Token | Spalte | Sichtbarkeit |
+|-------|--------|--------------|
+| Koordinator-Feed | `calendar_token_coordinator` | Listen: öffentlich, geschützt und privat · Termine: geschützt und privat |
+| Mitglieder-Feed | `calendar_token_member` | Listen: öffentlich und geschützt · Termine: nur geschützt |
+
+Die Rolle ergibt sich ausschließlich daraus, **welche Spalte** auf das Token passt — sie kann
+nicht über einen Request-Parameter beeinflusst werden.
+
+Den Link findet man jeweils unten auf der Kalenderansicht (`/coordinator/lists`
+bzw. `/member/lists`). Koordinatoren können beide Tokens unter „Mein Profil" neu erzeugen,
+falls ein Link öffentlich geworden ist.
+
+> **Hinweis:** Die Tokens gelten teamweit, nicht pro Person. Ein erneuertes Token macht das
+> Abo für **alle** Abonnenten dieses Feeds ungültig — alle müssen den Link neu eintragen.
+
+---
+
+## Installation auf dem Startbildschirm (PWA)
+
+Die App liefert ein Web App Manifest (`public/manifest.webmanifest`) und einen Icon-Satz aus,
+lässt sich also unter Android und iOS zum Startbildschirm hinzufügen und startet dann ohne
+Browser-Leiste.
+
+Bewusst **ohne** Service Worker: Das Deployment läuft per FTP ohne Build-Schritt, es gibt also
+kein Cache-Busting über Dateinamen. Ein Cache würde Nutzer dauerhaft auf veralteten Stylesheets
+festhalten. Folge: Chrome zeigt keinen automatischen Installations-Dialog — die Installation
+läuft über das Browser-Menü. Unter iOS war das ohnehin immer so.
+
+Icons werden aus einem Skript erzeugt und sind reproduzierbar:
+
+```bash
+php bin/generate-pwa-icons.php
+```
 
 ---
 
@@ -289,7 +380,8 @@ git pull
 docker compose --env-file .env.production up -d --build
 ```
 
-Das Postgres-Volume (`pgdata`) bleibt erhalten. Neue Tabellenspalten werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt.
+Das Postgres-Volume (`pgdata`) bleibt erhalten. Schema-Änderungen werden **nicht** automatisch
+angewendet — offene Skripte aus `database/migrations/` vorher einmalig von Hand einspielen.
 
 ### 6. Logs
 
@@ -360,7 +452,8 @@ git pull
 docker compose --env-file .env.production up -d --build --no-deps php nginx
 ```
 
-Die externe Datenbank wird nicht berührt. Neue Tabellenspalten werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt.
+Die externe Datenbank wird nicht berührt. Schema-Änderungen werden **nicht** automatisch
+angewendet — offene Skripte aus `database/migrations/` vorher einmalig von Hand einspielen.
 
 ---
 
@@ -368,13 +461,15 @@ Die externe Datenbank wird nicht berührt. Neue Tabellenspalten werden beim erst
 
 ```
 public/             Webroot (index.php — Front Controller, .htaccess)
+  manifest.webmanifest  Web App Manifest (Installation auf dem Startbildschirm)
+  icons/            App-Icons (192/512/maskable/apple-touch)
 src/
   admin/            Admin-Handler (Teams, Koordinatoren, Einstellungen)
   auth/             Login, Logout, Session
   coordinator/      Koordinator-Handler (Listen, Spalten, Mitglieder, Statistik, Dateien, Logo)
   member/           Mitglieder-Handler (Listen, Statistik, Dateien)
-  ics_handler.php   Öffentlicher ICS-Feed-Endpunkt (/ics/{team_id}.ics)
-  db/               PDO-Verbindung, Sichtbarkeits-Helpers, Migrationen
+  ics_token_handler.php  Token-geschützter ICS-Feed (/ics/{token}.ics)
+  db/               PDO-Verbindung, Sichtbarkeits-Helpers, Schema-Initialisierung
   templates/
     admin/          Admin-Templates
     coordinator/    Koordinator-Templates
@@ -386,9 +481,11 @@ src/
     csrf.php        CSRF-Token-Generierung und -Validierung
     helpers.php     Hilfsfunktionen (redirect, htmle, require_*)
 database/           SQL-Schema und RLS-Richtlinien
+  migrations/       Einmalig von Hand auszuführende Migrationsskripte
+bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)
 landing/            Statische Produkt-Landingpage (nicht Teil der App)
 uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
 config.php          App-Konfiguration (liest Umgebungsvariablen)
-deploy.sh           Hetzner FTP-Deployment-Skript
+deploy.sh           Hetzner FTP-Deployment-Skript (Konfiguration per Umgebungsvariablen)
 ```
