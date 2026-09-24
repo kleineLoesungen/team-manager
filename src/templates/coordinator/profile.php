@@ -114,8 +114,8 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
                 <i class="bi bi-clipboard"></i>
             </button>
         </div>
-        <a href="<?= e($ics_url_coordinator) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
-            <i class="bi bi-calendar-plus me-1"></i>In Kalender-App öffnen
+        <a href="<?= e(webcal_url($ics_url_coordinator)) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
+            <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
         </a>
         <form method="POST" action="/coordinator/calendar-reset" class="d-inline">
             <?= csrf_field() ?>
@@ -156,8 +156,8 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
                 <i class="bi bi-clipboard"></i>
             </button>
         </div>
-        <a href="<?= e($ics_url_member) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
-            <i class="bi bi-calendar-plus me-1"></i>In Kalender-App öffnen
+        <a href="<?= e(webcal_url($ics_url_member)) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
+            <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
         </a>
         <form method="POST" action="/coordinator/calendar-reset" class="d-inline">
             <?= csrf_field() ?>

@@ -137,8 +137,8 @@ endforeach;
                 <i class="bi bi-clipboard"></i>
             </button>
         </div>
-        <a href="<?= e($ics_url) ?>" class="btn btn-outline-primary min-touch">
-            <i class="bi bi-calendar-plus me-1"></i>In Kalender-App öffnen
+        <a href="<?= e(webcal_url($ics_url)) ?>" class="btn btn-outline-primary min-touch">
+            <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
         </a>
     </div>
 </div>

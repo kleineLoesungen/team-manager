@@ -89,3 +89,13 @@ function prefill_number_cells(PDO $pdo, int $team_id, int $user_id): void {
     );
     $stmt->execute([$user_id, $team_id, $team_id]);
 }
+
+/**
+ * Turn an https ICS feed URL into a webcal:// one.
+ *
+ * Calendar apps treat webcal:// as "subscribe and keep polling", while an https link to a
+ * .ics file is a one-off import that never updates.
+ */
+function webcal_url(string $url): string {
+    return preg_replace('#^https?://#', 'webcal://', $url);
+}
