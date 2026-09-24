@@ -131,12 +131,14 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("SET search_path TO {$s}, public");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.teams (
-        id         SERIAL PRIMARY KEY,
-        name       VARCHAR(100) NOT NULL,
-        is_active  BOOLEAN NOT NULL DEFAULT TRUE,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        logo_path  VARCHAR(500) NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        id                          SERIAL PRIMARY KEY,
+        name                        VARCHAR(100) NOT NULL,
+        is_active                   BOOLEAN NOT NULL DEFAULT TRUE,
+        sort_order                  INTEGER NOT NULL DEFAULT 0,
+        logo_path                   VARCHAR(500) NULL,
+        calendar_token_coordinator  VARCHAR(64)  UNIQUE NULL,
+        calendar_token_member       VARCHAR(64)  UNIQUE NULL,
+        created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
@@ -149,7 +151,6 @@ function db_init_schema(PDO $pdo, string $s): void {
         password_hash  VARCHAR(255) NOT NULL,
         is_active      BOOLEAN NOT NULL DEFAULT TRUE,
         confirmed_at   TIMESTAMPTZ NULL,
-        calendar_token VARCHAR(64)  UNIQUE NULL,
         created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
@@ -358,14 +359,6 @@ function db_init_schema(PDO $pdo, string $s): void {
         ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES {$s}.members(id) ON DELETE SET NULL");
     $pdo->exec("ALTER TABLE {$s}.users
         ADD COLUMN IF NOT EXISTS club_id INTEGER REFERENCES {$s}.clubs(id) ON DELETE SET NULL");
-    $pdo->exec("ALTER TABLE {$s}.users
-        ADD COLUMN IF NOT EXISTS calendar_token VARCHAR(64) UNIQUE NULL");
-    // Backfill tokens for existing users (safe to re-run; only fills NULL rows)
-    $missing = $pdo->query("SELECT id FROM {$s}.users WHERE calendar_token IS NULL")->fetchAll(PDO::FETCH_COLUMN);
-    foreach ($missing as $uid) {
-        $pdo->prepare("UPDATE {$s}.users SET calendar_token = ? WHERE id = ?")
-            ->execute([bin2hex(random_bytes(32)), $uid]);
-    }
 
     // files — Markdown documents visible to team members
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.files (

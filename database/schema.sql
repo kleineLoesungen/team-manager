@@ -8,12 +8,14 @@ SET search_path TO team_manager, public;
 
 -- Teams table
 CREATE TABLE IF NOT EXISTS team_manager.teams (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
-    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-    sort_order  INTEGER NOT NULL DEFAULT 0,
-    logo_path   VARCHAR(500)         NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                          SERIAL PRIMARY KEY,
+    name                        VARCHAR(100) NOT NULL,
+    is_active                   BOOLEAN NOT NULL DEFAULT TRUE,
+    sort_order                  INTEGER NOT NULL DEFAULT 0,
+    logo_path                   VARCHAR(500)         NULL,
+    calendar_token_coordinator  VARCHAR(64)  UNIQUE  NULL,
+    calendar_token_member       VARCHAR(64)  UNIQUE  NULL,
+    created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Users table — coordinators and members only (admin is in config.php, per D-02)
@@ -29,7 +31,6 @@ CREATE TABLE IF NOT EXISTS team_manager.users (
     email         VARCHAR(255)     NULL,
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
     confirmed_at   TIMESTAMPTZ          NULL,
-    calendar_token VARCHAR(64)  UNIQUE   NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     -- member_id and club_id added via ALTER TABLE below (forward reference to members/clubs)
 );

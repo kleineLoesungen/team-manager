@@ -17,8 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $pdo  = get_db();
-        $stmt = $pdo->prepare("INSERT INTO teams (name, sort_order) VALUES (?, ?)");
-        $stmt->execute([$team_name, $sort_order]);
+        $stmt = $pdo->prepare(
+            "INSERT INTO teams (name, sort_order, calendar_token_coordinator, calendar_token_member) VALUES (?, ?, ?, ?)"
+        );
+        $stmt->execute([$team_name, $sort_order, generate_calendar_token(), generate_calendar_token()]);
         redirect('/admin/teams?success=' . urlencode($team_name . ' erstellt.'));
     } catch (PDOException $e) {
         error_log('Team create error: ' . $e->getMessage());
