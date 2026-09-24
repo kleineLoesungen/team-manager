@@ -133,6 +133,12 @@ if (!empty($global_columns)) {
         JOIN columns c ON c.id = ce.column_id
             AND (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         WHERE ce.member_id = :member_id
+          -- Column must still be attached to THIS list. Unlinking a global column can
+          -- leave its cells behind, and without this they keep counting.
+          AND EXISTS (
+              SELECT 1 FROM list_global_columns lgc
+              WHERE lgc.list_id = ce.list_id AND lgc.column_id = ce.column_id
+          )
     ");
     $cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':member_id' => $member_id]);
     foreach ($cells_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
