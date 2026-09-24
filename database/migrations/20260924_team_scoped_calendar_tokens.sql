@@ -2,8 +2,10 @@
 -- Team Manager - one-time migration
 --
 -- >>> SET YOUR SCHEMA ON THE `SET search_path` LINE BELOW BEFORE RUNNING. <<<
---     Production and Docker/dev may differ. The app reads its schema from
---     DB_SCHEMA in config.php (default: team_manager) - use THAT value.
+--     Production uses `manager` (confirmed 2026-09-24). Docker/dev uses
+--     `team_manager`. The app reads DB_SCHEMA from config.php - use THAT value.
+--     This server also has `flowy` and `flowy_new2` schemas holding a teams
+--     table; they are NOT the app's schema. Do not run this against them.
 --     Verify with:
 --         SELECT table_schema FROM information_schema.tables WHERE table_name='teams';
 --
@@ -25,7 +27,7 @@
 --
 -- Usage: psql -h <host> -U <owner> -d <database> -f <this file>
 
-SET search_path TO team_manager, public;   -- <<< CHANGE IF YOUR SCHEMA DIFFERS
+SET search_path TO manager, public;   -- <<< CHANGE IF YOUR SCHEMA DIFFERS
 
 -- Required for the DML sections below to actually affect rows under RLS.
 SET app.is_admin = true;
@@ -72,6 +74,12 @@ WHERE calendar_token_member IS NULL;
 -- safe either way.
 ALTER TABLE users
     DROP COLUMN IF EXISTS calendar_token;
+
+-- Commit explicitly. Some GUI clients (pgAdmin, DBeaver) wrap a whole script in one
+-- transaction with auto-commit OFF - the script then appears to run fine while nothing
+-- persists. That happened twice on 2026-09-24. Under psql's default auto-commit this
+-- line just warns "no transaction in progress", which is harmless.
+COMMIT;
 
 -- Verification - eyeball every team has both tokens, and the old column is gone.
 SELECT id, name,
