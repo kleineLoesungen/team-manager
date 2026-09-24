@@ -176,11 +176,13 @@ body.has-actionbar {
 /* Sticky Primäraktion (Seitenkopf-Variante B) */
 .tm-actionbar {
   position: fixed; z-index: 1029;
-  inset: auto 0 calc(var(--tm-bottomnav-h) + env(safe-area-inset-bottom, 0px)) 0;
+  bottom: var(--bar-h, calc(var(--tm-bottomnav-h) + env(safe-area-inset-bottom, 0px)));
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 540px;
   padding: .5rem var(--tm-page-x);
   background: rgba(255,255,255,.96);
   backdrop-filter: blur(6px);
-  border-top: 1px solid var(--bs-border-color);
+  border-top: 1px solid var(--bs-border-color, var(--line));
 }
 .tm-actionbar .btn { width: 100%; }
 
@@ -591,3 +593,10 @@ body.has-actionbar {
 .login-wrapper   { min-height: 100dvh; }
 .login-card-wrap { width: 100%; max-width: 400px; margin: 1rem; }
 .text-xs         { font-size: 0.75rem; }
+
+/* Attribute inline-expand rows */
+.tm-attr-item summary { cursor: pointer; list-style: none; }
+.tm-attr-item summary::-webkit-details-marker { display: none; }
+.tm-attr-item[open] .tm-attr-chevron { transform: rotate(180deg); }
+.tm-attr-chevron { transition: transform .2s ease; }
+.tm-attr-edit { border-bottom-left-radius: var(--r, .375rem); border-bottom-right-radius: var(--r, .375rem); }

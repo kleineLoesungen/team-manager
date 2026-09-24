@@ -75,72 +75,75 @@
     <div class="card-body">
         <!-- Attribute list -->
         <?php if (!empty($group['attributes'])): ?>
-        <div class="table-responsive mb-3">
-            <table class="table table-sm align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Typ</th>
-                        <th class="text-center">Sichtbar</th>
-                        <th class="text-center">Editierbar</th>
-                        <th>Reihenfolge</th>
-                        <th>Aktionen</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($group['attributes'] as $attr): ?>
-                    <tr>
-                        <!-- Inline edit form for this attribute -->
-                        <form method="POST"
-                              action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/edit">
-                            <?= csrf_field() ?>
-                            <td>
+        <div class="list-group list-group-flush mb-3">
+            <?php foreach ($group['attributes'] as $attr): ?>
+            <details class="tm-attr-item">
+                <summary class="list-group-item d-flex align-items-center gap-2 py-2">
+                    <span class="flex-grow-1 fw-medium"><?= e($attr['name']) ?></span>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                        <?= $attr['data_type'] === 'date' ? 'Datum' : 'Text' ?>
+                    </span>
+                    <?php if ($attr['visible_to_player']): ?>
+                    <span class="badge bg-success-subtle text-success-emphasis">Sichtbar</span>
+                    <?php endif; ?>
+                    <?php if ($attr['editable_by_player']): ?>
+                    <span class="badge bg-primary-subtle text-primary-emphasis">Editierbar</span>
+                    <?php endif; ?>
+                    <i class="bi bi-chevron-down text-muted small tm-attr-chevron"></i>
+                </summary>
+                <div class="tm-attr-edit bg-body-tertiary px-3 py-3 border-top">
+                    <form method="POST"
+                          action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/edit">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="action" value="save">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Name</label>
                                 <input type="text" class="form-control" name="name"
                                        value="<?= e($attr['name']) ?>" maxlength="100" required>
-                            </td>
-                            <td>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Typ</label>
                                 <select class="form-select" name="data_type">
                                     <option value="text" <?= ($attr['data_type'] ?? 'text') === 'text' ? 'selected' : '' ?>>Text</option>
                                     <option value="date" <?= ($attr['data_type'] ?? 'text') === 'date' ? 'selected' : '' ?>>Datum</option>
                                 </select>
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check form-switch d-flex justify-content-center mb-0">
-                                    <input class="form-check-input" type="checkbox"
-                                           name="visible_to_player" role="switch"
-                                           <?= $attr['visible_to_player'] ? 'checked' : '' ?>>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check form-switch d-flex justify-content-center mb-0">
-                                    <input class="form-check-input" type="checkbox"
-                                           name="editable_by_player" role="switch"
-                                           <?= $attr['editable_by_player'] ? 'checked' : '' ?>>
-                                </div>
-                            </td>
-                            <td>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Reihenfolge</label>
                                 <input type="number" class="form-control" name="sort_order"
                                        value="<?= (int)$attr['sort_order'] ?>" min="0">
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <button type="submit" class="btn btn-sm btn-outline-primary">Speichern</button>
-                        </form>
-                                    <!-- Delete attribute (separate form) -->
-                                    <form method="POST"
-                                          action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/delete">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="confirm_delete" value="1">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           name="visible_to_player" id="vis_<?= (int)$attr['id'] ?>"
+                                           <?= $attr['visible_to_player'] ? 'checked' : '' ?>>
+                                    <label class="form-check-label" for="vis_<?= (int)$attr['id'] ?>">Sichtbar</label>
                                 </div>
-                            </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           name="editable_by_player" id="edit_<?= (int)$attr['id'] ?>"
+                                           <?= $attr['editable_by_player'] ? 'checked' : '' ?>>
+                                    <label class="form-check-label" for="edit_<?= (int)$attr['id'] ?>">Editierbar</label>
+                                </div>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between align-items-center">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-floppy me-1"></i>Speichern
+                                </button>
+                                <button type="submit" class="btn btn-link btn-sm text-danger px-0"
+                                        onclick="this.form.querySelector('[name=action]').value='delete';return confirm('Attribut „<?= e($attr['name']) ?>" löschen?')">
+                                    <i class="bi bi-trash me-1"></i>Löschen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </details>
+            <?php endforeach; ?>
         </div>
         <?php else: ?>
         <p class="text-muted small mb-3">Noch keine Attribute in dieser Gruppe.</p>
@@ -148,46 +151,47 @@
 
         <!-- Neues Attribut erstellen -->
         <div class="border-top pt-3">
-            <p class="fw-semibold small mb-2">Neues Attribut hinzufügen</p>
-            <form method="POST" action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/create"
-                  class="row g-2 align-items-end">
+            <p class="fw-semibold small mb-3">Neues Attribut hinzufügen</p>
+            <form method="POST" action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/create">
                 <?= csrf_field() ?>
-                <div class="col-12 col-sm-3">
-                    <label class="form-label mb-1">Name</label>
-                    <input type="text" class="form-control" name="name"
-                           maxlength="100" required placeholder="z.B. Geburtsdatum …">
-                </div>
-                <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1">Typ</label>
-                    <select class="form-select" name="data_type">
-                        <option value="text">Text</option>
-                        <option value="date">Datum</option>
-                    </select>
-                </div>
-                <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1">Reihenfolge</label>
-                    <input type="number" class="form-control" name="sort_order" value="0" min="0">
-                </div>
-                <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1">Sichtbar</label>
-                    <div class="form-check form-switch mt-1">
-                        <input class="form-check-input" type="checkbox" name="visible_to_player"
-                               role="switch" id="visible_new_<?= (int)$group['id'] ?>" checked>
-                        <label class="form-check-label small" for="visible_new_<?= (int)$group['id'] ?>">Mitglied</label>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="attr_name_<?= (int)$group['id'] ?>">Name</label>
+                        <input type="text" class="form-control" name="name"
+                               id="attr_name_<?= (int)$group['id'] ?>"
+                               maxlength="100" required placeholder="z.B. Geburtsdatum …">
                     </div>
-                </div>
-                <div class="col-6 col-sm-2">
-                    <label class="form-label mb-1">Editierbar</label>
-                    <div class="form-check form-switch mt-1">
-                        <input class="form-check-input" type="checkbox" name="editable_by_player"
-                               role="switch" id="editable_new_<?= (int)$group['id'] ?>">
-                        <label class="form-check-label small" for="editable_new_<?= (int)$group['id'] ?>">Mitglied</label>
+                    <div class="col-6 col-sm-3">
+                        <label class="form-label" for="attr_type_<?= (int)$group['id'] ?>">Typ</label>
+                        <select class="form-select" name="data_type" id="attr_type_<?= (int)$group['id'] ?>">
+                            <option value="text">Text</option>
+                            <option value="date">Datum</option>
+                        </select>
                     </div>
-                </div>
-                <div class="col-6 col-sm-1">
-                    <button type="submit" class="btn btn-sm btn-primary w-100">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
+                    <div class="col-6 col-sm-3">
+                        <label class="form-label" for="attr_order_<?= (int)$group['id'] ?>">Reihenfolge</label>
+                        <input type="number" class="form-control" name="sort_order"
+                               id="attr_order_<?= (int)$group['id'] ?>" value="0" min="0">
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="visible_to_player"
+                                   role="switch" id="visible_new_<?= (int)$group['id'] ?>" checked>
+                            <label class="form-check-label" for="visible_new_<?= (int)$group['id'] ?>">Für Mitglied sichtbar</label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="editable_by_player"
+                                   role="switch" id="editable_new_<?= (int)$group['id'] ?>">
+                            <label class="form-check-label" for="editable_new_<?= (int)$group['id'] ?>">Von Mitglied editierbar</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary min-touch">
+                            <i class="bi bi-plus-lg me-1"></i>Attribut hinzufügen
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
