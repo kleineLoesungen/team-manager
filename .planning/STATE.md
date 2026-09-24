@@ -187,6 +187,7 @@ Plan: Not started
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
+| 260924-uyq | team-scoped ICS tokens (2/team), remove old public ICS route (security), extract migrations to SQL script | 2026-09-24 | 8669bb3 | [260924-uyq-team-scoped-ics-tokens-remove-old-route-](.planning/quick/260924-uyq-team-scoped-ics-tokens-remove-old-route-/) |
 | 260924-oht | ship installability (PWA manifest + icons, no service worker) — device verify pending | 2026-09-24 | e6a9be0 | [260924-oht-ship-installability](.planning/quick/260924-oht-ship-installability/) |
 | 260825-0y5 | update landing page like rfeasley.io | 2026-08-25 | acc8f2f | [260825-0y5-update-landing-page-like-rfeasley-io](.planning/quick/260825-0y5-update-landing-page-like-rfeasley-io/) |
 | 260826-vyn | Add week/month date switcher to coordinator and member list overview pages | 2026-08-26 | fcb6ef4 | [260826-vyn-add-week-month-date-switcher-to-coordina](.planning/quick/260826-vyn-add-week-month-date-switcher-to-coordina/) |
