@@ -12,11 +12,15 @@ $user_id = (int)$_SESSION['user_id'];
 $error   = '';
 
 // Load linked member_id (profile record) and calendar token
-$link_stmt = $pdo->prepare("SELECT member_id, calendar_token FROM users WHERE id = ?");
+$link_stmt = $pdo->prepare(
+    "SELECT u.member_id, t.calendar_token_member
+     FROM users u JOIN teams t ON t.id = u.team_id
+     WHERE u.id = ?"
+);
 $link_stmt->execute([$user_id]);
 $link_row       = $link_stmt->fetch(PDO::FETCH_ASSOC);
 $player_id      = (int)($link_row['member_id'] ?? 0);
-$calendar_token = $link_row['calendar_token'] ?? null;
+$calendar_token = $link_row['calendar_token_member'] ?? null;
 
 $player      = null;
 $clubs       = [];

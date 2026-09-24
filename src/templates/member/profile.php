@@ -172,11 +172,6 @@ foreach ($attr_groups as $g) {
             Abonniere deinen persönlichen Kalender in Apple Kalender, Google Calendar oder Outlook.
             Der Link enthält alle öffentlichen und geschützten Termine und Anwesenheitslisten.
         </p>
-        <?php if (!empty($_GET['cal_reset'])): ?>
-        <div class="alert alert-success py-2 small mb-3">
-            <i class="bi bi-check-circle me-1"></i>Kalender-Link wurde erneuert. Bitte das Abo in deiner App aktualisieren.
-        </div>
-        <?php endif; ?>
         <div class="input-group mb-3">
             <input type="text" id="ics-url-member" class="form-control form-control-sm font-monospace"
                    value="<?= e($ics_url) ?>" readonly>
@@ -189,13 +184,6 @@ foreach ($attr_groups as $g) {
         <a href="<?= e($ics_url) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
             <i class="bi bi-calendar-plus me-1"></i>In Kalender-App öffnen
         </a>
-        <form method="POST" action="/member/calendar-reset" class="d-inline">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-sm btn-outline-danger min-touch"
-                    onclick="return confirm('Link wirklich erneuern? Dein bisheriges Abo hört auf zu funktionieren.')">
-                <i class="bi bi-arrow-clockwise me-1"></i>Link erneuern
-            </button>
-        </form>
         <?php else: ?>
         <p class="text-muted small mb-0">Kein Kalender-Link verfügbar. Bitte Seite neu laden.</p>
         <?php endif; ?>
