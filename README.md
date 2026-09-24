@@ -172,7 +172,7 @@ define('ADMIN_PASSWORD_HASH', password_hash('IhrPasswort', PASSWORD_BCRYPT, ['co
 define('DB_HOST',   'localhost');
 define('DB_PORT',   '5432');
 define('DB_NAME',   'ihre_datenbank');
-define('DB_SCHEMA', 'team_manager');
+define('DB_SCHEMA', 'team_manager');   // Bestandsinstallationen können abweichen — siehe Hinweis unten
 define('DB_USER',   'ihr_db_benutzer');
 define('DB_PASS',   'ihr_db_passwort');
 
@@ -189,6 +189,14 @@ define('MAIL_PORT',     587);
 define('MAIL_USERNAME', 'ihr-smtp-benutzer');
 define('MAIL_PASSWORD', 'ihr-smtp-passwort');
 ```
+
+> **Hinweis zu `DB_SCHEMA`:** `team_manager` ist nur der Standardwert für Neuinstallationen.
+> Eine bestehende Produktionsinstallation kann ein anderes Schema verwenden — maßgeblich ist
+> allein der Wert in der dortigen `config.php`. Vor jeder Schema-Änderung prüfen, welche
+> Schemas überhaupt existieren:
+> ```sql
+> SELECT table_schema FROM information_schema.tables WHERE table_name = 'teams';
+> ```
 
 **3. Deployment konfigurieren** — `deploy.sh` liest seine Einstellungen ausschließlich aus
 Umgebungsvariablen, niemals aus Kommandozeilen-Argumenten. Argumente wären für andere
@@ -223,37 +231,46 @@ angelegt (nur bei einer leeren Datenbank).
 
 `config.php` wird nie überschrieben.
 
-> **Wichtig:** Schema-Änderungen werden **nicht** mehr automatisch angewendet. Die App
-> führt zur Laufzeit keine Migrationen aus. Liegt in `database/migrations/` ein Skript,
-> das noch nicht eingespielt wurde, muss es **vor** dem Deployment einmalig von Hand
-> gegen die Produktionsdatenbank ausgeführt werden — sonst greifen die neuen Handler auf
-> Spalten zu, die es noch nicht gibt. Details unter [Datenbank-Migrationen](#datenbank-migrationen).
+> **Wichtig:** Schema-Änderungen werden **nicht** automatisch angewendet. Die App führt zur
+> Laufzeit keine Migrationen aus. Bringt eine Code-Version neue Spalten oder Richtlinien mit,
+> müssen diese **vor** dem Deployment von Hand gegen die Produktionsdatenbank eingespielt
+> werden — sonst greifen die neuen Handler auf Spalten zu, die es noch nicht gibt.
+> Details unter [Datenbank-Änderungen](#datenbank-änderungen).
 
 ---
 
-## Datenbank-Migrationen
+## Datenbank-Änderungen
 
 Die App führt zur Laufzeit **keine** Migrationen aus. Beim ersten Seitenaufruf gegen eine
 leere Datenbank wird das Schema aus `db_init_schema()` angelegt — das ist alles. Bestehende
 Datenbanken werden nie automatisch verändert.
 
-Schema-Änderungen liegen als nummerierte SQL-Skripte in `database/migrations/` und werden
-einmalig von Hand eingespielt, **bevor** die zugehörige Code-Version deployed wird:
+`database/schema.sql` und `database/rls_policies.sql` sind die Wahrheitsquelle für den
+aktuellen Stand. Es liegen **keine** Migrationsskripte im Repository: Eine Schema-Änderung
+wird als Einmal-Skript geschrieben, von Hand gegen jede Umgebung eingespielt und danach
+wieder entfernt — die beiden Dateien oben werden im selben Zug nachgezogen. Der Wortlaut
+eines bereits eingespielten Skripts bleibt über die Git-Historie auffindbar.
 
-```bash
-psql -h <host> -U <eigentümer> -d <datenbank> -f database/migrations/<skript>.sql
-```
+Beim Schreiben eines solchen Skripts zu beachten:
 
-Zu beachten:
-
-- **Schema-Name:** In Produktion heißt das Schema `manager`, in Docker/Dev `team_manager`.
-  Die Skripte sind auf `manager` geschrieben — für lokal entsprechend anpassen.
+- **Schema-Name niemals raten.** In Produktion heißt das Schema `manager`, in Docker/Dev
+  `team_manager` — und auf demselben Server liegen weitere Schemas (`flowy`, `flowy_new2`),
+  die ebenfalls eine `teams`-Tabelle haben. Maßgeblich ist `DB_SCHEMA` aus `config.php`.
+  Prüfen mit:
+  ```sql
+  SELECT table_schema FROM information_schema.tables WHERE table_name = 'teams';
+  ```
+  Das Skript setzt den Namen an genau einer Stelle per `SET search_path TO <schema>, public;`
+  und verwendet danach unqualifizierte Tabellennamen.
 - **RLS:** Jede Tabelle hat Row-Level-Security-Richtlinien, die
   `current_setting('app.is_admin', true) = 'true'` prüfen. Ohne ein einleitendes
   `SET app.is_admin = true;` betreffen `UPDATE`/`DELETE` kommentarlos 0 Zeilen.
 - **Rechte:** `ALTER`/`DROP` benötigen den Tabelleneigentümer; der App-Datenbankbenutzer
   hat diese Rechte nicht.
-- **Reihenfolge:** Erst migrieren, dann deployen. Umgekehrt greifen die neuen Handler auf
+- **Transaktion:** GUI-Clients wie pgAdmin oder DBeaver fassen ein Skript oft in eine
+  Transaktion ohne Auto-Commit. Das Skript läuft dann scheinbar durch, ohne dass etwas
+  persistiert wird. Entweder `psql` verwenden oder das Skript mit `COMMIT;` abschließen.
+- **Reihenfolge:** Erst einspielen, dann deployen. Umgekehrt greifen die neuen Handler auf
   Spalten zu, die noch nicht existieren — das Ergebnis sind HTTP 500 auf den betroffenen Seiten.
 
 ---
@@ -381,7 +398,7 @@ docker compose --env-file .env.production up -d --build
 ```
 
 Das Postgres-Volume (`pgdata`) bleibt erhalten. Schema-Änderungen werden **nicht** automatisch
-angewendet — offene Skripte aus `database/migrations/` vorher einmalig von Hand einspielen.
+angewendet — nötige Schema-Anpassungen vorher von Hand einspielen (siehe Datenbank-Änderungen).
 
 ### 6. Logs
 
@@ -453,7 +470,7 @@ docker compose --env-file .env.production up -d --build --no-deps php nginx
 ```
 
 Die externe Datenbank wird nicht berührt. Schema-Änderungen werden **nicht** automatisch
-angewendet — offene Skripte aus `database/migrations/` vorher einmalig von Hand einspielen.
+angewendet — nötige Schema-Anpassungen vorher von Hand einspielen (siehe Datenbank-Änderungen).
 
 ---
 
@@ -480,8 +497,7 @@ src/
     calendar.php    Kalender-Hilfsfunktionen (Wochen-/Monatsgrenzen, ICS-Formatierung)
     csrf.php        CSRF-Token-Generierung und -Validierung
     helpers.php     Hilfsfunktionen (redirect, htmle, require_*)
-database/           SQL-Schema und RLS-Richtlinien
-  migrations/       Einmalig von Hand auszuführende Migrationsskripte
+database/           SQL-Schema und RLS-Richtlinien (Wahrheitsquelle, keine Migrationsdateien)
 bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)
 landing/            Statische Produkt-Landingpage (nicht Teil der App)
