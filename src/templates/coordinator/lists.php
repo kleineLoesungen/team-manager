@@ -186,15 +186,31 @@ $vis_badge = function(string $visibility): void {
 </div>
 <?php endif; ?>
 
-<!-- ICS info box (D-14) — bottom of calendar tab -->
-<div class="alert alert-info py-2 mt-4 small d-flex align-items-center gap-2">
-    <i class="bi bi-calendar2-check flex-shrink-0"></i>
-    <span>
-        <strong>Kalender abonnieren:</strong>
-        Deinen persönlichen Kalender-Link findest du unter
-        <a href="/coordinator/profile" class="alert-link">Mein Profil</a>.
-    </span>
+<!-- Kalender-Abo (D-14) — bottom of calendar tab -->
+<?php if ($ics_url): ?>
+<div class="card mt-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-calendar2-check"></i>
+        <span class="fw-semibold">Kalender abonnieren</span>
+    </div>
+    <div class="card-body">
+        <p class="text-body-secondary small mb-3">
+            Alle Termine in Apple Kalender, Google Calendar oder Outlook — inklusive privater Einträge.
+        </p>
+        <div class="input-group mb-3">
+            <input type="text" id="ics-url-lists" class="form-control font-monospace"
+                   value="<?= e($ics_url) ?>" readonly>
+            <button class="btn btn-outline-secondary" type="button" title="Link kopieren"
+                    onclick="navigator.clipboard.writeText(document.getElementById('ics-url-lists').value).then(()=>{this.textContent='✓';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-clipboard\'></i>';},1500)})">
+                <i class="bi bi-clipboard"></i>
+            </button>
+        </div>
+        <a href="<?= e($ics_url) ?>" class="btn btn-outline-primary min-touch">
+            <i class="bi bi-calendar-plus me-1"></i>In Kalender-App öffnen
+        </a>
+    </div>
 </div>
+<?php endif; ?>
 
 <?php else: ?>
 <!-- ════════════════════════════════════════════════════════════════════════════

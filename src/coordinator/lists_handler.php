@@ -89,7 +89,13 @@ if ($showCalendar) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems) {
+$tstmt = $pdo->prepare("SELECT calendar_token_coordinator FROM teams WHERE id = ?");
+$tstmt->execute([$_SESSION['team_id']]);
+$cal_token = $tstmt->fetchColumn();
+$scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
+
+render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/lists.php';

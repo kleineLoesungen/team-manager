@@ -1,9 +1,6 @@
 <?php
 // src/templates/member/profile.php — Full member data edit page
-// Variables (via use()): $player (array|null), $clubs (array), $attr_groups (array), $error (string), $success (bool), $calendar_token (string|null)
-$scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$ics_url = $calendar_token ? ($scheme . '://' . $host . '/ics/' . $calendar_token . '.ics') : null;
+// Variables (via use()): $player (array|null), $clubs (array), $attr_groups (array), $error (string), $success (bool)
 ?>
 <?php if ($error): render_flash('error', $error); endif; ?>
 <?php if ($success): render_flash('success', 'Deine Daten wurden gespeichert.'); endif; ?>
@@ -160,35 +157,6 @@ foreach ($attr_groups as $g) {
 <?php else: ?>
 <?php render_empty('person-x', 'Kein Mitgliedsprofil', 'Dein Konto ist noch keinem Mitgliedsprofil zugeordnet. Bitte wende dich an deinen Koordinator.'); ?>
 <?php endif; ?>
-
-<div class="card mt-4">
-    <div class="card-header d-flex align-items-center gap-2">
-        <i class="bi bi-calendar2-check"></i>
-        <span class="fw-semibold">Kalender-Abo</span>
-    </div>
-    <div class="card-body">
-        <?php if ($ics_url): ?>
-        <p class="text-body-secondary small mb-3">
-            Abonniere deinen persönlichen Kalender in Apple Kalender, Google Calendar oder Outlook.
-            Der Link enthält alle öffentlichen und geschützten Termine und Anwesenheitslisten.
-        </p>
-        <div class="input-group mb-3">
-            <input type="text" id="ics-url-member" class="form-control form-control-sm font-monospace"
-                   value="<?= e($ics_url) ?>" readonly>
-            <button class="btn btn-outline-secondary btn-sm"
-                    onclick="navigator.clipboard.writeText(document.getElementById('ics-url-member').value).then(()=>{this.textContent='✓';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-clipboard\'></i>';},1500)})"
-                    type="button" title="Link kopieren">
-                <i class="bi bi-clipboard"></i>
-            </button>
-        </div>
-        <a href="<?= e($ics_url) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
-            <i class="bi bi-calendar-plus me-1"></i>In Kalender-App öffnen
-        </a>
-        <?php else: ?>
-        <p class="text-muted small mb-0">Kein Kalender-Link verfügbar. Bitte Seite neu laden.</p>
-        <?php endif; ?>
-    </div>
-</div>
 
 <div class="list-group mt-4">
     <a href="/member/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">

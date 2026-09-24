@@ -77,7 +77,13 @@ if ($showCalendar) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems) {
+$tstmt = $pdo->prepare("SELECT calendar_token_member FROM teams WHERE id = ?");
+$tstmt->execute([$_SESSION['team_id']]);
+$cal_token = $tstmt->fetchColumn();
+$scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
+
+render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url) {
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/member/lists.php';
 });
