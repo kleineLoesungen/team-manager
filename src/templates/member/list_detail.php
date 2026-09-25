@@ -86,7 +86,7 @@ foreach ($columns as $col) {
         ?>
         <tr class="<?= $is_own_row ? 'table-primary' : '' ?>">
             <?php if ($list['show_all_rows']): ?>
-            <td class="text-nowrap fw-medium">
+            <td class="fw-medium">
                 <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
                 <?php if ($is_own_row): render_badge('info', 'Ich'); endif; ?>
             </td>

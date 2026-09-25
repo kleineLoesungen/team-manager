@@ -268,7 +268,7 @@ $show_full_form = $is_free_list
     <?php render_matrix_table($matrix_cols, function() use ($free_rows, $columns, $cells) { ?>
         <?php foreach ($free_rows as $row): ?>
         <tr>
-            <td class="text-nowrap fw-medium"><?= e($row['label']) ?></td>
+            <td class="fw-medium"><?= e($row['label']) ?></td>
             <?php foreach ($columns as $col): ?>
             <td>
                 <?php
@@ -414,7 +414,7 @@ $show_full_form = $is_free_list
     <?php render_matrix_table($matrix_cols, function() use ($players, $columns, $cells) { ?>
         <?php foreach ($players as $player): ?>
         <tr>
-            <td class="text-nowrap fw-medium">
+            <td class="fw-medium">
                 <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
             </td>
             <?php foreach ($columns as $col): ?>

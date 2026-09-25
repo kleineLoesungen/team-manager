@@ -75,13 +75,13 @@ mit Chevron rechts, keine konkurrierenden Aktionen in der Zeile. Cards sind für
 Sammlungen nicht zulässig — sie bleiben Formularabschnitten und der Gefahrenzone vorbehalten.
 
 **Matrix und Statistik.** Immer im Wrapper `.tm-matrix` (oder über `render_matrix_table()`),
-nie in `.table-responsive`. Vollständige Tabelle, horizontal scrollbar, erste Spalte und
-Kopfzeile fixiert, Summenzeile (`tfoot`) unten fixiert. Keine Spalte wird auf kleinen
-Displays ausgeblendet — der Quervergleich über Mitglieder ist der Zweck der Seite.
-Die Namensspalte ist auf 42vw begrenzt und kürzt mit „…“. Kopfzellen brechen um
-(kein `text-nowrap` auf `<th>`), Zahlen stehen rechtsbündig in Tabellenziffern.
-Auf dem Smartphone läuft die Tabelle randlos bis an den Bildschirmrand; sobald
-horizontal gescrollt ist, zeigt die fixierte Spalte eine Schattenkante.
+nie in `.table-responsive`. Ziel: Name + 3–4 Spalten passen auf 360 px ohne Scrollen.
+Dafür: kompakte Zellen, Namen und Kopfzellen brechen um (kein `text-nowrap` auf der
+ersten Spalte oder auf `<th>`), Nebenwerte wie Prozent oder Datum stehen als
+`<small class="d-block">` unter dem Hauptwert statt in einer eigenen Spalte oder daneben.
+Kein eigener vertikaler Scrollbereich, keine fixierte Spalte. Nur wenn eine Tabelle
+trotzdem zu breit ist, scrollt sie horizontal. Keine Spalte wird ausgeblendet.
+Auf dem Smartphone läuft die Tabelle randlos bis an den Bildschirmrand.
 
 **Formularfelder.** Gruppiert in Abschnitts-Cards mit Abschnittsüberschrift.
 Label immer sichtbar über dem Feld, Pflichtfelder mit `*`, Hilfetext unter dem Feld.

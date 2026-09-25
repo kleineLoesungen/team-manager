@@ -78,13 +78,6 @@ function render_layout_foot(): void {
             if (a) sessionStorage.setItem('scroll:' + location.pathname.replace(/\?.*$/, ''), window.scrollY);
         });
 
-        /* Matrix-Tabellen: Schattenkante an der fixierten Spalte, sobald gescrollt */
-        document.querySelectorAll('.tm-matrix').forEach(function(m) {
-            function upd() { m.classList.toggle('is-scrolled', m.scrollLeft > 0); }
-            m.addEventListener('scroll', upd, { passive: true });
-            upd();
-        });
-
         /* theme toggle */
         function tmApply(t) {
             document.documentElement.setAttribute('data-theme', t);

@@ -13,13 +13,13 @@
     </p>
 
     <?php render_matrix_table(
-        ['Spalte', 'Gesamt', 'Letzte 4 Wo.', '4–8 Wo.', '8–12 Wo.'],
+        ['Spalte', 'Gesamt', '0–4 Wo.', '4–8 Wo.', '8–12 Wo.'],
         function() use ($global_columns, $player_stats) {
             foreach ($global_columns as $col):
                 $vals = $player_stats[(int)$col['id']] ?? ['all' => 0, '4w' => 0, '4_8w' => 0, '8_12w' => 0];
             ?>
                 <tr>
-                    <td class="fw-semibold text-nowrap"><?= e($col['name']) ?></td>
+                    <td class="fw-semibold"><?= e($col['name']) ?></td>
                     <?php foreach (['all', '4w', '4_8w', '8_12w'] as $win):
                         $v = (float)($vals[$win] ?? 0);
                     ?>
@@ -36,7 +36,7 @@
     <h5 class="mb-3 mt-4">Listenübersicht</h5>
     <?php
     // Build headers for per-list table
-    $_perlist_headers = ['Liste', 'Datum'];
+    $_perlist_headers = ['Liste'];
     foreach ($global_columns as $_col) {
         $_perlist_headers[] = $_col['name'];
     }
@@ -47,10 +47,9 @@
             foreach ($per_list_rows as $list_row):
             ?>
                 <tr>
-                    <td class="fw-semibold text-nowrap"><?= e($list_row['name']) ?></td>
-                    <td class="text-nowrap text-muted small">
-                        <?= $list_row['date'] ? date('d.m.Y', strtotime($list_row['date'])) : '—' ?>
-                    </td>
+                    <td class="fw-semibold"><?= e($list_row['name']) ?>
+                                <?php if ($list_row['date']): ?><small class="d-block text-muted fw-normal"><?= date('d.m.Y', strtotime($list_row['date'])) ?></small><?php endif; ?>
+                            </td>
                     <?php foreach ($global_columns as $col):
                         $cid = (int)$col['id'];
                         $lid = (int)$list_row['id'];
@@ -72,7 +71,7 @@
         function() use ($global_columns, $per_list_totals, $col_list_counts) {
             ?>
             <tr class="fw-bold">
-                <td colspan="2">Gesamt</td>
+                <td>Gesamt</td>
                 <?php foreach ($global_columns as $col):
                     $cid    = (int)$col['id'];
                     $totals = $per_list_totals[$cid] ?? null;
@@ -85,7 +84,7 @@
                         $count_true  = (int)($totals['count_true'] ?? 0);
                         $total_lists = (int)($col_list_counts[$cid] ?? 0);
                         $pct = $total_lists > 0 ? round($count_true / $total_lists * 100) : 0;
-                        echo $count_true . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                        echo $count_true . '<small class="d-block text-muted fw-normal">' . $pct . '%</small>';
                     ?>
                     <?php endif; ?>
                 </td>

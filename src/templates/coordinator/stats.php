@@ -69,7 +69,7 @@
                 <?php foreach ($player_order as $pid): ?>
                     <?php $p = $player_stats[$pid]; ?>
                     <tr>
-                        <td class="fw-semibold text-nowrap">
+                        <td class="fw-semibold">
                             <?= e($p['first_name'] . ' ' . $p['last_name']) ?>
                         </td>
                         <?php foreach ($global_columns as $col): ?>
@@ -148,9 +148,9 @@
 
     $windows = [
         'all'    => 'Gesamt',
-        '4w'     => 'Letzte&nbsp;4&nbsp;Wo.',
-        '4_8w'   => '4–8&nbsp;Wo.',
-        '8_12w'  => '8–12&nbsp;Wo.',
+        '4w'     => '0–4 Wo.',
+        '4_8w'   => '4–8 Wo.',
+        '8_12w'  => '8–12 Wo.',
     ];
     ?>
 
@@ -183,7 +183,7 @@
                 <?php foreach ($ranking_order as $pid): ?>
                     <?php $p = $ranking[$pid]; ?>
                     <tr>
-                        <td class="fw-semibold text-nowrap"><?= e($p['first_name'] . ' ' . $p['last_name']) ?></td>
+                        <td class="fw-semibold"><?= e($p['first_name'] . ' ' . $p['last_name']) ?></td>
                         <?php foreach ($global_columns as $col): ?>
                             <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                             <?php $cid = (int)$col['id']; ?>
@@ -207,7 +207,7 @@
                                 <td class="text-end text-nowrap border-start<?= $active_cell ? ' table-active fw-semibold' : '' ?>">
                                     <?= $display ?>
                                     <?php if ($pct !== null): ?>
-                                        <small class="text-muted fw-normal ms-1">(<?= $pct ?>%)</small>
+                                        <small class="d-block text-muted fw-normal"><?= $pct ?>%</small>
                                     <?php endif; ?>
                                 </td>
                             <?php endforeach; ?>
@@ -258,7 +258,6 @@
                 <thead>
                     <tr>
                         <th>Liste</th>
-                        <th class="text-muted small fw-normal">Datum</th>
                         <?php foreach ($global_columns as $col): ?>
                             <th class="text-end"><?= e($col['name']) ?></th>
                         <?php endforeach; ?>
@@ -267,9 +266,8 @@
                 <tbody>
                     <?php foreach ($mod_per_list_rows as $list_row): ?>
                         <tr>
-                            <td class="fw-semibold text-nowrap"><?= e($list_row['name']) ?></td>
-                            <td class="text-nowrap text-muted small">
-                                <?= $list_row['date'] ? date('d.m.Y', strtotime($list_row['date'])) : '—' ?>
+                            <td class="fw-semibold"><?= e($list_row['name']) ?>
+                                <?php if ($list_row['date']): ?><small class="d-block text-muted fw-normal"><?= date('d.m.Y', strtotime($list_row['date'])) ?></small><?php endif; ?>
                             </td>
                             <?php foreach ($global_columns as $col): ?>
                                 <td class="text-end text-nowrap">
@@ -293,7 +291,7 @@
                 </tbody>
                 <tfoot class="fw-bold">
                     <tr>
-                        <td colspan="2">Gesamt</td>
+                        <td>Gesamt</td>
                         <?php foreach ($global_columns as $col): ?>
                             <td class="text-end text-nowrap">
                                 <?php
@@ -306,7 +304,7 @@
                                         $count_true  = (int)($totals['count_true'] ?? 0);
                                         $total_lists = (int)($mod_col_list_counts[$cid] ?? 0);
                                         $pct = $total_lists > 0 ? round($count_true / $total_lists * 100) : 0;
-                                        echo $count_true . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                                        echo $count_true . '<small class="d-block text-muted fw-normal">' . $pct . '%</small>';
                                     }
                                 ?>
                             </td>
@@ -324,7 +322,6 @@
                 <thead>
                     <tr>
                         <th>Liste</th>
-                        <th class="text-muted small fw-normal">Datum</th>
                         <?php foreach ($global_columns as $col): ?>
                             <th class="text-end">
                                 <?= e($col['name']) ?>
@@ -338,9 +335,8 @@
                 <tbody>
                     <?php foreach ($all_lists_rows as $lid => $list_row): ?>
                         <tr>
-                            <td class="fw-semibold text-nowrap"><?= e($list_row['name']) ?></td>
-                            <td class="text-nowrap text-muted small">
-                                <?= $list_row['date'] ? date('d.m.Y', strtotime($list_row['date'])) : '—' ?>
+                            <td class="fw-semibold"><?= e($list_row['name']) ?>
+                                <?php if ($list_row['date']): ?><small class="d-block text-muted fw-normal"><?= date('d.m.Y', strtotime($list_row['date'])) ?></small><?php endif; ?>
                             </td>
                             <?php foreach ($global_columns as $col): ?>
                                 <td class="text-end text-nowrap">
@@ -352,7 +348,7 @@
                                         } elseif ($col['data_type'] === 'boolean') {
                                             $cnt = (int)$entry['val'];
                                             $pct = $total_active_members > 0 ? round($cnt / $total_active_members * 100) : 0;
-                                            echo $cnt . ' / ' . $total_active_members . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                                            echo $cnt . ' / ' . $total_active_members . '<small class="d-block text-muted fw-normal">' . $pct . '%</small>';
                                         } else {
                                             $n = (float)$entry['val'];
                                             echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
@@ -365,7 +361,7 @@
                 </tbody>
                 <tfoot class="fw-bold">
                     <tr>
-                        <td colspan="2">Gesamt</td>
+                        <td>Gesamt</td>
                         <?php foreach ($global_columns as $col): ?>
                             <td class="text-end text-nowrap">
                                 <?php
@@ -382,7 +378,7 @@
                                     if ($col['data_type'] === 'boolean') {
                                         $possible = $total_active_members * $list_count_col;
                                         $pct      = $possible > 0 ? round($total_val / $possible * 100) : 0;
-                                        echo (int)$total_val . ' / ' . $possible . ' <small class="text-muted fw-normal">(' . $pct . '%)</small>';
+                                        echo (int)$total_val . ' / ' . $possible . '<small class="d-block text-muted fw-normal">' . $pct . '%</small>';
                                     } else {
                                         $n = $total_val;
                                         echo ($n == floor($n)) ? (int)$n : number_format($n, 2, ',', '.');
