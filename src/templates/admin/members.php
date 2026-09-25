@@ -93,7 +93,7 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
 <div class="list-group mb-4">
     <?php foreach ($profiles as $p): ?>
     <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
-    <div class="list-group-item px-3 py-3">
+    <div class="list-group-item">
 
         <!-- Name + switchable info -->
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
@@ -233,7 +233,7 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
     <div class="list-group opacity-75">
         <?php foreach ($inactive_profiles as $p): ?>
         <?php $linked = $linked_users_map[$p['id']] ?? []; ?>
-        <div class="list-group-item px-3 py-3 opacity-75">
+        <div class="list-group-item opacity-75">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                 <div>
                     <div class="fw-semibold text-muted d-flex align-items-center gap-1">

@@ -23,7 +23,7 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
 <?php render_collection_group('Aktive Teams', function() use ($active_teams, $coaches_by_team): void { ?>
 <div class="list-group mb-3">
     <?php foreach ($active_teams as $team): ?>
-    <div class="list-group-item px-3 py-3">
+    <div class="list-group-item">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div class="fw-semibold">
                 <?php if ($team['sort_order'] !== 0): ?>
@@ -68,7 +68,7 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
 <?php render_collection_group('Inaktive Teams', function() use ($inactive_teams, $coaches_by_team): void { ?>
 <div class="list-group opacity-75 mb-3">
     <?php foreach ($inactive_teams as $team): ?>
-    <div class="list-group-item px-3 py-3">
+    <div class="list-group-item">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div class="fw-semibold text-muted">
                 <?= e($team['name']) ?>

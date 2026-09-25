@@ -84,7 +84,7 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
     $render_coordinator = function(array $c) use ($coordinator_team_names) {
         $my_teams = $coordinator_team_names[$c['id']] ?? [];
         ?>
-        <div class="list-group-item px-3 py-3">
+        <div class="list-group-item">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
                 <div class="fw-semibold d-flex align-items-center gap-2">
                     <?= e($c['first_name'] . ' ' . $c['last_name']) ?>
@@ -175,7 +175,7 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
         <div class="collapse mt-2" id="inactiveCoordinators">
             <div class="list-group opacity-75">
                 <?php foreach ($inactive_coordinators as $coordinator): ?>
-                <div class="list-group-item px-3 py-3">
+                <div class="list-group-item">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
                         <div class="fw-semibold text-muted">
                             <?= e($coordinator['first_name'] . ' ' . $coordinator['last_name']) ?>

@@ -25,7 +25,7 @@ aber nicht überschreiben — Abweichungen erfordern eine Änderung dieser Datei
 |---|---|
 | Schriftgrößen, Radien, Farben | `:root` in `app.css` |
 | Innenabstände von Komponenten (Card, Button, List-Group, Alert, Tabelle) | Komponentenklasse in `app.css` (Bootstrap setzt diese Variablen auf der Klasse, nicht auf `:root`) |
-| Seitenrand, Navigationshöhe, Touch-Mindestmaß | `--tm-*`-Tokens in `app.css` |
+| Seitenrand, Navigationshöhe, Touch-Mindestmaß | Tokens in `app.css` (`--pad`, `--topbar-h`, `--tab-h`, `--tm-touch-min`) |
 | Abstände **zwischen** Bausteinen | Utility-Klassen in den Partials, nur aus der erlaubten Teilmenge |
 
 **Erlaubte Spacing-Utilities in Templates:**
@@ -45,7 +45,7 @@ Deshalb kein `form-control-sm`, auch nicht in gruppierten Abschnitts-Cards.
 
 ## 3. Layout
 
-- Header: Vereinslogo, Vereinsname, rechts Profil-/Abmelde-Zugang. Höhe aus `--tm-header-h`.
+- Header: Vereinslogo, Vereinsname, rechts Profil-/Abmelde-Zugang. Höhe aus `--topbar-h`.
 - Navigation: **Bottom-Nav, maximal fünf Punkte.** Identisch aufgebaut für alle Rollen,
   nur die Punkte unterscheiden sich. Der fünfte Punkt ist „Mehr", sobald eine Rolle mehr braucht.
   Die öffentliche Ticker-Seite nutzt dasselbe Layout ohne Navigation.
@@ -138,7 +138,8 @@ Mindesthöhe 44 px für alles Antippbare.
 
 - Dark Mode: per Schalter in der Kopfzeile (`data-theme`), Farben nur über die Tokens
   `--surface`, `--surface-2`, `--line`, `--t1…3`. Keine festen Farbwerte wie `#fff`.
-- Team-Logos färben das Theme nicht ein. Primärfarbe ist immer Anthrazit `#2f3640`.
+- Team-Logos färben das Theme nicht ein. Die Markenfarbe (`--brand`, Admin-Einstellung `app_color`)
+  erscheint nur auf Primär-Buttons und dem aktiven Tab.
 
 ## 9. Änderungen
 

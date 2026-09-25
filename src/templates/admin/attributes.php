@@ -78,7 +78,7 @@
         <div class="list-group list-group-flush mb-3">
             <?php foreach ($group['attributes'] as $attr): ?>
             <details class="tm-attr-item">
-                <summary class="list-group-item d-flex align-items-center gap-2 py-2">
+                <summary class="list-group-item d-flex align-items-center gap-2">
                     <span class="flex-grow-1 fw-medium"><?= e($attr['name']) ?></span>
                     <span class="badge bg-secondary-subtle text-secondary-emphasis">
                         <?= $attr['data_type'] === 'date' ? 'Datum' : 'Text' ?>

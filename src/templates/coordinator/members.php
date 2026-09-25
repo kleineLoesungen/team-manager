@@ -39,7 +39,7 @@ $fmt_attr = function(array $a): string {
 <div class="list-group mb-4">
     <?php foreach ($active_members as $m): ?>
     <?php $pid = (int)$m['member_profile_id']; ?>
-    <div class="list-group-item px-3 py-3">
+    <div class="list-group-item">
         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
             <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold d-flex align-items-center gap-2">
@@ -135,7 +135,7 @@ $fmt_attr = function(array $a): string {
     <div class="collapse mt-2" id="inactiveMembers">
         <div class="list-group opacity-75">
             <?php foreach ($inactive_members as $m): ?>
-            <div class="list-group-item px-3 py-3">
+            <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                     <div>
                         <div class="fw-semibold text-muted"><?= e($m['first_name'] . ' ' . $m['last_name']) ?></div>

@@ -29,7 +29,7 @@
     ?>
     <div class="list-group mb-4">
         <?php foreach ($active_clubs as $club): ?>
-        <div class="list-group-item px-3 py-3">
+        <div class="list-group-item">
             <div class="fw-semibold mb-2"><?= e($club['name']) ?></div>
             <div class="d-flex gap-2 flex-wrap">
                 <a href="/admin/clubs/<?= (int)$club['id'] ?>/edit" data-save-scroll
@@ -60,7 +60,7 @@
         <?php render_collection_group('Inaktiv', function() use ($inactive_clubs) { ?>
         <div class="list-group opacity-75">
             <?php foreach ($inactive_clubs as $club): ?>
-            <div class="list-group-item px-3 py-3">
+            <div class="list-group-item">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="fw-semibold text-muted"><?= e($club['name']) ?></span>
                     <?php render_badge('dim', 'Inaktiv'); ?>

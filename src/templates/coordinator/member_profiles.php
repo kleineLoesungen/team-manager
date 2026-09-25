@@ -84,7 +84,7 @@ declare(strict_types=1);
     <?php foreach ($profiles as $p):
         $user_active = (bool)$p['user_active'];
     ?>
-    <div class="list-group-item px-3 py-3">
+    <div class="list-group-item">
         <div class="d-flex justify-content-between align-items-start gap-2">
             <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold"><?= e($p['first_name'] . ' ' . $p['last_name']) ?></div>

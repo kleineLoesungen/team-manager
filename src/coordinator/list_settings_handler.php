@@ -331,7 +331,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             <p class="text-muted small mb-3">Lokale Spalten gehören nur zu dieser Liste. Löschen entfernt auch alle zugehörigen Einträge.</p>
             <ul class="list-group list-group-flush">
                 <?php foreach ($local_columns as $col): ?>
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <span class="fw-medium"><?= e($col['name']) ?></span>
                         <span class="badge bg-light text-dark border ms-2 small">
@@ -371,7 +371,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
             <?php if (!empty($global_columns)): ?>
             <ul class="list-group list-group-flush mb-3">
                 <?php foreach ($global_columns as $col): ?>
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <span class="fw-medium"><?= e($col['name']) ?></span>
                         <span class="badge bg-light text-dark border ms-2 small">
