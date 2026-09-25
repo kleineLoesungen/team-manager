@@ -133,6 +133,6 @@ Mindesthöhe 44 px für alles Antippbare.
 
 ## 9. Änderungen
 
-Änderungen an dieser Datei laufen über `/gsd-phase --edit` oder eine eigene Phase,
-nie beiläufig in einer Feature-Phase. Wer beim Umsetzen merkt, dass eine Regel nicht trägt,
+Änderungen an dieser Datei sind eigene Commits,
+nie beiläufig in einem Feature-Commit. Wer beim Umsetzen merkt, dass eine Regel nicht trägt,
 meldet das, statt sie lokal zu umgehen.

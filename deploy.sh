@@ -78,13 +78,15 @@ open -u "$FTP_USER,$FTP_PASS" "$FTP_HOST"
 mirror --reverse \
     --exclude-glob='.DS_Store' \
     --exclude='.git/' \
-    --exclude='.planning/' \
     --exclude='docker/' \
     --exclude='docker-compose.yml' \
     --exclude-glob='.env*' \
     --exclude='config.php' \
     --exclude='deploy.sh' \
     --exclude='README.md' \
+    --exclude='CLAUDE.md' \
+    --exclude='docs/' \
+    --exclude='.claude/' \
     --exclude='landing/' \
     --exclude='^public/' \
     . ${FTP_DIR}
