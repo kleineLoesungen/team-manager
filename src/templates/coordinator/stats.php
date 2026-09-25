@@ -50,13 +50,13 @@
     <div class="alert alert-info">Keine aktiven Mitglieder im Team.</div>
 <?php else: ?>
     <h5 class="mb-3">Mitgliederstatistiken</h5>
-    <div class="table-responsive mb-4">
+    <div class="tm-matrix mb-4">
         <table class="table table-sm table-striped table-hover align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
-                    <th class="text-nowrap">Mitglied</th>
+                    <th>Mitglied</th>
                     <?php foreach ($global_columns as $col): ?>
-                        <th class="text-nowrap text-end">
+                        <th class="text-end">
                             <?= e($col['name']) ?>
                             <small class="text-muted fw-normal d-block">
                                 <?= $col['data_type'] === 'number' ? 'Summe' : 'Anzahl' ?>
@@ -154,11 +154,11 @@
     ];
     ?>
 
-    <div class="table-responsive">
+    <div class="tm-matrix">
         <table class="table table-sm table-striped table-hover align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
-                    <th rowspan="2" class="align-middle text-nowrap">Mitglied</th>
+                    <th rowspan="2" class="align-middle">Mitglied</th>
                     <?php foreach ($global_columns as $col): ?>
                         <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <th colspan="4" class="text-center border-start"><?= e($col['name']) ?></th>
@@ -169,7 +169,7 @@
                         <?php if ($col_filter !== 0 && (int)$col['id'] !== $col_filter) continue; ?>
                         <?php foreach ($windows as $win_key => $win_label): ?>
                             <?php $active = ($sort_col_id === (int)$col['id'] && $sort_win === $win_key); ?>
-                            <th class="text-end text-nowrap border-start<?= $active ? ' text-primary' : '' ?>">
+                            <th class="text-end border-start<?= $active ? ' text-primary' : '' ?>">
                                 <a href="<?= ranking_sort_url((int)$col['id'], $win_key, $_GET) ?>"
                                    class="text-decoration-none<?= $active ? ' text-primary fw-bold' : ' text-body' ?>">
                                     <?= $win_label ?>
@@ -253,14 +253,14 @@
 
     <?php if ($selected_member_id && !empty($mod_per_list_rows)): ?>
         <h6 class="mb-3">Listenübersicht: <?= e($selected_member_name) ?></h6>
-        <div class="table-responsive">
+        <div class="tm-matrix">
             <table class="table table-sm table-bordered align-middle">
-                <thead class="table-light">
+                <thead>
                     <tr>
-                        <th class="text-nowrap">Liste</th>
-                        <th class="text-nowrap text-muted small fw-normal">Datum</th>
+                        <th>Liste</th>
+                        <th class="text-muted small fw-normal">Datum</th>
                         <?php foreach ($global_columns as $col): ?>
-                            <th class="text-end text-nowrap"><?= e($col['name']) ?></th>
+                            <th class="text-end"><?= e($col['name']) ?></th>
                         <?php endforeach; ?>
                     </tr>
                 </thead>
@@ -319,14 +319,14 @@
         <p class="text-muted small">Keine Listen mit globalen Spalten für dieses Mitglied gefunden.</p>
     <?php elseif (!empty($all_lists_rows)): ?>
         <h6 class="mb-3">Listenübersicht: Alle Mitglieder</h6>
-        <div class="table-responsive">
+        <div class="tm-matrix">
             <table class="table table-sm table-bordered align-middle">
-                <thead class="table-light">
+                <thead>
                     <tr>
-                        <th class="text-nowrap">Liste</th>
-                        <th class="text-nowrap text-muted small fw-normal">Datum</th>
+                        <th>Liste</th>
+                        <th class="text-muted small fw-normal">Datum</th>
                         <?php foreach ($global_columns as $col): ?>
-                            <th class="text-end text-nowrap">
+                            <th class="text-end">
                                 <?= e($col['name']) ?>
                                 <small class="text-muted fw-normal d-block">
                                     <?= $col['data_type'] === 'number' ? 'Summe' : 'Anzahl' ?>

@@ -74,9 +74,14 @@ stehen in einer Gruppe „Ohne Termin" am Ende. Eine Zeile ist ein Link auf das 
 mit Chevron rechts, keine konkurrierenden Aktionen in der Zeile. Cards sind für
 Sammlungen nicht zulässig — sie bleiben Formularabschnitten und der Gefahrenzone vorbehalten.
 
-**Matrix und Statistik.** Vollständige Tabelle, horizontal scrollbar, erste Spalte fixiert.
-Keine Spalte wird auf kleinen Displays ausgeblendet — der Quervergleich über Mitglieder
-ist der Zweck der Seite. Unter der Tabelle ein Wischhinweis.
+**Matrix und Statistik.** Immer im Wrapper `.tm-matrix` (oder über `render_matrix_table()`),
+nie in `.table-responsive`. Vollständige Tabelle, horizontal scrollbar, erste Spalte und
+Kopfzeile fixiert, Summenzeile (`tfoot`) unten fixiert. Keine Spalte wird auf kleinen
+Displays ausgeblendet — der Quervergleich über Mitglieder ist der Zweck der Seite.
+Die Namensspalte ist auf 42vw begrenzt und kürzt mit „…“. Kopfzellen brechen um
+(kein `text-nowrap` auf `<th>`), Zahlen stehen rechtsbündig in Tabellenziffern.
+Auf dem Smartphone läuft die Tabelle randlos bis an den Bildschirmrand; sobald
+horizontal gescrollt ist, zeigt die fixierte Spalte eine Schattenkante.
 
 **Formularfelder.** Gruppiert in Abschnitts-Cards mit Abschnittsüberschrift.
 Label immer sichtbar über dem Feld, Pflichtfelder mit `*`, Hilfetext unter dem Feld.
@@ -125,10 +130,14 @@ Mindesthöhe 44 px für alles Antippbare.
 - Jedes Eingabefeld hat ein verknüpftes `<label>`.
 - `prefers-reduced-motion` wird respektiert.
 - Erste Zielbreite ist 360 px. Breakpoints nur `md` und darüber.
+- Querformat: Die App ist bis `--app-max` (960 px) breit, nicht auf Hochformatbreite gedeckelt.
+  Seitenränder berücksichtigen `env(safe-area-inset-left/right)` (Notch). Bei geringer Höhe
+  (≤ 500 px) scrollt die Kopfzeile mit und die Tab-Leiste wird einzeilig.
 
 ## 8. Was nicht entschieden ist
 
-- Dark Mode: bewusst nicht eingeführt. `data-bs-theme` bleibt auf `light`.
+- Dark Mode: per Schalter in der Kopfzeile (`data-theme`), Farben nur über die Tokens
+  `--surface`, `--surface-2`, `--line`, `--t1…3`. Keine festen Farbwerte wie `#fff`.
 - Team-Logos färben das Theme nicht ein. Primärfarbe ist immer Anthrazit `#2f3640`.
 
 ## 9. Änderungen
