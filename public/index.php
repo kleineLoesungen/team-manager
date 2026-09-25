@@ -12,12 +12,27 @@ unset($_parent);
 
 require_once ROOT_PATH . '/config.php';
 
-// TEMP DIAGNOSTIC — remove after Hetzner init issue is resolved
-set_exception_handler(function(Throwable $e): void {
-    http_response_code(500);
-    echo '<pre style="font-family:monospace;padding:1em;white-space:pre-wrap">';
-    echo htmlspecialchars($e::class . ': ' . $e->getMessage() . "\n\n" . $e->getTraceAsString());
-    echo '</pre>';
+// Fehler nie im Browser zeigen außer in der Entwicklung — Stacktraces verraten Pfade,
+// SQL und Schemanamen. Details landen im PHP-Error-Log.
+$_is_dev = APP_ENV === 'development';
+ini_set('display_errors', $_is_dev ? '1' : '0');
+ini_set('log_errors', '1');
+set_exception_handler(function(Throwable $e) use ($_is_dev): void {
+    error_log('Unbehandelte Ausnahme: ' . $e::class . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/html; charset=UTF-8');
+    }
+    if ($_is_dev) {
+        echo '<pre>' . htmlspecialchars($e::class . ': ' . $e->getMessage() . "\n\n" . $e->getTraceAsString()) . '</pre>';
+        return;
+    }
+    echo '<!DOCTYPE html><html lang="de"><meta charset="UTF-8">'
+       . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+       . '<title>Fehler · Team Manager</title>'
+       . '<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:3rem auto;padding:0 1rem">'
+       . '<h1>Etwas ist schiefgelaufen</h1>'
+       . '<p>Die Seite konnte nicht geladen werden. Versuch es gleich noch einmal oder geh zurück zur <a href="/">Startseite</a>.</p>';
 });
 
 require_once ROOT_PATH . '/src/auth/session.php';

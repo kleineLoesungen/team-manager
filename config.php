@@ -25,9 +25,9 @@ define('BASE_URL', getenv('BASE_URL') ?: '');
 // Set MAIL_DRIVER=smtp to use PHPMailer+SMTP (bundled in src/lib/phpmailer/ — no Composer needed)
 // Set MAIL_DRIVER=mail to use PHP's built-in mail() function
 define('MAIL_DRIVER',       getenv('MAIL_DRIVER')       ?: 'smtp');
-define('MAIL_HOST',         getenv('MAIL_HOST')         ?: 'mail.your-server.de');
+define('MAIL_HOST',         getenv('MAIL_HOST')         ?: '');
 define('MAIL_PORT',         (int)(getenv('MAIL_PORT')   ?: '587'));
-define('MAIL_USERNAME',     getenv('MAIL_USERNAME')     ?: 'noreply@frickenfelden.info');
-define('MAIL_PASSWORD',     getenv('MAIL_PASSWORD')     ?: 'MswVt93JhuKpfKt5');
-define('MAIL_FROM_ADDRESS', getenv('MAIL_FROM_ADDRESS') ?: 'noreply@frickenfelden.info');
+define('MAIL_USERNAME',     getenv('MAIL_USERNAME')     ?: '');
+define('MAIL_PASSWORD',     getenv('MAIL_PASSWORD')     ?: '');
+define('MAIL_FROM_ADDRESS', getenv('MAIL_FROM_ADDRESS') ?: '');
 define('MAIL_FROM_NAME',    getenv('MAIL_FROM_NAME')    ?: 'Team Manager');
