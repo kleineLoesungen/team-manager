@@ -214,3 +214,46 @@ function render_action_bar(string $label, string $form_id): void {
     <script>document.body.classList.add('has-actionbar');</script>
     <?php
 }
+
+/**
+ * "App auf dem Startbildschirm" card for the profile pages.
+ * Without JavaScript it shows the manual steps for iOS and Android. The script in
+ * render_layout_foot() then adapts it: hidden when already running as installed app,
+ * native install dialog where the browser offers one (Chrome/Android), otherwise the
+ * button reveals the steps for the current platform. iOS has no install API at all.
+ */
+function render_install_app(): void {
+    ?>
+    <div class="card mt-4" data-install>
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-phone"></i>
+            <span class="fw-semibold">App auf dem Startbildschirm</span>
+        </div>
+        <div class="card-body">
+            <p class="text-body-secondary small mb-3">
+                Speichere den Team Manager auf deinem Startbildschirm. Er öffnet sich dann
+                wie eine App, ohne Adressleiste, und du bist mit einem Tipp in deinem Team.
+            </p>
+            <button type="button" class="btn btn-outline-primary min-touch" data-install-btn hidden
+                    aria-expanded="false">
+                <i class="bi bi-download me-2"></i>App installieren
+            </button>
+            <div data-install-steps="ios">
+                <p class="small fw-semibold mt-3 mb-2">iPhone und iPad</p>
+                <ol class="small mb-0">
+                    <li>Tippe auf <i class="bi bi-box-arrow-up" aria-hidden="true"></i> <strong>Teilen</strong>
+                        (Safari: unten, Chrome: oben rechts).</li>
+                    <li>Wähle <strong>Zum Home-Bildschirm</strong> und tippe auf <strong>Hinzufügen</strong>.</li>
+                </ol>
+            </div>
+            <div data-install-steps="android">
+                <p class="small fw-semibold mt-3 mb-2">Android</p>
+                <ol class="small mb-0">
+                    <li>Tippe oben rechts auf <i class="bi bi-three-dots-vertical" aria-hidden="true"></i> <strong>Menü</strong>.</li>
+                    <li>Wähle <strong>App installieren</strong> oder <strong>Zum Startbildschirm hinzufügen</strong>.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <?php
+}

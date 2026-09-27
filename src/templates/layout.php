@@ -78,6 +78,54 @@ function render_layout_foot(): void {
             if (a) sessionStorage.setItem('scroll:' + location.pathname.replace(/\?.*$/, ''), window.scrollY);
         });
 
+        /* "App installieren" (render_install_app). beforeinstallprompt feuert früh
+           und nur in Chromium-Browsern; es wird gemerkt, bis der Button getippt wird. */
+        var tmPrompt = null;
+        var tmCard = document.querySelector('[data-install]');
+        var ua = navigator.userAgent;
+        var isAndroid = /Android/i.test(ua);
+        // iPadOS meldet sich als Mac; erkennbar nur an den Touchpunkten
+        var isIos = !isAndroid && (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+        var installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+        function tmInstallUi() {
+            if (!tmCard) return;
+            var btn = tmCard.querySelector('[data-install-btn]');
+            var steps = tmCard.querySelectorAll('[data-install-steps]');
+            if (installed || (!tmPrompt && !isIos && !isAndroid)) { tmCard.hidden = true; return; }
+            tmCard.hidden = false;
+            btn.hidden = false;
+            // Ohne nativen Dialog: nur die Schritte der eigenen Plattform, eingeklappt
+            var mine = isIos ? 'ios' : 'android';
+            steps.forEach(function(s) { s.hidden = true; s.dataset.mine = (s.dataset.installSteps === mine) ? '1' : ''; });
+        }
+        if (tmCard) {
+            tmCard.querySelector('[data-install-btn]').addEventListener('click', function() {
+                var btn = this;
+                if (tmPrompt) {
+                    tmPrompt.prompt();
+                    tmPrompt.userChoice.then(function(c) {
+                        tmPrompt = null;
+                        if (c.outcome === 'accepted') { installed = true; }
+                        tmInstallUi();
+                    });
+                    return;
+                }
+                var open = btn.getAttribute('aria-expanded') !== 'true';
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                tmCard.querySelectorAll('[data-install-steps]').forEach(function(s) {
+                    s.hidden = !(open && s.dataset.mine === '1');
+                });
+            });
+        }
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();          // eigener Button statt Browser-Leiste
+            tmPrompt = e;
+            tmInstallUi();
+        });
+        window.addEventListener('appinstalled', function() { installed = true; tmInstallUi(); });
+        tmInstallUi();
+
         /* theme toggle */
         function tmApply(t) {
             document.documentElement.setAttribute('data-theme', t);

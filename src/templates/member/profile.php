@@ -158,6 +158,8 @@ foreach ($attr_groups as $g) {
 <?php render_empty('person-x', 'Kein Mitgliedsprofil', 'Dein Konto ist noch keinem Mitgliedsprofil zugeordnet. Bitte wende dich an deinen Koordinator.'); ?>
 <?php endif; ?>
 
+<?php render_install_app(); ?>
+
 <div class="list-group mt-4">
     <a href="/member/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
         <i class="bi bi-person-badge fs-5"></i>

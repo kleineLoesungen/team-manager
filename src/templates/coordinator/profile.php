@@ -174,6 +174,8 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
 </div>
 <?php endif; ?>
 
+<?php render_install_app(); ?>
+
 <div class="list-group mt-4">
     <a href="/coordinator/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
         <i class="bi bi-person-badge"></i>
