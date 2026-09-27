@@ -14,9 +14,11 @@
 -- Keine Datenänderungen, daher kein `SET app.is_admin` nötig.
 -- Idempotent, läuft in einer Transaktion.
 --
--- Aufruf: psql -h <host> -U <owner> -d <database> -f 20260927_ticker_live.sql
+-- Aufruf: im Query-Tool von pgAdmin komplett ausführen, oder
+--         psql -h <host> -U <owner> -d <database> -v ON_ERROR_STOP=1 -f 20260927_ticker_live.sql
+-- Reines SQL ohne psql-Befehle. Schlägt eine Anweisung fehl, wird die ganze Transaktion
+-- zurückgerollt — es bleibt nichts halb eingespielt.
 
-\set ON_ERROR_STOP on
 BEGIN;
 
 SET LOCAL search_path TO SCHEMA_EINTRAGEN;   -- <<< z. B. team_manager
