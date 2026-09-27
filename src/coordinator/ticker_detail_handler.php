@@ -142,9 +142,12 @@ $stmt = $pdo->prepare(
 $stmt->execute([$ticker_id, $ticker_team_id]);
 $freigabe_members = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+require_once ROOT_PATH . '/src/db/ticker_viewers.php';
+$viewer_counts = ticker_viewers_counts($pdo, (int)$ticker['id']);
+
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id) {
+render_coach_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id, $viewer_counts) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/ticker_detail.php';
 });

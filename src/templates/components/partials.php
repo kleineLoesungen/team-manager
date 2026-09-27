@@ -257,3 +257,25 @@ function render_install_app(): void {
     </div>
     <?php
 }
+
+/**
+ * Viewer count of a live ticker, plus the heartbeat hook for the layout script.
+ * $counts null = public page: the tab is counted, but no number is shown.
+ * Active ticker: "12 Zuschauer (max. 30)", updated live. Closed: "max. 30 Zuschauer".
+ * @param array      $ticker Needs 'id' and 'status'
+ * @param array|null $counts ['active' => int, 'max' => int] from ticker_viewers_counts()
+ */
+function render_ticker_viewers(array $ticker, ?array $counts): void {
+    $is_active = ($ticker['status'] ?? '') === 'active';
+    $ping = $is_active ? ' data-ticker-ping="' . (int)$ticker['id'] . '"' : '';
+    if ($counts === null) {
+        if ($is_active) echo '<span hidden' . $ping . '></span>';
+        return;
+    }
+    if (!$is_active && $counts['max'] === 0) return;   // vor Einführung der Zählung geschlossen
+    ?>
+    <span class="text-muted small text-nowrap"<?= $ping ?> title="Zuschauer mit geöffnetem Ticker, Stand der letzten Minute">
+        <i class="bi bi-eye me-1" aria-hidden="true"></i><?php if ($is_active): ?><span data-viewers-now><?= $counts['active'] ?></span> Zuschauer (max. <span data-viewers-max><?= $counts['max'] ?></span>)<?php else: ?>max. <?= $counts['max'] ?> Zuschauer<?php endif; ?>
+    </span>
+    <?php
+}

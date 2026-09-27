@@ -124,9 +124,12 @@ $stmt = $pdo->prepare(
 $stmt->execute([$_SESSION['team_id']]);
 $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+require_once ROOT_PATH . '/src/db/ticker_viewers.php';
+$viewer_counts = ticker_viewers_counts($pdo, (int)$ticker['id']);
+
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id) {
+render_member_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id, $viewer_counts) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/member/ticker_detail.php';
 });

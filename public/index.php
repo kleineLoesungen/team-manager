@@ -570,6 +570,13 @@ match (true) {
     $path === '/ticker'
         => require ROOT_PATH . '/src/public/ticker_handler.php',
 
+    // /ticker/{id}/ping — POST: viewer heartbeat (public, JSON)
+    (bool)preg_match('#^/ticker/(\d+)/ping$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/public/ticker_ping_handler.php';
+        })(),
+
     // /ticker/{id} — GET: public ticker detail feed
     (bool)preg_match('#^/ticker/(\d+)$#', $path, $matches)
         => (function() use ($matches): void {

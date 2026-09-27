@@ -4,6 +4,8 @@
 require_once dirname(__DIR__, 2) . '/templates/layout.php';
 render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], function() use ($ticker, $messages, $app_title, $team) {
     ?>
+    <div data-ticker-live>
+    <?php render_ticker_viewers($ticker, null); ?>
     <div class="mb-3">
         <a href="/ticker" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left me-2"></i>Alle Ticker
@@ -50,9 +52,32 @@ render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], fun
     <p class="text-muted text-center small mt-4">
         <a href="/login" class="text-muted">Anmelden</a> · <?= e($app_title) ?>
     </p>
+    </div>
 
     <?php if ($ticker['status'] === 'active'): ?>
-    <script>setTimeout(function(){ location.reload(); }, 30000);</script>
+    <noscript><meta http-equiv="refresh" content="30"></noscript>
+    <script>
+    (function () {
+        // Neue Nachrichten im Hintergrund holen und nur den Inhalt tauschen: kein Flackern,
+        // die Scroll-Position bleibt, und der Tab behält seine Zuschauer-ID (Layout-Skript).
+        var live = document.querySelector('[data-ticker-live]');
+        var timer = setInterval(refresh, 30000);
+        function refresh() {
+            if (document.visibilityState !== 'visible') return;
+            fetch(location.href, { cache: 'no-store', credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.text() : null; })
+                .then(function (html) {
+                    if (!html) return;
+                    var next = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-ticker-live]');
+                    if (!next) return;
+                    live.innerHTML = next.innerHTML;
+                    if (!live.querySelector('[data-ticker-ping]')) clearInterval(timer);   // Ticker beendet
+                })
+                .catch(function () {});
+        }
+        document.addEventListener('visibilitychange', refresh);
+    })();
+    </script>
     <?php endif; ?>
     <?php
 });

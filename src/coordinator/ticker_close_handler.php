@@ -15,4 +15,10 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$ticker_id, $_SESSION['team_id']]);
 
+// Nach dem Schließen zählt nur noch das Maximum
+if ($stmt->rowCount() > 0) {
+    require_once ROOT_PATH . '/src/db/ticker_viewers.php';
+    ticker_viewers_clear($pdo, $ticker_id);
+}
+
 redirect('/coordinator/ticker?success=closed');

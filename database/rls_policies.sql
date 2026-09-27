@@ -344,7 +344,8 @@ ALTER TABLE team_manager.tickers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_manager.tickers FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY tickers_select ON team_manager.tickers FOR SELECT USING (
-    team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    current_setting('app.is_admin', true) = 'true'
+    OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
 );
 CREATE POLICY tickers_insert ON team_manager.tickers FOR INSERT WITH CHECK (
     current_setting('app.current_role', true) = 'coordinator'
@@ -410,6 +411,43 @@ CREATE POLICY ticker_members_insert ON team_manager.ticker_members FOR INSERT WI
 CREATE POLICY ticker_members_delete ON team_manager.ticker_members FOR DELETE USING (
     current_setting('app.current_role', true) = 'coordinator'
     AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+
+-- ticker_viewers, ticker_viewer_peaks: anyone with the ticker's team context may record
+-- and count (public ping)
+ALTER TABLE team_manager.ticker_viewers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_viewers FORCE ROW LEVEL SECURITY;
+CREATE POLICY ticker_viewers_all ON team_manager.ticker_viewers FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_viewers.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_viewers.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+);
+ALTER TABLE team_manager.ticker_viewer_peaks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_viewer_peaks FORCE ROW LEVEL SECURITY;
+CREATE POLICY ticker_viewer_peaks_all ON team_manager.ticker_viewer_peaks FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_viewer_peaks.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_viewer_peaks.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
 );
 
 -- ── Phase 8: Member & Club Management RLS ─────────────────────────────────────

@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/ticker_detail.php
-// Variables: $ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id
+// Variables: $ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id, $viewer_counts
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 <?php if (!empty($error)): render_flash('error', $error); endif; ?>
@@ -15,8 +15,9 @@
 <p class="text-muted small mb-3"><?= e($ticker['description']) ?></p>
 <?php endif; ?>
 
-<div class="mb-4">
+<div class="d-flex flex-wrap gap-2 align-items-center mb-4">
     <?php $ticker['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
+    <?php render_ticker_viewers($ticker, $viewer_counts); ?>
 </div>
 
 <script>

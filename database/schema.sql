@@ -180,6 +180,24 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_members (
 );
 CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON team_manager.ticker_members(user_id, team_id);
 
+-- Ticker-Viewers — who has a ticker open right now. viewer_id is a random per-tab UUID held
+-- only in browser memory (no cookie, no IP). Rows older than a few minutes are deleted on
+-- every ping and all rows of a ticker when it is closed; only ticker_viewer_peaks remains.
+CREATE TABLE IF NOT EXISTS team_manager.ticker_viewers (
+    ticker_id INTEGER     NOT NULL REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
+    viewer_id UUID        NOT NULL,
+    last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (ticker_id, viewer_id)
+);
+CREATE INDEX IF NOT EXISTS idx_ticker_viewers_seen ON team_manager.ticker_viewers(ticker_id, last_seen);
+
+-- Ticker-Viewer-Peaks — highest concurrent viewer count, kept until the ticker is deleted.
+-- Separate table because tickers_update is coordinator-only and anonymous viewers ping too.
+CREATE TABLE IF NOT EXISTS team_manager.ticker_viewer_peaks (
+    ticker_id INTEGER PRIMARY KEY REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
+    peak      INTEGER NOT NULL DEFAULT 0
+);
+
 -- ── Phase 8: Member & Club Management ─────────────────────────────────────────
 
 -- Clubs — permanent home of members, independent of team assignments

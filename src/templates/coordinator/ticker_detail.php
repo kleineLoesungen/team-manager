@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/ticker_detail.php
-// Variables: $ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id
+// Variables: $ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id, $viewer_counts
 ?>
 <div class="mb-3">
     <a href="/coordinator/ticker" class="btn btn-sm btn-outline-secondary">
@@ -21,8 +21,10 @@
             <i class="bi bi-x-circle me-1"></i>Ticker schließen
         </button>
     </form>
+    <?php render_ticker_viewers($ticker, $viewer_counts); ?>
     <?php else: ?>
     <?php render_badge('dim', 'Beendet'); ?>
+    <?php render_ticker_viewers($ticker, $viewer_counts); ?>
     <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/reopen" class="d-inline">
         <?= csrf_field() ?>
         <button type="submit" class="btn btn-sm btn-outline-success">

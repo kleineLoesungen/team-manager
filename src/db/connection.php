@@ -218,6 +218,18 @@ function db_init_schema(PDO $pdo, string $s): void {
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON {$s}.ticker_members(user_id, team_id)");
 
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_viewers (
+        ticker_id INTEGER     NOT NULL REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
+        viewer_id UUID        NOT NULL,
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (ticker_id, viewer_id)
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_viewers_seen ON {$s}.ticker_viewers(ticker_id, last_seen)");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_viewer_peaks (
+        ticker_id INTEGER PRIMARY KEY REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
+        peak      INTEGER NOT NULL DEFAULT 0
+    )");
+
     // ── Phase 8: Member & Club Management ─────────────────────────────────
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.clubs (
         id         SERIAL PRIMARY KEY,
@@ -632,6 +644,50 @@ function db_init_rls(PDO $pdo, string $s): void {
     $pdo->exec("CREATE POLICY ticker_members_delete ON {$s}.ticker_members FOR DELETE USING (
         current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_viewers ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_viewers FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_viewers skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_viewers_all ON {$s}.ticker_viewers FOR ALL USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_viewers.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_viewers.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_viewer_peaks ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_viewer_peaks FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_viewer_peaks skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_viewer_peaks_all ON {$s}.ticker_viewer_peaks FOR ALL USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_viewer_peaks.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_viewer_peaks.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
     )");
 
     // ── Phase 8: Member & Club Management RLS ─────────────────────────────
