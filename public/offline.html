@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f3640">
+  <title>Keine Verbindung · Team Manager</title>
+  <!-- Eigenständig: wird vom Service Worker ohne Netz ausgeliefert, darf also
+       nichts nachladen (kein Bootstrap, keine Icons, kein app.css). -->
+  <style>
+    :root { --bg: #F2F2F7; --surface: #FFFFFF; --t1: #000000; --t2: rgba(60, 60, 67, .85); --btn: #2f3640; --btn-fg: #FFFFFF; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #000000; --surface: #1C1C1E; --t1: #FFFFFF; --t2: rgba(235, 235, 245, .80); --btn: #D1D1D6; --btn-fg: #1C1C1E; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100dvh;
+      display: grid; place-items: center;
+      padding: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+      background: var(--bg); color: var(--t1);
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Helvetica Neue', system-ui, sans-serif;
+    }
+    main { width: 100%; max-width: 400px; background: var(--surface); border-radius: 12px; padding: 24px; text-align: center; }
+    svg { width: 48px; height: 48px; color: var(--t2); }
+    h1 { font-size: 1.25rem; font-weight: 600; margin: 12px 0 8px; }
+    p { color: var(--t2); margin: 0 0 20px; }
+    a {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 44px; border-radius: 10px;
+      background: var(--btn); color: var(--btn-fg);
+      font-weight: 500; text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/>
+      <path d="M19 12.9a10 10 0 0 0-2.4-1.7"/><path d="M2 8.8a15 15 0 0 1 4.2-2.6"/><path d="M22 8.8a15 15 0 0 0-11.9-3.7"/>
+      <path d="M12 20h.01"/>
+    </svg>
+    <h1>Keine Verbindung</h1>
+    <p>Du bist gerade offline. Sobald du wieder Netz hast, lädt der Team Manager wie gewohnt.</p>
+    <a href="">Seite neu laden</a>
+  </main>
+</body>
+</html>

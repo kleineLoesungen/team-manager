@@ -18,6 +18,8 @@ aber nicht überschreiben — Abweichungen erfordern eine Änderung dieser Datei
 - Formulare funktionieren ohne JavaScript. Bootstrap-JS ist nur für Offcanvas/Collapse erlaubt,
   nie für Validierung, Bestätigung oder Feedback.
 - Icons: Bootstrap Icons. Keine Emoji in der Oberfläche.
+- Service Worker (`public/sw.js`) nur für Installierbarkeit und die Offline-Hinweisseite.
+  Er speichert keine Seiten oder Daten zwischen — Mitgliederdaten gehören nicht auf das Gerät.
 
 ## 2. Wo Größen definiert werden
 

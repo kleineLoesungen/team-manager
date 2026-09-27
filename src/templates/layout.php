@@ -78,6 +78,13 @@ function render_layout_foot(): void {
             if (a) sessionStorage.setItem('scroll:' + location.pathname.replace(/\?.*$/, ''), window.scrollY);
         });
 
+        /* Service Worker (public/sw.js): Installierbarkeit + Offline-Hinweis, kein Daten-Cache */
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+        }
+
         /* "App installieren" (render_install_app). beforeinstallprompt feuert früh
            und nur in Chromium-Browsern; es wird gemerkt, bis der Button getippt wird. */
         var tmPrompt = null;
