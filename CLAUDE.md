@@ -156,5 +156,9 @@ Browser → public/index.php (front controller)
 | `ticker_members` | Which members have write access to a ticker |
 | `ticker_viewers` | Open ticker tabs: random per-tab UUID + last heartbeat (rows live minutes, cleared on close) |
 | `ticker_viewer_peaks` | Highest concurrent viewer count per ticker, kept until the ticker is deleted |
+| `push_subscriptions` | Push-capable devices per signed-in user (endpoint + encryption keys) |
+| `ticker_subscriptions` | Opt-in per ticker and user: start notice + every new entry |
+| `ticker_push_state` | Marks a ticker's start notice as sent (exactly once) |
 
 Admin credentials live in `config.php` / environment variables — not in the DB.
+The VAPID key pair for push is generated on first use and stored in `settings` (`vapid_keys`).

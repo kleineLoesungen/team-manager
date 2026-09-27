@@ -133,6 +133,78 @@ function render_layout_foot(): void {
         window.addEventListener('appinstalled', function() { installed = true; tmInstallUi(); });
         tmInstallUi();
 
+        /* Punkt am App-Icon ("es gibt etwas Neues", gesetzt vom Service Worker bei Push)
+           verschwindet, sobald die App geöffnet ist */
+        function tmClearBadge() {
+            if (navigator.clearAppBadge && document.visibilityState === 'visible') navigator.clearAppBadge().catch(function() {});
+        }
+        tmClearBadge();
+        document.addEventListener('visibilitychange', tmClearBadge);
+
+        /* "Ticker abonnieren" (render_ticker_push_toggle): erst dieses Gerät für Push
+           registrieren, dann das Formular abschicken. Abbestellen braucht kein Gerät. */
+        var tmPushForm = document.querySelector('[data-push-form]');
+        if (tmPushForm) {
+            var tmPushHint = tmPushForm.querySelector('[data-push-hint]');
+            var tmCanPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+            var tmPushKey = tmPushForm.getAttribute('data-push-key');
+            var tmB64u = function(buf) {
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            };
+            var tmKeyBytes = function(b64u) {
+                var s = atob(b64u.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - b64u.length % 4) % 4));
+                return Uint8Array.from(s, function(c) { return c.charCodeAt(0); });
+            };
+            var tmRegisterDevice = function() {
+                return navigator.serviceWorker.ready.then(function(reg) {
+                    return reg.pushManager.getSubscription().then(function(sub) {
+                        // Mit anderem Server-Schlüssel angelegt? Dann neu abonnieren.
+                        var k = sub && sub.options && sub.options.applicationServerKey;
+                        if (sub && k && tmB64u(k) !== tmPushKey) return sub.unsubscribe().then(function() { return null; });
+                        return sub;
+                    }).then(function(sub) {
+                        return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: tmKeyBytes(tmPushKey) });
+                    });
+                }).then(function(sub) {
+                    return fetch('/push/subscribe', {
+                        method: 'POST', credentials: 'same-origin',
+                        body: new URLSearchParams({
+                            _csrf: tmPushForm.querySelector('[name=_csrf]').value,
+                            subscription: JSON.stringify(sub)
+                        })
+                    }).then(function(r) { if (!r.ok) throw new Error('push/subscribe ' + r.status); });
+                });
+            };
+            var tmPushFail = function(text) {
+                tmPushHint.textContent = text;
+                tmPushHint.classList.add('text-danger');
+            };
+            tmPushForm.addEventListener('submit', function(e) {
+                if (tmPushForm.querySelector('[name=on]').value !== '1') return;
+                e.preventDefault();
+                if (!tmCanPush) {
+                    tmPushFail(isIos
+                        ? 'Auf dem iPhone gehen Benachrichtigungen nur in der installierten App. Installiere sie im Profil und öffne den Ticker dort.'
+                        : 'Dieser Browser kann keine Benachrichtigungen empfangen.');
+                    return;
+                }
+                Notification.requestPermission().then(function(p) {
+                    if (p !== 'granted') throw new Error('permission ' + p);
+                    return tmRegisterDevice();
+                }).then(function() {
+                    tmPushForm.submit();
+                }).catch(function() {
+                    tmPushFail(Notification.permission === 'denied'
+                        ? 'Benachrichtigungen sind für diese Seite blockiert. Erlaube sie in den Einstellungen deines Browsers und tipp dann noch einmal.'
+                        : 'Das hat nicht geklappt. Prüf deine Verbindung und tipp noch einmal.');
+                });
+            });
+            // Schon abonniert und erlaubt: Gerät still auffrischen, Push-Endpunkte können wechseln
+            if (tmPushForm.getAttribute('data-push-on') === '1' && tmCanPush && Notification.permission === 'granted') {
+                tmRegisterDevice().catch(function() {});
+            }
+        }
+
         /* Live-Ticker: Zuschauer melden (render_ticker_viewers, src/db/ticker_viewers.php).
            Die ID lebt nur im Arbeitsspeicher dieses Tabs — kein Cookie, kein Storage.
            Gemeldet wird nur, solange der Tab sichtbar ist. */

@@ -229,6 +229,27 @@ function db_init_schema(PDO $pdo, string $s): void {
         ticker_id INTEGER PRIMARY KEY REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
         peak      INTEGER NOT NULL DEFAULT 0
     )");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.push_subscriptions (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER      NOT NULL REFERENCES {$s}.users(id) ON DELETE CASCADE,
+        endpoint   TEXT         NOT NULL UNIQUE,
+        p256dh     VARCHAR(100) NOT NULL,
+        auth       VARCHAR(50)  NOT NULL,
+        created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON {$s}.push_subscriptions(user_id)");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_subscriptions (
+        ticker_id  INTEGER     NOT NULL REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
+        user_id    INTEGER     NOT NULL REFERENCES {$s}.users(id)   ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (ticker_id, user_id)
+    )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_subscriptions_user ON {$s}.ticker_subscriptions(user_id)");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_push_state (
+        ticker_id     INTEGER PRIMARY KEY REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
+        start_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
 
     // ── Phase 8: Member & Club Management ─────────────────────────────────
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.clubs (
@@ -686,6 +707,66 @@ function db_init_rls(PDO $pdo, string $s): void {
         OR EXISTS (
             SELECT 1 FROM {$s}.tickers
             WHERE tickers.id = ticker_viewer_peaks.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.push_subscriptions ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.push_subscriptions FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS push_subscriptions skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY push_subscriptions_all ON {$s}.push_subscriptions FOR ALL USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_subscriptions ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_subscriptions FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_subscriptions skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_subscriptions_all ON {$s}.ticker_subscriptions FOR ALL USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_subscriptions.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        ))
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_subscriptions.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        ))
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_push_state ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_push_state FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_push_state skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_push_state_all ON {$s}.ticker_push_state FOR ALL USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_push_state.ticker_id
+              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        )
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR EXISTS (
+            SELECT 1 FROM {$s}.tickers
+            WHERE tickers.id = ticker_push_state.ticker_id
               AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
     )");

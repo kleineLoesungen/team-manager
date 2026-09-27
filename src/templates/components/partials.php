@@ -279,3 +279,33 @@ function render_ticker_viewers(array $ticker, ?array $counts): void {
     </span>
     <?php
 }
+
+/**
+ * "Ticker abonnieren" — opt-in for push notifications of one running ticker.
+ * The form works on its own for opting out; opting in first registers this device for push
+ * (layout script: permission prompt, PushManager.subscribe, POST /push/subscribe), then
+ * submits. Shows its own success message after the redirect.
+ * @param string $vapid_public applicationServerKey from push_vapid()
+ */
+function render_ticker_push_toggle(array $ticker, string $role, bool $subscribed, string $vapid_public): void {
+    if (($ticker['status'] ?? '') !== 'active') return;
+    $flash = $_GET['success'] ?? '';
+    if ($flash === 'notify_on')  render_flash('success', 'Du bekommst jetzt Benachrichtigungen zu diesem Ticker.');
+    if ($flash === 'notify_off') render_flash('success', 'Benachrichtigungen zu diesem Ticker beendet.');
+    ?>
+    <form method="POST" action="/<?= $role === 'coordinator' ? 'coordinator' : 'member' ?>/ticker/<?= (int)$ticker['id'] ?>/notify"
+          class="mb-4" data-push-form data-push-key="<?= htmlspecialchars($vapid_public, ENT_QUOTES) ?>"
+          data-push-on="<?= $subscribed ? '1' : '0' ?>">
+        <?= csrf_field() ?>
+        <input type="hidden" name="on" value="<?= $subscribed ? '0' : '1' ?>">
+        <button type="submit" class="btn <?= $subscribed ? 'btn-outline-secondary' : 'btn-outline-primary' ?>">
+            <i class="bi <?= $subscribed ? 'bi-bell-slash' : 'bi-bell' ?> me-2" aria-hidden="true"></i><?= $subscribed ? 'Benachrichtigungen beenden' : 'Ticker abonnieren' ?>
+        </button>
+        <p class="form-text mb-0" data-push-hint>
+            <?= $subscribed
+                ? 'Du bekommst eine Nachricht zum Start und bei jedem neuen Eintrag.'
+                : 'Bekomm eine Nachricht aufs Handy, wenn der Ticker startet, und bei jedem neuen Eintrag.' ?>
+        </p>
+    </form>
+    <?php
+}

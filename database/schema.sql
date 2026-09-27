@@ -198,6 +198,32 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_viewer_peaks (
     peak      INTEGER NOT NULL DEFAULT 0
 );
 
+-- Push-Subscriptions — one row per device (browser) of a signed-in user. endpoint, p256dh
+-- and auth come from PushManager.subscribe(); the server encrypts each notification for them.
+CREATE TABLE IF NOT EXISTS team_manager.push_subscriptions (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER      NOT NULL REFERENCES team_manager.users(id) ON DELETE CASCADE,
+    endpoint   TEXT         NOT NULL UNIQUE,
+    p256dh     VARCHAR(100) NOT NULL,
+    auth       VARCHAR(50)  NOT NULL,
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON team_manager.push_subscriptions(user_id);
+-- Ticker-Subscriptions — opt-in per ticker and user: start notice plus every new entry
+CREATE TABLE IF NOT EXISTS team_manager.ticker_subscriptions (
+    ticker_id  INTEGER     NOT NULL REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
+    user_id    INTEGER     NOT NULL REFERENCES team_manager.users(id)   ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (ticker_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_ticker_subscriptions_user ON team_manager.ticker_subscriptions(user_id);
+-- Ticker-Push-State — the start notice goes out exactly once (row = already sent)
+CREATE TABLE IF NOT EXISTS team_manager.ticker_push_state (
+    ticker_id     INTEGER PRIMARY KEY REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
+    start_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ── Phase 8: Member & Club Management ─────────────────────────────────────────
 
 -- Clubs — permanent home of members, independent of team assignments

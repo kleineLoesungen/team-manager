@@ -43,6 +43,11 @@ require_once ROOT_PATH . '/src/utils/helpers.php';
 // Start secure session on every request
 start_secure_session();
 
+// Startmeldungen der Live-Ticker per Push. Kein Cronjob nötig: höchstens einmal pro Minute
+// geprüft und erst nach dem Senden der Antwort ausgeführt (src/push/ticker_push.php).
+require_once ROOT_PATH . '/src/push/ticker_push.php';
+push_check_due_starts();
+
 // Parse the request path (strip query string, normalize trailing slash)
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path   = rtrim($path, '/') ?: '/';
@@ -565,6 +570,18 @@ match (true) {
     // Calendar token reset — coordinator
     $path === '/coordinator/calendar-reset'
         => require ROOT_PATH . '/src/coordinator/calendar_reset_handler.php',
+
+    // ── Push-Benachrichtigungen (angemeldete Mitglieder und Koordinatoren) ──
+    $path === '/push/subscribe'
+        => require ROOT_PATH . '/src/push/subscribe_handler.php',
+
+    // /{coordinator|member}/ticker/{id}/notify — POST: opt-in/out per ticker
+    (bool)preg_match('#^/(coordinator|member)/ticker/(\d+)/notify$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['role']      = $matches[1];
+            $_REQUEST['ticker_id'] = (int)$matches[2];
+            require ROOT_PATH . '/src/push/ticker_notify_handler.php';
+        })(),
 
     // ── Public: Ticker (no auth) ─────────────────────────────────────────────
     $path === '/ticker'

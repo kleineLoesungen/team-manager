@@ -55,9 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt = $pdo->prepare(
                 "INSERT INTO ticker_messages (ticker_id, tag_id, message, timestamp, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, NOW(), NOW())"
+                 VALUES (?, ?, ?, ?, NOW(), NOW()) RETURNING id"
             );
             $stmt->execute([$ticker_id, $tag_id, $message, $timestamp]);
+            $message_id = (int)$stmt->fetchColumn();
+            require_once ROOT_PATH . '/src/push/ticker_push.php';
+            push_defer(fn() => push_ticker_entry(get_db(), $message_id, (int)$_SESSION['user_id']));
             redirect("/member/ticker/$ticker_id");
         }
     }
@@ -126,10 +129,13 @@ $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require_once ROOT_PATH . '/src/db/ticker_viewers.php';
 $viewer_counts = ticker_viewers_counts($pdo, (int)$ticker['id']);
+require_once ROOT_PATH . '/src/push/ticker_push.php';
+$push_subscribed = push_ticker_is_subscribed($pdo, (int)$ticker['id'], (int)$_SESSION['user_id']);
+$push_key        = push_vapid($pdo)['public'];
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id, $viewer_counts) {
+render_member_page(e($ticker['name']), 'ticker', function() use ($ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id, $viewer_counts, $push_subscribed, $push_key) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/member/ticker_detail.php';
 });

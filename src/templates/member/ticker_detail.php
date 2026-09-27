@@ -1,8 +1,8 @@
 <?php
 // src/templates/member/ticker_detail.php
-// Variables: $ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id, $viewer_counts
+// Variables: $ticker, $messages, $tags, $is_freigegeben, $error, $edit_message, $ticker_id, $viewer_counts, $push_subscribed, $push_key
 ?>
-<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
+<?php if (isset($_GET['success']) && !str_starts_with($_GET['success'], 'notify_')): render_flash('success', 'Gespeichert.'); endif; ?>
 <?php if (!empty($error)): render_flash('error', $error); endif; ?>
 
 <div class="mb-3">
@@ -19,6 +19,8 @@
     <?php $ticker['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
     <?php render_ticker_viewers($ticker, $viewer_counts); ?>
 </div>
+
+<?php render_ticker_push_toggle($ticker, 'member', $push_subscribed, $push_key); ?>
 
 <script>
 function updateCounter(textarea, counterId) {

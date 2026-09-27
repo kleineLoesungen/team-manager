@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/ticker_detail.php
-// Variables: $ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id, $viewer_counts
+// Variables: $ticker, $messages, $tags, $freigabe_members, $error, $edit_message, $ticker_id, $viewer_counts, $push_subscribed, $push_key
 ?>
 <div class="mb-3">
     <a href="/coordinator/ticker" class="btn btn-sm btn-outline-secondary">
@@ -41,6 +41,8 @@
         <i class="bi bi-trash me-1"></i>Löschen
     </a>
 </div>
+
+<?php render_ticker_push_toggle($ticker, 'coordinator', $push_subscribed, $push_key); ?>
 
 <?php if (!empty($freigabe_members)): ?>
 <p class="text-muted small mb-4">

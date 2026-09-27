@@ -450,6 +450,55 @@ CREATE POLICY ticker_viewer_peaks_all ON team_manager.ticker_viewer_peaks FOR AL
     )
 );
 
+-- push_subscriptions: each user manages their own devices; sending runs as admin
+-- ticker_subscriptions: own opt-ins within the ticker's team
+-- ticker_push_state: written by whoever triggers the start notice (team context or admin)
+ALTER TABLE team_manager.push_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.push_subscriptions FORCE ROW LEVEL SECURITY;
+CREATE POLICY push_subscriptions_all ON team_manager.push_subscriptions FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+);
+ALTER TABLE team_manager.ticker_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_subscriptions FORCE ROW LEVEL SECURITY;
+CREATE POLICY ticker_subscriptions_all ON team_manager.ticker_subscriptions FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        AND EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_subscriptions.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    ))
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR (user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        AND EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_subscriptions.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    ))
+);
+ALTER TABLE team_manager.ticker_push_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_push_state FORCE ROW LEVEL SECURITY;
+CREATE POLICY ticker_push_state_all ON team_manager.ticker_push_state FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_push_state.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR EXISTS (
+        SELECT 1 FROM team_manager.tickers
+        WHERE tickers.id = ticker_push_state.ticker_id
+          AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )
+);
+
 -- ── Phase 8: Member & Club Management RLS ─────────────────────────────────────
 
 ALTER TABLE team_manager.clubs ENABLE ROW LEVEL SECURITY;
