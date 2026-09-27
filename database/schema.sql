@@ -224,6 +224,15 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_push_state (
     start_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ticker-Seen — when a user last opened the ticker overview of a team. Drives the dot on the
+-- "Ticker" tab and the "Neu" badge (running tickers created after that moment).
+CREATE TABLE IF NOT EXISTS team_manager.ticker_seen (
+    user_id INTEGER     NOT NULL REFERENCES team_manager.users(id) ON DELETE CASCADE,
+    team_id INTEGER     NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, team_id)
+);
+
 -- ── Phase 8: Member & Club Management ─────────────────────────────────────────
 
 -- Clubs — permanent home of members, independent of team assignments

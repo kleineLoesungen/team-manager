@@ -250,6 +250,12 @@ function db_init_schema(PDO $pdo, string $s): void {
         ticker_id     INTEGER PRIMARY KEY REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
         start_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_seen (
+        user_id INTEGER     NOT NULL REFERENCES {$s}.users(id) ON DELETE CASCADE,
+        team_id INTEGER     NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
+        seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (user_id, team_id)
+    )");
 
     // ── Phase 8: Member & Club Management ─────────────────────────────────
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.clubs (
@@ -769,6 +775,20 @@ function db_init_rls(PDO $pdo, string $s): void {
             WHERE tickers.id = ticker_push_state.ticker_id
               AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
+    )");
+
+    $pdo->exec("ALTER TABLE {$s}.ticker_seen ENABLE ROW LEVEL SECURITY");
+    try {
+        $pdo->exec("ALTER TABLE {$s}.ticker_seen FORCE ROW LEVEL SECURITY");
+    } catch (PDOException $e) {
+        error_log('db_init_rls: FORCE RLS ticker_seen skipped (non-fatal) — ' . $e->getMessage());
+    }
+    $pdo->exec("CREATE POLICY ticker_seen_all ON {$s}.ticker_seen FOR ALL USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
     )");
 
     // ── Phase 8: Member & Club Management RLS ─────────────────────────────

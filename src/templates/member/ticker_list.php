@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/ticker_list.php
-// Variables: $tickers (array), $other_tickers (array)
+// Variables: $tickers (array), $other_tickers (array), $seen_before (?string)
 $other_tickers ??= [];
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
@@ -17,6 +17,7 @@ $other_tickers ??= [];
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
                     <?php $t['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
+                    <?php if (ticker_is_new($t, $seen_before)) render_badge('info', 'Neu'); ?>
                 </div>
                 <?php if ($t['description']): ?>
                 <p class="mb-0 text-muted small text-truncate"><?= e($t['description']) ?></p>

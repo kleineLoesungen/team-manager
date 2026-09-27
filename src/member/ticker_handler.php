@@ -17,6 +17,10 @@ $stmt = $pdo->prepare(
 $stmt->execute([$_SESSION['team_id']]);
 $tickers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+require_once ROOT_PATH . '/src/db/ticker_seen.php';
+$seen_before = ticker_seen_at($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
+ticker_mark_seen($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
+
 // Tickers from other teams this member also belongs to (same profile)
 set_admin_context($pdo);
 $other_stmt = $pdo->prepare(
@@ -40,6 +44,6 @@ set_team_context($pdo, (int)$_SESSION['team_id'], 'member', (int)$_SESSION['user
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Ticker', 'ticker', function() use ($tickers, $other_tickers) {
+render_member_page('Ticker', 'ticker', function() use ($tickers, $other_tickers, $seen_before) {
     require ROOT_PATH . '/src/templates/member/ticker_list.php';
 });

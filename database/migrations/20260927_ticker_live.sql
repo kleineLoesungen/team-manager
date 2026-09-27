@@ -1,5 +1,5 @@
 -- database/migrations/20260927_ticker_live.sql
--- Team Manager — Einmal-Migration: Live-Ticker mit Zuschauerzählung und Push-Benachrichtigungen
+-- Team Manager — Einmal-Migration: Live-Ticker mit Zuschauerzählung, Push und Neu-Markierung
 --
 -- VOR dem Deployment der App-Version mit Zuschauerzählung einspielen, danach diese
 -- Datei löschen (Konvention: keine Migrationsdateien im Repo, siehe README).
@@ -175,6 +175,28 @@ CREATE POLICY ticker_push_state_all ON ticker_push_state FOR ALL USING (
     )
 );
 
+-- ── Punkt am Ticker-Reiter ─────────────────────────────────────────────────
+
+-- Ticker-Seen — when a user last opened the ticker overview of a team. Drives the dot on the
+-- "Ticker" tab and the "Neu" badge (running tickers created after that moment).
+CREATE TABLE IF NOT EXISTS ticker_seen (
+    user_id INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    team_id INTEGER     NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, team_id)
+);
+
+ALTER TABLE ticker_seen ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ticker_seen FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS ticker_seen_all ON ticker_seen;
+CREATE POLICY ticker_seen_all ON ticker_seen FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+);
+
 -- Rechte der App-Rolle: dieselben wie auf tickers (Rollenname muss nicht bekannt sein).
 -- Wo Default Privileges greifen, ist das ein No-op.
 DO $$
@@ -186,7 +208,7 @@ BEGIN
           AND privilege_type = 'INSERT' AND grantee <> current_user
     LOOP
         EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ticker_viewers, ticker_viewer_peaks, '
-                       'push_subscriptions, ticker_subscriptions, ticker_push_state TO %I', g.grantee);
+                       'push_subscriptions, ticker_subscriptions, ticker_push_state, ticker_seen TO %I', g.grantee);
         EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE push_subscriptions_id_seq TO %I', g.grantee);
     END LOOP;
 END $$;

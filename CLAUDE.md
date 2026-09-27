@@ -159,6 +159,7 @@ Browser → public/index.php (front controller)
 | `push_subscriptions` | Push-capable devices per signed-in user (endpoint + encryption keys) |
 | `ticker_subscriptions` | Opt-in per ticker and user: start notice + every new entry |
 | `ticker_push_state` | Marks a ticker's start notice as sent (exactly once) |
+| `ticker_seen` | When a user last opened the ticker overview per team (dot on the Ticker tab, "Neu" badge) |
 
 Admin credentials live in `config.php` / environment variables — not in the DB.
 The VAPID key pair for push is generated on first use and stored in `settings` (`vapid_keys`).

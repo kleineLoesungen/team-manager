@@ -56,8 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  VALUES (?, ?, ?, 'active', ?, ?, NOW(), NOW())
                  RETURNING id"
             );
+            require_once ROOT_PATH . '/src/db/ticker_seen.php';
+            $had_unseen = ticker_has_unseen($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
             $stmt->execute([$_SESSION['team_id'], $name, $description ?: null, $event_date_val, $start_time_val]);
             $ticker_id = (int)$stmt->fetchColumn();
+            // Den eigenen neuen Ticker nicht als "neu" markieren (andere ungesehene bleiben)
+            if (!$had_unseen) {
+                ticker_mark_seen($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
+            }
 
             // Insert freigabe members (D-11)
             if (!empty($freigabe)) {

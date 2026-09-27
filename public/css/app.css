@@ -164,12 +164,20 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 .tab-item.is-on          { color: var(--brand); }
 .tab-item i[class*="bi"] { font-size: 24px; line-height: 1; display: block; }
 .tab-label               { font-size: 10px; font-weight: 500; line-height: 1; }
+/* "Es gibt etwas Neues" (z. B. neuer Ticker), oben rechts am Symbol */
+.tab-item { position: relative; }
+.tab-dot {
+  position: absolute; top: 7px; left: calc(50% + 7px);
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--bad); box-shadow: 0 0 0 2px var(--tab-bg);
+}
 
 @media (orientation: landscape) and (max-height: 500px) {
   .topbar { position: static; }        /* scrollt mit, spart Höhe */
   .tab-item { flex-direction: row; gap: 6px; padding: 0; }
   .tab-item i[class*="bi"] { font-size: 18px; }
   .tab-label { font-size: 12px; }
+  .tab-dot { top: 8px; left: calc(50% - 4px); }
 }
 
 /* Klebende Primäraktion über der Tab-Leiste */

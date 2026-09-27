@@ -17,6 +17,10 @@ $stmt = $pdo->prepare(
 $stmt->execute([$_SESSION['team_id']]);
 $tickers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+require_once ROOT_PATH . '/src/db/ticker_seen.php';
+$seen_before = ticker_seen_at($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
+ticker_mark_seen($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
+
 // Tickers from other teams this coordinator also manages
 set_admin_context($pdo);
 $other_stmt = $pdo->prepare(
@@ -43,7 +47,7 @@ $success = !empty($_GET['success']) ? match($_GET['success']) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Ticker', 'ticker', function() use ($tickers, $other_tickers, $success) {
+render_coach_page('Ticker', 'ticker', function() use ($tickers, $other_tickers, $success, $seen_before) {
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/ticker.php';
 });

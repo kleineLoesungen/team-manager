@@ -304,6 +304,18 @@ function render_page(array $opts, callable $body): void {
     ];
 
     $team_name = htmlspecialchars($_SESSION['team_name'] ?? 'Team Manager', ENT_QUOTES);
+
+    // Punkt am Reiter "Ticker": laufender Ticker, den die Übersicht noch nicht gezeigt hat
+    $ticker_new = false;
+    if (in_array($role, ['coordinator', 'member'], true) && $active !== 'ticker'
+        && !empty($_SESSION['user_id']) && !empty($_SESSION['team_id'])) {
+        try {
+            require_once ROOT_PATH . '/src/db/ticker_seen.php';
+            $ticker_new = ticker_has_unseen(get_db(), (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
+        } catch (Throwable $e) {
+            error_log('ticker_has_unseen: ' . $e->getMessage());   // nie die Seite dafür scheitern lassen
+        }
+    }
     ?>
     <div class="app">
         <header class="topbar">
@@ -332,6 +344,9 @@ function render_page(array $opts, callable $body): void {
                class="tab-item <?= $active === $key ? 'is-on' : '' ?>"
                aria-current="<?= $active === $key ? 'page' : 'false' ?>">
                 <i class="bi <?= $tab['icon'] ?>"></i>
+                <?php if ($key === 'ticker' && $ticker_new): ?>
+                <span class="tab-dot"><span class="visually-hidden">Neuer Ticker</span></span>
+                <?php endif; ?>
                 <span class="tab-label"><?= $tab['label'] ?></span>
             </a>
             <?php endforeach; ?>

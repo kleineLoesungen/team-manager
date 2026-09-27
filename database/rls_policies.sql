@@ -499,6 +499,17 @@ CREATE POLICY ticker_push_state_all ON team_manager.ticker_push_state FOR ALL US
     )
 );
 
+-- ticker_seen: each user reads and writes only their own row
+ALTER TABLE team_manager.ticker_seen ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.ticker_seen FORCE ROW LEVEL SECURITY;
+CREATE POLICY ticker_seen_all ON team_manager.ticker_seen FOR ALL USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
+);
+
 -- ── Phase 8: Member & Club Management RLS ─────────────────────────────────────
 
 ALTER TABLE team_manager.clubs ENABLE ROW LEVEL SECURITY;

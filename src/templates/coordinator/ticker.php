@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/ticker.php — coordinator ticker list
-// Variables: $tickers (array), $other_tickers (array)
+// Variables: $tickers (array), $other_tickers (array), $seen_before (?string)
 $other_tickers ??= [];
 ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -26,6 +26,7 @@ $other_tickers ??= [];
                     <?php else: ?>
                         <?php render_badge('dim', 'Beendet'); ?>
                     <?php endif; ?>
+                    <?php if (ticker_is_new($t, $seen_before)) render_badge('info', 'Neu'); ?>
                 </div>
                 <?php if ($t['description']): ?>
                 <p class="mb-1 text-muted small text-truncate"><?= e($t['description']) ?></p>
