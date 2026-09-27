@@ -1,9 +1,10 @@
 <?php
 // src/db/ticker_viewers.php — Zuschauerzählung im Live-Ticker
 //
-// Jeder geöffnete, sichtbare Ticker-Tab meldet sich alle 30 s per POST /ticker/{id}/ping
-// mit einer Zufalls-UUID, die nur im Arbeitsspeicher des Browsers liegt: kein Cookie,
-// kein localStorage, keine IP-Adresse. "Aktiv" heißt: in den letzten 60 s gemeldet.
+// Jede geöffnete, sichtbare Ticker-Seite meldet sich alle 30 s per POST /ticker/{id}/ping.
+// Ein Zuschauer ist eine Browser-Sitzung: Die ID ist ein Hash aus der ohnehin bestehenden
+// Sitzungs-ID und der Ticker-ID — kein zusätzliches Cookie, kein localStorage, keine IP.
+// Mehrfaches Öffnen und mehrere Tabs zählen so einmal. "Aktiv" = in den letzten 60 s gemeldet.
 // Beim Schließen des Tickers werden die Einzeleinträge gelöscht; nur ticker_viewer_peaks
 // bleibt, bis der Ticker gelöscht wird.
 

@@ -59,7 +59,7 @@ render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], fun
     <script>
     (function () {
         // Neue Nachrichten im Hintergrund holen und nur den Inhalt tauschen: kein Flackern,
-        // die Scroll-Position bleibt, und der Tab behält seine Zuschauer-ID (Layout-Skript).
+        // die Scroll-Position bleibt, und Zuschauer werden nicht bei jedem Neuladen neu gezählt.
         var live = document.querySelector('[data-ticker-live]');
         var timer = setInterval(refresh, 30000);
         function refresh() {

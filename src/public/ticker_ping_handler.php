@@ -1,6 +1,6 @@
 <?php
 // src/public/ticker_ping_handler.php — POST /ticker/{id}/ping
-// Heartbeat of an open ticker tab (see src/db/ticker_viewers.php). Public on purpose:
+// Heartbeat of an open ticker page (see src/db/ticker_viewers.php). Public on purpose:
 // anonymous visitors of /ticker/{id} count as viewers too. The counts in the response
 // are only included for signed-in coordinators and members of the ticker's team.
 
@@ -17,17 +17,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     exit;
 }
 
-// Nur lesen, nie schreiben: Session-Sperre sofort freigeben, damit parallele Seitenaufrufe
-// desselben Nutzers nicht auf den Ping warten.
-session_write_close();
-
 $ticker_id = (int)($_REQUEST['ticker_id'] ?? 0);
-$viewer_id = strtolower((string)($_POST['viewer'] ?? ''));
-if ($ticker_id <= 0 || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $viewer_id)) {
+if ($ticker_id <= 0) {
     http_response_code(400);
     echo '{}';
     exit;
 }
+
+// Zuschauer = Browser-Sitzung. Die App setzt das Sitzungs-Cookie ohnehin für jeden Aufruf;
+// gespeichert wird nur ein nicht umkehrbarer Hash, getrennt pro Ticker. So zählt ein Browser
+// einmal, egal wie oft die Seite geöffnet wird. Ohne Cookie (blockiert) wird nicht gezählt,
+// sonst ergäbe jeder Ping einen neuen Zuschauer.
+$viewer_id = null;
+if (!empty($_COOKIE[session_name()])) {
+    // Leere Sitzungen verwirft PHP (use_strict_mode) — der Merker hält auch anonyme stabil.
+    $_SESSION['ticker_viewer'] = true;
+    $h = hash('sha256', 'ticker-viewer|' . $ticker_id . '|' . session_id());
+    $viewer_id = substr($h, 0, 8) . '-' . substr($h, 8, 4) . '-' . substr($h, 12, 4) . '-'
+               . substr($h, 16, 4) . '-' . substr($h, 20, 12);
+}
+// Session-Sperre sofort freigeben, damit parallele Seitenaufrufe nicht auf den Ping warten
+session_write_close();
 
 $pdo = get_db();
 
@@ -64,10 +74,12 @@ if (!empty($_SESSION['user_id']) && in_array($role, ['coordinator', 'member'], t
 }
 
 // Nur laufende Ticker zählen; geschlossene behalten ihr Maximum unverändert
-if ($ticker['status'] === 'active') {
+if ($ticker['status'] === 'active' && $viewer_id !== null) {
     reset_rls_context($pdo);
     set_team_context($pdo, $team_id);
     $counts = ticker_viewers_record($pdo, $ticker_id, $viewer_id);
+} elseif ($ticker['status'] === 'active') {
+    $counts = ticker_viewers_counts($pdo, $ticker_id);
 } else {
     $counts = ticker_viewers_counts($pdo, $ticker_id);
     $counts['active'] = 0;

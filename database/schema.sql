@@ -180,9 +180,10 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_members (
 );
 CREATE INDEX IF NOT EXISTS idx_ticker_members_user ON team_manager.ticker_members(user_id, team_id);
 
--- Ticker-Viewers — who has a ticker open right now. viewer_id is a random per-tab UUID held
--- only in browser memory (no cookie, no IP). Rows older than a few minutes are deleted on
--- every ping and all rows of a ticker when it is closed; only ticker_viewer_peaks remains.
+-- Ticker-Viewers — who has a ticker open right now. viewer_id is a hash of the existing PHP
+-- session id and the ticker id (one browser = one viewer; no extra cookie, no IP). Rows older
+-- than a few minutes are deleted on every ping and all rows of a ticker when it is closed;
+-- only ticker_viewer_peaks remains.
 CREATE TABLE IF NOT EXISTS team_manager.ticker_viewers (
     ticker_id INTEGER     NOT NULL REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
     viewer_id UUID        NOT NULL,

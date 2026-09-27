@@ -154,7 +154,7 @@ Browser → public/index.php (front controller)
 | `ticker_tags` | Tag labels + color per team for ticker messages |
 | `ticker_messages` | Messages posted to a ticker (with optional tag_id) |
 | `ticker_members` | Which members have write access to a ticker |
-| `ticker_viewers` | Open ticker tabs: random per-tab UUID + last heartbeat (rows live minutes, cleared on close) |
+| `ticker_viewers` | Current viewers: hash of session id + ticker id, last heartbeat (rows live minutes, cleared on close) |
 | `ticker_viewer_peaks` | Highest concurrent viewer count per ticker, kept until the ticker is deleted |
 | `push_subscriptions` | Push-capable devices per signed-in user (endpoint + encryption keys) |
 | `ticker_subscriptions` | Opt-in per ticker and user: start notice + every new entry |

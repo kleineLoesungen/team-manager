@@ -206,22 +206,15 @@ function render_layout_foot(): void {
         }
 
         /* Live-Ticker: Zuschauer melden (render_ticker_viewers, src/db/ticker_viewers.php).
-           Die ID lebt nur im Arbeitsspeicher dieses Tabs — kein Cookie, kein Storage.
-           Gemeldet wird nur, solange der Tab sichtbar ist. */
+           Der Server erkennt den Browser an der bestehenden Sitzung; gemeldet wird nur,
+           solange die Seite sichtbar ist. */
         var tmPingEl = document.querySelector('[data-ticker-ping]');
-        if (tmPingEl && window.fetch && window.crypto && crypto.getRandomValues) {
+        if (tmPingEl && window.fetch) {
             var tmTicker = tmPingEl.getAttribute('data-ticker-ping');
-            var b = crypto.getRandomValues(new Uint8Array(16));
-            b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;          // UUID v4
-            var h = Array.prototype.map.call(b, function(x) { return (x + 256).toString(16).slice(1); }).join('');
-            var tmViewer = h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
             var tmPingTimer = null;
             var tmPing = function() {
                 if (document.visibilityState !== 'visible') return;
-                fetch('/ticker/' + tmTicker + '/ping', {
-                    method: 'POST', credentials: 'same-origin',
-                    body: new URLSearchParams({ viewer: tmViewer })
-                }).then(function(r) { return r.ok ? r.json() : null; }).then(function(d) {
+                fetch('/ticker/' + tmTicker + '/ping', { method: 'POST', credentials: 'same-origin' }).then(function(r) { return r.ok ? r.json() : null; }).then(function(d) {
                     if (!d) return;
                     if (d.status !== 'active') { clearInterval(tmPingTimer); return; }
                     if (typeof d.active === 'number') {
@@ -233,6 +226,8 @@ function render_layout_foot(): void {
             tmPing();
             tmPingTimer = setInterval(tmPing, 30000);
             document.addEventListener('visibilitychange', tmPing);
+            // Zurück-Taste aus dem Seiten-Cache: Seite ist wieder sichtbar, gleich melden
+            window.addEventListener('pageshow', function(e) { if (e.persisted) tmPing(); });
         }
 
         /* theme toggle */
