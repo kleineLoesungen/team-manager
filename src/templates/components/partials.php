@@ -348,16 +348,8 @@ function render_recipient_picker(array $recipients, ?array $selected_ids): void 
  */
 function render_auto_visibility_hint(array $list): void {
     require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
-    if (empty($list['auto_visibility'])) return;
-    $target = list_visibility_label($list['auto_visibility']);
-    if (!empty($list['auto_visibility_done_at'])) {
-        $text = 'Am ' . list_auto_visibility_when(new DateTimeImmutable($list['auto_visibility_done_at']))
-              . ' automatisch auf „' . $target . '“ umgestellt.';
-    } elseif ($due = list_auto_visibility_due($list)) {
-        $text = 'Wird am ' . list_auto_visibility_when($due) . ' automatisch auf „' . $target . '“ umgestellt.';
-    } else {
-        $text = 'Automatische Umstellung auf „' . $target . '“ wartet auf ein Datum.';
-    }
+    $text = list_auto_visibility_text_coordinator($list);
+    if ($text === null) return;
     ?>
     <p class="small text-muted mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= htmlspecialchars($text, ENT_QUOTES) ?></p>
     <?php
@@ -370,24 +362,7 @@ function render_auto_visibility_hint(array $list): void {
  */
 function render_auto_visibility_member_hint(array $list): void {
     require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
-    $target  = $list['auto_visibility'] ?? '';
-    $current = $list['visibility'] ?? '';
-    if ($target === '' || $target === null) return;
-
-    $text = null;
-    if (!empty($list['auto_visibility_done_at'])) {
-        if ($target === 'protected' && $current === 'protected') {
-            $text = 'Eintragen ist seit ' . list_auto_visibility_when(new DateTimeImmutable($list['auto_visibility_done_at'])) . ' geschlossen.';
-        }
-    } elseif ($due = list_auto_visibility_due($list)) {
-        $when = list_auto_visibility_when($due);
-        $text = match (true) {
-            $target === 'protected' && $current === 'public'    => "Eintragen ist bis $when möglich.",
-            $target === 'public'    && $current === 'protected' => "Eintragen ist ab $when möglich.",
-            $target === 'private'                              => "Die Liste wird am $when ausgeblendet.",
-            default                                            => null,
-        };
-    }
+    $text = list_auto_visibility_text_member($list);
     if ($text === null) return;
     ?>
     <p class="small text-muted mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= htmlspecialchars($text, ENT_QUOTES) ?></p>
@@ -471,10 +446,20 @@ function render_dashboard(array $d, string $role): void {
                                 <?php if ($is_coord && $it['type'] === 'list'):
                                     render_badge(match ($it['visibility']) { 'public' => 'ok', 'protected' => 'warn', default => 'dim' },
                                                  list_visibility_label($it['visibility']));
+                                elseif (!$is_coord && in_array($it['type'], ['list', 'file'], true) && $it['visibility'] === 'protected'):
+                                    render_badge('warn', 'Nur lesen');
                                 endif; ?>
                             </span>
                             <?php if ($meta): ?>
                             <span class="d-block small text-muted"><?= e(implode(' · ', $meta)) ?></span>
+                            <?php endif; ?>
+                            <?php
+                            // Bevorstehende automatische Umstellung: ab wann sich etwas ändert
+                            $deadline = $it['type'] === 'list'
+                                ? ($is_coord ? list_auto_visibility_text_coordinator($it, true) : list_auto_visibility_text_member($it, true))
+                                : null;
+                            if ($deadline): ?>
+                            <span class="d-block small text-muted"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= e($deadline) ?></span>
                             <?php endif; ?>
                             <?php if ($own):
                                 $shown = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);

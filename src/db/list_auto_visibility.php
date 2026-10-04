@@ -59,3 +59,45 @@ function list_auto_visibility_when(DateTimeImmutable $at): string {
     $at = $at->setTimezone(new DateTimeZone('Europe/Berlin'));
     return ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][(int)$at->format('w')] . ' ' . $at->format('d.m.') . ' um ' . $at->format('H:i');
 }
+
+/**
+ * Coordinator wording: "Wird am Di 07.10. um 16:00 automatisch auf „Geschützt“ umgestellt."
+ * or, once done, when it happened. null = no rule (or done and $pending_only).
+ */
+function list_auto_visibility_text_coordinator(array $list, bool $pending_only = false): ?string {
+    if (empty($list['auto_visibility'])) return null;
+    $target = list_visibility_label($list['auto_visibility']);
+    if (!empty($list['auto_visibility_done_at'])) {
+        return $pending_only ? null
+            : 'Am ' . list_auto_visibility_when(new DateTimeImmutable($list['auto_visibility_done_at']))
+              . ' automatisch auf „' . $target . '“ umgestellt.';
+    }
+    $due = list_auto_visibility_due($list);
+    return $due
+        ? 'Wird am ' . list_auto_visibility_when($due) . ' automatisch auf „' . $target . '“ umgestellt.'
+        : 'Automatische Umstellung auf „' . $target . '“ wartet auf ein Datum.';
+}
+
+/**
+ * Member wording — what the change means for them ("Eintragen ist bis … möglich").
+ * null when there is nothing relevant to say (or done and $pending_only).
+ */
+function list_auto_visibility_text_member(array $list, bool $pending_only = false): ?string {
+    $target  = $list['auto_visibility'] ?? '';
+    $current = $list['visibility'] ?? '';
+    if ($target === '' || $target === null) return null;
+    if (!empty($list['auto_visibility_done_at'])) {
+        return (!$pending_only && $target === 'protected' && $current === 'protected')
+            ? 'Eintragen ist seit ' . list_auto_visibility_when(new DateTimeImmutable($list['auto_visibility_done_at'])) . ' geschlossen.'
+            : null;
+    }
+    $due = list_auto_visibility_due($list);
+    if (!$due) return null;
+    $when = list_auto_visibility_when($due);
+    return match (true) {
+        $target === 'protected' && $current === 'public'    => "Eintragen ist bis $when möglich.",
+        $target === 'public'    && $current === 'protected' => "Eintragen ist ab $when möglich.",
+        $target === 'private'                              => "Die Liste wird am $when ausgeblendet.",
+        default                                            => null,
+    };
+}
