@@ -12,91 +12,10 @@ $member_id = (int)$_SESSION['user_id'];
 // System columns (team_id = NULL) require admin context to bypass RLS
 set_admin_context($pdo);
 
-// ── Fetch global columns for this team (team-scoped + system columns) ────────
-$cols_stmt = $pdo->prepare(
-    "SELECT id, name, data_type FROM columns
-     WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
-     ORDER BY is_system DESC, sort_order, id"
-);
-$cols_stmt->execute([$team_id]);
-$global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// ── Aggregation query: own row, public + protected lists, 4 time windows ─────
-// LEFT JOIN cells restricted to this player; LEFT JOIN lists restricted to public/protected.
-// WHERE (cells.id IS NULL OR lists.id IS NOT NULL) ensures CROSS JOIN rows are kept but
-// cells belonging to private lists are excluded (lists.id IS NULL means visibility filter rejected them).
-$player_stats = [];
-
-if (!empty($global_columns)) {
-    $agg_sql = "
-        SELECT
-            c.id        AS column_id,
-            c.name      AS column_name,
-            c.data_type,
-
-            -- Gesamt: all public/protected cells up to today (dated ≤ today or undated)
-            COALESCE(
-                CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN cells.id IS NOT NULL AND (lists.date IS NULL OR lists.date <= CURRENT_DATE) THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.id IS NOT NULL AND (lists.date IS NULL OR lists.date <= CURRENT_DATE) AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
-                END, 0
-            ) AS sum_all,
-
-            -- Letzte 4 Wochen: lists.date within last 28 days
-            COALESCE(
-                CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '28 days' AND lists.date <= CURRENT_DATE AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
-                END, 0
-            ) AS sum_4w,
-
-            -- 4–8 Wochen
-            COALESCE(
-                CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '56 days' AND lists.date < CURRENT_DATE - INTERVAL '28 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
-                END, 0
-            ) AS sum_4_8w,
-
-            -- 8–12 Wochen
-            COALESCE(
-                CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN lists.date IS NOT NULL AND lists.date >= CURRENT_DATE - INTERVAL '84 days' AND lists.date < CURRENT_DATE - INTERVAL '56 days' AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
-                END, 0
-            ) AS sum_8_12w
-
-        FROM (
-            SELECT id, name, data_type, sort_order
-            FROM columns
-            WHERE (team_id = ? OR is_system = TRUE) AND list_id IS NULL AND is_active = TRUE
-        ) c
-        LEFT JOIN cells ON cells.column_id = c.id
-                       AND cells.member_id = ?
-                       AND EXISTS (
-                           SELECT 1 FROM list_global_columns lgc
-                           WHERE lgc.list_id = cells.list_id AND lgc.column_id = c.id
-                       )
-        LEFT JOIN lists ON cells.list_id = lists.id
-                       AND lists.visibility IN ('public', 'protected')
-        WHERE (cells.id IS NULL OR lists.id IS NOT NULL)
-        GROUP BY c.id, c.name, c.data_type, c.sort_order
-        ORDER BY c.sort_order, c.id
-    ";
-
-    $agg_stmt = $pdo->prepare($agg_sql);
-    $agg_stmt->execute([$team_id, $member_id]);
-    $raw = $agg_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($raw as $row) {
-        $player_stats[(int)$row['column_id']] = [
-            'all'    => (float)$row['sum_all'],
-            '4w'     => (float)$row['sum_4w'],
-            '4_8w'   => (float)$row['sum_4_8w'],
-            '8_12w'  => (float)$row['sum_8_12w'],
-        ];
-    }
-}
+// ── Global columns + own totals (shared with the overview, src/db/member_stats.php) ──
+require_once ROOT_PATH . '/src/db/member_stats.php';
+$global_columns = member_stats_global_columns($pdo, $team_id);
+$player_stats   = !empty($global_columns) ? member_stats_totals($pdo, $team_id, $member_id) : [];
 
 // ── Per-list breakdown: lists with global columns for this member ─────────────
 // Uses list_global_columns join table to find which lists have global columns attached.

@@ -393,3 +393,122 @@ function render_auto_visibility_member_hint(array $list): void {
     <p class="small text-muted mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= htmlspecialchars($text, ENT_QUOTES) ?></p>
     <?php
 }
+
+/**
+ * Übersicht (Reiter "Inhalte"): Live, Nächste 7 Tage, Deine Werte (src/db/dashboard.php).
+ * @param array  $d    Result of dashboard_data()
+ * @param string $role 'member' | 'coordinator'
+ */
+function render_dashboard(array $d, string $role): void {
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';   // list_visibility_label()
+    $is_coord = $role === 'coordinator';
+    $base     = $is_coord ? '/coordinator' : '/member';
+    $time     = fn(?string $t) => $t ? substr($t, 0, 5) : null;
+    $url      = fn(array $it) => match ($it['type']) {
+        'list'   => $base . '/lists/' . (int)$it['id'],
+        'file'   => $base . '/files/' . (int)$it['id'],
+        'ticker' => $base . '/ticker/' . (int)$it['id'],
+        'event'  => $is_coord ? '/coordinator/events/' . (int)$it['id'] . '/edit' : null,
+    };
+    $icon = fn(array $it) => match ($it['type']) {
+        'list'   => 'bi-table',
+        'file'   => 'bi-file-earmark-text',
+        'ticker' => 'bi-megaphone',
+        'event'  => preg_match('/^bi-[a-z0-9-]+$/', (string)$it['icon']) ? $it['icon'] : 'bi-calendar-event',
+    };
+    ?>
+
+    <?php if (!empty($d['live'])): ?>
+    <section class="mb-4" aria-labelledby="dash-live">
+        <h2 class="h3 mb-2" id="dash-live">Live</h2>
+        <div class="list-group">
+            <?php foreach ($d['live'] as $t): ?>
+            <a href="<?= $base ?>/ticker/<?= (int)$t['id'] ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <span class="flex-grow-1 min-w-0">
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="fw-semibold"><?= e($t['name']) ?></span>
+                        <?php render_badge('ok', 'Live'); ?>
+                    </span>
+                    <?php if ($t['last_message'] !== null): ?>
+                    <span class="d-block small text-muted text-truncate">
+                        <?= e(substr((string)$t['last_time'], 0, 5)) ?><?= $t['last_tag'] ? ' ' . e($t['last_tag']) . ':' : '' ?> <?= e($t['last_message']) ?>
+                    </span>
+                    <?php endif; ?>
+                </span>
+                <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <section class="mb-4" aria-labelledby="dash-next">
+        <h2 class="h3 mb-0" id="dash-next">Nächste 7 Tage</h2>
+        <?php if (empty($d['upcoming'])): ?>
+            <?php render_empty('calendar3', 'In den nächsten 7 Tagen steht nichts an',
+                'Termine, Listen und Ticker mit Datum erscheinen hier. Was später kommt, zeigt die Monatsansicht.'); ?>
+        <?php else: ?>
+            <?php foreach ($d['upcoming'] as $date => $items):
+                render_collection_group(dashboard_day_label($date), function () use ($items, $d, $is_coord, $url, $icon, $time) { ?>
+                <div class="list-group">
+                    <?php foreach ($items as $it):
+                        $href = $url($it);
+                        $tag  = $href ? 'a' : 'div';
+                        $meta = array_filter([
+                            $time($it['time_start']) ? $time($it['time_start']) . ($time($it['time_end']) ? '–' . $time($it['time_end']) : '') . ' Uhr' : null,
+                            $it['location'] ?: null,
+                            $it['type'] === 'ticker' ? 'Live-Ticker' : null,
+                        ]);
+                        $own = $d['values'][(int)$it['id']] ?? [];
+                        if ($it['type'] !== 'list') $own = [];
+                    ?>
+                    <<?= $tag ?> <?= $href ? 'href="' . e($href) . '"' : '' ?> class="list-group-item <?= $href ? 'list-group-item-action' : '' ?> d-flex align-items-center gap-3">
+                        <i class="bi <?= e($icon($it)) ?> text-muted" aria-hidden="true"></i>
+                        <span class="flex-grow-1 min-w-0">
+                            <span class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="fw-semibold"><?= e($it['name']) ?></span>
+                                <?php if ($is_coord && $it['type'] === 'list'):
+                                    render_badge(match ($it['visibility']) { 'public' => 'ok', 'protected' => 'warn', default => 'dim' },
+                                                 list_visibility_label($it['visibility']));
+                                endif; ?>
+                            </span>
+                            <?php if ($meta): ?>
+                            <span class="d-block small text-muted"><?= e(implode(' · ', $meta)) ?></span>
+                            <?php endif; ?>
+                            <?php if ($own):
+                                $shown = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
+                                $more  = count($own) - count($shown); ?>
+                            <span class="d-block small"><?= e(implode(' · ', array_map(fn($v) => $v['name'] . ': ' . $v['value'], $shown))) ?><?= $more > 0 ? ' <span class="text-muted">+' . $more . '</span>' : '' ?></span>
+                            <?php endif; ?>
+                        </span>
+                        <?php if ($href): ?><i class="bi bi-chevron-right text-muted" aria-hidden="true"></i><?php endif; ?>
+                    </<?= $tag ?>>
+                    <?php endforeach; ?>
+                </div>
+            <?php });
+            endforeach; ?>
+        <?php endif; ?>
+    </section>
+
+    <?php if (!$is_coord && !empty($d['columns'])): ?>
+    <section class="mb-4" aria-labelledby="dash-values">
+        <div class="d-flex align-items-baseline justify-content-between mb-2">
+            <h2 class="h3 mb-0" id="dash-values">Deine Werte</h2>
+            <a href="/member/stats" class="small">Zur Statistik</a>
+        </div>
+        <div class="list-group">
+            <?php foreach ($d['columns'] as $col):
+                $v   = $d['totals'][(int)$col['id']] ?? ['all' => 0, '4w' => 0];
+                $fmt = fn(float $n) => floor($n) == $n ? (string)(int)$n : number_format($n, 2, ',', '.'); ?>
+            <div class="list-group-item d-flex align-items-baseline gap-3">
+                <span class="flex-grow-1"><?= e($col['name']) ?></span>
+                <span class="small text-muted text-nowrap">4 Wo.: <?= $fmt((float)$v['4w']) ?></span>
+                <span class="fw-semibold text-end tm-dash-total"><?= $fmt((float)$v['all']) ?></span>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+    <?php
+}

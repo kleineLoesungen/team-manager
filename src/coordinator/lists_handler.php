@@ -51,10 +51,12 @@ $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 $success = !empty($_GET['success']) ? 'Gespeichert.' : '';
 
 // ── Calendar view logic (per D-01 through D-09) ──────────────────────────
-$allowed_views = ['calendar', 'week', 'month', 'list'];
-$view = in_array($_GET['view'] ?? '', $allowed_views) ? $_GET['view'] : 'calendar';
-$showCalendar = ($view !== 'list');
-$periodView   = ($view === 'month') ? 'month' : 'week'; // 'calendar' defaults to week
+// Ansichten: Übersicht (Standard, ersetzt die frühere Wochenansicht) | Monat | Liste.
+// Alte Links (?view=calendar / ?view=week) landen in der Übersicht.
+$allowed_views = ['overview', 'month', 'list'];
+$view = in_array($_GET['view'] ?? '', $allowed_views, true) ? $_GET['view'] : 'overview';
+$showCalendar = ($view === 'month');
+$periodView   = 'month';
 $offset       = max(-120, min(120, (int)($_GET['offset'] ?? 0))); // clamp offset
 
 $datedItems   = [];
@@ -95,7 +97,14 @@ $cal_token = $tstmt->fetchColumn();
 $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
 
-render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url) {
+// Übersicht: Live, nächste 7 Tage, eigene Werte (src/db/dashboard.php)
+$dashboard = null;
+if ($view === 'overview') {
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    $dashboard = dashboard_data($pdo, 'coordinator');
+}
+
+render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url, $dashboard) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/lists.php';

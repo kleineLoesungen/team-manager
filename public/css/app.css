@@ -492,6 +492,9 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 /* Zahlenfeld für Stunden (z. B. automatische Sichtbarkeit): Platz für drei Ziffern */
 .tm-input-hours { width: 5.5rem; }
 
+/* Übersicht, "Deine Werte": Gesamtwert rechtsbündig in fester Breite, Tabellenziffern */
+.tm-dash-total { min-width: 3rem; font-variant-numeric: tabular-nums; }
+
 /* Filter-Pills */
 .tm-filters { display: flex; gap: .25rem; flex-wrap: wrap; }
 

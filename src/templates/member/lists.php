@@ -1,7 +1,7 @@
 <?php
-// src/templates/member/lists.php — overview tabs: Kalender (default) | Liste
+// src/templates/member/lists.php — overview tabs: Übersicht (default) | Monat | Liste
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
-//            $datedItems, $undatedItems, $ics_url
+//            $datedItems, $undatedItems, $ics_url, $dashboard
 
 // ── German day name helper ────────────────────────────────────────────────────
 $de_days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
@@ -16,26 +16,27 @@ $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
-<!-- ── View switcher: Kalender / Liste ───────────────────────────────── -->
+<!-- ── View switcher: Übersicht / Monat / Liste ─────────────────────────── -->
 <div class="seg-ctrl">
-    <a href="<?= $cal_url('calendar', 0) ?>" class="<?= ($view !== 'list') ? 'on' : '' ?>">
-        <i class="bi bi-calendar3 me-1"></i>Kalender
+    <a href="<?= $base_url ?>" class="<?= ($view === 'overview') ? 'on' : '' ?>">
+        <i class="bi bi-house me-1"></i>Übersicht
+    </a>
+    <a href="<?= $cal_url('month', 0) ?>" class="<?= ($view === 'month') ? 'on' : '' ?>">
+        <i class="bi bi-calendar3 me-1"></i>Monat
     </a>
     <a href="<?= $base_url . '?view=list' ?>" class="<?= ($view === 'list') ? 'on' : '' ?>">
         <i class="bi bi-list-ul me-1"></i>Liste
     </a>
 </div>
 
-<?php if ($showCalendar): ?>
+<?php if ($view === 'overview'): ?>
+<?php render_dashboard($dashboard, 'member'); ?>
+
+<?php elseif ($showCalendar): ?>
 <!-- ════════════════════════════════════════════════════════════════════════════
      CALENDAR VIEW
      ════════════════════════════════════════════════════════════════════════════ -->
 
-<!-- Week/Month toggle -->
-<div class="seg-ctrl">
-    <a href="<?= $cal_url('week', 0) ?>" class="<?= $periodView === 'week' ? 'on' : '' ?>">Woche</a>
-    <a href="<?= $cal_url('month', 0) ?>" class="<?= $periodView === 'month' ? 'on' : '' ?>">Monat</a>
-</div>
 
 <!-- Period navigation: ‹ label › -->
 <div class="period-nav">
