@@ -67,6 +67,13 @@ erDiagram
 
 ### Starten
 
+Einmalig die Konfiguration aus der Vorlage anlegen (`config.php` ist nicht im Repo; die Werte
+kommen über `.env.docker`):
+
+```bash
+cp config.example.php config.php
+```
+
 ```bash
 docker compose up --build
 ```
@@ -502,6 +509,6 @@ bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)
 landing/            Statische Produkt-Landingpage (nicht Teil der App)
 uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
-config.php          App-Konfiguration (liest Umgebungsvariablen)
+config.example.php  Vorlage für config.php (App-Konfiguration, liest Umgebungsvariablen)
 deploy.sh           Hetzner FTP-Deployment-Skript (Konfiguration per Umgebungsvariablen)
 ```

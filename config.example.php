@@ -1,6 +1,9 @@
 <?php
-// config.php — Application configuration
-// IMPORTANT: Never commit real credentials. Copy .env.example and fill in.
+// config.example.php — Vorlage für config.php (config.php ist nicht im Repo, siehe .gitignore)
+//
+// Lokal (Docker): cp config.example.php config.php — die Werte kommen aus .env.docker.
+// Produktion: config.php einmalig per FTP anlegen (README, "Ersteinrichtung"); deploy.sh
+// überschreibt sie nie. Echte Zugangsdaten gehören nie in diese Vorlage.
 
 // Admin credentials (single admin — per D-02)
 define('ADMIN_USERNAME', getenv('ADMIN_USERNAME') ?: 'admin');

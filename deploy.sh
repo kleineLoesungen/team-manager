@@ -82,6 +82,7 @@ mirror --reverse \
     --exclude='docker-compose.yml' \
     --exclude-glob='.env*' \
     --exclude='config.php' \
+    --exclude='config.example.php' \
     --exclude='deploy.sh' \
     --exclude='README.md' \
     --exclude='CLAUDE.md' \
