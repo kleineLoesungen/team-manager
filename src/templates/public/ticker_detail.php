@@ -4,7 +4,7 @@
 require_once dirname(__DIR__, 2) . '/templates/layout.php';
 render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], function() use ($ticker, $messages, $app_title, $team) {
     ?>
-    <div data-ticker-live>
+    <div data-ticker-refresh="page">
     <?php render_ticker_viewers($ticker, null); ?>
     <div class="mb-3">
         <a href="/ticker" class="btn btn-sm btn-outline-secondary">
@@ -55,29 +55,8 @@ render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], fun
     </div>
 
     <?php if ($ticker['status'] === 'active'): ?>
+    <!-- Ohne JavaScript: alte Lösung, ganze Seite alle 30 s neu laden -->
     <noscript><meta http-equiv="refresh" content="30"></noscript>
-    <script>
-    (function () {
-        // Neue Nachrichten im Hintergrund holen und nur den Inhalt tauschen: kein Flackern,
-        // die Scroll-Position bleibt, und Zuschauer werden nicht bei jedem Neuladen neu gezählt.
-        var live = document.querySelector('[data-ticker-live]');
-        var timer = setInterval(refresh, 30000);
-        function refresh() {
-            if (document.visibilityState !== 'visible') return;
-            fetch(location.href, { cache: 'no-store', credentials: 'same-origin' })
-                .then(function (r) { return r.ok ? r.text() : null; })
-                .then(function (html) {
-                    if (!html) return;
-                    var next = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-ticker-live]');
-                    if (!next) return;
-                    live.innerHTML = next.innerHTML;
-                    if (!live.querySelector('[data-ticker-ping]')) clearInterval(timer);   // Ticker beendet
-                })
-                .catch(function () {});
-        }
-        document.addEventListener('visibilitychange', refresh);
-    })();
-    </script>
     <?php endif; ?>
     <?php
 });

@@ -138,7 +138,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Message feed (newest first) -->
+<!-- Message feed (newest first). data-ticker-refresh: lädt neue Einträge nach (Layout-Skript) -->
+<div data-ticker-refresh="feed">
 <p class="text-muted small mb-2">
     <?= count($messages) ?> <?= count($messages) === 1 ? 'Nachricht' : 'Nachrichten' ?>
 </p>
@@ -176,3 +177,4 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
+</div>

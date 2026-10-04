@@ -230,6 +230,41 @@ function render_layout_foot(): void {
             window.addEventListener('pageshow', function(e) { if (e.persisted) tmPing(); });
         }
 
+        /* Live-Ticker: neue Einträge ohne Neuladen. Getauscht wird nur der Inhalt der
+           [data-ticker-refresh]-Bereiche (Eingabefelder bleiben unberührt) — alle 30 s, sofort
+           wenn die Seite wieder sichtbar wird (z. B. nach Tipp auf eine Benachrichtigung) und
+           wenn der Service Worker eine Push-Nachricht meldet. Nur bei laufendem Ticker. */
+        if (document.querySelector('[data-ticker-refresh]') && document.querySelector('[data-ticker-ping]')
+            && window.fetch && window.DOMParser) {
+            var tmRefreshTimer = null;
+            var tmRefreshBusy = false;
+            var tmRefresh = function() {
+                if (document.visibilityState !== 'visible' || tmRefreshBusy) return;
+                tmRefreshBusy = true;
+                fetch(location.href, { cache: 'no-store', credentials: 'same-origin' })
+                    .then(function(r) { return r.ok && !r.redirected ? r.text() : null; })
+                    .then(function(html) {
+                        if (!html) return;
+                        var doc = new DOMParser().parseFromString(html, 'text/html');
+                        document.querySelectorAll('[data-ticker-refresh]').forEach(function(el) {
+                            var next = doc.querySelector('[data-ticker-refresh="' + el.getAttribute('data-ticker-refresh') + '"]');
+                            if (next) el.innerHTML = next.innerHTML;
+                        });
+                        if (!doc.querySelector('[data-ticker-ping]')) clearInterval(tmRefreshTimer);   // Ticker beendet
+                    })
+                    .catch(function() {})
+                    .then(function() { tmRefreshBusy = false; });
+            };
+            tmRefreshTimer = setInterval(tmRefresh, 30000);
+            document.addEventListener('visibilitychange', tmRefresh);
+            window.addEventListener('pageshow', function(e) { if (e.persisted) tmRefresh(); });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.addEventListener('message', function(e) {
+                    if (e.data && e.data.type === 'ticker-push') tmRefresh();
+                });
+            }
+        }
+
         /* theme toggle */
         function tmApply(t) {
             document.documentElement.setAttribute('data-theme', t);

@@ -30,6 +30,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
         <i class="bi bi-share me-1"></i>Teilen
     </button>
 </div>
+<?php render_auto_visibility_member_hint($list); ?>
 <?php if (!empty($list['description'])): ?>
 <p class="text-muted small mb-3"><?= e($list['description']) ?></p>
 <?php endif; ?>

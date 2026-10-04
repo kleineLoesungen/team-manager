@@ -362,3 +362,34 @@ function render_auto_visibility_hint(array $list): void {
     <p class="small text-muted mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= htmlspecialchars($text, ENT_QUOTES) ?></p>
     <?php
 }
+
+/**
+ * The same automatic visibility change, worded for members: what it means for them
+ * ("Eintragen ist bis … möglich") instead of the coordinator's visibility labels.
+ * @param array $list Needs visibility, auto_visibility, auto_visibility_hours, auto_visibility_done_at, date, time_start
+ */
+function render_auto_visibility_member_hint(array $list): void {
+    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
+    $target  = $list['auto_visibility'] ?? '';
+    $current = $list['visibility'] ?? '';
+    if ($target === '' || $target === null) return;
+
+    $text = null;
+    if (!empty($list['auto_visibility_done_at'])) {
+        if ($target === 'protected' && $current === 'protected') {
+            $text = 'Eintragen ist seit ' . list_auto_visibility_when(new DateTimeImmutable($list['auto_visibility_done_at'])) . ' geschlossen.';
+        }
+    } elseif ($due = list_auto_visibility_due($list)) {
+        $when = list_auto_visibility_when($due);
+        $text = match (true) {
+            $target === 'protected' && $current === 'public'    => "Eintragen ist bis $when möglich.",
+            $target === 'public'    && $current === 'protected' => "Eintragen ist ab $when möglich.",
+            $target === 'private'                              => "Die Liste wird am $when ausgeblendet.",
+            default                                            => null,
+        };
+    }
+    if ($text === null) return;
+    ?>
+    <p class="small text-muted mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= htmlspecialchars($text, ENT_QUOTES) ?></p>
+    <?php
+}

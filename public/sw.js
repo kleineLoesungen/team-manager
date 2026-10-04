@@ -49,6 +49,8 @@ self.addEventListener('push', (event) => {
     }),
     // Punkt am App-Icon: "es gibt etwas Neues" (Badging API; die App löscht ihn beim Öffnen)
     self.navigator.setAppBadge ? self.navigator.setAppBadge().catch(() => {}) : null,
+    // Offene Ticker-Seiten laden den neuen Eintrag sofort nach (Layout-Skript)
+    self.clients.matchAll({ type: 'window' }).then((list) => list.forEach((c) => c.postMessage({ type: 'ticker-push' }))),
   ]));
 });
 
