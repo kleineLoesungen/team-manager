@@ -529,6 +529,10 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 
 [data-save-scroll] { cursor: pointer; }
 
+/* Flex-Kind darf schmaler werden als sein Inhalt — nötig, damit text-truncate in Zeilen
+   kürzt statt den Rest (z. B. den Pfeil rechts) hinauszuschieben. Bootstrap hat das nicht. */
+.min-w-0 { min-width: 0; }
+
 
 /* ---------- 6. Qualitätsboden ---------- */
 :focus-visible { outline: 2px solid var(--t1); outline-offset: 2px; }

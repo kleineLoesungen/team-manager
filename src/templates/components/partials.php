@@ -60,10 +60,11 @@ function render_empty(string $icon, string $heading, string $body_text, ?string 
 
 /**
  * Semantic status badge.
- * @param string $type  'ok' | 'warn' | 'bad' | 'dim' | 'info'
- * @param string $label Badge text
+ * @param string      $type  'ok' | 'warn' | 'bad' | 'dim' | 'info'
+ * @param string      $label Badge text
+ * @param string|null $icon  Optional Bootstrap icon class shown before the text (e.g. 'bi-clock')
  */
-function render_badge(string $type, string $label): void {
+function render_badge(string $type, string $label, ?string $icon = null): void {
     $class = match($type) {
         'ok'   => 'badge-ok',
         'warn' => 'badge-warn',
@@ -73,7 +74,7 @@ function render_badge(string $type, string $label): void {
         default => 'badge-dim',
     };
     ?>
-    <span class="badge <?= $class ?>"><?= htmlspecialchars($label, ENT_QUOTES) ?></span>
+    <span class="badge <?= $class ?>"><?php if ($icon): ?><i class="bi <?= htmlspecialchars($icon, ENT_QUOTES) ?> me-1" aria-hidden="true"></i><?php endif; ?><?= htmlspecialchars($label, ENT_QUOTES) ?></span>
     <?php
 }
 
@@ -370,13 +371,14 @@ function render_auto_visibility_member_hint(array $list): void {
 }
 
 /**
- * Übersicht (Reiter "Inhalte"): Live, Nächste 7 Tage, Deine Werte (src/db/dashboard.php).
+ * Übersicht (Reiter "Inhalte"): Live, Nächste 7 Tage, Dokumente, Deine Werte
+ * (src/db/dashboard.php). Kompakt: Symbole und Kennzeichen statt Sätzen.
  * @param array  $d    Result of dashboard_data()
  * @param string $role 'member' | 'coordinator'
  */
 function render_dashboard(array $d, string $role): void {
     require_once ROOT_PATH . '/src/db/dashboard.php';
-    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';   // list_visibility_label()
+    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
     $is_coord = $role === 'coordinator';
     $base     = $is_coord ? '/coordinator' : '/member';
     $time     = fn(?string $t) => $t ? substr($t, 0, 5) : null;
@@ -392,30 +394,42 @@ function render_dashboard(array $d, string $role): void {
         'ticker' => 'bi-megaphone',
         'event'  => preg_match('/^bi-[a-z0-9-]+$/', (string)$it['icon']) ? $it['icon'] : 'bi-calendar-event',
     };
+    // Sichtbarkeit: Koordinatoren sehen sie immer, Mitglieder nur, wenn sie nur lesen dürfen
+    $vis_badge = function (array $it) use ($is_coord): void {
+        if (!in_array($it['type'], ['list', 'file'], true)) return;
+        if ($is_coord) {
+            render_badge(match ($it['visibility']) { 'public' => 'ok', 'protected' => 'warn', default => 'dim' },
+                         list_visibility_label($it['visibility']));
+        } elseif ($it['visibility'] === 'protected') {
+            render_badge('dim', 'Nur lesen', 'bi-lock');
+        }
+    };
     ?>
 
     <?php if (!empty($d['live'])): ?>
     <section class="mb-4" aria-labelledby="dash-live">
-        <h2 class="h3 mb-2" id="dash-live">Live</h2>
+        <div class="d-flex align-items-baseline justify-content-between mb-2">
+            <h2 class="h3 mb-0" id="dash-live">Live</h2>
+            <a href="/ticker" class="small">Alle Teams</a>
+        </div>
         <div class="list-group">
             <?php foreach ($d['live'] as $t): ?>
             <a href="<?= e($t['url']) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <i class="bi bi-megaphone text-muted" aria-hidden="true"></i>
                 <span class="flex-grow-1 min-w-0">
                     <span class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="fw-semibold"><?= $t['team_name'] !== null ? e($t['team_name']) . ' · ' : '' ?><?= e($t['name']) ?></span>
+                        <span class="fw-semibold"><?= e($t['name']) ?></span>
                         <?php render_badge('ok', 'Live'); ?>
+                        <?php if ($t['team_name'] !== null) render_badge('dim', $t['team_name'], 'bi-people'); ?>
                     </span>
                     <?php if ($t['last_message'] !== null): ?>
-                    <span class="d-block small text-muted text-truncate">
-                        <?= e(substr((string)$t['last_time'], 0, 5)) ?><?= $t['last_tag'] ? ' ' . e($t['last_tag']) . ':' : '' ?> <?= e($t['last_message']) ?>
-                    </span>
+                    <span class="d-block small text-muted text-truncate"><?= e(substr((string)$t['last_time'], 0, 5)) ?> <?= $t['last_tag'] ? e($t['last_tag']) . ' · ' : '' ?><?= e($t['last_message']) ?></span>
                     <?php endif; ?>
                 </span>
                 <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
             </a>
             <?php endforeach; ?>
         </div>
-        <p class="small mt-2 mb-0"><a href="/ticker">Ticker aller Teams</a></p>
     </section>
     <?php else: ?>
     <p class="small mb-4"><i class="bi bi-megaphone me-1 text-muted" aria-hidden="true"></i><a href="/ticker">Ticker aller Teams</a></p>
@@ -424,50 +438,47 @@ function render_dashboard(array $d, string $role): void {
     <section class="mb-4" aria-labelledby="dash-next">
         <h2 class="h3 mb-0" id="dash-next">Nächste 7 Tage</h2>
         <?php if (empty($d['upcoming'])): ?>
-            <?php render_empty('calendar3', 'In den nächsten 7 Tagen steht nichts an',
-                'Termine, Listen und Ticker mit Datum erscheinen hier. Was später kommt, zeigt die Monatsansicht.'); ?>
+            <?php render_empty('calendar3', 'Nichts in den nächsten 7 Tagen', 'Was später kommt, zeigt die Monatsansicht.'); ?>
         <?php else: ?>
             <?php foreach ($d['upcoming'] as $date => $items):
-                render_collection_group(dashboard_day_label($date), function () use ($items, $d, $is_coord, $url, $icon, $time) { ?>
+                render_collection_group(dashboard_day_label($date), function () use ($items, $d, $is_coord, $url, $icon, $time, $vis_badge) { ?>
                 <div class="list-group">
                     <?php foreach ($items as $it):
-                        $href = $url($it);
-                        $tag  = $href ? 'a' : 'div';
-                        $meta = array_filter([
-                            $time($it['time_start']) ? $time($it['time_start']) . ($time($it['time_end']) ? '–' . $time($it['time_end']) : '') . ' Uhr' : null,
-                            $it['location'] ?: null,
-                            $it['type'] === 'ticker' ? 'Live-Ticker' : null,
-                        ]);
-                        $own = $d['values'][(int)$it['id']] ?? [];
-                        if ($it['type'] !== 'list') $own = [];
+                        $href     = $url($it);
+                        $tag      = $href ? 'a' : 'div';
+                        $start    = $time($it['time_start']);
+                        $end      = $time($it['time_end']);
+                        $deadline = $it['type'] === 'list' ? list_auto_visibility_badge($it, $is_coord) : null;
+                        $own      = $it['type'] === 'list' ? ($d['values'][(int)$it['id']] ?? []) : [];
+                        $shown    = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
+                        $more     = count($own) - count($shown);
                     ?>
                     <<?= $tag ?> <?= $href ? 'href="' . e($href) . '"' : '' ?> class="list-group-item <?= $href ? 'list-group-item-action' : '' ?> d-flex align-items-center gap-3">
                         <i class="bi <?= e($icon($it)) ?> text-muted" aria-hidden="true"></i>
                         <span class="flex-grow-1 min-w-0">
                             <span class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="fw-semibold"><?= e($it['name']) ?></span>
-                                <?php if ($is_coord && $it['type'] === 'list'):
-                                    render_badge(match ($it['visibility']) { 'public' => 'ok', 'protected' => 'warn', default => 'dim' },
-                                                 list_visibility_label($it['visibility']));
-                                elseif (!$is_coord && in_array($it['type'], ['list', 'file'], true) && $it['visibility'] === 'protected'):
-                                    render_badge('warn', 'Nur lesen');
-                                endif; ?>
+                                <?php $vis_badge($it); ?>
+                                <?php if ($deadline) render_badge($deadline['type'], $deadline['label'], $deadline['icon']); ?>
                             </span>
-                            <?php if ($meta): ?>
-                            <span class="d-block small text-muted"><?= e(implode(' · ', $meta)) ?></span>
+                            <?php if ($start || $it['location']): ?>
+                            <span class="d-flex gap-3 small text-muted min-w-0">
+                                <?php if ($start): ?><span class="text-nowrap"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= e($start . ($end ? '–' . $end : '')) ?></span><?php endif; ?>
+                                <?php if ($it['location']): ?><span class="text-truncate min-w-0"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i><?= e($it['location']) ?></span><?php endif; ?>
+                            </span>
                             <?php endif; ?>
-                            <?php
-                            // Bevorstehende automatische Umstellung: ab wann sich etwas ändert
-                            $deadline = $it['type'] === 'list'
-                                ? ($is_coord ? list_auto_visibility_text_coordinator($it, true) : list_auto_visibility_text_member($it, true))
-                                : null;
-                            if ($deadline): ?>
-                            <span class="d-block small text-muted"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= e($deadline) ?></span>
-                            <?php endif; ?>
-                            <?php if ($own):
-                                $shown = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
-                                $more  = count($own) - count($shown); ?>
-                            <span class="d-block small"><?= e(implode(' · ', array_map(fn($v) => $v['name'] . ': ' . $v['value'], $shown))) ?><?= $more > 0 ? ' <span class="text-muted">+' . $more . '</span>' : '' ?></span>
+                            <?php if ($shown): ?>
+                            <span class="d-flex gap-1 flex-wrap mt-1">
+                                <?php foreach ($shown as $v):
+                                    if ($v['type'] === 'boolean') {
+                                        $v['yes'] ? render_badge('ok', $v['name'], 'bi-check-lg')
+                                                  : render_badge('dim', $v['name'], $v['set'] ? 'bi-x-lg' : 'bi-dash');
+                                    } else {
+                                        render_badge('dim', $v['name'] . ' ' . $v['value']);
+                                    }
+                                endforeach; ?>
+                                <?php if ($more > 0) render_badge('dim', '+' . $more); ?>
+                            </span>
                             <?php endif; ?>
                         </span>
                         <?php if ($href): ?><i class="bi bi-chevron-right text-muted" aria-hidden="true"></i><?php endif; ?>
@@ -479,19 +490,37 @@ function render_dashboard(array $d, string $role): void {
         <?php endif; ?>
     </section>
 
+    <?php if (!empty($d['files'])): ?>
+    <section class="mb-4" aria-labelledby="dash-files">
+        <h2 class="h3 mb-2" id="dash-files">Dokumente</h2>
+        <div class="list-group">
+            <?php foreach ($d['files'] as $f): ?>
+            <a href="<?= $base ?>/files/<?= (int)$f['id'] ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                <i class="bi bi-file-earmark-text text-muted" aria-hidden="true"></i>
+                <span class="flex-grow-1 min-w-0 d-flex align-items-center gap-2 flex-wrap">
+                    <span class="fw-semibold"><?= e($f['name']) ?></span>
+                    <?php $vis_badge(['type' => 'file'] + $f); ?>
+                </span>
+                <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <?php if (!$is_coord && !empty($d['columns'])): ?>
     <section class="mb-4" aria-labelledby="dash-values">
         <div class="d-flex align-items-baseline justify-content-between mb-2">
             <h2 class="h3 mb-0" id="dash-values">Deine Werte</h2>
-            <a href="/member/stats" class="small">Zur Statistik</a>
+            <a href="/member/stats" class="small">Statistik</a>
         </div>
         <div class="list-group">
             <?php foreach ($d['columns'] as $col):
                 $v   = $d['totals'][(int)$col['id']] ?? ['all' => 0, '4w' => 0];
                 $fmt = fn(float $n) => floor($n) == $n ? (string)(int)$n : number_format($n, 2, ',', '.'); ?>
-            <div class="list-group-item d-flex align-items-baseline gap-3">
+            <div class="list-group-item d-flex align-items-center gap-2">
                 <span class="flex-grow-1"><?= e($col['name']) ?></span>
-                <span class="small text-muted text-nowrap">4 Wo.: <?= $fmt((float)$v['4w']) ?></span>
+                <?php render_badge('dim', '4 Wo. ' . $fmt((float)$v['4w'])); ?>
                 <span class="fw-semibold text-end tm-dash-total"><?= $fmt((float)$v['all']) ?></span>
             </div>
             <?php endforeach; ?>

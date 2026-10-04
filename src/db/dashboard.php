@@ -6,6 +6,7 @@
 //                   Eintrag; darunter ein Link auf /ticker (Ticker aller Teams)
 //   Nächste 7 Tage  Listen, Dokumente, Termine und geplante Ticker; Mitglieder sehen bei
 //                   Listen ihre eigenen Werte ("Training: Ja · Tore: 0")
+//   Dokumente       Dokumente ohne Datum, die nicht versteckt sind
 //   Deine Werte     eigene Kennzahlen (nur Mitglieder, src/db/member_stats.php)
 // Sichtbarkeit wie überall: Mitglieder nur öffentliche/geschützte Listen und Dokumente,
 // geschützte Termine; Koordinatoren alles ihres Teams.
@@ -127,9 +128,30 @@ function dashboard_own_values(PDO $pdo, int $team_id, int $user_id, array $list_
 
     $values = [];
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $values[(int)$row['list_id']][] = ['name' => $row['name'], 'value' => dashboard_format_value($row['data_type'], $row['value'])];
+        $values[(int)$row['list_id']][] = [
+            'name'  => $row['name'],
+            'type'  => $row['data_type'],
+            'set'   => $row['value'] !== null && $row['value'] !== '',
+            'yes'   => in_array($row['value'], ['1', 'true'], true),
+            'value' => dashboard_format_value($row['data_type'], $row['value']),
+        ];
     }
     return $values;
+}
+
+/**
+ * Documents without a date that are not hidden ("In Listenansicht verstecken"), for the
+ * section below the next days. Members: public/protected, coordinators: all of their team.
+ */
+function dashboard_undated_files(PDO $pdo, int $team_id, bool $is_coordinator): array {
+    $vis  = $is_coordinator ? "('public', 'protected', 'private')" : "('public', 'protected')";
+    $stmt = $pdo->prepare(
+        "SELECT id, name, visibility FROM files
+         WHERE team_id = ? AND date IS NULL AND is_hidden = FALSE AND visibility IN $vis
+         ORDER BY name"
+    );
+    $stmt->execute([$team_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function dashboard_format_value(string $type, ?string $value): string {
@@ -168,6 +190,7 @@ function dashboard_data(PDO $pdo, string $role): array {
     $data = [
         'live'     => dashboard_live_tickers($pdo, $role, $team_id, $user_id),
         'upcoming' => dashboard_upcoming($pdo, $team_id, $is_coordinator),
+        'files'    => dashboard_undated_files($pdo, $team_id, $is_coordinator),
         'values'   => [],
         'columns'  => [],
         'totals'   => [],

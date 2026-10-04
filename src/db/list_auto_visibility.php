@@ -101,3 +101,43 @@ function list_auto_visibility_text_member(array $list, bool $pending_only = fals
         default                                            => null,
     };
 }
+
+/** Short point in time for badges: "heute 16:00", "morgen 16:00", "Mo 16:00", later "Mo 12.10. 16:00". */
+function list_auto_visibility_short_when(DateTimeImmutable $at): string {
+    $tz    = new DateTimeZone('Europe/Berlin');
+    $at    = $at->setTimezone($tz);
+    $days  = (int)(new DateTimeImmutable('today', $tz))->diff($at->setTime(0, 0))->format('%r%a');
+    $time  = $at->format('H:i');
+    $wd    = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][(int)$at->format('w')];
+    return match (true) {
+        $days === 0           => 'heute ' . $time,
+        $days === 1           => 'morgen ' . $time,
+        $days > 1 && $days < 7 => $wd . ' ' . $time,
+        default               => $wd . ' ' . $at->format('d.m.') . ' ' . $time,
+    };
+}
+
+/**
+ * Pending automatic change as a compact badge for the overview, or null.
+ * Members: what it means for them ("bis …" / "ab …" to enter, "bis …" visible);
+ * coordinators: the target visibility and when.
+ * @return array{type: string, icon: string, label: string}|null
+ */
+function list_auto_visibility_badge(array $list, bool $is_coordinator): ?array {
+    $target = $list['auto_visibility'] ?? '';
+    if ($target === '' || $target === null || !empty($list['auto_visibility_done_at'])) return null;
+    $due = list_auto_visibility_due($list);
+    if (!$due) return null;
+    $when = list_auto_visibility_short_when($due);
+    if ($is_coordinator) {
+        return ['type' => 'info', 'icon' => 'bi-arrow-right', 'label' => list_visibility_label($target) . ' ' . $when];
+    }
+    $current = $list['visibility'] ?? '';
+    return match (true) {
+        $target === 'protected' && $current === 'public'    => ['type' => 'warn', 'icon' => 'bi-pencil', 'label' => 'bis ' . $when],
+        $target === 'public'    && $current === 'protected' => ['type' => 'info', 'icon' => 'bi-pencil', 'label' => 'ab ' . $when],
+        $target === 'private'                              => ['type' => 'dim',  'icon' => 'bi-eye-slash', 'label' => 'bis ' . $when],
+        default                                            => null,
+    };
+}
+
