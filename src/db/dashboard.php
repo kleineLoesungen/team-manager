@@ -106,12 +106,58 @@ function dashboard_dated(PDO $pdo, int $team_id, bool $is_coordinator, string $f
     return $by_day;
 }
 
-/** Overview: today .. today+6 (Europe/Berlin), tickers only before they start. */
+/**
+ * Overview: today .. today+6 (Europe/Berlin), tickers only before they start — plus lists
+ * dated later whose automatic visibility change happens within these days. Those appear on
+ * the day of the change ('deadline_only' => true), not on their own date.
+ */
 function dashboard_upcoming(PDO $pdo, int $team_id, bool $is_coordinator): array {
     $tz    = new DateTimeZone('Europe/Berlin');
     $today = new DateTimeImmutable('today', $tz);
-    return dashboard_dated($pdo, $team_id, $is_coordinator, $today->format('Y-m-d'),
-        $today->modify('+' . (DASHBOARD_DAYS - 1) . ' days')->format('Y-m-d'), true);
+    $to    = $today->modify('+' . (DASHBOARD_DAYS - 1) . ' days')->format('Y-m-d');
+    $by_day = dashboard_dated($pdo, $team_id, $is_coordinator, $today->format('Y-m-d'), $to, true);
+
+    foreach (dashboard_later_deadlines($pdo, $team_id, $is_coordinator, $to) as $it) {
+        $by_day[$it['due_date']][] = $it;
+    }
+    ksort($by_day);
+    foreach ($by_day as &$items) {   // innerhalb des Tages nach Uhrzeit (Frist: Zeitpunkt der Umstellung)
+        usort($items, fn($a, $b) => [$a['sort_time'] ?? substr((string)$a['time_start'], 0, 5), $a['name']]
+                                 <=> [$b['sort_time'] ?? substr((string)$b['time_start'], 0, 5), $b['name']]);
+    }
+    return $by_day;
+}
+
+/**
+ * Lists dated after $to whose pending automatic visibility change falls between now and the
+ * end of $to. Members only get lists they can see right now and changes that matter to them
+ * (list_auto_visibility_badge()), so a private list that will be released stays invisible.
+ */
+function dashboard_later_deadlines(PDO $pdo, int $team_id, bool $is_coordinator, string $to): array {
+    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
+    $vis = $is_coordinator ? "('public', 'protected', 'private')" : "('public', 'protected')";
+    $due = "((date + COALESCE(time_start, TIME '00:00')) AT TIME ZONE 'Europe/Berlin') - make_interval(hours => auto_visibility_hours)";
+    $stmt = $pdo->prepare(
+        "SELECT 'list' AS type, id, name, date, time_start, time_end, location, visibility, list_type,
+                auto_visibility, auto_visibility_hours, auto_visibility_done_at, NULL AS icon
+         FROM lists
+         WHERE team_id = :t AND visibility IN $vis AND date > :to
+           AND auto_visibility IS NOT NULL AND auto_visibility_done_at IS NULL
+           AND $due >= NOW()
+           AND $due < ((CAST(:to2 AS date) + 1) + TIME '00:00') AT TIME ZONE 'Europe/Berlin'"
+    );
+    $stmt->execute([':t' => $team_id, ':to' => $to, ':to2' => $to]);
+
+    $items = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $it) {
+        if (!list_auto_visibility_badge($it, $is_coordinator)) continue;   // für Mitglieder ohne Bedeutung
+        $at = list_auto_visibility_due($it);
+        $it['deadline_only'] = true;
+        $it['due_date']      = $at->format('Y-m-d');
+        $it['sort_time']     = $at->format('H:i');
+        $items[] = $it;
+    }
+    return $items;
 }
 
 /**

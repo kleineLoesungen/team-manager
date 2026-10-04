@@ -8,8 +8,8 @@
 <?php else: ?>
 
     <p class="text-muted mb-4 small">
-        Statistiken werden aus allen öffentlichen und geschützten Listen berechnet.
-        Die Zeitfenster zeigen Werte der letzten 4, 4–8 und 8–12 Wochen (nur Listen mit Datum).
+        Statistiken werden aus allen öffentlichen und geschützten Listen mit Datum bis heute berechnet.
+        Die Zeitfenster zeigen Werte der letzten 4, 4–8 und 8–12 Wochen.
     </p>
 
     <?php render_matrix_table(

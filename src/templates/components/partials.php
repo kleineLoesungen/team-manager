@@ -407,8 +407,10 @@ function render_content_row(array $it, string $role, array $values): void {
     };
     $href     = $url($it);
     $tag      = $href ? 'a' : 'div';
-    $start    = $time($it['time_start']);
-    $end      = $time($it['time_end']);
+    // Steht nur wegen der Frist an diesem Tag: eigenes Datum als Kennzeichen, keine Uhrzeitzeile
+    $later    = !empty($it['deadline_only']);
+    $start    = $later ? null : $time($it['time_start']);
+    $end      = $later ? null : $time($it['time_end']);
     $deadline = $it['type'] === 'list' ? list_auto_visibility_badge($it, $is_coord) : null;
     $own      = $it['type'] === 'list' ? ($values[(int)$it['id']] ?? []) : [];
     $shown    = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
@@ -421,6 +423,7 @@ function render_content_row(array $it, string $role, array $values): void {
                 <span class="fw-semibold"><?= e($it['name']) ?></span>
                 <?php $vis_badge($it); ?>
                 <?php if ($deadline) render_badge($deadline['type'], $deadline['label'], $deadline['icon']); ?>
+                <?php if ($later) render_badge('dim', dashboard_day_label($it['date']) . ($time($it['time_start']) ? ' ' . $time($it['time_start']) : ''), 'bi-calendar-event'); ?>
             </span>
             <?php if ($start || $it['location']): ?>
             <span class="d-flex flex-wrap column-gap-3 small text-muted">
@@ -517,17 +520,15 @@ function render_dashboard(array $d, string $role): void {
     <?php if (!$is_coord && !empty($d['columns'])): ?>
     <section class="mb-4" aria-labelledby="dash-values">
         <div class="d-flex align-items-baseline justify-content-between mb-2">
-            <h2 class="h3 mb-0" id="dash-values">Deine Werte</h2>
+            <h2 class="h3 mb-0" id="dash-values">Deine Werte <span class="small text-muted fw-normal">letzte 4 Wochen</span></h2>
             <a href="/member/stats" class="small">Statistik</a>
         </div>
         <div class="list-group">
             <?php foreach ($d['columns'] as $col):
-                $v   = $d['totals'][(int)$col['id']] ?? ['all' => 0, '4w' => 0];
-                $fmt = fn(float $n) => floor($n) == $n ? (string)(int)$n : number_format($n, 2, ',', '.'); ?>
+                $n = (float)($d['totals'][(int)$col['id']]['4w'] ?? 0); ?>
             <div class="list-group-item d-flex align-items-center gap-2">
                 <span class="flex-grow-1"><?= e($col['name']) ?></span>
-                <?php render_badge('dim', '4 Wo. ' . $fmt((float)$v['4w'])); ?>
-                <span class="fw-semibold text-end tm-dash-total"><?= $fmt((float)$v['all']) ?></span>
+                <span class="fw-semibold text-end tm-dash-total"><?= floor($n) == $n ? (int)$n : number_format($n, 2, ',', '.') ?></span>
             </div>
             <?php endforeach; ?>
         </div>

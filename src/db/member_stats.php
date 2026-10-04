@@ -33,11 +33,11 @@ function member_stats_totals(PDO $pdo, int $team_id, int $member_id): array {
             c.name      AS column_name,
             c.data_type,
 
-            -- Gesamt: all public/protected cells up to today (dated ≤ today or undated)
+            -- Gesamt: all public/protected cells of dated lists up to today (undated lists do not count)
             COALESCE(
                 CASE
-                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN cells.id IS NOT NULL AND (lists.date IS NULL OR lists.date <= CURRENT_DATE) THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
-                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.id IS NOT NULL AND (lists.date IS NULL OR lists.date <= CURRENT_DATE) AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
+                    WHEN c.data_type = 'number'  THEN SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date <= CURRENT_DATE THEN CAST(cells.value AS NUMERIC) ELSE 0 END)
+                    WHEN c.data_type = 'boolean' THEN SUM(CASE WHEN cells.id IS NOT NULL AND lists.date IS NOT NULL AND lists.date <= CURRENT_DATE AND cells.value IN ('true','1') THEN 1 ELSE 0 END)
                 END, 0
             ) AS sum_all,
 
