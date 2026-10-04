@@ -197,6 +197,63 @@ function dashboard_own_values(PDO $pdo, int $team_id, int $user_id, array $list_
 }
 
 /**
+ * Coordinators: per list the column totals shown on the overview/month rows — numbers summed,
+ * yes/no counted as "ja / Zeilen". Text columns are left out. Rows are the active members
+ * (member lists) or the list's own rows (free lists), as in the list detail's "Gesamt" line.
+ * Needs admin context (system columns). Same shape as dashboard_own_values(), with 'total'.
+ * @param int[] $list_ids
+ */
+function dashboard_list_totals(PDO $pdo, int $team_id, array $list_ids): array {
+    if (!$list_ids) return [];
+    $in = implode(',', array_fill(0, count($list_ids), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT l.id AS list_id, c.name, c.data_type,
+                SUM(CASE WHEN c.data_type = 'number' AND cells.value ~ '^\\s*-?[0-9]*\\.?[0-9]+\\s*\$'
+                         THEN cells.value::numeric END) AS sum,
+                COUNT(cells.value) FILTER (WHERE c.data_type = 'boolean' AND cells.value IN ('1', 'true')) AS yes,
+                CASE WHEN l.list_type = 'free'
+                     THEN (SELECT COUNT(*) FROM free_list_rows f WHERE f.list_id = l.id)
+                     ELSE (SELECT COUNT(*) FROM users u JOIN members m ON m.id = u.member_id WHERE u.team_id = l.team_id AND u.role = 'member' AND u.is_active = TRUE)
+                END AS row_count
+         FROM lists l
+         JOIN columns c ON c.is_active = TRUE AND c.data_type IN ('number', 'boolean') AND (
+                  c.list_id = l.id
+               OR (l.list_type = 'member' AND c.list_id IS NULL AND (c.team_id = l.team_id OR c.is_system = TRUE)
+                   AND EXISTS (SELECT 1 FROM list_global_columns lgc WHERE lgc.list_id = l.id AND lgc.column_id = c.id)))
+         LEFT JOIN cells ON cells.list_id = l.id AND cells.column_id = c.id AND (
+                  (l.list_type = 'free' AND cells.member_id IN (SELECT f.id FROM free_list_rows f WHERE f.list_id = l.id))
+               OR (l.list_type <> 'free' AND cells.member_id IN
+                   (SELECT u.id FROM users u JOIN members m ON m.id = u.member_id WHERE u.team_id = l.team_id AND u.role = 'member' AND u.is_active = TRUE)))
+         WHERE l.id IN ($in) AND l.team_id = ?
+         GROUP BY l.id, l.list_type, l.team_id, c.id, c.name, c.data_type, c.list_id, c.sort_order, c.created_at
+         ORDER BY l.id, (c.list_id IS NULL) DESC, c.sort_order, c.created_at"
+    );
+    $stmt->execute(array_merge(array_map('intval', $list_ids), [$team_id]));
+
+    $totals = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $totals[(int)$row['list_id']][] = [
+            'name'  => $row['name'],
+            'type'  => $row['data_type'],
+            'total' => true,
+            'value' => $row['data_type'] === 'boolean'
+                ? (int)$row['yes'] . '/' . (int)$row['row_count']
+                : dashboard_format_value('number', (string)(float)($row['sum'] ?? 0)),
+        ];
+    }
+    return $totals;
+}
+
+/** Ids of all lists among the given rows (for dashboard_list_totals). */
+function dashboard_list_ids(array $items): array {
+    $ids = [];
+    foreach ($items as $it) {
+        if ($it['type'] === 'list') $ids[] = (int)$it['id'];
+    }
+    return $ids;
+}
+
+/**
  * Lists and documents without a date that are not hidden ("verstecken"), for the section
  * "Ohne Datum" below the next days. Same row shape as dashboard_upcoming().
  * Members: public/protected, coordinators: all of their team.
@@ -267,6 +324,12 @@ function dashboard_data(PDO $pdo, string $role): array {
         $data['totals']  = $data['columns'] ? member_stats_totals($pdo, $team_id, $user_id) : [];
         reset_rls_context($pdo);
         set_team_context($pdo, $team_id, 'member', $user_id);
+    } else {
+        set_admin_context($pdo);   // Systemspalten
+        $data['values'] = dashboard_list_totals($pdo, $team_id,
+            dashboard_list_ids(array_merge($data['undated'], ...array_values($data['upcoming']))));
+        reset_rls_context($pdo);
+        set_team_context($pdo, $team_id, 'coordinator', $user_id);
     }
     return $data;
 }
@@ -301,6 +364,12 @@ function dashboard_month_data(PDO $pdo, string $role, array $boundaries): array 
             dashboard_member_list_ids(array_merge($data['undated'], ...array_values($data['days']))));
         reset_rls_context($pdo);
         set_team_context($pdo, $team_id, 'member', $user_id);
+    } else {
+        set_admin_context($pdo);   // Systemspalten
+        $data['values'] = dashboard_list_totals($pdo, $team_id,
+            dashboard_list_ids(array_merge($data['undated'], ...array_values($data['days']))));
+        reset_rls_context($pdo);
+        set_team_context($pdo, $team_id, 'coordinator', $user_id);
     }
     return $data;
 }

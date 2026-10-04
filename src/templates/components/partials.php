@@ -372,10 +372,11 @@ function render_auto_visibility_member_hint(array $list): void {
 
 /**
  * One row of the content overview and the month view: list, document, event or ticker with
- * time/place icons, visibility, pending deadline and — for members — their own values as badges.
+ * time/place icons, visibility, pending deadline and — for members — their own values as badges,
+ * for coordinators the column totals.
  * @param array  $it     Row from dashboard_dated() / dashboard_undated()
  * @param string $role   'member' | 'coordinator'
- * @param array  $values Own values per list id (dashboard_own_values()), members only
+ * @param array  $values Per list id: own values (dashboard_own_values()) or totals (dashboard_list_totals())
  */
 function render_content_row(array $it, string $role, array $values): void {
     require_once ROOT_PATH . '/src/db/dashboard.php';
@@ -447,7 +448,9 @@ function render_content_row(array $it, string $role, array $values): void {
             <?php if ($shown): ?>
             <span class="d-flex gap-1 flex-wrap mt-1">
                 <?php foreach ($shown as $v):
-                    if ($v['type'] === 'boolean') {
+                    if (!empty($v['total'])) {   // Koordinatoren: Summe der Spalte
+                        render_badge('dim', $v['name'] . ' ' . $v['value'], $v['type'] === 'boolean' ? 'bi-check-lg' : null);
+                    } elseif ($v['type'] === 'boolean') {
                         $v['yes'] ? render_badge('ok', $v['name'], 'bi-check-lg')
                                   : render_badge('dim', $v['name'], $v['set'] ? 'bi-x-lg' : 'bi-dash');
                     } else {
