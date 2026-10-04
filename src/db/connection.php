@@ -147,8 +147,9 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_columns_list_id ON {$s}.columns(list_id)");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.list_global_columns (
-        list_id   INTEGER NOT NULL REFERENCES {$s}.lists(id)   ON DELETE CASCADE,
-        column_id INTEGER NOT NULL REFERENCES {$s}.columns(id) ON DELETE CASCADE,
+        list_id       INTEGER NOT NULL REFERENCES {$s}.lists(id)   ON DELETE CASCADE,
+        column_id     INTEGER NOT NULL REFERENCES {$s}.columns(id) ON DELETE CASCADE,
+        default_value TEXT    NULL,
         PRIMARY KEY (list_id, column_id)
     )");
 

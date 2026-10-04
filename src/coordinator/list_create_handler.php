@@ -99,24 +99,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $valid_stmt->execute([...$selected_cols, $_SESSION['team_id']]);
                 $valid_ids = $valid_stmt->fetchAll(PDO::FETCH_COLUMN);
 
+                // Typen für die Standardwerte (Team- und Systemspalten)
+                $type_map = [];
+                foreach (array_merge($system_columns, $global_columns) as $gc) {
+                    $type_map[(int)$gc['id']] = $gc['data_type'];
+                }
+                // Standardwert je Spalte gilt auch für später hinzukommende Mitglieder
+                // (prefill_member_cells), deshalb wird er an der Verknüpfung gespeichert.
                 $link_stmt = $pdo->prepare(
-                    "INSERT INTO list_global_columns (list_id, column_id) VALUES (?, ?)"
+                    "INSERT INTO list_global_columns (list_id, column_id, default_value) VALUES (?, ?, ?)"
                 );
                 foreach ($valid_ids as $col_id) {
-                    $link_stmt->execute([$list_id, (int)$col_id]);
+                    $col_id = (int)$col_id;
+                    $link_stmt->execute([$list_id, $col_id, list_default_value($type_map[$col_id] ?? null, $defaults, $col_id)]);
                 }
             }
 
             // Pre-populate default cell values for all active players on this team
             if (!empty($valid_ids)) {
-                // Build type map from both team columns and system columns
-                $type_map = [];
-                foreach ($system_columns as $sc) {
-                    $type_map[(int)$sc['id']] = $sc['data_type'];
-                }
-                foreach ($global_columns as $gc) {
-                    $type_map[(int)$gc['id']] = $gc['data_type'];
-                }
 
                 // Fetch all active players
                 $players_stmt = $pdo->prepare(
@@ -132,23 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 foreach ($valid_ids as $col_id) {
-                    $col_id     = (int)$col_id;
-                    $data_type  = $type_map[$col_id] ?? null;
-                    $raw        = $defaults[$col_id] ?? null;
-
-                    // Validate and normalise default value per type
-                    $value = null;
-                    if ($data_type === 'boolean') {
-                        $value = isset($defaults[$col_id]) ? '1' : '0';
-                    } elseif ($data_type === 'number') {
-                        if ($raw !== null && $raw !== '') {
-                            $int_ok   = filter_var($raw, FILTER_VALIDATE_INT)   !== false;
-                            $float_ok = filter_var($raw, FILTER_VALIDATE_FLOAT) !== false;
-                            $value = ($int_ok || $float_ok) ? $raw : '0';
-                        } else {
-                            $value = '0';
-                        }
-                    }
+                    $col_id = (int)$col_id;
+                    $value  = list_default_value($type_map[$col_id] ?? null, $defaults, $col_id);
 
                     if ($value === null) {
                         continue;

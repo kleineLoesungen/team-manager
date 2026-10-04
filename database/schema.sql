@@ -108,8 +108,9 @@ CREATE INDEX IF NOT EXISTS idx_columns_is_system ON team_manager.columns(is_syst
 -- List–global-column associations — which global columns appear in each list (D-11)
 -- A global column only shows in a list if a row exists here for that (list_id, column_id) pair.
 CREATE TABLE IF NOT EXISTS team_manager.list_global_columns (
-    list_id   INTEGER NOT NULL REFERENCES team_manager.lists(id)   ON DELETE CASCADE,
-    column_id INTEGER NOT NULL REFERENCES team_manager.columns(id) ON DELETE CASCADE,
+    list_id       INTEGER NOT NULL REFERENCES team_manager.lists(id)   ON DELETE CASCADE,
+    column_id     INTEGER NOT NULL REFERENCES team_manager.columns(id) ON DELETE CASCADE,
+    default_value TEXT    NULL,   -- Standardwert dieser Spalte in dieser Liste, auch für später hinzukommende Mitglieder
     PRIMARY KEY (list_id, column_id)
 );
 CREATE INDEX IF NOT EXISTS idx_lgc_list_id   ON team_manager.list_global_columns(list_id);

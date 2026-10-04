@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $ins->execute([$team_id, $username, $password_hash, $member_profile_id]);
                 $new_user_id = (int)$ins->fetchColumn();
-                prefill_number_cells($pdo, $team_id, $new_user_id);
+                prefill_member_cells($pdo, $team_id, $new_user_id);
 
                 $credential_username = $username;
                 $credential_password = $plain_password;
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $ins->execute([$team_id, $username, $password_hash, $new_member_id]);
                 $new_user_id = (int)$ins->fetchColumn();
-                prefill_number_cells($pdo, $team_id, $new_user_id);
+                prefill_member_cells($pdo, $team_id, $new_user_id);
 
                 $credential_username = $username;
                 $credential_password = $plain_password;

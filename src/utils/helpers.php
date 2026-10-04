@@ -73,21 +73,55 @@ function generate_calendar_token(): string {
     return bin2hex(random_bytes(32));
 }
 
-function prefill_number_cells(PDO $pdo, int $team_id, int $user_id): void {
+/**
+ * Default value of a global column in a new list, as stored in list_global_columns.default_value
+ * and written into the members' cells. Booleans: '1' if ticked, else '0'; numbers: the entered
+ * number, else '0'; text: no default (null).
+ * @param array $defaults Raw form input [column_id => value]
+ */
+function list_default_value(?string $data_type, array $defaults, int $col_id): ?string {
+    $raw = $defaults[$col_id] ?? null;
+    if ($data_type === 'boolean') {
+        return isset($defaults[$col_id]) ? '1' : '0';
+    }
+    if ($data_type === 'number') {
+        if ($raw !== null && $raw !== '' && (filter_var($raw, FILTER_VALIDATE_INT) !== false || filter_var($raw, FILTER_VALIDATE_FLOAT) !== false)) {
+            return (string)$raw;
+        }
+        return '0';
+    }
+    return null;
+}
+
+/**
+ * Pre-fill the cells of a member who joins a team later, in the team's member lists:
+ * - lists from today on and without a date: the list's default (list_global_columns.default_value)
+ * - past lists, and lists created before defaults were stored: numbers 0 as before
+ *   (no "Ja" for trainings before someone joined — that would distort the statistics)
+ */
+function prefill_member_cells(PDO $pdo, int $team_id, int $user_id): void {
+    $today = (new DateTimeImmutable('today', new DateTimeZone('Europe/Berlin')))->format('Y-m-d');
     $stmt = $pdo->prepare(
         "INSERT INTO cells (list_id, column_id, member_id, value)
-         SELECT lgc.list_id, lgc.column_id, ?, '0'
-         FROM list_global_columns lgc
-         JOIN columns c ON c.id = lgc.column_id
-             AND c.data_type = 'number'
-             AND c.list_id IS NULL
-             AND c.is_active = TRUE
-             AND (c.team_id = ? OR c.is_system = TRUE)
-         JOIN lists l ON l.id = lgc.list_id
-             AND l.team_id = ?
+         SELECT list_id, column_id, ?, value FROM (
+             SELECT lgc.list_id, lgc.column_id,
+                    CASE
+                        WHEN (l.date IS NULL OR l.date >= ?) AND lgc.default_value IS NOT NULL THEN lgc.default_value
+                        WHEN c.data_type = 'number' THEN '0'
+                    END AS value
+             FROM list_global_columns lgc
+             JOIN columns c ON c.id = lgc.column_id
+                 AND c.list_id IS NULL
+                 AND c.is_active = TRUE
+                 AND (c.team_id = ? OR c.is_system = TRUE)
+             JOIN lists l ON l.id = lgc.list_id
+                 AND l.team_id = ?
+                 AND l.list_type = 'member'
+         ) v
+         WHERE value IS NOT NULL
          ON CONFLICT (list_id, column_id, member_id) DO NOTHING"
     );
-    $stmt->execute([$user_id, $team_id, $team_id]);
+    $stmt->execute([$user_id, $today, $team_id, $team_id]);
 }
 
 /**
