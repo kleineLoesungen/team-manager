@@ -142,6 +142,7 @@ const LIST_SERIES_REPEATS = [
     'yearly'    => ['label' => 'Jährlich',        'months' => 12],
 ];
 const LIST_SERIES_MAX = 52;
+const LIST_CREATE_LOCAL_COLUMNS = 3;   // Zeilen für eigene Spalten im Anlegen-Formular
 
 /**
  * Dates of a list series, starting with $start (Y-m-d). Monthly steps keep the start day and
@@ -174,5 +175,27 @@ function absolute_url(string $path): string {
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
           || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
     return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/' . ltrim($path, '/');
+}
+
+/**
+ * Dates of a list series from $start up to and including $until. Returns at most
+ * LIST_SERIES_MAX + 1 dates, so callers can tell "too many" apart from "exactly the maximum".
+ * @return list<string> Y-m-d
+ */
+function list_series_dates_until(string $start, string $repeat, string $until): array {
+    $dates = [];
+    for ($n = 1; $n <= LIST_SERIES_MAX + 1; $n++) {
+        $all  = list_series_dates($start, $repeat, $n);
+        $last = end($all);
+        if ($last > $until) break;
+        $dates = $all;
+    }
+    return $dates;
+}
+
+/** Return target after creating content: one of the list views, else the overview. */
+function coordinator_lists_return_to(?string $url): string {
+    $url = (string)$url;
+    return preg_match('#^/coordinator/lists(\?[A-Za-z0-9_=&%.-]*)?$#', $url) ? $url : '/coordinator/lists';
 }
 

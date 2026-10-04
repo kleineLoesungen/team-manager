@@ -28,8 +28,14 @@ $cols_stmt->execute([$_SESSION['team_id']]);
 $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
+require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
 
 $list_type = in_array($_GET['type'] ?? '', ['member', 'free']) ? $_GET['type'] : 'member';
+
+// Woher kam der Koordinator (Übersicht, Monat, Liste)? Dorthin geht es nach einer Serie zurück.
+$referer_path = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_PATH) ?: '';
+$referer_qs   = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_QUERY);
+$return_to    = coordinator_lists_return_to($_POST['return_to'] ?? ($referer_path . ($referer_qs ? '?' . $referer_qs : '')));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -61,10 +67,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $time_end = $raw_te . ':00';
     }
 
-    // Serie: so viele eigenständige Listen wie Termine (danach einzeln bearbeitbar)
-    $repeat       = array_key_exists($_POST['repeat'] ?? '', LIST_SERIES_REPEATS) ? $_POST['repeat'] : '';
-    $repeat_count = filter_var($_POST['repeat_count'] ?? '', FILTER_VALIDATE_INT,
-        ['options' => ['min_range' => 2, 'max_range' => LIST_SERIES_MAX]]);
+    $is_hidden = isset($_POST['is_hidden']) ? 1 : 0;
+
+    // Automatische Umstellung der Sichtbarkeit ('' = aus), gilt je Liste relativ zu ihrem Datum
+    $auto       = $_POST['auto_visibility'] ?? '';
+    $raw_hours  = trim($_POST['auto_visibility_hours'] ?? '');
+    $auto_hours = $raw_hours === '' ? 0 : filter_var($raw_hours, FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 0, 'max_range' => LIST_AUTO_VISIBILITY_MAX_HOURS]]);
+
+    // Eigene (lokale) Spalten: bis zu LIST_CREATE_LOCAL_COLUMNS Zeilen, leere Namen werden ignoriert
+    $local_columns = [];
+    foreach ((array)($_POST['local_name'] ?? []) as $k => $raw_name) {
+        $col_name = trim((string)$raw_name);
+        if ($col_name === '') continue;
+        $local_columns[] = [
+            'name'       => mb_substr($col_name, 0, 100),
+            'data_type'  => in_array($_POST['local_type'][$k] ?? '', ['boolean', 'number', 'text'], true) ? $_POST['local_type'][$k] : 'boolean',
+            'coach_only' => !empty($_POST['local_coach'][$k]) ? 1 : 0,
+        ];
+    }
+
+    // Serie bis Enddatum: so viele eigenständige Listen wie Termine (danach einzeln bearbeitbar)
+    $repeat = array_key_exists($_POST['repeat'] ?? '', LIST_SERIES_REPEATS) ? $_POST['repeat'] : '';
+    $until  = trim($_POST['repeat_until'] ?? '');
+    if ($until !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $until)) $until = '';
+    $series = ($repeat !== '' && $date !== '' && $until !== '' && $until >= $date)
+        ? list_series_dates_until($date, $repeat, $until) : [];
 
     if (empty($name)) {
         $error = 'Name ist erforderlich.';
@@ -74,17 +102,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Serien gibt es nur für Mitgliederlisten.';
     } elseif ($repeat !== '' && $date === '') {
         $error = 'Für eine Serie braucht die Liste ein Datum — es ist der erste Termin.';
-    } elseif ($repeat !== '' && $repeat_count === false) {
-        $error = 'Anzahl Termine: Gib eine Zahl von 2 bis ' . LIST_SERIES_MAX . ' ein.';
+    } elseif ($repeat !== '' && ($until === '' || $until < $date)) {
+        $error = 'Gib an, bis wann die Serie läuft — ein Datum ab dem ersten Termin.';
+    } elseif ($repeat !== '' && count($series) < 2) {
+        $error = 'Bis zu diesem Datum gibt es nur einen Termin. Wähle ein späteres Enddatum.';
+    } elseif ($repeat !== '' && count($series) > LIST_SERIES_MAX) {
+        $error = 'Das wären mehr als ' . LIST_SERIES_MAX . ' Termine. Wähle ein früheres Enddatum.';
+    } elseif (!in_array($auto, ['', 'public', 'protected', 'private'], true)) {
+        $error = 'Ungültige automatische Sichtbarkeit.';
+    } elseif ($auto !== '' && $auto_hours === false) {
+        $error = 'Stunden vor Beginn: Gib eine ganze Zahl von 0 bis ' . LIST_AUTO_VISIBILITY_MAX_HOURS . ' ein.';
+    } elseif ($auto !== '' && $date === '') {
+        $error = 'Für die automatische Umstellung braucht die Liste ein Datum.';
     } else {
-        $dates = $repeat !== '' ? list_series_dates($date, $repeat, (int)$repeat_count) : [$date];
+        $dates = $repeat !== '' ? $series : [$date];
         try {
             $pdo->beginTransaction();
             foreach ($dates as $list_date) {
-                $cols = "team_id, name, visibility, list_type, show_all_rows, date, description, location, time_start, time_end";
-                $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+                $cols = "team_id, name, visibility, list_type, show_all_rows, is_hidden, auto_visibility, auto_visibility_hours, date, description, location, time_start, time_end";
+                $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
                 $params = [
-                    $_SESSION['team_id'], $name, $visibility, $list_type, $show_all_rows,
+                    $_SESSION['team_id'], $name, $visibility, $list_type, $show_all_rows, $is_hidden,
+                    $auto !== '' ? $auto : null, $auto !== '' ? (int)$auto_hours : 0,
                     $list_date !== '' ? $list_date : null,
                     $description !== '' ? $description : null,
                     $location !== '' ? $location : null,
@@ -95,6 +134,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("INSERT INTO lists ({$cols}) VALUES ({$vals}) RETURNING id");
                 $stmt->execute($params);
                 $list_id = (int)$stmt->fetchColumn();
+
+                // Eigene Spalten dieser Liste (in jeder Liste einer Serie gleich)
+                $local_stmt = $pdo->prepare(
+                    "INSERT INTO columns (team_id, list_id, name, data_type, coach_only, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
+                );
+                foreach ($local_columns as $pos => $lc) {
+                    $local_stmt->execute([$_SESSION['team_id'], $list_id, $lc['name'], $lc['data_type'], $lc['coach_only'], $pos]);
+                }
 
                 // Link selected global columns (D-11) — validate ownership first
                 // Free lists do not support global columns
@@ -159,8 +206,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $pdo->commit();
-            if (count($dates) > 1) {
-                redirect('/coordinator/lists?view=list&success=series&count=' . count($dates));
+            if (count($dates) > 1) {   // Serie: zurück zur Ansicht, aus der der Koordinator kam
+                redirect($return_to . (str_contains($return_to, '?') ? '&' : '?') . 'success=series&count=' . count($dates));
             }
             redirect('/coordinator/lists/' . $list_id . '?success=1');
 
@@ -173,6 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = ($list_type === 'free') ? 'Neue freie Liste' : 'Neue Mitgliederliste';
-render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $system_columns, $list_type) {
+render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $system_columns, $list_type, $return_to) {
     require ROOT_PATH . '/src/templates/coordinator/list_form.php';
 });
