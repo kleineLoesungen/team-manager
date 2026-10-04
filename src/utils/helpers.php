@@ -133,3 +133,33 @@ function prefill_member_cells(PDO $pdo, int $team_id, int $user_id): void {
 function webcal_url(string $url): string {
     return preg_replace('#^https?://#', 'webcal://', $url);
 }
+
+/** Series of list dates: the repeat options of the list form. */
+const LIST_SERIES_REPEATS = [
+    'weekly'    => ['label' => 'Wöchentlich',     'months' => 0],
+    'monthly'   => ['label' => 'Monatlich',       'months' => 1],
+    'quarterly' => ['label' => 'Vierteljährlich', 'months' => 3],
+    'yearly'    => ['label' => 'Jährlich',        'months' => 12],
+];
+const LIST_SERIES_MAX = 52;
+
+/**
+ * Dates of a list series, starting with $start (Y-m-d). Monthly steps keep the start day and
+ * fall back to the last day of shorter months (31.01. → 28.02. → 31.03.).
+ * @return list<string> Y-m-d
+ */
+function list_series_dates(string $start, string $repeat, int $count): array {
+    $first = new DateTimeImmutable($start);
+    $dates = [];
+    for ($k = 0; $k < $count; $k++) {
+        if ($repeat === 'weekly') {
+            $dates[] = $first->modify('+' . (7 * $k) . ' days')->format('Y-m-d');
+            continue;
+        }
+        $month = $first->modify('first day of this month')->modify('+' . ($k * LIST_SERIES_REPEATS[$repeat]['months']) . ' months');
+        $day   = min((int)$first->format('j'), (int)$month->format('t'));
+        $dates[] = $month->setDate((int)$month->format('Y'), (int)$month->format('n'), $day)->format('Y-m-d');
+    }
+    return $dates;
+}
+

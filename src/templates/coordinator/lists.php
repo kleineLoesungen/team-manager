@@ -22,7 +22,7 @@ $vis_badge = function(string $visibility): void {
 };
 ?>
 
-<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
+<?php if ($success): render_flash('success', $success); endif; ?>
 
 <!-- ── View switcher: Übersicht / Monat / Liste ─────────────────────────── -->
 <div class="seg-ctrl">
@@ -287,7 +287,10 @@ $render_card = function(array $item) use ($vis_badge): void {
 <?php endif; // $showCalendar / list view ?>
 <script>
 (function() {
-    var url = (location.pathname + location.search).replace(/[?&]success=1/, '').replace(/\?$/, '');
+    // Erfolgsmeldung nur einmal: success/count aus der Adresse entfernen
+    var u = new URL(location.href);
+    u.searchParams.delete('success'); u.searchParams.delete('count');
+    var url = u.pathname + u.search;
     if (url !== location.pathname + location.search) history.replaceState(null, '', url);
     sessionStorage.setItem('coordinator_lists_url', url);
     var saved = sessionStorage.getItem('coordinator_lists_scroll');

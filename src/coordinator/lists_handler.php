@@ -48,7 +48,11 @@ usort($items, function(array $a, array $b): int {
 });
 
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
-$success = !empty($_GET['success']) ? 'Gespeichert.' : '';
+$success = match (true) {
+    ($_GET['success'] ?? '') === 'series' => max(2, (int)($_GET['count'] ?? 0)) . ' Termine angelegt. Jeder lässt sich einzeln bearbeiten.',
+    !empty($_GET['success'])              => 'Gespeichert.',
+    default                               => '',
+};
 
 // ── Calendar view logic (per D-01 through D-09) ──────────────────────────
 // Ansichten: Übersicht (Standard, ersetzt die frühere Wochenansicht) | Monat | Liste.
@@ -86,6 +90,5 @@ if ($view === 'overview') {
 
 render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
-    if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/lists.php';
 });

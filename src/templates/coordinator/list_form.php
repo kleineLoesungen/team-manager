@@ -53,6 +53,30 @@
                 <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
             </div>
 
+            <?php if (($list_type ?? 'member') === 'member'): ?>
+            <!-- Section: Serie (optional) — legt mehrere eigenständige Listen an -->
+            <div class="mb-4">
+                <label for="list_repeat" class="form-label fw-semibold">Wiederholen <span class="text-muted fw-normal">(optional)</span></label>
+                <select id="list_repeat" name="repeat" class="form-select mb-2">
+                    <option value="">Nicht wiederholen</option>
+                    <?php foreach (LIST_SERIES_REPEATS as $key => $r): ?>
+                    <option value="<?= $key ?>" <?= ($_POST['repeat'] ?? '') === $key ? 'selected' : '' ?>><?= e($r['label']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="number" id="list_repeat_count" name="repeat_count"
+                           class="form-control tm-input-hours" inputmode="numeric"
+                           min="2" max="<?= LIST_SERIES_MAX ?>" step="1"
+                           value="<?= e($_POST['repeat_count'] ?? '') ?>">
+                    <label for="list_repeat_count" class="mb-0">Termine insgesamt</label>
+                </div>
+                <div class="form-text">
+                    Legt so viele einzelne Listen an, beginnend am gewählten Datum. Jede lässt sich
+                    danach einzeln bearbeiten oder löschen.
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Section: Location (optional) — per D-15, D-16 -->
             <div class="mb-4">
                 <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
