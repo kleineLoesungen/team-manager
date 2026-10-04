@@ -69,12 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // list_type intentionally omitted from this INSERT - pre-existing behavior,
-            // unrelated to this migration-guard cleanup (its feature-flag constant was never defined).
-            $cols = "team_id, name, visibility, show_all_rows, date, description, location, time_start, time_end";
-            $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?";
+            $cols = "team_id, name, visibility, list_type, show_all_rows, date, description, location, time_start, time_end";
+            $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
             $params = [
-                $_SESSION['team_id'], $name, $visibility, $show_all_rows,
+                $_SESSION['team_id'], $name, $visibility, $list_type, $show_all_rows,
                 $date !== '' ? $date : null,
                 $description !== '' ? $description : null,
                 $location !== '' ? $location : null,

@@ -38,15 +38,17 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 <?php if (empty($columns)): ?>
 <div class="alert alert-info">Diese Liste hat noch keine Spalten.</div>
 <?php elseif (empty($players)): ?>
-<?php render_empty('people', 'Keine Mitglieder', 'Keine Mitglieder im Team.'); ?>
+<?php empty($list['is_free'])
+    ? render_empty('people', 'Keine Mitglieder', 'Keine Mitglieder im Team.')
+    : render_empty('table', 'Noch keine Zeilen', 'Der Koordinator hat in dieser Liste noch keine Zeilen angelegt.'); ?>
 <?php else: ?>
 
-<?php $can_edit = $list['visibility'] === 'public'; ?>
+<?php $can_edit = $list['visibility'] === 'public' && empty($list['is_free']); ?>
 
 <?php
 // Build column headers for render_matrix_table
 $_headers = [];
-if ($list['show_all_rows']) $_headers[] = 'Mitglied';
+if ($list['show_all_rows']) $_headers[] = empty($list['is_free']) ? 'Mitglied' : 'Zeile';
 foreach ($columns as $col) $_headers[] = $col['name'];
 if ($can_edit) $_headers[] = '';
 

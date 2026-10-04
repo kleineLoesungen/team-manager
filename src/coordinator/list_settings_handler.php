@@ -11,7 +11,7 @@ $pdo     = get_db();
 $error   = '';
 
 // Fetch list including show_all_rows, is_hidden, date, description, and optional time columns
-$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at';
+$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, list_type';
 $stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -71,7 +71,10 @@ require ROOT_PATH . '/src/templates/coordinator/layout.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    if (isset($_POST['action']) && $_POST['action'] === 'bind_column') {
+    if (isset($_POST['action']) && $_POST['action'] === 'bind_column' && ($list['list_type'] ?? 'member') === 'free') {
+        // Freie Listen haben keine Mitgliederzeilen: globale Spalten (Statistik pro Mitglied) passen nicht
+        $error = 'Freie Listen haben keine globalen Spalten.';
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'bind_column') {
         $col_id = (int)($_POST['column_id'] ?? 0);
         // Validate: column must belong to this team or be a system column, and not already linked
         $check = $pdo->prepare(
@@ -413,7 +416,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
         </div>
     </div>
     <?php endif; ?>
-    <?php if (!empty($global_columns) || !empty($available_columns)): ?>
+    <?php if (($list['list_type'] ?? 'member') !== 'free' && (!empty($global_columns) || !empty($available_columns))): ?>
     <div class="card shadow-sm mt-4">
         <div class="card-body">
             <h6 class="card-title">Globale Spalten</h6>

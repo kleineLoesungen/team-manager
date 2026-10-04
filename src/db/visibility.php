@@ -83,7 +83,7 @@ function can_edit_cell(int $list_id, int $member_id): bool {
     set_admin_context($pdo);
 
     $stmt = $pdo->prepare(
-        "SELECT visibility, team_id FROM lists WHERE id = ?"
+        "SELECT visibility, team_id, list_type FROM lists WHERE id = ?"
     );
     $stmt->execute([$list_id]);
     $list = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -110,6 +110,10 @@ function can_edit_cell(int $list_id, int $member_id): bool {
     }
 
     if ($role === 'member') {
+        // Freie Listen: Zeilen gehören keinem Mitglied (cells.member_id = free_list_rows.id)
+        if (($list['list_type'] ?? 'member') === 'free') {
+            return false;
+        }
         // CELL-01: members can only edit their own row in public lists
         $is_own_row = (int)$_SESSION['user_id'] === $member_id;
         $is_public  = $visibility === 'public';

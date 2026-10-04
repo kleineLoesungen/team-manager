@@ -18,8 +18,8 @@ if (!can_view_list($list_id)) {
     exit;
 }
 
-// Fetch list metadata (include list_type if available)
-$list_type_col = "";
+// Fetch list metadata including list_type (member | free)
+$list_type_col = ", list_type";
 $list_time_cols = ", time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at";
 $list_stmt = $pdo->prepare("SELECT id, name, visibility, date, description{$list_type_col}{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);

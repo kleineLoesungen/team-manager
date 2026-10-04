@@ -20,7 +20,7 @@ if (!can_view_list($list_id)) {
 
 // Fetch list metadata including show_all_rows
 $list_time_cols = ", time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at";
-$list_stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, date, description{$list_time_cols} FROM lists WHERE id = ?");
+$list_stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, list_type, date, description{$list_time_cols} FROM lists WHERE id = ?");
 $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 // pdo_pgsql returns booleans as 't'/'f' strings; normalize explicitly
@@ -48,8 +48,18 @@ $col_stmt = $pdo->prepare(
 $col_stmt->execute([$list_id, $_SESSION['team_id'], $list_id]);
 $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Row visibility: show all rows or only own row
-if ($list['show_all_rows']) {
+$list['is_free'] = ($list['list_type'] ?? 'member') === 'free';
+
+// Freie Liste: Zeilen sind frei benannt (free_list_rows), nicht Mitglieder. Alle Zeilen, nur
+// lesen; die Werte hängen an free_list_rows.id (cells.member_id).
+if ($list['is_free']) {
+    $row_stmt = $pdo->prepare("SELECT id, label FROM free_list_rows WHERE list_id = ? ORDER BY position, created_at");
+    $row_stmt->execute([$list_id]);
+    $players = array_map(fn($r) => ['id' => $r['id'], 'first_name' => $r['label'], 'last_name' => ''],
+                         $row_stmt->fetchAll(PDO::FETCH_ASSOC));
+    $list['show_all_rows'] = true;
+    $current_user_id       = 0;   // keine eigene Zeile
+} elseif ($list['show_all_rows']) {
     $player_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
@@ -67,7 +77,9 @@ if ($list['show_all_rows']) {
     );
     $player_stmt->execute([$current_user_id, $_SESSION['team_id']]);
 }
-$players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);
+if (!$list['is_free']) {
+    $players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Fetch cells — only for visible member rows
 if ($list['show_all_rows']) {
