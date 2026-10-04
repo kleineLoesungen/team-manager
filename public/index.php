@@ -513,6 +513,10 @@ match (true) {
     $path === '/member/ticker'
         => require ROOT_PATH . '/src/member/ticker_handler.php',
 
+    // /member/switch-team — GET: Teamauswahl; POST: zum Konto desselben Profils im anderen Team
+    $path === '/member/switch-team'
+        => require ROOT_PATH . '/src/member/switch_team_handler.php',
+
     // /member/ticker/{id} — GET/POST: ticker feed + post form for freigegeben members
     (bool)preg_match('#^/member/ticker/(\d+)$#', $path, $matches)
         => (function() use ($matches): void {

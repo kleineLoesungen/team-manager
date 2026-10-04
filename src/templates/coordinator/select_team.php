@@ -1,6 +1,7 @@
 <?php
 // src/templates/coordinator/select_team.php — Team picker UI for multi-team coordinators
-// Variables: $available_teams, $is_switch (bool), $error (bool)
+// Variables: $available_teams, $is_switch (bool), $error (bool), $form_action, $back_url
+// Shared by coordinators (/coordinator/select-team) and members (/member/switch-team).
 
 declare(strict_types=1);
 
@@ -22,7 +23,7 @@ render_layout_head('Team auswählen');
             <p class="text-muted small mb-0">
                 <?php if ($is_switch): ?>
                     Wähle das Team, zu dem du wechseln möchtest.
-                <?php else: ?>
+                <?php elseif (($_SESSION['role'] ?? '') === 'coordinator'): ?>
                     Du verwaltest mehrere Teams. Wähle das Team für diese Sitzung.
                 <?php endif; ?>
             </p>
@@ -34,11 +35,12 @@ render_layout_head('Team auswählen');
 
         <div class="d-flex flex-column gap-3">
             <?php foreach ($available_teams as $team): ?>
-            <form method="POST" action="/coordinator/select-team">
+            <?php $is_current = (int)$team['team_id'] === (int)($_SESSION['team_id'] ?? 0) && empty($_SESSION['pending_team_pick']); ?>
+            <form method="POST" action="<?= e($form_action) ?>">
                 <?= csrf_field() ?>
                 <input type="hidden" name="team_id" value="<?= e((string)$team['team_id']) ?>">
-                <button type="submit" class="btn btn-primary w-100 min-touch text-start px-4">
-                    <i class="bi bi-building me-2"></i><?= e($team['team_name']) ?>
+                <button type="submit" class="btn <?= $is_current ? 'btn-outline-secondary' : 'btn-primary' ?> w-100 min-touch text-start px-4" <?= $is_current ? 'disabled' : '' ?>>
+                    <i class="bi bi-building me-2"></i><?= e($team['team_name']) ?><?= $is_current ? ' · aktuell' : '' ?>
                 </button>
             </form>
             <?php endforeach; ?>
@@ -46,7 +48,7 @@ render_layout_head('Team auswählen');
 
         <?php if ($is_switch && !empty($_SESSION['team_id'])): ?>
         <div class="mt-4 text-center">
-            <a href="/coordinator/members" class="btn btn-outline-secondary">
+            <a href="<?= e($back_url) ?>" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Zurück
             </a>
         </div>

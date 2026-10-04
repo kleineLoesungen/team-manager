@@ -192,7 +192,8 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
         <span class="flex-grow-1">Team-Logo</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
-    <?php if (!empty($_SESSION['coordinator_teams']) && count($_SESSION['coordinator_teams']) > 1): ?>
+    <?php require_once ROOT_PATH . '/src/db/team_switch.php';
+          if (count(team_switch_options(get_db())) > 1): ?>
     <a href="/coordinator/switch-team" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
         <i class="bi bi-arrow-left-right"></i>
         <span class="flex-grow-1">Team wechseln</span>

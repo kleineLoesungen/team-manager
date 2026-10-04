@@ -39,26 +39,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('/coordinator/members');
 }
 
-// GET: populate available_teams if not already set (switch-team case)
-if (empty($_SESSION['available_teams'])) {
-    $pdo = get_db();
-    set_admin_context($pdo);
-    $ct_stmt = $pdo->prepare(
-        "SELECT ct.team_id, t.name AS team_name
-         FROM coordinator_teams ct
-         JOIN teams t ON t.id = ct.team_id
-         WHERE ct.user_id = ? AND ct.left_at IS NULL AND t.is_active = TRUE
-         ORDER BY ct.joined_at DESC"
-    );
-    $ct_stmt->execute([(int)$_SESSION['user_id']]);
-    $_SESSION['available_teams'] = array_map(fn($t) => [
-        'team_id'   => (int)$t['team_id'],
-        'team_name' => $t['team_name'],
-    ], $ct_stmt->fetchAll());
-    reset_rls_context($pdo);
+// GET: Teams immer frisch laden (Zuordnungen können sich seit dem Login geändert haben)
+if (!$is_switch && !empty($_SESSION['pending_team_pick']) && !empty($_SESSION['available_teams'])) {
+    $available_teams = $_SESSION['available_teams'];   // direkt nach dem Login: Liste vom Login
+} else {
+    require_once ROOT_PATH . '/src/db/team_switch.php';
+    $available_teams = team_switch_options(get_db());
+    $_SESSION['available_teams'] = $available_teams;
 }
-
-$available_teams = $_SESSION['available_teams'];
-$error = !empty($_GET['error']);
+$error       = !empty($_GET['error']);
+$form_action = '/coordinator/select-team';
+$back_url    = '/coordinator/lists';
 
 require ROOT_PATH . '/src/templates/coordinator/select_team.php';

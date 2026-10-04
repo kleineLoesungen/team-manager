@@ -171,6 +171,14 @@ foreach ($attr_groups as $g) {
         <span class="flex-grow-1">Verlauf</span>
         <i class="bi bi-chevron-right text-muted small"></i>
     </a>
+    <?php require_once ROOT_PATH . '/src/db/team_switch.php';
+          if (count(team_switch_options(get_db())) > 1): ?>
+    <a href="/member/switch-team" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+        <i class="bi bi-arrow-left-right fs-5"></i>
+        <span class="flex-grow-1">Team wechseln</span>
+        <i class="bi bi-chevron-right text-muted small"></i>
+    </a>
+    <?php endif; ?>
     <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
         <i class="bi bi-box-arrow-right fs-5"></i>
         <span class="flex-grow-1">Abmelden</span>

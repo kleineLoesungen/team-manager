@@ -335,6 +335,19 @@ function render_page(array $opts, callable $body): void {
 
     $team_name = htmlspecialchars($_SESSION['team_name'] ?? 'Team Manager', ENT_QUOTES);
 
+    // Teamwechsel: Teamname in der Kopfzeile antippbar, sobald es mehr als ein Team gibt
+    $switch_url = null;
+    if (in_array($role, ['coordinator', 'member'], true) && !empty($_SESSION['user_id']) && empty($_SESSION['pending_team_pick'])) {
+        try {
+            require_once ROOT_PATH . '/src/db/team_switch.php';
+            if (count(team_switch_options(get_db())) > 1) {
+                $switch_url = $role === 'coordinator' ? '/coordinator/switch-team' : '/member/switch-team';
+            }
+        } catch (Throwable $e) {
+            error_log('team_switch_options: ' . $e->getMessage());
+        }
+    }
+
     // Punkt am Reiter "Ticker": laufender Ticker, den die Übersicht noch nicht gezeigt hat
     $ticker_new = false;
     if (in_array($role, ['coordinator', 'member'], true) && $active !== 'ticker'
@@ -350,7 +363,11 @@ function render_page(array $opts, callable $body): void {
     <div class="app">
         <header class="topbar">
             <img src="/logo" alt="" class="topbar-logo" onerror="this.style.display='none'" loading="eager">
+            <?php if ($switch_url): ?>
+            <a href="<?= $switch_url ?>" class="topbar-title topbar-switch" aria-label="Team wechseln, aktuell <?= $team_name ?>"><?= $team_name ?><i class="bi bi-chevron-expand ms-1" aria-hidden="true"></i></a>
+            <?php else: ?>
             <span class="topbar-title"><?= $team_name ?></span>
+            <?php endif; ?>
             <?php if ($back): ?>
             <a href="<?= htmlspecialchars($back, ENT_QUOTES) ?>" class="topbar-context text-decoration-none">
                 <i class="bi bi-chevron-left"></i> Zurück
