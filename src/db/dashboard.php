@@ -2,7 +2,8 @@
 // src/db/dashboard.php — Daten für die Übersicht (Reiter "Inhalte", Ansicht "Übersicht")
 //
 // Ersetzt die frühere Wochenansicht. Drei Bereiche, alle aus vorhandenen Daten:
-//   Live            laufende Ticker des Teams mit letztem Eintrag
+//   Live            laufende Ticker des Teams und der weiteren Teams des Nutzers, mit letztem
+//                   Eintrag; darunter ein Link auf /ticker (Ticker aller Teams)
 //   Nächste 7 Tage  Listen, Dokumente, Termine und geplante Ticker; Mitglieder sehen bei
 //                   Listen ihre eigenen Werte ("Training: Ja · Tore: 0")
 //   Deine Werte     eigene Kennzahlen (nur Mitglieder, src/db/member_stats.php)
@@ -14,23 +15,54 @@ declare(strict_types=1);
 const DASHBOARD_DAYS = 7;
 const DASHBOARD_VALUES_SHOWN = 4;   // weitere Spalten werden als "+n" zusammengefasst
 
-/** Running tickers (active and started) with their latest entry. */
-function dashboard_live_tickers(PDO $pdo, int $team_id): array {
+/**
+ * Running tickers (active and started) with their latest entry: own team first, then the
+ * user's other teams — members: teams where the same member profile is an active member,
+ * coordinators: further teams they manage (same rules as the ticker pages).
+ * Each row gets 'team_name' (null for the own team) and 'url': coordinators open every
+ * ticker in their area; members open other teams' tickers on the public page, because
+ * /member/ticker/{id} only serves the team they are signed in with.
+ * Uses admin context for the cross-team part and restores the role's team context.
+ */
+function dashboard_live_tickers(PDO $pdo, string $role, int $team_id, int $user_id): array {
+    $is_coord = $role === 'coordinator';
+    $live = "t.status = 'active'
+             AND (t.event_date IS NULL
+                  OR ((t.event_date + COALESCE(t.start_time, TIME '00:00')) AT TIME ZONE 'Europe/Berlin') <= NOW())";
+    $other_teams = $is_coord
+        ? "SELECT ct.team_id FROM coordinator_teams ct WHERE ct.user_id = :u AND ct.left_at IS NULL"
+        : "SELECT u2.team_id FROM users u2
+           WHERE u2.member_id = (SELECT member_id FROM users WHERE id = :u)
+             AND u2.role = 'member' AND u2.is_active = TRUE";
+
+    set_admin_context($pdo);
     $stmt = $pdo->prepare(
-        "SELECT t.id, t.name, m.timestamp AS last_time, m.message AS last_message, tg.label AS last_tag
+        "SELECT t.id, t.name, (t.team_id <> :own) AS other_team, tm.name AS team_name,
+                m.timestamp AS last_time, m.message AS last_message, tg.label AS last_tag
          FROM tickers t
+         JOIN teams tm ON tm.id = t.team_id AND tm.is_active = TRUE
          LEFT JOIN LATERAL (
              SELECT timestamp, message, tag_id FROM ticker_messages
              WHERE ticker_id = t.id ORDER BY created_at DESC LIMIT 1
          ) m ON TRUE
          LEFT JOIN ticker_tags tg ON tg.id = m.tag_id
-         WHERE t.team_id = ? AND t.status = 'active'
-           AND (t.event_date IS NULL
-                OR ((t.event_date + COALESCE(t.start_time, TIME '00:00')) AT TIME ZONE 'Europe/Berlin') <= NOW())
-         ORDER BY t.created_at DESC"
+         WHERE $live
+           AND (t.team_id = :own2 OR t.team_id IN ($other_teams))
+         ORDER BY (t.team_id <> :own3), tm.name, t.created_at DESC"
     );
-    $stmt->execute([$team_id]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->execute([':own' => $team_id, ':own2' => $team_id, ':own3' => $team_id, ':u' => $user_id]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    reset_rls_context($pdo);
+    set_team_context($pdo, $team_id, $role, $user_id);
+
+    foreach ($rows as &$r) {
+        $other = in_array($r['other_team'], [true, 1, '1', 't', 'true'], true);
+        $r['team_name'] = $other ? $r['team_name'] : null;
+        $r['url'] = ($is_coord || !$other)
+            ? '/' . ($is_coord ? 'coordinator' : 'member') . '/ticker/' . (int)$r['id']
+            : '/ticker/' . (int)$r['id'];
+    }
+    return $rows;
 }
 
 /**
@@ -134,7 +166,7 @@ function dashboard_data(PDO $pdo, string $role): array {
     $is_coordinator = $role === 'coordinator';
 
     $data = [
-        'live'     => dashboard_live_tickers($pdo, $team_id),
+        'live'     => dashboard_live_tickers($pdo, $role, $team_id, $user_id),
         'upcoming' => dashboard_upcoming($pdo, $team_id, $is_coordinator),
         'values'   => [],
         'columns'  => [],

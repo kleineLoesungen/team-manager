@@ -399,10 +399,10 @@ function render_dashboard(array $d, string $role): void {
         <h2 class="h3 mb-2" id="dash-live">Live</h2>
         <div class="list-group">
             <?php foreach ($d['live'] as $t): ?>
-            <a href="<?= $base ?>/ticker/<?= (int)$t['id'] ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <a href="<?= e($t['url']) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
                 <span class="flex-grow-1 min-w-0">
-                    <span class="d-flex align-items-center gap-2">
-                        <span class="fw-semibold"><?= e($t['name']) ?></span>
+                    <span class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-semibold"><?= $t['team_name'] !== null ? e($t['team_name']) . ' · ' : '' ?><?= e($t['name']) ?></span>
                         <?php render_badge('ok', 'Live'); ?>
                     </span>
                     <?php if ($t['last_message'] !== null): ?>
@@ -415,7 +415,10 @@ function render_dashboard(array $d, string $role): void {
             </a>
             <?php endforeach; ?>
         </div>
+        <p class="small mt-2 mb-0"><a href="/ticker">Ticker aller Teams</a></p>
     </section>
+    <?php else: ?>
+    <p class="small mb-4"><i class="bi bi-megaphone me-1 text-muted" aria-hidden="true"></i><a href="/ticker">Ticker aller Teams</a></p>
     <?php endif; ?>
 
     <section class="mb-4" aria-labelledby="dash-next">

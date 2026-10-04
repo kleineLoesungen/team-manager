@@ -34,7 +34,8 @@ $other_tickers ??= [];
 <h2 class="h6 fw-semibold text-muted mt-4 mb-2">Weitere Teams</h2>
 <div class="list-group mb-4">
     <?php foreach ($other_tickers as $t): ?>
-    <a href="/member/ticker/<?= (int)$t['id'] ?>"
+    <!-- Öffentliche Seite: /member/ticker/{id} kennt nur das angemeldete Team -->
+    <a href="/ticker/<?= (int)$t['id'] ?>"
        class="list-group-item list-group-item-action text-decoration-none">
         <div class="d-flex justify-content-between align-items-center">
             <div class="flex-grow-1 me-2 min-w-0">
