@@ -495,6 +495,14 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 /* Übersicht, "Deine Werte": Gesamtwert rechtsbündig in fester Breite, Tabellenziffern */
 .tm-dash-total { min-width: 3rem; font-variant-numeric: tabular-nums; }
 
+/* Erinnerung an eine automatische Umstellung (Übersicht): farbiger Streifen links + Wecker.
+   gelb = Eintragen schließt, blau = öffnet, grau = Liste wird ausgeblendet */
+.tm-reminder        { box-shadow: inset 4px 0 0 var(--tm-reminder-color); }
+.tm-reminder-icon   { color: var(--tm-reminder-color); font-size: 1.125rem; }
+.tm-reminder--warn  { --tm-reminder-color: var(--warn); }
+.tm-reminder--info  { --tm-reminder-color: var(--blue); }
+.tm-reminder--dim   { --tm-reminder-color: var(--t3); }
+
 /* Filter-Pills */
 .tm-filters { display: flex; gap: .25rem; flex-wrap: wrap; }
 

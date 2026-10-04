@@ -118,7 +118,8 @@ function list_auto_visibility_short_when(DateTimeImmutable $at): string {
 }
 
 /**
- * Pending automatic change as a compact badge for the overview, or null.
+ * Pending automatic change as a compact badge for the overview, or null. The alarm icon
+ * marks automatic visibility changes everywhere (badge and reminder rows).
  * Members: what it means for them ("bis …" / "ab …" to enter, "bis …" visible);
  * coordinators: the target visibility and when.
  * @return array{type: string, icon: string, label: string}|null
@@ -130,14 +131,36 @@ function list_auto_visibility_badge(array $list, bool $is_coordinator): ?array {
     if (!$due) return null;
     $when = list_auto_visibility_short_when($due);
     if ($is_coordinator) {
-        return ['type' => 'info', 'icon' => 'bi-arrow-right', 'label' => list_visibility_label($target) . ' ' . $when];
+        return ['type' => 'info', 'icon' => 'bi-alarm', 'label' => '→ ' . list_visibility_label($target) . ' ' . $when];
     }
     $current = $list['visibility'] ?? '';
     return match (true) {
-        $target === 'protected' && $current === 'public'    => ['type' => 'warn', 'icon' => 'bi-pencil', 'label' => 'bis ' . $when],
-        $target === 'public'    && $current === 'protected' => ['type' => 'info', 'icon' => 'bi-pencil', 'label' => 'ab ' . $when],
-        $target === 'private'                              => ['type' => 'dim',  'icon' => 'bi-eye-slash', 'label' => 'bis ' . $when],
+        $target === 'protected' && $current === 'public'    => ['type' => 'warn', 'icon' => 'bi-alarm', 'label' => 'bis ' . $when],
+        $target === 'public'    && $current === 'protected' => ['type' => 'info', 'icon' => 'bi-alarm', 'label' => 'ab ' . $when],
+        $target === 'private'                              => ['type' => 'dim',  'icon' => 'bi-alarm', 'label' => 'bis ' . $when],
         default                                            => null,
     };
+}
+
+/**
+ * Reminder row in the overview for a list dated later whose visibility changes soon:
+ * headline (what happens), time and tone (warn = closes, info = opens, dim = hidden).
+ * @return array{title: string, time: string, tone: string}|null
+ */
+function list_auto_visibility_reminder(array $list, bool $is_coordinator): ?array {
+    $badge = list_auto_visibility_badge($list, $is_coordinator);
+    $due   = list_auto_visibility_due($list);
+    if (!$badge || !$due) return null;
+    $target  = $list['auto_visibility'];
+    $current = $list['visibility'] ?? '';
+    $title = $is_coordinator
+        ? 'Wird ' . list_visibility_label($target)
+        : match (true) {
+            $target === 'protected' && $current === 'public'    => 'Anmeldeschluss',
+            $target === 'public'    && $current === 'protected' => 'Anmeldung öffnet',
+            default                                            => 'Wird ausgeblendet',
+        };
+    $tone = match ($target) { 'protected' => 'warn', 'public' => 'info', default => 'dim' };
+    return ['title' => $title, 'time' => $due->setTimezone(new DateTimeZone('Europe/Berlin'))->format('H:i'), 'tone' => $tone];
 }
 

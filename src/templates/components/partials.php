@@ -413,9 +413,23 @@ function render_content_row(array $it, string $role, array $values): void {
     $end      = $later ? null : $time($it['time_end']);
     $deadline = $it['type'] === 'list' ? list_auto_visibility_badge($it, $is_coord) : null;
     $own      = $it['type'] === 'list' ? ($values[(int)$it['id']] ?? []) : [];
+    $reminder = $later ? list_auto_visibility_reminder($it, $is_coord) : null;
     $shown    = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
     $more     = count($own) - count($shown);
-    ?>
+    if ($reminder): ?>
+    <!-- Erinnerung: Sichtbarkeit einer später datierten Liste ändert sich an diesem Tag -->
+    <a href="<?= e($href) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3 tm-reminder tm-reminder--<?= $reminder['tone'] ?>">
+        <i class="bi bi-alarm tm-reminder-icon" aria-hidden="true"></i>
+        <span class="flex-grow-1 min-w-0">
+            <span class="d-block fw-semibold"><?= e($reminder['title']) ?> <span class="text-nowrap"><?= e($reminder['time']) ?></span></span>
+            <span class="d-flex align-items-center gap-2 flex-wrap small">
+                <span class="text-break"><?= e($it['name']) ?></span>
+                <?php render_badge('dim', dashboard_day_label($it['date']) . ($time($it['time_start']) ? ' ' . $time($it['time_start']) : ''), 'bi-calendar-event'); ?>
+            </span>
+        </span>
+        <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+    </a>
+    <?php return; endif; ?>
     <<?= $tag ?> <?= $href ? 'href="' . e($href) . '"' : '' ?> class="list-group-item <?= $href ? 'list-group-item-action' : '' ?> d-flex align-items-center gap-3">
         <i class="bi <?= e($icon($it)) ?> text-muted" aria-hidden="true"></i>
         <span class="flex-grow-1 min-w-0">
@@ -423,7 +437,6 @@ function render_content_row(array $it, string $role, array $values): void {
                 <span class="fw-semibold"><?= e($it['name']) ?></span>
                 <?php $vis_badge($it); ?>
                 <?php if ($deadline) render_badge($deadline['type'], $deadline['label'], $deadline['icon']); ?>
-                <?php if ($later) render_badge('dim', dashboard_day_label($it['date']) . ($time($it['time_start']) ? ' ' . $time($it['time_start']) : ''), 'bi-calendar-event'); ?>
             </span>
             <?php if ($start || $it['location']): ?>
             <span class="d-flex flex-wrap column-gap-3 small text-muted">
