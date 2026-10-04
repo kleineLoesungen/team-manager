@@ -6,7 +6,7 @@
 //                   Eintrag; darunter ein Link auf /ticker (Ticker aller Teams)
 //   Nächste 7 Tage  Listen, Dokumente, Termine und geplante Ticker; Mitglieder sehen bei
 //                   Listen ihre eigenen Werte ("Training: Ja · Tore: 0")
-//   Dokumente       Dokumente ohne Datum, die nicht versteckt sind
+//   Ohne Datum      Listen und Dokumente ohne Datum, die nicht versteckt sind
 //   Deine Werte     eigene Kennzahlen (nur Mitglieder, src/db/member_stats.php)
 // Sichtbarkeit wie überall: Mitglieder nur öffentliche/geschützte Listen und Dokumente,
 // geschützte Termine; Koordinatoren alles ihres Teams.
@@ -140,17 +140,22 @@ function dashboard_own_values(PDO $pdo, int $team_id, int $user_id, array $list_
 }
 
 /**
- * Documents without a date that are not hidden ("In Listenansicht verstecken"), for the
- * section below the next days. Members: public/protected, coordinators: all of their team.
+ * Lists and documents without a date that are not hidden ("verstecken"), for the section
+ * "Ohne Datum" below the next days. Same row shape as dashboard_upcoming().
+ * Members: public/protected, coordinators: all of their team.
  */
-function dashboard_undated_files(PDO $pdo, int $team_id, bool $is_coordinator): array {
+function dashboard_undated(PDO $pdo, int $team_id, bool $is_coordinator): array {
     $vis  = $is_coordinator ? "('public', 'protected', 'private')" : "('public', 'protected')";
     $stmt = $pdo->prepare(
-        "SELECT id, name, visibility FROM files
-         WHERE team_id = ? AND date IS NULL AND is_hidden = FALSE AND visibility IN $vis
+        "SELECT 'list' AS type, id, name, date, time_start, time_end, location, visibility, list_type,
+                auto_visibility, auto_visibility_hours, auto_visibility_done_at, NULL AS icon
+         FROM lists WHERE team_id = :t AND date IS NULL AND is_hidden = FALSE AND visibility IN $vis
+         UNION ALL
+         SELECT 'file', id, name, NULL, NULL, NULL, NULL, visibility, NULL, NULL, 0, NULL, NULL
+         FROM files WHERE team_id = :t AND date IS NULL AND is_hidden = FALSE AND visibility IN $vis
          ORDER BY name"
     );
-    $stmt->execute([$team_id]);
+    $stmt->execute([':t' => $team_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -190,7 +195,7 @@ function dashboard_data(PDO $pdo, string $role): array {
     $data = [
         'live'     => dashboard_live_tickers($pdo, $role, $team_id, $user_id),
         'upcoming' => dashboard_upcoming($pdo, $team_id, $is_coordinator),
-        'files'    => dashboard_undated_files($pdo, $team_id, $is_coordinator),
+        'undated'  => dashboard_undated($pdo, $team_id, $is_coordinator),
         'values'   => [],
         'columns'  => [],
         'totals'   => [],
@@ -198,10 +203,8 @@ function dashboard_data(PDO $pdo, string $role): array {
 
     if (!$is_coordinator) {
         $list_ids = [];
-        foreach ($data['upcoming'] as $items) {
-            foreach ($items as $it) {
-                if ($it['type'] === 'list' && $it['list_type'] === 'member') $list_ids[] = (int)$it['id'];
-            }
+        foreach (array_merge($data['undated'], ...array_values($data['upcoming'])) as $it) {
+            if ($it['type'] === 'list' && $it['list_type'] === 'member') $list_ids[] = (int)$it['id'];
         }
         require_once ROOT_PATH . '/src/db/member_stats.php';
         set_admin_context($pdo);   // Systemspalten
