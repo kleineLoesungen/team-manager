@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['confirmed_at'] = $_SESSION['confirmed_at'] ?? date('c');
         }
 
-        redirect($is_confirm_route && $is_first_confirm ? '/coordinator/members' : '/coordinator/profile?success=1');
+        redirect($is_confirm_route && $is_first_confirm ? '/coordinator/lists' : '/coordinator/profile?success=1');
     }
 
     // On validation error, keep submitted values for re-display

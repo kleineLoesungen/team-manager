@@ -22,7 +22,7 @@ if (is_authenticated()) {
     }
     // Role-based redirect for already-authenticated users — per D-02
     if (($_SESSION['role'] ?? '') === 'coordinator') {
-        redirect('/coordinator/members');
+        redirect('/coordinator/lists');
     } else {
         redirect('/member/lists');
     }
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (is_valid_return_to($return_to)) {
                             redirect($return_to);
                         } elseif ($role === 'coordinator') {
-                            redirect('/coordinator/members');
+                            redirect('/coordinator/lists');
                         } else {
                             redirect('/member/lists');
                         }

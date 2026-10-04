@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     unset($_SESSION['pending_team_pick']);
     // Keep available_teams in session for switch-team functionality
     set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
-    redirect('/coordinator/members');
+    redirect('/coordinator/lists');
 }
 
 // GET: Teams immer frisch laden (Zuordnungen können sich seit dem Login geändert haben)

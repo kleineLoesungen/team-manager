@@ -226,7 +226,11 @@ match (true) {
         })(),
 
     // ── Coordinator: Members ───────────────────────────────────────────
-    $path === '/coordinator' || $path === '/coordinator/members'
+    // Startseite der Koordinatoren ist die Übersicht (Reiter "Inhalte")
+    $path === '/coordinator'
+        => redirect('/coordinator/lists'),
+
+    $path === '/coordinator/members'
         => require ROOT_PATH . '/src/coordinator/members_handler.php',
 
     $path === '/coordinator/members/create'
