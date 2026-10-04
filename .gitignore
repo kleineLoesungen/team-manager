@@ -3,3 +3,5 @@
 .env.deploy
 vendor/
 config.php
+# macOS-Ordnerdaten
+.DS_Store
