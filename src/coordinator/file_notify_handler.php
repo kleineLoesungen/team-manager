@@ -3,6 +3,7 @@
 // Coordinator review and send notification for a file (markdown document).
 // Per D-01: button on file detail page links here.
 // Per D-02, D-03, D-04: same rules as list_notify but for files table.
+// Recipients can be switched off individually on the review page (recipients[] = user ids).
 
 declare(strict_types=1);
 
@@ -66,12 +67,18 @@ $team_name         = $team_row['name'] ?? 'Team';
 $subject_prefilled = '[' . $team_name . '] ' . $file['name'];
 
 $error = '';
+$selected_ids = null;   // null = alle ausgewählt (erster Aufruf)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
     $subject_raw = trim($_POST['subject'] ?? '');
     $body_raw    = trim($_POST['body']    ?? '');
+
+    // Nur Ids zulassen, die tatsächlich mögliche Empfänger sind
+    $allowed_ids  = array_map(fn($u) => (int)$u['id'], $with_email);
+    $posted_ids   = array_map('intval', (array)($_POST['recipients'] ?? []));
+    $selected_ids = array_values(array_intersect($allowed_ids, $posted_ids));
 
     if ($subject_raw === '') {
         $error = 'Bitte gib einen Betreff an.';
@@ -81,11 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Bitte gib eine Nachricht ein.';
     } elseif (mb_strlen($body_raw) > 2000) {
         $error = 'Nachricht zu lang (max. 2000 Zeichen).';
+    } elseif (empty($selected_ids)) {
+        $error = 'Alle Empfänger sind abgewählt. Wähle mindestens eine Person aus.';
     } else {
         // Re-fetch recipients for actual send (never trust GET-time state)
         if ($target_role === 'member') {
             $re_stmt = $pdo->prepare(
-                "SELECT p.first_name, u.role,
+                "SELECT u.id, p.first_name, u.role,
                         p.email,
                         p.contact_email
                  FROM users u JOIN teams t ON t.id = u.team_id
@@ -95,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
         } else {
             $re_stmt = $pdo->prepare(
-                "SELECT p.first_name, u.role, p.email, NULL AS contact_email
+                "SELECT u.id, p.first_name, u.role, p.email, NULL AS contact_email
                  FROM users u
                  JOIN teams t ON t.id = u.team_id
                  JOIN members p ON p.id = u.member_id
@@ -110,6 +119,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $failed = 0;
 
         foreach ($send_recipients as $recipient) {
+            if (!in_array((int)$recipient['id'], $selected_ids, true)) {
+                continue;   // auf der Prüfseite abgewählt
+            }
             $recipient_link = app_url($recipient['role'] === 'member'
                 ? '/member/files/' . $file_id
                 : '/coordinator/files/' . $file_id);
@@ -148,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Benachrichtigung prüfen', 'lists', function() use (
-    $file, $with_email, $without_email, $subject_prefilled, $content_link, $error
+    $file, $with_email, $without_email, $subject_prefilled, $content_link, $error, $selected_ids
 ) {
     if ($error) echo '<div class="alert alert-danger mb-3">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/file_notify.php';
