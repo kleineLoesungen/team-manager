@@ -50,31 +50,14 @@ $showCalendar = ($view === 'month');
 $periodView   = 'month';
 $offset       = max(-120, min(120, (int)($_GET['offset'] ?? 0))); // clamp offset
 
-$datedItems   = [];
-$undatedItems = [];
-$boundaries   = ['start' => '', 'end' => '', 'label' => ''];
+$month      = null;   // Monatsansicht: gleiche Zeilen wie die Übersicht (src/db/dashboard.php)
+$boundaries = ['start' => '', 'end' => '', 'label' => ''];
 if ($showCalendar) {
     require_once ROOT_PATH . '/src/utils/calendar.php';
-    $now = new DateTime('now', new DateTimeZone('Europe/Berlin'));
-
-    $boundaries = ($periodView === 'month')
-        ? getMonthBoundaries($now, $offset)
-        : getWeekBoundaries($now, $offset);
-
-    // Filter $items — visibility already restricted to public+protected by SQL (D-08)
-    $datedItems = array_values(array_filter(
-        $items,
-        fn($i) => $i['date'] !== null
-               && $i['date'] >= $boundaries['start']
-               && $i['date'] <= $boundaries['end']
-    ));
-    // Sort dated items ascending by date (existing $items sort is descending)
-    usort($datedItems, fn($a, $b) => strcmp($a['date'], $b['date']));
-
-    // Undated items: all items without a date
-    $undatedItems = array_values(array_filter($items, fn($i) => $i['date'] === null));
-
-    // ICS URL moved to /member/profile (personal token-based feed)
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    $now        = new DateTime('now', new DateTimeZone('Europe/Berlin'));
+    $boundaries = getMonthBoundaries($now, $offset);
+    $month      = dashboard_month_data($pdo, 'member', $boundaries);
 }
 
 // Übersicht: Live, nächste 7 Tage, eigene Werte (src/db/dashboard.php)
@@ -92,7 +75,7 @@ $cal_token = $tstmt->fetchColumn();
 $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
 
-render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url, $dashboard) {
+render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/member/lists.php';
 });

@@ -59,34 +59,14 @@ $showCalendar = ($view === 'month');
 $periodView   = 'month';
 $offset       = max(-120, min(120, (int)($_GET['offset'] ?? 0))); // clamp offset
 
-$datedItems   = [];
-$undatedItems = [];
-$boundaries   = ['start' => '', 'end' => '', 'label' => ''];
-
+$month      = null;   // Monatsansicht: gleiche Zeilen wie die Übersicht (src/db/dashboard.php)
+$boundaries = ['start' => '', 'end' => '', 'label' => ''];
 if ($showCalendar) {
     require_once ROOT_PATH . '/src/utils/calendar.php';
-    $now = new DateTime('now', new DateTimeZone('Europe/Berlin'));
-
-    $boundaries = ($periodView === 'month')
-        ? getMonthBoundaries($now, $offset)
-        : getWeekBoundaries($now, $offset);
-
-    // Filter $items (already fetched, includes all visibility states for coordinator per D-09)
-    $datedItems = array_values(array_filter(
-        $items,
-        fn($i) => $i['date'] !== null
-               && $i['date'] >= $boundaries['start']
-               && $i['date'] <= $boundaries['end']
-    ));
-    // Sort dated items ascending by date (existing $items sort is descending)
-    usort($datedItems, fn($a, $b) => strcmp($a['date'], $b['date']));
-
-    // Undated items: all items without a date (sorted created_at DESC from existing $items order)
-    $undatedItems = array_values(array_filter($items, fn($i) => $i['date'] === null));
-
-    // ICS URL moved to /coordinator/profile (personal token-based feed)
-
-    usort($datedItems, fn($a, $b) => strcmp($a['date'], $b['date']));
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    $now        = new DateTime('now', new DateTimeZone('Europe/Berlin'));
+    $boundaries = getMonthBoundaries($now, $offset);
+    $month      = dashboard_month_data($pdo, 'coordinator', $boundaries);
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
@@ -104,7 +84,7 @@ if ($view === 'overview') {
     $dashboard = dashboard_data($pdo, 'coordinator');
 }
 
-render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $datedItems, $undatedItems, $ics_url, $dashboard) {
+render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/lists.php';

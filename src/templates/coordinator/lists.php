@@ -1,7 +1,7 @@
 <?php
 // src/templates/coordinator/lists.php — overview tabs: Übersicht (default) | Monat | Liste
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
-//            $datedItems, $undatedItems, $ics_url, $dashboard
+//            $month, $ics_url, $dashboard
 
 // ── German day name helper ────────────────────────────────────────────────────
 $de_days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
@@ -83,110 +83,34 @@ $vis_badge = function(string $visibility): void {
 
 <!-- Period navigation: ‹ label › ────────────────────────────────────── -->
 <div class="period-nav">
-    <a href="<?= $cal_url($periodView, $offset - 1) ?>" title="<?= $periodView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat' ?>">‹</a>
+    <a href="<?= $cal_url($periodView, $offset - 1) ?>" title="Vorheriger Monat">‹</a>
     <span class="period-label"><?= e($boundaries['label']) ?></span>
-    <a href="<?= $cal_url($periodView, $offset + 1) ?>" title="<?= $periodView === 'week' ? 'Nächste Woche' : 'Nächster Monat' ?>">›</a>
+    <a href="<?= $cal_url($periodView, $offset + 1) ?>" title="Nächster Monat">›</a>
 </div>
 
-<!-- Dated entries timeline (D-04, D-05) -->
-<?php if (!empty($datedItems)): ?>
+<!-- Einträge des Monats — gleiche Zeilen wie die Übersicht (render_content_row) -->
+<?php if (!empty($month['days'])): ?>
 <div class="mb-4">
-    <?php
-    // Group items by date, preserving order
-    $groups_by_date = [];
-    foreach ($datedItems as $_item) {
-        $groups_by_date[$_item['date']][] = $_item;
-    }
-    foreach ($groups_by_date as $date => $group_items): ?>
-    <div class="mb-3">
-    <?php render_collection_group($day_header($date), function() use ($group_items, $vis_badge): void {
-        foreach ($group_items as $item) {
-            if ($item['type'] === 'event') { ?>
-        <div class="card card-sm mb-2 border-0 bg-body-secondary">
-            <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="flex-grow-1 min-w-0">
-                        <a href="/coordinator/events/<?= (int)$item['id'] ?>/edit"
-                           class="text-decoration-none fw-semibold text-body">
-                            <i class="bi <?= e($item['icon'] ?? 'bi-calendar-event') ?> me-1 text-muted"></i><?= e($item['name']) ?>
-                        </a>
-                        <?php if (empty($item['is_all_day']) && !empty($item['time_start'])): ?>
-                        <div class="small text-muted mt-1">
-                            <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
-                        </div>
-                        <?php endif; ?>
-                        <?php if (!empty($item['location'])): ?>
-                        <div class="small text-muted mt-1">
-                            <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php if ($item['visibility'] === 'private'): ?>
-                    <?php render_badge('dim', 'Privat'); ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-            <?php } else {
-                $is_file    = ($item['type'] === 'file');
-                $detail_url = $is_file
-                    ? '/coordinator/files/' . (int)$item['id']
-                    : '/coordinator/lists/' . (int)$item['id']; ?>
-        <div class="card card-sm mb-2">
-            <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="flex-grow-1 min-w-0">
-                        <a href="<?= e($detail_url) ?>" class="text-decoration-none fw-semibold text-body">
-                            <i class="bi <?= $is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($item['name']) ?>
-                        </a>
-                        <?php if (!empty($item['location'])): ?>
-                        <div class="small text-muted mt-1">
-                            <i class="bi bi-geo-alt me-1"></i><?= e($item['location']) ?>
-                        </div>
-                        <?php endif; ?>
-                        <?php if (!empty($item['time_start'])): ?>
-                        <div class="small text-muted mt-1">
-                            <i class="bi bi-clock me-1"></i><?= e(substr((string)$item['time_start'], 0, 5)) ?><?php if (!empty($item['time_end'])): ?> – <?= e(substr((string)$item['time_end'], 0, 5)) ?><?php endif; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php $vis_badge($item['visibility']); ?>
-                </div>
-            </div>
-        </div>
-            <?php }
-        }
-    }); ?>
+<?php foreach ($month['days'] as $_date => $_day_items):
+    render_collection_group($day_header($_date), function () use ($_day_items, $month) { ?>
+    <div class="list-group">
+        <?php foreach ($_day_items as $_it) render_content_row($_it, 'coordinator', $month['values']); ?>
     </div>
-    <?php endforeach; ?>
+<?php });
+endforeach; ?>
 </div>
 <?php else: ?>
-<?php render_empty('calendar3', 'Noch keine Einträge', 'Kein Eintrag mit Datum in diesem Zeitraum.'); ?>
+<?php render_empty('calendar3', 'Keine Einträge', 'Noch keine Einträge mit Datum in diesem Monat.'); ?>
 <?php endif; ?>
 
-<!-- Undated section (D-04) -->
-<?php if (!empty($undatedItems)): ?>
+<!-- Ohne Datum: nicht versteckte Listen und Dokumente (versteckte stehen unter "Liste") -->
+<?php if (!empty($month['undated'])): ?>
 <div class="mt-4">
-<?php render_collection_group('Ohne Datum', function() use ($undatedItems, $vis_badge): void {
-    foreach ($undatedItems as $item) {
-        $is_file    = ($item['type'] === 'file');
-        $detail_url = $is_file
-            ? '/coordinator/files/' . (int)$item['id']
-            : '/coordinator/lists/' . (int)$item['id']; ?>
-    <div class="card card-sm mb-2">
-        <div class="card-body py-2 px-3">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div class="flex-grow-1 min-w-0">
-                    <a href="<?= e($detail_url) ?>" class="text-decoration-none fw-semibold text-body">
-                        <i class="bi <?= $is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($item['name']) ?>
-                    </a>
-                </div>
-                <?php $vis_badge($item['visibility']); ?>
-            </div>
-        </div>
+<?php render_collection_group('Ohne Datum', function () use ($month) { ?>
+    <div class="list-group">
+        <?php foreach ($month['undated'] as $_it) render_content_row($_it, 'coordinator', $month['values']); ?>
     </div>
-    <?php }
-}); ?>
+<?php }); ?>
 </div>
 <?php endif; ?>
 

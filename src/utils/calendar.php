@@ -4,52 +4,6 @@
 declare(strict_types=1);
 
 /**
- * Calculate ISO week boundaries (Monday–Sunday) with offset.
- *
- * @param DateTime $now    Reference date (server's current date in Europe/Berlin)
- * @param int      $offset Weeks to offset: 0 = current week, -1 = last week, +1 = next week
- * @return array{start: string, end: string, label: string}
- *   start/end: 'Y-m-d' strings for SQL BETWEEN clause
- *   label: formatted German string e.g. "14.–20. Juli 2026"
- */
-function getWeekBoundaries(DateTime $now, int $offset): array
-{
-    $monday = clone $now;
-    $monday->modify('Monday this week');
-    if ($offset !== 0) {
-        $monday->modify(($offset > 0 ? '+' : '') . $offset . ' weeks');
-    }
-    $sunday = clone $monday;
-    $sunday->modify('+6 days');
-
-    $de_months = [
-        1 => 'Januar', 2 => 'Februar', 3 => 'März',    4 => 'April',
-        5 => 'Mai',    6 => 'Juni',    7 => 'Juli',     8 => 'August',
-        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
-    ];
-
-    // If Monday and Sunday are in the same month: "14.–20. Juli 2026"
-    // If they span months: "28. Juli–3. August 2026"
-    $mon_month = (int)$monday->format('n');
-    $sun_month = (int)$sunday->format('n');
-
-    if ($mon_month === $sun_month) {
-        $label = $monday->format('d.') . '–' . $sunday->format('d.') . ' '
-               . $de_months[$sun_month] . ' ' . $sunday->format('Y');
-    } else {
-        $label = $monday->format('d.') . ' ' . $de_months[$mon_month]
-               . '–' . $sunday->format('d.') . ' ' . $de_months[$sun_month]
-               . ' ' . $sunday->format('Y');
-    }
-
-    return [
-        'start' => $monday->format('Y-m-d'),
-        'end'   => $sunday->format('Y-m-d'),
-        'label' => $label,
-    ];
-}
-
-/**
  * Calculate calendar month boundaries with offset.
  *
  * @param DateTime $now    Reference date (server's current date in Europe/Berlin)

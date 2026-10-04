@@ -1,7 +1,7 @@
 <?php
 // src/templates/member/lists.php — overview tabs: Übersicht (default) | Monat | Liste
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
-//            $datedItems, $undatedItems, $ics_url, $dashboard
+//            $month, $ics_url, $dashboard
 
 // ── German day name helper ────────────────────────────────────────────────────
 $de_days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
@@ -40,83 +40,35 @@ $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&
 
 <!-- Period navigation: ‹ label › -->
 <div class="period-nav">
-    <a href="<?= $cal_url($periodView, $offset - 1) ?>" title="<?= $periodView === 'week' ? 'Vorherige Woche' : 'Vorheriger Monat' ?>">‹</a>
+    <a href="<?= $cal_url($periodView, $offset - 1) ?>" title="Vorheriger Monat">‹</a>
     <span class="period-label"><?= e($boundaries['label']) ?></span>
-    <a href="<?= $cal_url($periodView, $offset + 1) ?>" title="<?= $periodView === 'week' ? 'Nächste Woche' : 'Nächster Monat' ?>">›</a>
+    <a href="<?= $cal_url($periodView, $offset + 1) ?>" title="Nächster Monat">›</a>
 </div>
 
-<!-- Dated entries timeline -->
-<?php if (!empty($datedItems)): ?>
+<!-- Einträge des Monats — gleiche Zeilen wie die Übersicht (render_content_row) -->
+<?php if (!empty($month['days'])): ?>
 <div class="mb-4">
-<?php
-$date_groups = [];
-foreach ($datedItems as $_item) {
-    $date_groups[$_item['date']][] = $_item;
-}
-foreach ($date_groups as $_date => $_group_items):
-    render_collection_group($day_header($_date), function() use ($_group_items) {
-        foreach ($_group_items as $_item):
-            $_is_file    = ($_item['type'] === 'file');
-            $_detail_url = $_is_file
-                ? '/member/files/' . (int)$_item['id']
-                : '/member/lists/' . (int)$_item['id'];
-            ?>
-            <div class="card card-sm mb-2">
-                <div class="card-body py-2 px-3">
-                    <div class="d-flex justify-content-between align-items-start gap-2">
-                        <div class="flex-grow-1 min-w-0">
-                            <a href="<?= e($_detail_url) ?>" class="text-decoration-none fw-semibold text-body">
-                                <i class="bi <?= $_is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($_item['name']) ?>
-                            </a>
-                            <?php if (!empty($_item['location'])): ?>
-                            <div class="small text-muted mt-1">
-                                <i class="bi bi-geo-alt me-1"></i><?= e($_item['location']) ?>
-                            </div>
-                            <?php endif; ?>
-                            <?php if (!empty($_item['time_start'])): ?>
-                            <div class="small text-muted mt-1">
-                                <i class="bi bi-clock me-1"></i><?= e(substr((string)$_item['time_start'], 0, 5)) ?><?php if (!empty($_item['time_end'])): ?> – <?= e(substr((string)$_item['time_end'], 0, 5)) ?><?php endif; ?>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        <?php if ($_item['visibility'] === 'public'): render_badge('ok', 'Öffentlich');
-                        else: render_badge('warn', 'Nur lesen'); endif; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endforeach;
-    });
-endforeach;
-?>
+<?php foreach ($month['days'] as $_date => $_day_items):
+    render_collection_group($day_header($_date), function () use ($_day_items, $month) { ?>
+    <div class="list-group">
+        <?php foreach ($_day_items as $_it) render_content_row($_it, 'member', $month['values']); ?>
+    </div>
+<?php });
+endforeach; ?>
 </div>
 <?php else: ?>
-<?php render_empty('calendar3', 'Keine Einträge', 'Noch keine Einträge mit Datum in diesem Zeitraum.'); ?>
+<?php render_empty('calendar3', 'Keine Einträge', 'Noch keine Einträge mit Datum in diesem Monat.'); ?>
 <?php endif; ?>
 
-<!-- Undated section -->
-<?php if (!empty($undatedItems)): ?>
-<?php render_collection_group('Ohne Datum', function() use ($undatedItems) {
-    foreach ($undatedItems as $_item):
-        $_is_file    = ($_item['type'] === 'file');
-        $_detail_url = $_is_file
-            ? '/member/files/' . (int)$_item['id']
-            : '/member/lists/' . (int)$_item['id'];
-    ?>
-    <div class="card card-sm mb-2">
-        <div class="card-body py-2 px-3">
-            <div class="d-flex justify-content-between align-items-start gap-2">
-                <div class="flex-grow-1 min-w-0">
-                    <a href="<?= e($_detail_url) ?>" class="text-decoration-none fw-semibold text-body">
-                        <i class="bi <?= $_is_file ? 'bi-file-earmark-text' : 'bi-table' ?> me-1 text-muted"></i><?= e($_item['name']) ?>
-                    </a>
-                </div>
-                <?php if ($_item['visibility'] === 'public'): render_badge('ok', 'Öffentlich');
-                else: render_badge('warn', 'Nur lesen'); endif; ?>
-            </div>
-        </div>
+<!-- Ohne Datum: nicht versteckte Listen und Dokumente (versteckte stehen unter "Liste") -->
+<?php if (!empty($month['undated'])): ?>
+<div class="mt-4">
+<?php render_collection_group('Ohne Datum', function () use ($month) { ?>
+    <div class="list-group">
+        <?php foreach ($month['undated'] as $_it) render_content_row($_it, 'member', $month['values']); ?>
     </div>
-    <?php endforeach;
-}); ?>
+<?php }); ?>
+</div>
 <?php endif; ?>
 
 <!-- Kalender-Abo — bottom of calendar tab -->

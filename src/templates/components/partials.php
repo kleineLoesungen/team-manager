@@ -371,12 +371,13 @@ function render_auto_visibility_member_hint(array $list): void {
 }
 
 /**
- * Übersicht (Reiter "Inhalte"): Live, Nächste 7 Tage, Ohne Datum, Deine Werte
- * (src/db/dashboard.php). Kompakt: Symbole und Kennzeichen statt Sätzen.
- * @param array  $d    Result of dashboard_data()
- * @param string $role 'member' | 'coordinator'
+ * One row of the content overview and the month view: list, document, event or ticker with
+ * time/place icons, visibility, pending deadline and — for members — their own values as badges.
+ * @param array  $it     Row from dashboard_dated() / dashboard_undated()
+ * @param string $role   'member' | 'coordinator'
+ * @param array  $values Own values per list id (dashboard_own_values()), members only
  */
-function render_dashboard(array $d, string $role): void {
+function render_content_row(array $it, string $role, array $values): void {
     require_once ROOT_PATH . '/src/db/dashboard.php';
     require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
     $is_coord = $role === 'coordinator';
@@ -404,49 +405,60 @@ function render_dashboard(array $d, string $role): void {
             render_badge('dim', 'Nur lesen', 'bi-lock');
         }
     };
-    // Eine Zeile (Liste, Dokument, Termin, Ticker) — gemeinsam für "Nächste 7 Tage" und "Ohne Datum"
-    $render_item = function (array $it) use ($d, $is_coord, $url, $icon, $time, $vis_badge): void {
-        $href     = $url($it);
-        $tag      = $href ? 'a' : 'div';
-        $start    = $time($it['time_start']);
-        $end      = $time($it['time_end']);
-        $deadline = $it['type'] === 'list' ? list_auto_visibility_badge($it, $is_coord) : null;
-        $own      = $it['type'] === 'list' ? ($d['values'][(int)$it['id']] ?? []) : [];
-        $shown    = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
-        $more     = count($own) - count($shown);
-        ?>
-        <<?= $tag ?> <?= $href ? 'href="' . e($href) . '"' : '' ?> class="list-group-item <?= $href ? 'list-group-item-action' : '' ?> d-flex align-items-center gap-3">
-            <i class="bi <?= e($icon($it)) ?> text-muted" aria-hidden="true"></i>
-            <span class="flex-grow-1 min-w-0">
-                <span class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="fw-semibold"><?= e($it['name']) ?></span>
-                    <?php $vis_badge($it); ?>
-                    <?php if ($deadline) render_badge($deadline['type'], $deadline['label'], $deadline['icon']); ?>
-                </span>
-                <?php if ($start || $it['location']): ?>
-                <span class="d-flex flex-wrap column-gap-3 small text-muted">
-                    <?php if ($start): ?><span class="text-nowrap"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= e($start . ($end ? '–' . $end : '')) ?></span><?php endif; ?>
-                    <?php if ($it['location']): ?><span class="text-break"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i><?= e($it['location']) ?></span><?php endif; ?>
-                </span>
-                <?php endif; ?>
-                <?php if ($shown): ?>
-                <span class="d-flex gap-1 flex-wrap mt-1">
-                    <?php foreach ($shown as $v):
-                        if ($v['type'] === 'boolean') {
-                            $v['yes'] ? render_badge('ok', $v['name'], 'bi-check-lg')
-                                      : render_badge('dim', $v['name'], $v['set'] ? 'bi-x-lg' : 'bi-dash');
-                        } else {
-                            render_badge('dim', $v['name'] . ' ' . $v['value']);
-                        }
-                    endforeach; ?>
-                    <?php if ($more > 0) render_badge('dim', '+' . $more); ?>
-                </span>
-                <?php endif; ?>
+    $href     = $url($it);
+    $tag      = $href ? 'a' : 'div';
+    $start    = $time($it['time_start']);
+    $end      = $time($it['time_end']);
+    $deadline = $it['type'] === 'list' ? list_auto_visibility_badge($it, $is_coord) : null;
+    $own      = $it['type'] === 'list' ? ($values[(int)$it['id']] ?? []) : [];
+    $shown    = array_slice($own, 0, DASHBOARD_VALUES_SHOWN);
+    $more     = count($own) - count($shown);
+    ?>
+    <<?= $tag ?> <?= $href ? 'href="' . e($href) . '"' : '' ?> class="list-group-item <?= $href ? 'list-group-item-action' : '' ?> d-flex align-items-center gap-3">
+        <i class="bi <?= e($icon($it)) ?> text-muted" aria-hidden="true"></i>
+        <span class="flex-grow-1 min-w-0">
+            <span class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="fw-semibold"><?= e($it['name']) ?></span>
+                <?php $vis_badge($it); ?>
+                <?php if ($deadline) render_badge($deadline['type'], $deadline['label'], $deadline['icon']); ?>
             </span>
-            <?php if ($href): ?><i class="bi bi-chevron-right text-muted" aria-hidden="true"></i><?php endif; ?>
-        </<?= $tag ?>>
-        <?php
-    };
+            <?php if ($start || $it['location']): ?>
+            <span class="d-flex flex-wrap column-gap-3 small text-muted">
+                <?php if ($start): ?><span class="text-nowrap"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= e($start . ($end ? '–' . $end : '')) ?></span><?php endif; ?>
+                <?php if ($it['location']): ?><span class="text-break"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i><?= e($it['location']) ?></span><?php endif; ?>
+            </span>
+            <?php endif; ?>
+            <?php if ($shown): ?>
+            <span class="d-flex gap-1 flex-wrap mt-1">
+                <?php foreach ($shown as $v):
+                    if ($v['type'] === 'boolean') {
+                        $v['yes'] ? render_badge('ok', $v['name'], 'bi-check-lg')
+                                  : render_badge('dim', $v['name'], $v['set'] ? 'bi-x-lg' : 'bi-dash');
+                    } else {
+                        render_badge('dim', $v['name'] . ' ' . $v['value']);
+                    }
+                endforeach; ?>
+                <?php if ($more > 0) render_badge('dim', '+' . $more); ?>
+            </span>
+            <?php endif; ?>
+        </span>
+        <?php if ($href): ?><i class="bi bi-chevron-right text-muted" aria-hidden="true"></i><?php endif; ?>
+    </<?= $tag ?>>
+    <?php
+}
+
+/**
+ * Übersicht (Reiter "Inhalte"): Live, Nächste 7 Tage, Ohne Datum, Deine Werte
+ * (src/db/dashboard.php). Kompakt: Symbole und Kennzeichen statt Sätzen.
+ * @param array  $d    Result of dashboard_data()
+ * @param string $role 'member' | 'coordinator'
+ */
+function render_dashboard(array $d, string $role): void {
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
+    $is_coord = $role === 'coordinator';
+    $base     = $is_coord ? '/coordinator' : '/member';
+    $render_item = fn(array $it) => render_content_row($it, $role, $d['values']);
     ?>
 
     <?php if (!empty($d['live'])): ?>

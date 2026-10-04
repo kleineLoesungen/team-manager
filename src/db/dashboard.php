@@ -67,15 +67,19 @@ function dashboard_live_tickers(PDO $pdo, string $role, int $team_id, int $user_
 }
 
 /**
- * Everything dated today .. today+6 (Europe/Berlin), grouped by date, sorted by time.
- * @return array<string, list<array>> date (Y-m-d) => items; item 'type' is list|file|event|ticker
+ * Lists, documents, events and tickers dated $from .. $to (Y-m-d), grouped by date and sorted
+ * by time. Same visibility rules everywhere: members get public/protected lists and documents
+ * and protected events, coordinators everything of their team.
+ * $upcoming_tickers_only: only tickers that have not started yet (the overview shows running
+ * ones under "Live"); the month view shows all tickers of the period.
+ * @return array<string, list<array>> date => items; item 'type' is list|file|event|ticker
  */
-function dashboard_upcoming(PDO $pdo, int $team_id, bool $is_coordinator): array {
-    $tz    = new DateTimeZone('Europe/Berlin');
-    $from  = (new DateTimeImmutable('today', $tz))->format('Y-m-d');
-    $to    = (new DateTimeImmutable('today', $tz))->modify('+' . (DASHBOARD_DAYS - 1) . ' days')->format('Y-m-d');
+function dashboard_dated(PDO $pdo, int $team_id, bool $is_coordinator, string $from, string $to, bool $upcoming_tickers_only): array {
     $vis   = $is_coordinator ? "('public', 'protected', 'private')" : "('public', 'protected')";
     $evvis = $is_coordinator ? "('protected', 'private')" : "('protected')";
+    $tick  = $upcoming_tickers_only
+        ? "AND status = 'active' AND ((event_date + COALESCE(start_time, TIME '00:00')) AT TIME ZONE 'Europe/Berlin') > NOW()"
+        : '';
 
     $stmt = $pdo->prepare(
         "SELECT 'list' AS type, id, name, date, time_start, time_end, location, visibility, list_type,
@@ -90,8 +94,7 @@ function dashboard_upcoming(PDO $pdo, int $team_id, bool $is_coordinator): array
          FROM events WHERE team_id = :t AND visibility IN $evvis AND date BETWEEN :from AND :to
          UNION ALL
          SELECT 'ticker', id, name, event_date, start_time, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL
-         FROM tickers WHERE team_id = :t AND status = 'active' AND event_date BETWEEN :from AND :to
-           AND ((event_date + COALESCE(start_time, TIME '00:00')) AT TIME ZONE 'Europe/Berlin') > NOW()
+         FROM tickers WHERE team_id = :t AND event_date BETWEEN :from AND :to $tick
          ORDER BY date, time_start NULLS FIRST, name"
     );
     $stmt->execute([':t' => $team_id, ':from' => $from, ':to' => $to]);
@@ -101,6 +104,14 @@ function dashboard_upcoming(PDO $pdo, int $team_id, bool $is_coordinator): array
         $by_day[$row['date']][] = $row;
     }
     return $by_day;
+}
+
+/** Overview: today .. today+6 (Europe/Berlin), tickers only before they start. */
+function dashboard_upcoming(PDO $pdo, int $team_id, bool $is_coordinator): array {
+    $tz    = new DateTimeZone('Europe/Berlin');
+    $today = new DateTimeImmutable('today', $tz);
+    return dashboard_dated($pdo, $team_id, $is_coordinator, $today->format('Y-m-d'),
+        $today->modify('+' . (DASHBOARD_DAYS - 1) . ' days')->format('Y-m-d'), true);
 }
 
 /**
@@ -202,13 +213,10 @@ function dashboard_data(PDO $pdo, string $role): array {
     ];
 
     if (!$is_coordinator) {
-        $list_ids = [];
-        foreach (array_merge($data['undated'], ...array_values($data['upcoming'])) as $it) {
-            if ($it['type'] === 'list' && $it['list_type'] === 'member') $list_ids[] = (int)$it['id'];
-        }
         require_once ROOT_PATH . '/src/db/member_stats.php';
         set_admin_context($pdo);   // Systemspalten
-        $data['values']  = dashboard_own_values($pdo, $team_id, $user_id, $list_ids);
+        $data['values']  = dashboard_own_values($pdo, $team_id, $user_id,
+            dashboard_member_list_ids(array_merge($data['undated'], ...array_values($data['upcoming']))));
         $data['columns'] = member_stats_global_columns($pdo, $team_id);
         $data['totals']  = $data['columns'] ? member_stats_totals($pdo, $team_id, $user_id) : [];
         reset_rls_context($pdo);
@@ -216,3 +224,38 @@ function dashboard_data(PDO $pdo, string $role): array {
     }
     return $data;
 }
+
+/** Ids of member-type lists among the given rows (for dashboard_own_values). */
+function dashboard_member_list_ids(array $items): array {
+    $ids = [];
+    foreach ($items as $it) {
+        if ($it['type'] === 'list' && $it['list_type'] === 'member') $ids[] = (int)$it['id'];
+    }
+    return $ids;
+}
+
+/**
+ * Month view: everything dated within the month plus the undated, non-hidden entries,
+ * in the same row shape and with the same own values as the overview.
+ * @param array $boundaries ['start' => Y-m-d, 'end' => Y-m-d] from getMonthBoundaries()
+ */
+function dashboard_month_data(PDO $pdo, string $role, array $boundaries): array {
+    $team_id = (int)$_SESSION['team_id'];
+    $user_id = (int)$_SESSION['user_id'];
+    $is_coordinator = $role === 'coordinator';
+
+    $data = [
+        'days'    => dashboard_dated($pdo, $team_id, $is_coordinator, $boundaries['start'], $boundaries['end'], false),
+        'undated' => dashboard_undated($pdo, $team_id, $is_coordinator),
+        'values'  => [],
+    ];
+    if (!$is_coordinator) {
+        set_admin_context($pdo);   // Systemspalten
+        $data['values'] = dashboard_own_values($pdo, $team_id, $user_id,
+            dashboard_member_list_ids(array_merge($data['undated'], ...array_values($data['days']))));
+        reset_rls_context($pdo);
+        set_team_context($pdo, $team_id, 'member', $user_id);
+    }
+    return $data;
+}
+
