@@ -489,6 +489,9 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 .cell-number { min-width: 70px; max-width: 100px; }
 .cell-text   { min-width: 100px; }
 
+/* Zahlenfeld für Stunden (z. B. automatische Sichtbarkeit): Platz für drei Ziffern */
+.tm-input-hours { width: 5.5rem; }
+
 /* Filter-Pills */
 .tm-filters { display: flex; gap: .25rem; flex-wrap: wrap; }
 

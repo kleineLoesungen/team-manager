@@ -68,10 +68,19 @@ CREATE TABLE IF NOT EXISTS team_manager.lists (
     location      VARCHAR(255)             NULL,
     time_start    TIME                     NULL,
     time_end      TIME                     NULL,
+    -- Zeitgesteuerte Sichtbarkeit: auf auto_visibility umstellen, auto_visibility_hours vor
+    -- Beginn (date + time_start, ohne Uhrzeit 00:00, Europe/Berlin). done_at = schon erledigt.
+    auto_visibility         VARCHAR(10) NULL
+                            CHECK (auto_visibility IN ('public', 'protected', 'private')),
+    auto_visibility_hours   INTEGER     NOT NULL DEFAULT 0
+                            CHECK (auto_visibility_hours BETWEEN 0 AND 720),
+    auto_visibility_done_at TIMESTAMPTZ NULL,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_lists_team_id    ON team_manager.lists(team_id);
+CREATE INDEX IF NOT EXISTS idx_lists_auto_visibility_pending ON team_manager.lists(date)
+    WHERE auto_visibility IS NOT NULL AND auto_visibility_done_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_lists_visibility ON team_manager.lists(visibility);
 
 -- Columns — attribute metadata for EAV (global: list_id IS NULL; local: list_id IS NOT NULL)

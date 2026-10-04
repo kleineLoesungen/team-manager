@@ -4,13 +4,14 @@
 declare(strict_types=1);
 
 require_coordinator();
+require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
 
 $list_id = (int)($_REQUEST['list_id'] ?? 0);
 $pdo     = get_db();
 $error   = '';
 
 // Fetch list including show_all_rows, is_hidden, date, description, and optional time columns
-$time_cols = ', time_start, time_end';
+$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at';
 $stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -201,25 +202,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_time_end = $raw_te . ':00';
         }
 
+        // Automatische Umstellung der Sichtbarkeit ('' = aus)
+        $new_auto       = $_POST['auto_visibility'] ?? '';
+        $raw_auto_hours = trim($_POST['auto_visibility_hours'] ?? '');
+        $new_auto_hours = $raw_auto_hours === '' ? 0 : filter_var($raw_auto_hours, FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 0, 'max_range' => LIST_AUTO_VISIBILITY_MAX_HOURS]]);
+
         if ($new_name === '') {
             $error = 'Name ist erforderlich.';
         } elseif (mb_strlen($new_name) > 100) {
             $error = 'Name darf max. 100 Zeichen haben.';
         } elseif (!in_array($new_visibility, ['public', 'protected', 'private'])) {
             $error = 'Ungültiger Sichtbarkeits-Status.';
+        } elseif (!in_array($new_auto, ['', 'public', 'protected', 'private'], true)) {
+            $error = 'Ungültige automatische Sichtbarkeit.';
+        } elseif ($new_auto !== '' && $new_auto_hours === false) {
+            $error = 'Stunden vor Beginn: Gib eine ganze Zahl von 0 bis ' . LIST_AUTO_VISIBILITY_MAX_HOURS . ' ein.';
+        } elseif ($new_auto !== '' && $new_date === '') {
+            $error = 'Für die automatische Umstellung braucht die Liste ein Datum.';
         } else {
             try {
                 $upd = $pdo->prepare(
                     "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?,
-                            date = ?, location = ?, time_start = ?, time_end = ?, updated_at = NOW()
+                            date = ?, location = ?, time_start = ?, time_end = ?,
+                            -- Regel wird wieder scharf, sobald sie selbst, Datum oder Beginn sich ändern
+                            -- (SET-Ausdrücke sehen die alten Werte der Zeile)
+                            auto_visibility_done_at = CASE
+                                WHEN auto_visibility IS NOT DISTINCT FROM ?::varchar
+                                 AND auto_visibility_hours = ?::int
+                                 AND date IS NOT DISTINCT FROM ?::date
+                                 AND time_start IS NOT DISTINCT FROM ?::time
+                                THEN auto_visibility_done_at ELSE NULL END,
+                            auto_visibility = ?, auto_visibility_hours = ?,
+                            updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
                 );
+                $auto_val  = $new_auto !== '' ? $new_auto : null;
+                $hours_val = $new_auto !== '' ? (int)$new_auto_hours : 0;
+                $date_val  = $new_date !== '' ? $new_date : null;
+                $ts_val    = $new_time_start !== '' ? $new_time_start : null;
                 $upd->execute([
                     $new_name, $new_visibility, $new_show_all_rows, $new_is_hidden,
-                    $new_date !== '' ? $new_date : null,
+                    $date_val,
                     $new_location !== '' ? $new_location : null,
-                    $new_time_start !== '' ? $new_time_start : null,
+                    $ts_val,
                     $new_time_end   !== '' ? $new_time_end   : null,
+                    $auto_val, $hours_val, $date_val, $ts_val,
+                    $auto_val, $hours_val,
                     $list_id, $_SESSION['team_id'],
                 ]);
                 redirect('/coordinator/lists/' . $list_id . '?success=1');
@@ -311,6 +340,27 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                         </div>
                     </div>
                     <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
+                </div>
+                <div class="mb-4">
+                    <label for="auto_visibility" class="form-label fw-semibold">Sichtbarkeit automatisch umstellen <span class="text-muted fw-normal">(optional)</span></label>
+                    <select id="auto_visibility" name="auto_visibility" class="form-select mb-2">
+                        <option value="" <?= empty($list['auto_visibility']) ? 'selected' : '' ?>>Nicht automatisch</option>
+                        <?php foreach (['public', 'protected', 'private'] as $v): ?>
+                        <option value="<?= $v ?>" <?= ($list['auto_visibility'] ?? '') === $v ? 'selected' : '' ?>>auf <?= e(list_visibility_label($v)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" id="auto_visibility_hours" name="auto_visibility_hours"
+                               class="form-control tm-input-hours" inputmode="numeric"
+                               min="0" max="<?= LIST_AUTO_VISIBILITY_MAX_HOURS ?>" step="1"
+                               value="<?= (int)($list['auto_visibility_hours'] ?? 0) ?>">
+                        <label for="auto_visibility_hours" class="mb-0">Std. vor Beginn</label>
+                    </div>
+                    <div class="form-text">
+                        Zum Beispiel „auf Geschützt, 2 Std. vor Beginn“ als Anmeldeschluss oder „auf Öffentlich,
+                        48 Std. vor Beginn“ zum Freischalten. Ohne Uhrzeit zählt 00:00 als Beginn.
+                    </div>
+                    <?php render_auto_visibility_hint($list); ?>
                 </div>
                 <div class="mb-4">
                     <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>

@@ -116,9 +116,16 @@ function db_init_schema(PDO $pdo, string $s): void {
         location      VARCHAR(255) NULL,
         time_start    TIME NULL,
         time_end      TIME NULL,
+        auto_visibility         VARCHAR(10) NULL
+                                CHECK (auto_visibility IN ('public', 'protected', 'private')),
+        auto_visibility_hours   INTEGER NOT NULL DEFAULT 0
+                                CHECK (auto_visibility_hours BETWEEN 0 AND 720),
+        auto_visibility_done_at TIMESTAMPTZ NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lists_auto_visibility_pending ON {$s}.lists(date)
+        WHERE auto_visibility IS NOT NULL AND auto_visibility_done_at IS NULL");
 
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lists_team_id    ON {$s}.lists(team_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_lists_visibility ON {$s}.lists(visibility)");

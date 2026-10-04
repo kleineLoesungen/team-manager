@@ -340,3 +340,25 @@ function render_recipient_picker(array $recipients, ?array $selected_ids): void 
     </div>
     <?php
 }
+
+/**
+ * Hint for a list's automatic visibility change (src/db/list_auto_visibility.php):
+ * "Wird am Di 07.10. um 16:00 auf „Geschützt“ umgestellt." or, once done, when it happened.
+ * @param array $list Needs auto_visibility, auto_visibility_hours, auto_visibility_done_at, date, time_start
+ */
+function render_auto_visibility_hint(array $list): void {
+    require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
+    if (empty($list['auto_visibility'])) return;
+    $target = list_visibility_label($list['auto_visibility']);
+    if (!empty($list['auto_visibility_done_at'])) {
+        $text = 'Am ' . list_auto_visibility_when(new DateTimeImmutable($list['auto_visibility_done_at']))
+              . ' automatisch auf „' . $target . '“ umgestellt.';
+    } elseif ($due = list_auto_visibility_due($list)) {
+        $text = 'Wird am ' . list_auto_visibility_when($due) . ' automatisch auf „' . $target . '“ umgestellt.';
+    } else {
+        $text = 'Automatische Umstellung auf „' . $target . '“ wartet auf ein Datum.';
+    }
+    ?>
+    <p class="small text-muted mb-2"><i class="bi bi-clock me-1" aria-hidden="true"></i><?= htmlspecialchars($text, ENT_QUOTES) ?></p>
+    <?php
+}

@@ -48,6 +48,11 @@ start_secure_session();
 require_once ROOT_PATH . '/src/push/ticker_push.php';
 push_check_due_starts();
 
+// Zeitgesteuerte Sichtbarkeit von Listen: fällige Umstellungen vor jedem Seitenaufruf anwenden,
+// damit niemand nach der Frist noch den alten Stand sieht (src/db/list_auto_visibility.php).
+require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
+list_auto_visibility_apply(get_db());
+
 // Parse the request path (strip query string, normalize trailing slash)
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path   = rtrim($path, '/') ?: '/';
