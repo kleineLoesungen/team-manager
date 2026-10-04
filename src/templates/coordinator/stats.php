@@ -97,6 +97,8 @@
     </div>
 
     <!-- ── Rangliste mit Zeitfenstern (STAT-03) ───────────────────────── -->
+    <!-- Sprungmarke: Pills und Spaltenköpfe führen nach dem Neuladen direkt hierher -->
+    <div id="rangliste" class="tm-anchor">
     <!-- Column filter pills: one pill per global column -->
     <?php
     $base_filter_params = [];
@@ -104,21 +106,16 @@
     if (!empty($filter_date_from)) $base_filter_params['date_from'] = $filter_date_from;
     if (!empty($filter_date_to)) $base_filter_params['date_to'] = $filter_date_to;
     if ($filter_include_undated) $base_filter_params['include_undated'] = '1';
-    if ($sort_col_id > 0) $base_filter_params['sort_col'] = (string)$sort_col_id;
-    if ($sort_win !== 'all') $base_filter_params['sort_win'] = $sort_win;
 
+    // Spalte wählen = Rangliste dieser Spalte, sortiert nach "Gesamt"
     $col_pills = [];
-    $col_pills[] = [
-        'label'  => 'Alle Spalten',
-        'url'    => '/coordinator/stats' . (!empty($base_filter_params) ? '?' . http_build_query($base_filter_params) : ''),
-        'active' => $col_filter === 0,
-    ];
     foreach ($global_columns as $col) {
         $pill_params = $base_filter_params;
         $pill_params['col_filter'] = (string)(int)$col['id'];
+        $pill_params['sort_col']   = (string)(int)$col['id'];
         $col_pills[] = [
             'label'  => $col['name'],
-            'url'    => '/coordinator/stats?' . http_build_query($pill_params),
+            'url'    => '/coordinator/stats?' . http_build_query($pill_params) . '#rangliste',
             'active' => $col_filter === (int)$col['id'],
         ];
     }
@@ -143,7 +140,7 @@
             'sort_col'        => $col_id,
             'sort_win'        => $win,
         ], fn($v) => $v !== '');
-        return '/coordinator/stats?' . http_build_query($params);
+        return '/coordinator/stats?' . http_build_query($params) . '#rangliste';
     }
 
     $windows = [
@@ -217,6 +214,8 @@
             </tbody>
         </table>
     </div>
+
+    </div><!-- /#rangliste -->
 
     <!-- ── Listenübersicht pro Mitglied ───────────────────────────────────── -->
     <hr class="my-4">

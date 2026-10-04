@@ -309,3 +309,34 @@ function render_ticker_push_toggle(array $ticker, string $role, bool $subscribed
     </form>
     <?php
 }
+
+/**
+ * Recipient picker for notification forms: one switch per person, all on by default.
+ * Posts recipients[] = user ids; the handler must intersect them with the allowed recipients.
+ * @param array      $recipients   Rows with 'id', 'first_name', 'last_name'
+ * @param array|null $selected_ids Ids to show as selected (after a failed POST), null = all
+ */
+function render_recipient_picker(array $recipients, ?array $selected_ids): void {
+    if (empty($recipients)) return;
+    ?>
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-people" aria-hidden="true"></i>
+            <span class="fw-semibold" id="recipients-label">Empfänger</span>
+        </div>
+        <div class="list-group list-group-flush" role="group" aria-labelledby="recipients-label">
+            <?php foreach ($recipients as $r): $id = (int)$r['id']; ?>
+            <label class="list-group-item list-group-item-action d-flex align-items-center gap-3" for="recipient-<?= $id ?>">
+                <span class="flex-grow-1"><?= htmlspecialchars($r['first_name'] . ' ' . $r['last_name'], ENT_QUOTES) ?></span>
+                <span class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch"
+                           id="recipient-<?= $id ?>" name="recipients[]" value="<?= $id ?>"
+                           <?= ($selected_ids === null || in_array($id, $selected_ids, true)) ? 'checked' : '' ?>>
+                </span>
+            </label>
+            <?php endforeach; ?>
+        </div>
+        <div class="card-footer small">Wen du abschaltest, der bekommt diese Benachrichtigung nicht.</div>
+    </div>
+    <?php
+}

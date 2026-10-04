@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/list_notify.php — Review page before sending list notification
-// Variables: $list, $with_email, $without_email, $subject_prefilled, $content_link
+// Variables: $list, $with_email, $without_email, $subject_prefilled, $content_link, $selected_ids
 // Per UI spec Screen 2: context card, form (subject+body), mail preview, missing-email alert,
 // visibility warning (if private), send button.
 ?>
@@ -54,7 +54,7 @@
                class="form-control"
                maxlength="200"
                required
-               value="<?= e($subject_prefilled) ?>">
+               value="<?= e($_POST['subject'] ?? $subject_prefilled) ?>">
     </div>
 
     <div class="mb-3">
@@ -67,6 +67,9 @@
                   required><?= e($_POST['body'] ?? '') ?></textarea>
     </div>
 
+    <!-- Empfänger einzeln abwählbar -->
+    <?php render_recipient_picker($with_email, $selected_ids); ?>
+
     <!-- 3. Mail-Vorschau -->
     <?php
     $both_count = count(array_filter($with_email,
@@ -76,7 +79,7 @@
         <div class="card-header small fw-semibold">Vorschau der E-Mail</div>
         <div class="card-body">
             <p class="mb-1">
-                <span class="text-muted small">An:</span> <?= count($with_email) ?> Empfänger
+                <span class="text-muted small">An:</span> die ausgewählten Empfänger (<?= count($with_email) ?> möglich)
                 <?php if ($both_count > 0): ?>
                 <span class="text-muted small">(<?= $both_count ?> davon erhalten auch eine Kopie an die Kontakt-E-Mail)</span>
                 <?php endif; ?>

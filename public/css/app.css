@@ -491,6 +491,9 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 
 /* Filter-Pills */
 .tm-filters { display: flex; gap: .25rem; flex-wrap: wrap; }
+
+/* Sprungmarke (#…): Ziel landet unter der klebenden Kopfzeile statt dahinter */
+.tm-anchor { scroll-margin-top: calc(var(--topbar-h) + .5rem); }
 .tm-filters .btn { --bs-btn-border-radius: 999px; min-height: 36px; }
 
 /* Gefahrenzone */
