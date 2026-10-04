@@ -39,6 +39,26 @@ if (!$team) {
     exit;
 }
 
+// Angemeldet und im Team (Koordinatoren auch in weiteren betreuten Teams): eigene Ansicht
+// mit Zuschauerzahl, Abo und Posten. Geteilte Links zeigen auf diese öffentliche Seite.
+$role = $_SESSION['role'] ?? '';
+if (!empty($_SESSION['user_id']) && empty($_SESSION['pending_team_pick'])
+    && in_array($role, ['coordinator', 'member'], true)
+    && (time() - (int)($_SESSION['last_activity'] ?? 0)) <= SESSION_TIMEOUT) {
+    $own_team = (int)$ticker['team_id'] === (int)($_SESSION['team_id'] ?? 0);
+    if (!$own_team && $role === 'coordinator') {
+        set_admin_context($pdo);
+        $ct = $pdo->prepare("SELECT 1 FROM coordinator_teams WHERE user_id = ? AND team_id = ? AND left_at IS NULL");
+        $ct->execute([(int)$_SESSION['user_id'], (int)$ticker['team_id']]);
+        $own_team = (bool)$ct->fetchColumn();
+        reset_rls_context($pdo);
+        set_team_context($pdo, (int)$ticker['team_id']);
+    }
+    if ($own_team) {
+        redirect('/' . $role . '/ticker/' . $ticker_id);
+    }
+}
+
 // Fetch messages (newest first, D-05) with optional tag info
 $stmt = $pdo->prepare(
     "SELECT m.id, m.message, m.timestamp, m.tag_id, m.created_at,

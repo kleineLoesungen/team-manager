@@ -16,13 +16,14 @@ render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], fun
     <p class="text-muted small mb-3"><?= e($ticker['description']) ?></p>
     <?php endif; ?>
 
-    <div class="mb-4">
+    <div class="mb-3">
         <?php if ($ticker['status'] === 'active'): ?>
         <?php render_badge('ok', 'Live'); ?>
         <?php else: ?>
         <?php render_badge('dim', 'Geschlossen'); ?>
         <?php endif; ?>
     </div>
+    <div class="mb-4"><?php render_share_button('Ticker teilen', '/ticker/' . (int)$ticker['id'], $ticker['name'], 'Live-Ticker ' . $team['name'] . ': ' . $ticker['name']); ?></div>
 
     <!-- Message feed (newest first) -->
     <p class="text-muted small mb-2">

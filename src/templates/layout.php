@@ -265,6 +265,31 @@ function render_layout_foot(): void {
             }
         }
 
+        /* Teilen (render_share_button): System-Teilen-Menü, sonst Link kopieren */
+        document.addEventListener('click', function(e) {
+            var b = e.target.closest ? e.target.closest('[data-share-url]') : null;
+            if (!b) return;
+            var url = b.getAttribute('data-share-url');
+            var title = b.getAttribute('data-share-title') || document.title;
+            var text = b.getAttribute('data-share-text') || title;
+            if (navigator.share) {
+                navigator.share({ title: title, text: text, url: url }).catch(function() {});
+                return;
+            }
+            var label = b.querySelector('[data-share-label]');
+            var done = function() {
+                if (!label) return;
+                var old = label.textContent;
+                label.textContent = 'Link kopiert';
+                setTimeout(function() { label.textContent = old; }, 2000);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(done).catch(function() { window.prompt('Link kopieren:', url); });
+            } else {
+                window.prompt('Link kopieren:', url);
+            }
+        });
+
         /* theme toggle */
         function tmApply(t) {
             document.documentElement.setAttribute('data-theme', t);

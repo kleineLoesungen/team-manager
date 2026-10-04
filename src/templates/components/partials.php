@@ -549,3 +549,21 @@ function render_dashboard(array $d, string $role): void {
     <?php endif; ?>
     <?php
 }
+
+/**
+ * Share button. Opens the system share sheet where available (phones), otherwise copies the
+ * link and confirms with "Link kopiert" (layout script, [data-share-url]).
+ * @param string $label Button text, verb + object ("Ticker teilen")
+ * @param string $path  Path to share; shared as absolute URL
+ */
+function render_share_button(string $label, string $path, string $title, string $text = ''): void {
+    ?>
+    <button type="button" class="btn btn-outline-secondary"
+            data-share-url="<?= htmlspecialchars(absolute_url($path), ENT_QUOTES) ?>"
+            data-share-title="<?= htmlspecialchars($title, ENT_QUOTES) ?>"
+            data-share-text="<?= htmlspecialchars($text !== '' ? $text : $title, ENT_QUOTES) ?>">
+        <i class="bi bi-share me-2" aria-hidden="true"></i><span data-share-label><?= htmlspecialchars($label, ENT_QUOTES) ?></span>
+    </button>
+    <?php
+}
+

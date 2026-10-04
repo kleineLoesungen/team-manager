@@ -97,6 +97,10 @@ function require_coordinator(): void {
         redirect('/coordinator/select-team');
     }
     check_session_timeout();
+    if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'member') {
+        require_once ROOT_PATH . '/src/auth/role_redirect.php';
+        role_mismatch('coordinator');   // weiterleiten oder "Kein Zugriff" — nie zum Login (Schleife)
+    }
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'coordinator') {
         redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
     }
@@ -111,6 +115,10 @@ function require_coordinator(): void {
  */
 function require_member(): void {
     check_session_timeout();
+    if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'coordinator' && empty($_SESSION['pending_team_pick'])) {
+        require_once ROOT_PATH . '/src/auth/role_redirect.php';
+        role_mismatch('member');
+    }
     if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'member') {
         redirect('/login?return_to=' . urlencode($_SERVER['REQUEST_URI'] ?? ''));
     }

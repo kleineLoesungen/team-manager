@@ -163,3 +163,16 @@ function list_series_dates(string $start, string $repeat, int $count): array {
     return $dates;
 }
 
+/**
+ * Absolute URL of a path on this installation, for links shared outside the app.
+ * Uses BASE_URL when configured, otherwise the current request's scheme and host.
+ */
+function absolute_url(string $path): string {
+    if (defined('BASE_URL') && BASE_URL !== '') {
+        return app_url($path);
+    }
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+          || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/' . ltrim($path, '/');
+}
+

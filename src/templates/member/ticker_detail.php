@@ -20,6 +20,8 @@
     <?php render_ticker_viewers($ticker, $viewer_counts); ?>
 </div>
 
+<div class="mb-3"><?php render_share_button('Ticker teilen', '/ticker/' . (int)$ticker['id'], $ticker['name'], 'Live-Ticker: ' . $ticker['name']); ?></div>
+
 <?php render_ticker_push_toggle($ticker, 'member', $push_subscribed, $push_key); ?>
 
 <script>
