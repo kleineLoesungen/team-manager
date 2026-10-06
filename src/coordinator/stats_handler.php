@@ -357,6 +357,24 @@ if ($selected_member_id !== null && !in_array($selected_member_id, $valid_member
     $selected_member_id = null;
 }
 
+// ── Listenübersicht: same list + date filter for all members and one member ────
+// Returns " AND …" for lists aliased as $l and appends its values to $params.
+$list_filter_sql = function (string $l, array &$params) use ($filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated): string {
+    $sql = '';
+    if ($filter_list_id !== null) {
+        $sql     .= " AND $l.id = ?";
+        $params[] = $filter_list_id;
+    }
+    if ($filter_date_from !== null || $filter_date_to !== null) {
+        $range = [];
+        if ($filter_date_from !== null) { $range[] = "$l.date >= ?"; $params[] = $filter_date_from; }
+        if ($filter_date_to   !== null) { $range[] = "$l.date <= ?"; $params[] = $filter_date_to;   }
+        $sql .= ' AND (' . ($filter_include_undated ? "$l.date IS NULL OR " : '')
+              . "($l.date IS NOT NULL AND " . implode(' AND ', $range) . '))';
+    }
+    return $sql;
+};
+
 // ── All-members aggregate: per-list sums (default when no member selected) ────
 $all_lists_rows = [];  // ordered list metadata
 $all_lists_agg  = [];  // [list_id][col_id] => agg_value
@@ -382,27 +400,7 @@ if ($selected_member_id === null && !empty($global_columns)) {
         WHERE l.team_id = ?
     ";
     $al_params = [$team_id, $team_id];
-
-    if ($filter_list_id !== null) {
-        $al_sql      .= " AND l.id = ?";
-        $al_params[]  = $filter_list_id;
-    }
-
-    if ($filter_date_from !== null || $filter_date_to !== null) {
-        $al_dc = [];
-        if ($filter_include_undated) {
-            $al_dc[] = 'l.date IS NULL';
-        }
-        $al_rc = [];
-        if ($filter_date_from !== null) { $al_rc[] = 'l.date >= ?'; $al_params[] = $filter_date_from; }
-        if ($filter_date_to   !== null) { $al_rc[] = 'l.date <= ?'; $al_params[] = $filter_date_to;   }
-        if (!empty($al_rc)) {
-            $al_dc[] = '(l.date IS NOT NULL AND ' . implode(' AND ', $al_rc) . ')';
-        }
-        if (!empty($al_dc)) {
-            $al_sql .= ' AND (' . implode(' OR ', $al_dc) . ')';
-        }
-    }
+    $al_sql   .= $list_filter_sql('l', $al_params);
 
     $al_sql .= "
         GROUP BY l.id, l.name, l.date, c.id, c.data_type
@@ -438,43 +436,47 @@ if ($selected_member_id !== null) {
     }
 
     // Query A: lists with global columns for selected member (no visibility filter — coordinator sees all)
+    $mod_params     = [$team_id, $team_id];
     $mod_lists_stmt = $pdo->prepare("
         SELECT DISTINCT l.id, l.name, l.date
         FROM lists l
         JOIN list_global_columns lgc ON lgc.list_id = l.id
         JOIN columns c ON c.id = lgc.column_id
-            AND (c.team_id = :team_id OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
-        WHERE l.team_id = :team_id2
+            AND (c.team_id = ? OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
+        WHERE l.team_id = ?" . $list_filter_sql('l', $mod_params) . "
         ORDER BY l.date DESC NULLS LAST, l.name
     ");
-    $mod_lists_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
+    $mod_lists_stmt->execute($mod_params);
     $mod_per_list_rows = $mod_lists_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Query B: cells for selected member (only from lists where the column is currently attached)
+    $mod_params     = [$team_id, $team_id, $selected_member_id];
     $mod_cells_stmt = $pdo->prepare("
         SELECT ce.list_id, ce.column_id, ce.value
         FROM cells ce
-        JOIN lists l ON l.id = ce.list_id AND l.team_id = :team_id
+        JOIN lists l ON l.id = ce.list_id AND l.team_id = ?
         JOIN columns c ON c.id = ce.column_id
-            AND (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
+            AND (c.team_id = ? OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         JOIN list_global_columns lgc ON lgc.list_id = ce.list_id AND lgc.column_id = ce.column_id
-        WHERE ce.member_id = :member_id
+        WHERE ce.member_id = ?" . $list_filter_sql('l', $mod_params) . "
     ");
-    $mod_cells_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id, ':member_id' => $selected_member_id]);
+    $mod_cells_stmt->execute($mod_params);
     foreach ($mod_cells_stmt->fetchAll(PDO::FETCH_ASSOC) as $cell) {
         $mod_per_list_cells[(int)$cell['list_id']][(int)$cell['column_id']] = $cell['value'];
     }
 
     // Query C: total lists per column (no visibility filter — coordinator sees all)
+    $mod_params   = [$team_id];
     $mod_cnt_stmt = $pdo->prepare("
         SELECT c.id AS column_id, COUNT(DISTINCT l.id) AS total_lists
         FROM columns c
         JOIN list_global_columns lgc ON lgc.column_id = c.id
-        JOIN lists l ON l.id = lgc.list_id AND l.team_id = :team_id
-        WHERE (c.team_id = :team_id2 OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
+        JOIN lists l ON l.id = lgc.list_id AND l.team_id = ?" . $list_filter_sql('l', $mod_params) . "
+        WHERE (c.team_id = ? OR c.is_system = TRUE) AND c.list_id IS NULL AND c.is_active = TRUE
         GROUP BY c.id
     ");
-    $mod_cnt_stmt->execute([':team_id' => $team_id, ':team_id2' => $team_id]);
+    $mod_params[] = $team_id;
+    $mod_cnt_stmt->execute($mod_params);
     foreach ($mod_cnt_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $mod_col_list_counts[(int)$row['column_id']] = (int)$row['total_lists'];
     }
