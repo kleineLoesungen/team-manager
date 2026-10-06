@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
     logo_path                   VARCHAR(500)         NULL,
     calendar_token_coordinator  VARCHAR(64)  UNIQUE  NULL,
     calendar_token_member       VARCHAR(64)  UNIQUE  NULL,
+    members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,   -- Mitglieder dürfen Termine anlegen
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -360,6 +361,7 @@ CREATE TABLE IF NOT EXISTS team_manager.events (
     time_end    TIME NULL,
     visibility  VARCHAR(10) NOT NULL DEFAULT 'protected'
                 CHECK (visibility IN ('protected', 'private')),
+    created_by  INTEGER NULL REFERENCES team_manager.users(id) ON DELETE SET NULL,   -- Mitglied oder Koordinator
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_events_team_id ON team_manager.events(team_id);

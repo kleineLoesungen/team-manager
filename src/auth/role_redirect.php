@@ -40,6 +40,10 @@ function role_member_from_coordinator_path(string $path): never {
     ];
     if (isset($simple[$path])) redirect($simple[$path]);
 
+    // Termin (Bearbeiten-Link eines Koordinators): Ansicht für Mitglieder; private bleiben verborgen
+    if (preg_match('#^/coordinator/events/(\d+)(/.*)?$#', $path, $m)) {
+        redirect('/member/events/' . (int)$m[1]);
+    }
     if (!preg_match('#^/coordinator/(lists|files|ticker)/(\d+)(/.*)?$#', $path, $m)) {
         role_forbidden('Diese Seite ist nur für Koordinatoren.');
     }
@@ -89,6 +93,9 @@ function role_coordinator_from_member_path(string $path): never {
         '/member/resources' => '/coordinator/resources',
     ];
     if (isset($simple[$path])) redirect($simple[$path]);
+    if (preg_match('#^/member/events/(\d+)(/.*)?$#', $path, $m)) {
+        redirect('/coordinator/events/' . (int)$m[1] . '/edit');
+    }
     if (preg_match('#^/member/(lists|files|ticker)/(\d+)(/.*)?$#', $path, $m)) {
         redirect('/coordinator/' . $m[1] . '/' . (int)$m[2]);   // dort greift die Prüfung der Koordinatoren
     }

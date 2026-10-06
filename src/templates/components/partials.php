@@ -388,7 +388,7 @@ function render_content_row(array $it, string $role, array $values): void {
         'list'   => $base . '/lists/' . (int)$it['id'],
         'file'   => $base . '/files/' . (int)$it['id'],
         'ticker' => $base . '/ticker/' . (int)$it['id'],
-        'event'  => $is_coord ? '/coordinator/events/' . (int)$it['id'] . '/edit' : null,
+        'event'  => $is_coord ? '/coordinator/events/' . (int)$it['id'] . '/edit' : '/member/events/' . (int)$it['id'],
     };
     $icon = fn(array $it) => match ($it['type']) {
         'list'   => 'bi-table',
@@ -651,7 +651,7 @@ function render_resource_picker(array $resources, array $selected, bool $needs_d
             if (!any || !q.get('date')) { box.innerHTML = ''; return; }
             if (box.getAttribute('data-resource-check')) q.set('exclude', box.getAttribute('data-resource-check'));
             var mine = ++seq;
-            fetch('/coordinator/resources/check?' + q.toString(), { credentials: 'same-origin' })
+            fetch(<?= json_encode((($_SESSION['role'] ?? '') === 'member' ? '/member' : '/coordinator') . '/resources/check?') ?> + q.toString(), { credentials: 'same-origin' })
                 .then(function (r) { return r.ok ? r.text() : ''; })
                 .then(function (html) { if (mine === seq) box.innerHTML = html; })
                 .catch(function () {});
@@ -782,6 +782,14 @@ function render_series_fields(string $plural, string $one_label): void {
         document.addEventListener('DOMContentLoaded', update);   // Button steht weiter unten im Formular
     })();
     </script>
+    <?php
+}
+
+/** After saving: "N Einträge nutzen eine Ressource, die schon belegt ist" with link to the usage. */
+function render_resource_conflict_notice(int $count, string $usage_url): void {
+    ?>
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i><?= $count === 1 ? 'Ein Eintrag nutzt' : $count . ' Einträge nutzen' ?>
+        eine Ressource, die zur gleichen Zeit schon belegt ist. <a href="<?= e($usage_url) ?>" class="alert-link">Auslastung ansehen</a></div>
     <?php
 }
 

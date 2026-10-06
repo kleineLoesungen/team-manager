@@ -68,6 +68,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         logo_path                   VARCHAR(500) NULL,
         calendar_token_coordinator  VARCHAR(64)  UNIQUE NULL,
         calendar_token_member       VARCHAR(64)  UNIQUE NULL,
+        members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,
         created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
 
@@ -367,6 +368,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         time_end    TIME NULL,
         visibility  VARCHAR(10) NOT NULL DEFAULT 'protected'
                     CHECK (visibility IN ('protected', 'private')),
+        created_by  INTEGER NULL REFERENCES {$s}.users(id) ON DELETE SET NULL,
         created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_events_team_id ON {$s}.events(team_id)");
@@ -1048,16 +1050,38 @@ function db_init_rls(PDO $pdo, string $s): void {
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (current_setting('app.current_role', true) = 'member'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.teams t WHERE t.id = events.team_id AND t.members_create_events)
+            AND visibility = 'protected')
     )");
     $pdo->exec("CREATE POLICY events_update ON {$s}.events FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (current_setting('app.current_role', true) = 'member'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.teams t WHERE t.id = events.team_id AND t.members_create_events))
+    ) WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coordinator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (current_setting('app.current_role', true) = 'member'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.teams t WHERE t.id = events.team_id AND t.members_create_events)
+            AND visibility = 'protected')
     )");
     $pdo->exec("CREATE POLICY events_delete ON {$s}.events FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (current_setting('app.current_role', true) = 'member'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.teams t WHERE t.id = events.team_id AND t.members_create_events))
     )");
     // ── resources RLS ─────────────────────────────────────────────────────────
     $pdo->exec("ALTER TABLE {$s}.resources ENABLE ROW LEVEL SECURITY");
@@ -1085,11 +1109,21 @@ function db_init_rls(PDO $pdo, string $s): void {
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (current_setting('app.current_role', true) = 'member'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.events e
+                        WHERE e.id = resource_bookings.event_id AND e.team_id = resource_bookings.team_id
+                          AND e.created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer))
     )");
     $pdo->exec("CREATE POLICY resource_bookings_delete ON {$s}.resource_bookings FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+        OR (current_setting('app.current_role', true) = 'member'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+            AND EXISTS (SELECT 1 FROM {$s}.events e
+                        WHERE e.id = resource_bookings.event_id AND e.team_id = resource_bookings.team_id
+                          AND e.created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer))
     )");
 }
 

@@ -93,11 +93,6 @@ if ($view === 'overview') {
 
 render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard, $conflicts) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
-    if ($conflicts) {
-        echo '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>'
-           . ($conflicts === 1 ? 'Ein Eintrag nutzt' : $conflicts . ' Einträge nutzen')
-           . ' eine Ressource, die zur gleichen Zeit schon belegt ist. '
-           . '<a href="/coordinator/resources" class="alert-link">Auslastung ansehen</a></div>';
-    }
+    if ($conflicts) render_resource_conflict_notice($conflicts, '/coordinator/resources');
     require ROOT_PATH . '/src/templates/coordinator/lists.php';
 });

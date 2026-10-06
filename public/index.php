@@ -534,6 +534,31 @@ match (true) {
         })(),
 
     // ── Member: Statistics ────────────────────────────────────────────
+    // ── Member: Termine (nur wenn das Team es erlaubt; src/db/events.php) ──
+    $path === '/member/events/create'
+        => require ROOT_PATH . '/src/member/event_create_handler.php',
+
+    (bool)preg_match('#^/member/events/(\d+)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['event_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/member/event_handler.php';
+        })(),
+
+    (bool)preg_match('#^/member/events/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['event_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/member/event_edit_handler.php';
+        })(),
+
+    (bool)preg_match('#^/member/events/(\d+)/delete$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['event_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/member/event_delete_handler.php';
+        })(),
+
+    $path === '/member/resources/check'
+        => require ROOT_PATH . '/src/coordinator/resource_check_handler.php',
+
     $path === '/member/resources'
         => require ROOT_PATH . '/src/member/resources_handler.php',
 

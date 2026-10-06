@@ -1,5 +1,5 @@
 <?php
-// src/coordinator/resource_check_handler.php — GET /coordinator/resources/check
+// src/coordinator/resource_check_handler.php — GET /coordinator/resources/check (+ /member/resources/check)
 // Prüfung vor dem Speichern (Formulare für Listen und Termine, Skript in render_resource_picker):
 // liefert den Hinweis auf Überschneidungen als HTML-Ausschnitt, leer wenn frei.
 // Parameter wie im Formular: resource_ids[], date, time_start, time_end, is_all_day,
@@ -7,7 +7,8 @@
 
 declare(strict_types=1);
 
-require_coordinator();
+// Auch Mitglieder, die Termine anlegen dürfen, nutzen die Prüfung (gleicher Ausschnitt)
+($_SESSION['role'] ?? '') === 'member' ? require_member() : require_coordinator();
 require_once ROOT_PATH . '/src/db/resources.php';
 require_once ROOT_PATH . '/src/templates/components/partials.php';
 

@@ -699,7 +699,9 @@ CREATE POLICY files_delete ON team_manager.files FOR DELETE USING (
 ALTER TABLE team_manager.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_manager.events FORCE ROW LEVEL SECURITY;
 
--- Coordinators see all team events; members see protected events only; private = coordinator-only
+-- Coordinators see all team events; members see protected events only; private = coordinator-only.
+-- Members may create, change and delete their own events when the team allows it
+-- (teams.members_create_events); theirs are always protected.
 CREATE POLICY events_select ON team_manager.events FOR SELECT USING (
     current_setting('app.is_admin', true) = 'true'
     OR (current_setting('app.current_role', true) = 'coordinator'
@@ -711,16 +713,38 @@ CREATE POLICY events_insert ON team_manager.events FOR INSERT WITH CHECK (
     current_setting('app.is_admin', true) = 'true'
     OR (current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (current_setting('app.current_role', true) = 'member'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        AND EXISTS (SELECT 1 FROM team_manager.teams t WHERE t.id = events.team_id AND t.members_create_events)
+        AND visibility = 'protected')
 );
 CREATE POLICY events_update ON team_manager.events FOR UPDATE USING (
     current_setting('app.is_admin', true) = 'true'
     OR (current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (current_setting('app.current_role', true) = 'member'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        AND EXISTS (SELECT 1 FROM team_manager.teams t WHERE t.id = events.team_id AND t.members_create_events))
+) WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (current_setting('app.current_role', true) = 'member'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        AND EXISTS (SELECT 1 FROM team_manager.teams t WHERE t.id = events.team_id AND t.members_create_events)
+        AND visibility = 'protected')
 );
 CREATE POLICY events_delete ON team_manager.events FOR DELETE USING (
     current_setting('app.is_admin', true) = 'true'
     OR (current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (current_setting('app.current_role', true) = 'member'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
+        AND EXISTS (SELECT 1 FROM team_manager.teams t WHERE t.id = events.team_id AND t.members_create_events))
 );
 
 -- ── Resources RLS ────────────────────────────────────────────────────────────
@@ -752,9 +776,19 @@ CREATE POLICY resource_bookings_insert ON team_manager.resource_bookings FOR INS
     current_setting('app.is_admin', true) = 'true'
     OR (current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (current_setting('app.current_role', true) = 'member'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND EXISTS (SELECT 1 FROM team_manager.events e
+                    WHERE e.id = resource_bookings.event_id AND e.team_id = resource_bookings.team_id
+                      AND e.created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer))
 );
 CREATE POLICY resource_bookings_delete ON team_manager.resource_bookings FOR DELETE USING (
     current_setting('app.is_admin', true) = 'true'
     OR (current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    OR (current_setting('app.current_role', true) = 'member'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+        AND EXISTS (SELECT 1 FROM team_manager.events e
+                    WHERE e.id = resource_bookings.event_id AND e.team_id = resource_bookings.team_id
+                      AND e.created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer))
 );

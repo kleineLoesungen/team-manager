@@ -16,7 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action = trim($_POST['action'] ?? '');
 
-    if ($action === 'create_tag') {
+    if ($action === 'member_events') {
+        // Mitglieder dürfen Termine anlegen (src/db/events.php, RLS auf events)
+        $pdo->prepare("UPDATE teams SET members_create_events = ? WHERE id = ?")
+            ->execute([!empty($_POST['members_create_events']) ? 'true' : 'false', (int)$_SESSION['team_id']]);
+        redirect('/coordinator/settings?success=member_events');
+    } elseif ($action === 'create_tag') {
         $label = trim($_POST['label'] ?? '');
         $color = trim($_POST['color'] ?? 'secondary');
         $valid_colors = ['success', 'warning', 'danger', 'primary', 'secondary'];
@@ -98,12 +103,16 @@ $success = !empty($_GET['success']) ? match($_GET['success']) {
     'tag_created'    => 'Tag angelegt.',
     'tag_deleted'    => 'Tag gelöscht.',
     'column_deleted' => 'Spalte gelöscht.',
+    'member_events'  => 'Gespeichert.',
     default          => '',
 } : '';
 
+require_once ROOT_PATH . '/src/db/events.php';
+$members_create_events = events_members_may_create($pdo, (int)$_SESSION['team_id']);
+
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Einstellungen', 'settings', function() use ($columns, $system_columns, $ticker_tags, $error, $success, $delete_pending_col_id) {
+render_coach_page('Einstellungen', 'settings', function() use ($columns, $system_columns, $ticker_tags, $error, $success, $delete_pending_col_id, $members_create_events) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/settings.php';

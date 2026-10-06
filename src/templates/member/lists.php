@@ -1,7 +1,7 @@
 <?php
 // src/templates/member/lists.php — overview tabs: Übersicht (default) | Monat | Liste
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
-//            $month, $ics_url, $dashboard
+//            $month, $ics_url, $dashboard, $can_create_events
 
 // ── German day name helper ────────────────────────────────────────────────────
 $de_days = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
@@ -14,7 +14,6 @@ $day_header = function(string $date) use ($de_days): string {
 $base_url = '/member/lists';
 $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&offset=' . $off;
 ?>
-<?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <!-- ── View switcher: Übersicht / Monat / Liste ─────────────────────────── -->
 <div class="seg-ctrl">
@@ -28,6 +27,14 @@ $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&
         <i class="bi bi-list-ul me-1"></i>Liste
     </a>
 </div>
+
+<?php if ($can_create_events): ?>
+<div class="d-flex justify-content-end mb-3">
+    <a href="/member/events/create" class="btn btn-primary btn-sm min-touch">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Termin anlegen
+    </a>
+</div>
+<?php endif; ?>
 
 <?php if ($view === 'overview'): ?>
 <?php render_dashboard($dashboard, 'member'); ?>
@@ -188,4 +195,13 @@ $render_card = function(array $item): void {
 <?php endif; // empty($items) ?>
 
 <?php endif; // $showCalendar / list view ?>
-<script>sessionStorage.setItem('member_lists_url', location.href);</script>
+<script>
+(function () {
+    // Meldungen nur einmal: success/deleted/conflicts/error aus der Adresse entfernen
+    var u = new URL(location.href);
+    ['success', 'deleted', 'conflicts', 'error'].forEach(function (k) { u.searchParams.delete(k); });
+    var url = u.pathname + u.search;
+    if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+    sessionStorage.setItem('member_lists_url', url);
+})();
+</script>

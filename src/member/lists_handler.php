@@ -39,7 +39,17 @@ usort($items, function(array $a, array $b): int {
     return strcmp($b['created_at'], $a['created_at']);
 });
 
-$success = !empty($_GET['success']) ? 'Gespeichert.' : '';
+$success = match (true) {
+    !empty($_GET['deleted']) => 'Termin gelöscht.',
+    !empty($_GET['success']) => 'Gespeichert.',
+    default                  => '',
+};
+$error     = (string)($_GET['error'] ?? '');
+$conflicts = max(0, (int)($_GET['conflicts'] ?? 0));
+
+// Termine anlegen, wenn das Team es erlaubt (Koordinatoren-Einstellung)
+require_once ROOT_PATH . '/src/db/events.php';
+$can_create_events = events_members_may_create($pdo, (int)$_SESSION['team_id']);
 
 // ── Calendar view logic (per D-08, D-04, D-05) ───────────────────────────
 // Ansichten: Übersicht (Standard, ersetzt die frühere Wochenansicht) | Monat | Liste.
@@ -75,7 +85,9 @@ $cal_token = $tstmt->fetchColumn();
 $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
 
-render_member_page('Inhalte', 'lists', function() use ($items, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
-    if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
+render_member_page('Inhalte', 'lists', function() use ($items, $success, $error, $conflicts, $can_create_events, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
+    if ($error !== '') render_flash('error', $error);
+    if ($success) render_flash('success', $success);
+    if ($conflicts) render_resource_conflict_notice($conflicts, '/member/resources');
     require ROOT_PATH . '/src/templates/member/lists.php';
 });

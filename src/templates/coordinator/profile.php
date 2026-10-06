@@ -181,7 +181,7 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
 require_once ROOT_PATH . '/src/db/team_switch.php';
 render_tile_group('Verwaltung', [
     ['/coordinator/coordinators', 'bi-person-badge', 'Koordinatoren', 'Wer das Team betreut, mit Kontakt'],
-    ['/coordinator/settings',     'bi-gear',         'Einstellungen', 'Globale Spalten und Ticker-Tags'],
+    ['/coordinator/settings',     'bi-gear',         'Einstellungen', 'Termine, globale Spalten und Ticker-Tags'],
     ['/coordinator/logo',         'bi-image',        'Team-Logo',     'Logo in der Kopfzeile ändern'],
     count(team_switch_options(get_db())) > 1
         ? ['/coordinator/switch-team', 'bi-arrow-left-right', 'Team wechseln', 'Zu einem anderen deiner Teams'] : null,

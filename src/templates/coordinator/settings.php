@@ -1,19 +1,34 @@
 <?php
 // src/templates/coordinator/settings.php — Einstellungen page
-// Variables: $columns (array), $system_columns (array), $ticker_tags (array), $error (string), $success (string)
+// Variables: $columns (array), $system_columns (array), $ticker_tags (array), $error (string), $success (string),
+//            $members_create_events (bool)
 // Also: $delete_pending_col_id (int|null) — set when a column delete awaits confirmation
 
 // ── Section 1: Globale Spalten (preserved from columns.php) ──────────────────
 ?>
 
-<?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
-<?php if (!empty($error)): render_flash('error', $error); endif; ?>
 
 <div class="mb-3">
     <a href="/coordinator/profile" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zu Profil
     </a>
 </div>
+
+<h4 class="fw-semibold mb-3">Termine</h4>
+<form method="POST" action="/coordinator/settings" class="mb-5">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="member_events">
+    <div class="form-check form-switch d-flex align-items-center gap-2">
+        <input class="form-check-input" type="checkbox" role="switch" value="1"
+               name="members_create_events" id="members_create_events" <?= $members_create_events ? 'checked' : '' ?>>
+        <label class="form-check-label mb-0" for="members_create_events">Mitglieder dürfen Termine anlegen</label>
+    </div>
+    <div class="form-text mt-0 mb-3">
+        Sie legen einzelne Termine für das ganze Team an (keine Serien) und bearbeiten oder löschen nur ihre eigenen.
+        Du kannst alle Termine ändern.
+    </div>
+    <button type="submit" class="btn btn-outline-secondary min-touch">Einstellung speichern</button>
+</form>
 
 <h4 class="fw-semibold mb-3">Globale Spalten</h4>
 <p class="text-muted mb-3">Globale Spalten erscheinen in allen Listen des Teams.</p>

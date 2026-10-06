@@ -1,12 +1,16 @@
 <?php
-// src/templates/coordinator/event_form.php — shared create/edit form for events
-// Variables: $event (array|null — null for create), $error (string),
-//            $resources, $resource_selected, $resource_conflicts (src/db/resources.php)
+// src/templates/components/event_form.php — create/edit form for events (coordinators and members)
+// Variables: $event (array|null — null for create), $error (string), $event_role ('coordinator'|'member'),
+//            $resources, $resource_selected, $resource_conflicts, $resource_names (src/db/resources.php)
+// Members: no series, no visibility (always for the team), no "verstecken" (src/db/events.php).
 
 $is_edit   = $event !== null;
+$is_member = ($event_role ?? 'coordinator') === 'member';
+$base      = $is_member ? '/member' : '/coordinator';
+$lists_url = $base . '/lists';
 $action    = $is_edit
-    ? '/coordinator/events/' . (int)$event['id'] . '/edit'
-    : '/coordinator/events/create';
+    ? $base . '/events/' . (int)$event['id'] . '/edit'
+    : $base . '/events/create';
 
 $v_title      = $is_edit ? $event['title']       : '';
 $v_desc       = $is_edit ? ($event['description'] ?? '') : '';
@@ -43,16 +47,19 @@ $icons = [
 <?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3">
-    <a href="/coordinator/lists" id="js-back-btn" class="btn btn-sm btn-outline-secondary">
+    <a href="<?= $is_member && $is_edit ? $base . '/events/' . (int)$event['id'] : $lists_url ?>" id="js-back-btn" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
 </div>
 
 <?php if ($is_edit) render_place($event['location'] ?? null, $resource_names); ?>
+<?php if ($is_edit && !$is_member && ($event['creator_role'] ?? '') === 'member' && !empty($event['creator_name'])): ?>
+<p class="small text-muted mb-3"><i class="bi bi-person me-1" aria-hidden="true"></i>Angelegt von <?= e($event['creator_name']) ?></p>
+<?php endif; ?>
 
 <form method="POST" action="<?= e($action) ?>" novalidate>
     <?= csrf_field() ?>
-    <input type="hidden" name="_back" id="js-back-url" value="/coordinator/lists">
+    <input type="hidden" name="_back" id="js-back-url" value="<?= e($lists_url) ?>">
 
     <div class="card mb-3">
         <div class="card-header fw-semibold"><?= $is_edit ? 'Termin bearbeiten' : 'Neuer Termin' ?></div>
@@ -115,8 +122,8 @@ $icons = [
                 <div class="form-text">Ohne Beginn ganztägig. Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
             </div>
 
-            <?php if (!$is_edit): ?>
-            <!-- Serie: mehrere eigenständige Termine bis zu einem Enddatum -->
+            <?php if (!$is_edit && !$is_member): ?>
+            <!-- Serie: mehrere eigenständige Termine bis zu einem Enddatum (nur Koordinatoren) -->
             <?php render_series_fields('Termine', 'Termin anlegen'); ?>
             <?php endif; ?>
 
@@ -131,6 +138,9 @@ $icons = [
             <!-- Ressourcen (Platz, Halle …) -->
             <?php render_resource_picker($resources, $resource_selected, false, $is_edit ? 'event:' . (int)$event['id'] : null, $resource_conflicts); ?>
 
+            <?php if ($is_member): ?>
+            <p class="small text-muted mb-0"><i class="bi bi-people me-1" aria-hidden="true"></i>Alle im Team sehen diesen Termin.</p>
+            <?php else: ?>
             <!-- Visibility -->
             <div class="mb-3">
                 <label class="form-label">Sichtbarkeit</label>
@@ -165,21 +175,22 @@ $icons = [
                     <label class="form-check-label" for="is_hidden">In Listenansicht verstecken</label>
                 </div>
             </div>
+            <?php endif; ?>
 
         </div>
     </div>
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary min-touch" data-series-submit><?= $is_edit ? 'Termin speichern' : 'Termin anlegen' ?></button>
-        <a href="/coordinator/lists" class="btn btn-outline-secondary min-touch" data-back-link>Abbrechen</a>
+        <a href="<?= $is_member && $is_edit ? $base . '/events/' . (int)$event['id'] : $lists_url ?>" class="btn btn-outline-secondary min-touch"<?= $is_member && $is_edit ? '' : ' data-back-link' ?>>Abbrechen</a>
     </div>
 </form>
 
 <?php if ($is_edit):
     ob_start(); ?>
-    <form method="POST" action="/coordinator/events/<?= (int)$event['id'] ?>/delete">
+    <form method="POST" action="<?= $base ?>/events/<?= (int)$event['id'] ?>/delete">
         <?= csrf_field() ?>
-        <input type="hidden" name="_back" id="js-delete-back-url" value="/coordinator/lists">
+        <input type="hidden" name="_back" id="js-delete-back-url" value="<?= e($lists_url) ?>">
         <button type="submit" class="btn btn-outline-danger min-touch">Termin löschen</button>
     </form>
     <?php render_danger_zone('Termin löschen', 'Löscht diesen Termin und seine Ressourcen-Belegung unwiderruflich. Du bestätigst auf der nächsten Seite.', ob_get_clean());
@@ -199,9 +210,9 @@ endif; ?>
     });
 
     // Restore lists view state (view, offset, scroll) via sessionStorage
-    var listsUrl = sessionStorage.getItem('coordinator_lists_url');
+    var listsUrl = sessionStorage.getItem(<?= json_encode($is_member ? 'member_lists_url' : 'coordinator_lists_url') ?>);
     if (listsUrl) {
-        document.getElementById('js-back-btn').href = listsUrl;
+        if (!<?= json_encode($is_member && $is_edit) ?>) document.getElementById('js-back-btn').href = listsUrl;
         document.getElementById('js-back-url').value = listsUrl;
         document.querySelectorAll('[data-back-link]').forEach(function (a) { a.href = listsUrl; });
         var delBack = document.getElementById('js-delete-back-url');
