@@ -122,6 +122,16 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
     <?php if ($logo_deleted ?? false): ?><div class="alert alert-success">Standard-Logo gelöscht.</div><?php endif; ?>
+    <div class="list-group mb-4">
+        <a href="/admin/resources" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-box-seam text-muted" aria-hidden="true"></i>
+            <span class="flex-grow-1">
+                <span class="d-block fw-semibold">Ressourcen</span>
+                <span class="d-block small text-muted">Plätze, Hallen, Busse für alle Teams</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+        </a>
+    </div>
     <div class="card shadow-sm">
         <div class="card-body">
             <form method="POST" action="/admin/settings" enctype="multipart/form-data">

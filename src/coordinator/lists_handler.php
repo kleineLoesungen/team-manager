@@ -48,6 +48,8 @@ usort($items, function(array $a, array $b): int {
 });
 
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
+// Nach dem Speichern: so viele Listen/Termine teilen sich eine Ressource mit einer anderen Belegung
+$conflicts = max(0, (int)($_GET['conflicts'] ?? 0));
 $success = match (true) {
     ($_GET['success'] ?? '') === 'series' => max(2, (int)($_GET['count'] ?? 0)) . ' Termine angelegt. Jeder lässt sich einzeln bearbeiten.',
     !empty($_GET['success'])              => 'Gespeichert.',
@@ -88,7 +90,13 @@ if ($view === 'overview') {
     $dashboard = dashboard_data($pdo, 'coordinator');
 }
 
-render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
+render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard, $conflicts) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
+    if ($conflicts) {
+        echo '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>'
+           . ($conflicts === 1 ? 'Ein Eintrag nutzt' : $conflicts . ' Einträge nutzen')
+           . ' eine Ressource, die zur gleichen Zeit schon belegt ist. '
+           . '<a href="/coordinator/resources" class="alert-link">Auslastung ansehen</a></div>';
+    }
     require ROOT_PATH . '/src/templates/coordinator/lists.php';
 });

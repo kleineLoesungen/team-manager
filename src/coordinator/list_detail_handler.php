@@ -263,8 +263,13 @@ $success = !empty($_GET['notify_success'])
     ? (string)$_GET['notify_success']
     : (!empty($_GET['success']) ? 'Gespeichert.' : '');
 
+// Ressourcen dieser Liste und ihre Überschneidungen mit anderen Belegungen (nur Hinweis)
+require_once ROOT_PATH . '/src/db/resources.php';
+$resource_names     = resources_booked_names($pdo, 'list', $list_id);
+$resource_conflicts = $resource_names ? resources_conflicts($pdo, 'list', $list_id) : [];
+
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients) {
+render_coach_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients, $resource_names, $resource_conflicts) {
     require ROOT_PATH . '/src/templates/coordinator/list_detail.php';
 });

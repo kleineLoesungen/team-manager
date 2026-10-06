@@ -364,3 +364,27 @@ CREATE TABLE IF NOT EXISTS team_manager.events (
 );
 CREATE INDEX IF NOT EXISTS idx_events_team_id ON team_manager.events(team_id);
 CREATE INDEX IF NOT EXISTS idx_events_date    ON team_manager.events(date);
+
+-- Resources — bookable across all teams (pitch, hall, bus), managed by the admin
+CREATE TABLE IF NOT EXISTS team_manager.resources (
+    id             SERIAL PRIMARY KEY,
+    name           VARCHAR(100) NOT NULL,
+    is_active      BOOLEAN NOT NULL DEFAULT TRUE,
+    calendar_token CHAR(64) NULL UNIQUE,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Resource bookings — a resource used by one list or one event; time comes from the list/event
+CREATE TABLE IF NOT EXISTS team_manager.resource_bookings (
+    id          SERIAL PRIMARY KEY,
+    resource_id INTEGER NOT NULL REFERENCES team_manager.resources(id) ON DELETE CASCADE,
+    team_id     INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
+    list_id     INTEGER NULL REFERENCES team_manager.lists(id) ON DELETE CASCADE,
+    event_id    INTEGER NULL REFERENCES team_manager.events(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (num_nonnulls(list_id, event_id) = 1)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_list  ON team_manager.resource_bookings(resource_id, list_id)  WHERE list_id  IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_event ON team_manager.resource_bookings(resource_id, event_id) WHERE event_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_resource_bookings_list  ON team_manager.resource_bookings(list_id);
+CREATE INDEX IF NOT EXISTS idx_resource_bookings_event ON team_manager.resource_bookings(event_id);

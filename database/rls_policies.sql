@@ -722,3 +722,39 @@ CREATE POLICY events_delete ON team_manager.events FOR DELETE USING (
     OR (current_setting('app.current_role', true) = 'coordinator'
         AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
 );
+
+-- ── Resources RLS ────────────────────────────────────────────────────────────
+
+-- Resources: everyone signed in reads them (selection, usage); only the admin changes them.
+-- Bookings: own team only; the cross-team usage view reads them in admin context.
+ALTER TABLE team_manager.resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.resources FORCE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.resource_bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.resource_bookings FORCE ROW LEVEL SECURITY;
+CREATE POLICY resources_select ON team_manager.resources FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR NULLIF(current_setting('app.current_team_id', true), '')::integer IS NOT NULL
+);
+CREATE POLICY resources_insert ON team_manager.resources FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY resources_update ON team_manager.resources FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY resources_delete ON team_manager.resources FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY resource_bookings_select ON team_manager.resource_bookings FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+);
+CREATE POLICY resource_bookings_insert ON team_manager.resource_bookings FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);
+CREATE POLICY resource_bookings_delete ON team_manager.resource_bookings FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR (current_setting('app.current_role', true) = 'coordinator'
+        AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+);

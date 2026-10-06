@@ -67,6 +67,8 @@ $available_stmt->execute([$_SESSION['team_id'], $list_id]);
 $available_columns = $available_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
+require_once ROOT_PATH . '/src/db/resources.php';
+$resources = resources_active($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -254,6 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $auto_val, $hours_val,
                     $list_id, $_SESSION['team_id'],
                 ]);
+                resources_save($pdo, (int)$_SESSION['team_id'], 'list', $list_id, resources_from_post());
                 redirect('/coordinator/lists/' . $list_id . '?success=1');
             } catch (PDOException $e) {
                 error_log('List settings error: ' . $e->getMessage());
@@ -263,7 +266,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns) {
+$resource_selected = ($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== '')
+    ? resources_from_post() : resources_booked_ids($pdo, 'list', $list_id);
+
+render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns, $resources, $resource_selected) {
     ?>
     <div class="mb-3">
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
@@ -372,6 +378,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                            value="<?= e($list['location'] ?? '') ?>">
                     <div class="form-text">z. B. Sportplatz Mitte, Turnhalle Schule</div>
                 </div>
+                <?php render_resource_picker($resources, $resource_selected, true); ?>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
                 <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
             </form>

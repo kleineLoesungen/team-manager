@@ -313,6 +313,7 @@ function dashboard_data(PDO $pdo, string $role): array {
         'values'   => [],
         'columns'  => [],
         'totals'   => [],
+        'has_resources' => (bool)$pdo->query("SELECT 1 FROM resources WHERE is_active = TRUE LIMIT 1")->fetchColumn(),
     ];
 
     if (!$is_coordinator) {

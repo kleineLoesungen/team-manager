@@ -160,6 +160,8 @@ Browser → public/index.php (front controller)
 | `ticker_subscriptions` | Opt-in per ticker and user: start notice + every new entry |
 | `ticker_push_state` | Marks a ticker's start notice as sent (exactly once) |
 | `ticker_seen` | When a user last opened the ticker overview per team (dot on the Ticker tab, "Neu" badge) |
+| `resources` | Bookable resources for all teams (pitch, hall, bus), managed by the admin; ics token per resource |
+| `resource_bookings` | Which list or event uses a resource (time comes from the list/event; overlaps only warn) |
 
 Admin credentials live in `config.php` / environment variables — not in the DB.
 The VAPID key pair for push is generated on first use and stored in `settings` (`vapid_keys`).

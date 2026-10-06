@@ -107,6 +107,24 @@ match (true) {
         => require ROOT_PATH . '/src/admin/notify_coordinators_handler.php',
 
     // ── Admin: Clubs ────────────────────────────────────────────────────
+    $path === '/admin/resources'
+        => require ROOT_PATH . '/src/admin/resources_handler.php',
+
+    // /admin/resources/{id}/edit — GET+POST: rename
+    (bool)preg_match('#^/admin/resources/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['resource_id'] = $matches[1];
+            require ROOT_PATH . '/src/admin/resource_edit_handler.php';
+        })(),
+
+    // /admin/resources/{id}/(deactivate|reactivate) — POST actions
+    (bool)preg_match('#^/admin/resources/(\d+)/(deactivate|reactivate)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['resource_id'] = $matches[1];
+            $_REQUEST['action']      = $matches[2];
+            require ROOT_PATH . '/src/admin/resource_action_handler.php';
+        })(),
+
     $path === '/admin/clubs'
         => require ROOT_PATH . '/src/admin/clubs_handler.php',
 
@@ -367,6 +385,9 @@ match (true) {
         => require ROOT_PATH . '/src/coordinator/columns_create_handler.php',
 
     // ── Coordinator: Statistics ────────────────────────────────────────
+    $path === '/coordinator/resources'
+        => require ROOT_PATH . '/src/coordinator/resources_handler.php',
+
     $path === '/coordinator/stats'
         => require ROOT_PATH . '/src/coordinator/stats_handler.php',
 
@@ -510,6 +531,9 @@ match (true) {
         })(),
 
     // ── Member: Statistics ────────────────────────────────────────────
+    $path === '/member/resources'
+        => require ROOT_PATH . '/src/member/resources_handler.php',
+
     $path === '/member/stats'
         => require ROOT_PATH . '/src/member/stats_handler.php',
 
@@ -574,6 +598,13 @@ match (true) {
         })(),
 
     // Token-authenticated ICS feed — per-user personal calendar (Option 1: token URL)
+    // /ics/resource/{token}.ics — Belegung einer Ressource (kein Login)
+    (bool)preg_match('#^/ics/resource/([0-9a-f]{64})\.ics$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['cal_token'] = $matches[1];
+            require ROOT_PATH . '/src/ics_resource_handler.php';
+        })(),
+
     (bool)preg_match('#^/ics/([0-9a-f]{64})\.ics$#', $path, $matches)
         => (function() use ($matches): void {
             $_REQUEST['cal_token'] = $matches[1];

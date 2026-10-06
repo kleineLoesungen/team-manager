@@ -509,6 +509,10 @@ function render_dashboard(array $d, string $role): void {
     <p class="small mb-4"><i class="bi bi-megaphone me-1 text-muted" aria-hidden="true"></i><a href="/ticker">Ticker aller Teams</a></p>
     <?php endif; ?>
 
+    <?php if (!empty($d['has_resources'])): ?>
+    <p class="small mb-4"><i class="bi bi-box-seam me-1 text-muted" aria-hidden="true"></i><a href="<?= $base ?>/resources">Auslastung der Ressourcen</a></p>
+    <?php endif; ?>
+
     <section class="mb-4" aria-labelledby="dash-next">
         <h2 class="h3 mb-0" id="dash-next">Nächste 7 Tage</h2>
         <?php if (empty($d['upcoming'])): ?>
@@ -574,6 +578,59 @@ function render_ticker_status(array $t): void {
     $day = dashboard_day_label($t['event_date']);
     $day = in_array($day, ['Heute', 'Morgen'], true) ? mb_strtolower($day) : $day;
     render_badge('warn', 'Beginnt ' . $day . ($time ? ' ' . $time : ''), 'bi-clock');
+}
+
+/**
+ * Resource selection for lists and events: one switch per active resource (resource_ids[]).
+ * Renders nothing when the admin has not set up any resources.
+ * @param array $resources resources_active()
+ * @param int[] $selected  Booked/posted resource ids
+ * @param bool  $needs_date Show that only dated lists count (lists can be undated)
+ */
+function render_resource_picker(array $resources, array $selected, bool $needs_date = false): void {
+    if (!$resources) return;
+    ?>
+    <fieldset class="mb-4">
+        <legend class="form-label fw-semibold fs-6 mb-2">Ressourcen <span class="text-muted fw-normal">(optional)</span></legend>
+        <?php foreach ($resources as $r): $rid = (int)$r['id']; ?>
+        <div class="form-check form-switch d-flex align-items-center gap-2">
+            <input class="form-check-input" type="checkbox" role="switch"
+                   name="resource_ids[]" id="resource_<?= $rid ?>" value="<?= $rid ?>"
+                   <?= in_array($rid, $selected, true) ? 'checked' : '' ?>>
+            <label class="form-check-label mb-0" for="resource_<?= $rid ?>"><?= e($r['name']) ?></label>
+        </div>
+        <?php endforeach; ?>
+        <div class="form-text">
+            Belegt die Ressource für Datum und Uhrzeit<?= $needs_date ? ' (nur mit Datum)' : '' ?>; ohne Uhrzeit den ganzen Tag.
+            Überschneidungen mit anderen Teams werden angezeigt, aber nicht verhindert.
+            <a href="<?= ($_SESSION['role'] ?? '') === 'coordinator' ? '/coordinator/resources' : '/member/resources' ?>">Auslastung ansehen</a>
+        </div>
+    </fieldset>
+    <?php
+}
+
+/**
+ * Warning for a list or event whose resources are also booked at the same time.
+ * @param array $conflicts resources_conflicts()
+ */
+function render_resource_conflicts(array $conflicts): void {
+    if (!$conflicts) return;
+    require_once ROOT_PATH . '/src/db/resources.php';
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    ?>
+    <div class="alert alert-warning" role="status">
+        <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Ressource zur gleichen Zeit belegt</div>
+        <ul class="mb-0 ps-3 small">
+            <?php foreach ($conflicts as $c): ?>
+            <li>
+                <span class="fw-semibold"><?= e($c['resource_name']) ?></span>:
+                <?= e($c['team_name']) ?> · <?php if ($c['url']): ?><a href="<?= e($c['url']) ?>"><?= e($c['label']) ?></a><?php else: ?><?= e($c['label']) ?><?php endif; ?>
+                · <?= e(dashboard_day_label($c['date'])) ?> <?= e(resources_slot_time($c)) ?>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php
 }
 
 /**

@@ -83,6 +83,9 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                        placeholder="z. B. Sportplatz Mitte, Turnhalle" value="<?= e($old('location')) ?>">
             </div>
 
+            <!-- Ressourcen (Platz, Halle …): gelten für jede Liste einer Serie -->
+            <?php render_resource_picker($resources, $_SERVER['REQUEST_METHOD'] === 'POST' ? resources_from_post() : [], true); ?>
+
             <!-- Beschreibung -->
             <div class="mb-4">
                 <label for="list_description" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>

@@ -29,6 +29,9 @@ $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
+require_once ROOT_PATH . '/src/db/resources.php';
+
+$resources = resources_active($pdo);
 
 $list_type = in_array($_GET['type'] ?? '', ['member', 'free']) ? $_GET['type'] : 'member';
 
@@ -118,6 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dates = $repeat !== '' ? $series : [$date];
         try {
             $pdo->beginTransaction();
+            $resource_ids = resources_from_post();
+            $created      = [];
             foreach ($dates as $list_date) {
                 $cols = "team_id, name, visibility, list_type, show_all_rows, is_hidden, auto_visibility, auto_visibility_hours, date, description, location, time_start, time_end";
                 $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
@@ -134,6 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("INSERT INTO lists ({$cols}) VALUES ({$vals}) RETURNING id");
                 $stmt->execute($params);
                 $list_id = (int)$stmt->fetchColumn();
+                $created[] = $list_id;
+                resources_save($pdo, (int)$_SESSION['team_id'], 'list', $list_id, $resource_ids);
 
                 // Eigene Spalten dieser Liste (in jeder Liste einer Serie gleich)
                 $local_stmt = $pdo->prepare(
@@ -207,7 +214,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
             if (count($dates) > 1) {   // Serie: zurück zur Ansicht, aus der der Koordinator kam
-                redirect($return_to . (str_contains($return_to, '?') ? '&' : '?') . 'success=series&count=' . count($dates));
+                $conflicts = $resource_ids ? resources_conflict_count($pdo, 'list', $created) : 0;
+                redirect($return_to . (str_contains($return_to, '?') ? '&' : '?') . 'success=series&count=' . count($dates)
+                         . ($conflicts ? '&conflicts=' . $conflicts : ''));
             }
             redirect('/coordinator/lists/' . $list_id . '?success=1');
 
@@ -220,6 +229,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = ($list_type === 'free') ? 'Neue freie Liste' : 'Neue Mitgliederliste';
-render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $system_columns, $list_type, $return_to) {
+render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $system_columns, $list_type, $return_to, $resources) {
     require ROOT_PATH . '/src/templates/coordinator/list_form.php';
 });

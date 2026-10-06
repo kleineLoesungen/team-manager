@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 require_coordinator();
+require_once ROOT_PATH . '/src/db/resources.php';
 
 $event_id = (int)($_REQUEST['event_id'] ?? 0);
 if ($event_id <= 0) redirect('/coordinator/lists');
@@ -56,15 +57,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $event_id,
             $team_id,
         ]);
+        $resource_ids = resources_from_post();
+        resources_save($pdo, $team_id, 'event', $event_id, $resource_ids);
         $back = $_POST['_back'] ?? '';
         $back = preg_match('#^/coordinator/lists(\?[^<>"\']*)?$#', $back) ? $back : '/coordinator/lists';
-        redirect(str_contains($back, '?') ? $back . '&success=1' : $back . '?success=1');
+        $conflicts = $resource_ids ? resources_conflict_count($pdo, 'event', [$event_id]) : 0;
+        redirect($back . (str_contains($back, '?') ? '&' : '?') . 'success=1' . ($conflicts ? '&conflicts=' . $conflicts : ''));
     }
 }
 
+$resources          = resources_active($pdo);
+$resource_selected  = $_SERVER['REQUEST_METHOD'] === 'POST' ? resources_from_post() : resources_booked_ids($pdo, 'event', $event_id);
+$resource_conflicts = resources_conflicts($pdo, 'event', $event_id);
+
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Termin bearbeiten', 'lists', function() use ($error, $event) {
+render_coach_page('Termin bearbeiten', 'lists', function() use ($error, $event, $resources, $resource_selected, $resource_conflicts) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/event_form.php';
 });

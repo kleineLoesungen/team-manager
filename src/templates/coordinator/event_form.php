@@ -1,6 +1,7 @@
 <?php
 // src/templates/coordinator/event_form.php — shared create/edit form for events
-// Variables: $event (array|null — null for create), $error (string)
+// Variables: $event (array|null — null for create), $error (string),
+//            $resources, $resource_selected, $resource_conflicts (src/db/resources.php)
 
 $is_edit   = $event !== null;
 $action    = $is_edit
@@ -36,6 +37,8 @@ $icons = [
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
 </div>
+
+<?php render_resource_conflicts($resource_conflicts); ?>
 
 <form method="POST" action="<?= e($action) ?>" novalidate>
     <?= csrf_field() ?>
@@ -111,6 +114,9 @@ $icons = [
                        value="<?= e($v_location) ?>" maxlength="255"
                        placeholder="z. B. Sportplatz, Turnhalle …">
             </div>
+
+            <!-- Ressourcen (Platz, Halle …) -->
+            <?php render_resource_picker($resources, $resource_selected); ?>
 
             <!-- Description -->
             <div class="mb-3">

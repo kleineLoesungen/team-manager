@@ -505,6 +505,9 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 .tm-reminder--info  { --tm-reminder-color: var(--blue); }
 .tm-reminder--dim   { --tm-reminder-color: var(--t3); }
 
+/* Ressourcen-Auslastung: Uhrzeit links in fester Breite, Tabellenziffern */
+.tm-usage-time { min-width: 5.5rem; font-variant-numeric: tabular-nums; }
+
 /* Filter-Pills */
 .tm-filters { display: flex; gap: .25rem; flex-wrap: wrap; }
 

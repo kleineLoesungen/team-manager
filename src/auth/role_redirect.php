@@ -36,6 +36,7 @@ function role_member_from_coordinator_path(string $path): never {
         '/coordinator/stats'   => '/member/stats',
         '/coordinator/ticker'  => '/member/ticker',
         '/coordinator/profile' => '/member/profile',
+        '/coordinator/resources' => '/member/resources',
     ];
     if (isset($simple[$path])) redirect($simple[$path]);
 
@@ -85,6 +86,7 @@ function role_coordinator_from_member_path(string $path): never {
         '/member/ticker'  => '/coordinator/ticker',
         '/member/profile' => '/coordinator/profile',
         '/member/switch-team' => '/coordinator/switch-team',
+        '/member/resources' => '/coordinator/resources',
     ];
     if (isset($simple[$path])) redirect($simple[$path]);
     if (preg_match('#^/member/(lists|files|ticker)/(\d+)(/.*)?$#', $path, $m)) {

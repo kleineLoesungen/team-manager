@@ -371,6 +371,29 @@ function db_init_schema(PDO $pdo, string $s): void {
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_events_team_id ON {$s}.events(team_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_events_date    ON {$s}.events(date)");
+
+    // Resources — bookable across all teams (pitch, hall, bus), managed by the admin
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.resources (
+        id             SERIAL PRIMARY KEY,
+        name           VARCHAR(100) NOT NULL,
+        is_active      BOOLEAN NOT NULL DEFAULT TRUE,
+        calendar_token CHAR(64) NULL UNIQUE,
+        created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+    // Resource bookings — a resource used by one list or one event; time comes from the list/event
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.resource_bookings (
+        id          SERIAL PRIMARY KEY,
+        resource_id INTEGER NOT NULL REFERENCES {$s}.resources(id) ON DELETE CASCADE,
+        team_id     INTEGER NOT NULL REFERENCES {$s}.teams(id) ON DELETE CASCADE,
+        list_id     INTEGER NULL REFERENCES {$s}.lists(id) ON DELETE CASCADE,
+        event_id    INTEGER NULL REFERENCES {$s}.events(id) ON DELETE CASCADE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CHECK (num_nonnulls(list_id, event_id) = 1)
+    )");
+    $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_list  ON {$s}.resource_bookings(resource_id, list_id)  WHERE list_id  IS NOT NULL");
+    $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_event ON {$s}.resource_bookings(resource_id, event_id) WHERE event_id IS NOT NULL");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_resource_bookings_list  ON {$s}.resource_bookings(list_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_resource_bookings_event ON {$s}.resource_bookings(event_id)");
 }
 
 /**
@@ -1032,6 +1055,38 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
     )");
     $pdo->exec("CREATE POLICY events_delete ON {$s}.events FOR DELETE USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coordinator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+    // ── resources RLS ─────────────────────────────────────────────────────────
+    $pdo->exec("ALTER TABLE {$s}.resources ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.resources FORCE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.resource_bookings ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.resource_bookings FORCE ROW LEVEL SECURITY");
+    $pdo->exec("CREATE POLICY resources_select ON {$s}.resources FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR NULLIF(current_setting('app.current_team_id', true), '')::integer IS NOT NULL
+    )");
+    $pdo->exec("CREATE POLICY resources_insert ON {$s}.resources FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+    )");
+    $pdo->exec("CREATE POLICY resources_update ON {$s}.resources FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+    )");
+    $pdo->exec("CREATE POLICY resources_delete ON {$s}.resources FOR DELETE USING (
+        current_setting('app.is_admin', true) = 'true'
+    )");
+    $pdo->exec("CREATE POLICY resource_bookings_select ON {$s}.resource_bookings FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
+    )");
+    $pdo->exec("CREATE POLICY resource_bookings_insert ON {$s}.resource_bookings FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+        OR (current_setting('app.current_role', true) = 'coordinator'
+            AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
+    )");
+    $pdo->exec("CREATE POLICY resource_bookings_delete ON {$s}.resource_bookings FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
         OR (current_setting('app.current_role', true) = 'coordinator'
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer)
