@@ -57,6 +57,13 @@ $icons = [
                        placeholder="z. B. Training, Heimspiel vs. …">
             </div>
 
+            <!-- Description -->
+            <div class="mb-3">
+                <label class="form-label">Beschreibung <span class="text-muted small">(optional)</span></label>
+                <textarea class="form-control" name="description" rows="3"
+                          placeholder="Hinweise, Infos …"><?= e($v_desc) ?></textarea>
+            </div>
+
             <!-- Icon -->
             <div class="mb-3">
                 <label class="form-label">Icon</label>
@@ -119,23 +126,6 @@ $icons = [
             <!-- Ressourcen (Platz, Halle …) -->
             <?php render_resource_picker($resources, $resource_selected); ?>
 
-            <!-- Description -->
-            <div class="mb-3">
-                <label class="form-label">Beschreibung <span class="text-muted small">(optional)</span></label>
-                <textarea class="form-control" name="description" rows="3"
-                          placeholder="Hinweise, Infos …"><?= e($v_desc) ?></textarea>
-            </div>
-
-            <!-- Hidden in list view -->
-            <div class="mb-3">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch"
-                           id="is_hidden" name="is_hidden" value="1"
-                           <?= $v_hidden ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="is_hidden">In Listenansicht verstecken</label>
-                </div>
-            </div>
-
             <!-- Visibility -->
             <div class="mb-3">
                 <label class="form-label">Sichtbarkeit</label>
@@ -158,6 +148,16 @@ $icons = [
                             <div class="text-muted small">Nur für Koordinatoren sichtbar</div>
                         </label>
                     </div>
+                </div>
+            </div>
+
+            <!-- Hidden in list view -->
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch"
+                           id="is_hidden" name="is_hidden" value="1"
+                           <?= $v_hidden ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="is_hidden">In Listenansicht verstecken</label>
                 </div>
             </div>
 

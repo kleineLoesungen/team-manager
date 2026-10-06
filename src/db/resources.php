@@ -10,6 +10,8 @@
 
 declare(strict_types=1);
 
+const RESOURCE_PICKER_SWITCH_MAX = 5;   // bis hier ein Schalter je Ressource, darüber Chips
+
 /** Active resources (id, name), for the selection in forms. Works in any team context. */
 function resources_active(PDO $pdo): array {
     return $pdo->query("SELECT id, name FROM resources WHERE is_active = TRUE ORDER BY name")

@@ -595,9 +595,21 @@ function render_ticker_status(array $t, bool $with_start = false): void {
  */
 function render_resource_picker(array $resources, array $selected, bool $needs_date = false): void {
     if (!$resources) return;
+    $chips = count($resources) > RESOURCE_PICKER_SWITCH_MAX;   // viele Ressourcen: kompakte Chips statt Schalterliste
     ?>
     <fieldset class="mb-4">
         <legend class="form-label fw-semibold fs-6 mb-2">Ressourcen <span class="text-muted fw-normal">(optional)</span></legend>
+        <?php if ($chips): ?>
+        <div class="d-flex flex-wrap gap-2 mb-1">
+            <?php foreach ($resources as $r): $rid = (int)$r['id']; ?>
+            <input type="checkbox" class="btn-check" name="resource_ids[]" id="resource_<?= $rid ?>" value="<?= $rid ?>"
+                   autocomplete="off" <?= in_array($rid, $selected, true) ? 'checked' : '' ?>>
+            <label class="btn btn-sm btn-outline-secondary min-touch tm-chip" for="resource_<?= $rid ?>">
+                <i class="bi bi-check-lg tm-chip-check" aria-hidden="true"></i><?= e($r['name']) ?>
+            </label>
+            <?php endforeach; ?>
+        </div>
+        <?php else: ?>
         <?php foreach ($resources as $r): $rid = (int)$r['id']; ?>
         <div class="form-check form-switch d-flex align-items-center gap-2">
             <input class="form-check-input" type="checkbox" role="switch"
@@ -606,6 +618,7 @@ function render_resource_picker(array $resources, array $selected, bool $needs_d
             <label class="form-check-label mb-0" for="resource_<?= $rid ?>"><?= e($r['name']) ?></label>
         </div>
         <?php endforeach; ?>
+        <?php endif; ?>
         <div class="form-text">
             Belegt die Ressource für Datum und Uhrzeit<?= $needs_date ? ' (nur mit Datum)' : '' ?>; ohne Uhrzeit den ganzen Tag.
             Überschneidungen mit anderen Teams werden angezeigt, aber nicht verhindert.

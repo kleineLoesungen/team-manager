@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ((array)($_POST['local_name'] ?? []) as $k => $raw_name) {
         $col_name = trim((string)$raw_name);
         if ($col_name === '') continue;
+        if (count($local_columns) >= LIST_CREATE_LOCAL_COLUMNS) break;
         $local_columns[] = [
             'name'       => mb_substr($col_name, 0, 100),
             'data_type'  => in_array($_POST['local_type'][$k] ?? '', ['boolean', 'number', 'text'], true) ? $_POST['local_type'][$k] : 'boolean',

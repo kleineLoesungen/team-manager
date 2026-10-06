@@ -32,6 +32,13 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                        placeholder="z. B. Spiel gegen FC Beispiel" value="<?= e($old('name')) ?>">
             </div>
 
+            <!-- Beschreibung -->
+            <div class="mb-4">
+                <label for="list_description" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
+                <textarea id="list_description" name="description" class="form-control" rows="2" maxlength="500"
+                          placeholder="z. B. Heimspiel gegen FC Muster, Pokalrunde 2"><?= e($old('description')) ?></textarea>
+            </div>
+
             <!-- Datum -->
             <div class="mb-4">
                 <label for="list_date" class="form-label fw-semibold">Datum <span class="text-muted fw-normal">(optional)</span></label>
@@ -86,13 +93,6 @@ $is_member_list = ($list_type ?? 'member') === 'member';
             <!-- Ressourcen (Platz, Halle …): gelten für jede Liste einer Serie -->
             <?php render_resource_picker($resources, $_SERVER['REQUEST_METHOD'] === 'POST' ? resources_from_post() : [], true); ?>
 
-            <!-- Beschreibung -->
-            <div class="mb-4">
-                <label for="list_description" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
-                <textarea id="list_description" name="description" class="form-control" rows="2" maxlength="500"
-                          placeholder="z. B. Heimspiel gegen FC Muster, Pokalrunde 2"><?= e($old('description')) ?></textarea>
-            </div>
-
             <!-- Sichtbarkeit -->
             <div class="mb-4">
                 <label for="list_visibility" class="form-label fw-semibold">Sichtbarkeit</label>
@@ -137,32 +137,9 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                 <div class="form-check form-switch d-flex align-items-center gap-2">
                     <input class="form-check-input" type="checkbox" role="switch"
                            name="is_hidden" id="is_hidden" value="1" <?= $checked('is_hidden') ?>>
-                    <label class="form-check-label mb-0" for="is_hidden">Liste verstecken (erscheint eingeklappt am Ende der Listenansicht)</label>
+                    <label class="form-check-label mb-0" for="is_hidden">Liste verstecken</label>
                 </div>
-            </div>
-
-            <!-- Eigene Spalten -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Eigene Spalten <span class="text-muted fw-normal">(optional)</span></label>
-                <div class="form-text mt-0 mb-2">Nur für diese Liste<?= $is_member_list ? ' — bei einer Serie in jeder Liste' : '' ?>. Leere Zeilen werden ignoriert.</div>
-                <?php for ($k = 0; $k < LIST_CREATE_LOCAL_COLUMNS; $k++):
-                    $ln = (string)($_POST['local_name'][$k] ?? '');
-                    $lt = (string)($_POST['local_type'][$k] ?? 'boolean'); ?>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                    <input type="text" name="local_name[<?= $k ?>]" class="form-control flex-grow-1 tm-local-col-name"
-                           maxlength="100" placeholder="Spaltenname" aria-label="Name der eigenen Spalte <?= $k + 1 ?>" value="<?= e($ln) ?>">
-                    <select name="local_type[<?= $k ?>]" class="form-select w-auto" aria-label="Typ der eigenen Spalte <?= $k + 1 ?>">
-                        <option value="boolean" <?= $lt === 'boolean' ? 'selected' : '' ?>>Ja/Nein</option>
-                        <option value="number"  <?= $lt === 'number'  ? 'selected' : '' ?>>Zahl</option>
-                        <option value="text"    <?= $lt === 'text'    ? 'selected' : '' ?>>Text</option>
-                    </select>
-                    <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
-                        <input class="form-check-input" type="checkbox" role="switch" value="1"
-                               name="local_coach[<?= $k ?>]" id="local_coach_<?= $k ?>" <?= !empty($_POST['local_coach'][$k]) ? 'checked' : '' ?>>
-                        <label class="form-check-label mb-0 small" for="local_coach_<?= $k ?>">nur Koordinatoren</label>
-                    </div>
-                </div>
-                <?php endfor; ?>
+                <div class="form-text mt-0">Versteckte Listen erscheinen eingeklappt am Ende der Übersicht.</div>
             </div>
 
             <!-- Section 4: Global column selection with optional default values (member lists only) -->
@@ -274,11 +251,57 @@ $is_member_list = ($list_type ?? 'member') === 'member';
             </div>
             <?php endif; ?>
 
+            <!-- Eigene Spalten: leere Zeilen blendet das Skript unten aus, "Spalte hinzufügen" zeigt die nächste -->
+            <div class="mb-4" data-local-cols>
+                <label class="form-label fw-semibold">Eigene Spalten <span class="text-muted fw-normal">(optional)</span></label>
+                <div class="form-text mt-0 mb-2">Nur für diese Liste<?= $is_member_list ? ' — bei einer Serie in jeder Liste' : '' ?>. Leere Zeilen werden ignoriert.</div>
+                <?php for ($k = 0; $k < LIST_CREATE_LOCAL_COLUMNS; $k++):
+                    $ln = (string)($_POST['local_name'][$k] ?? '');
+                    $lt = (string)($_POST['local_type'][$k] ?? 'boolean'); ?>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2" data-local-col>
+                    <input type="text" name="local_name[<?= $k ?>]" class="form-control flex-grow-1 tm-local-col-name"
+                           maxlength="100" placeholder="Spaltenname" aria-label="Name der eigenen Spalte <?= $k + 1 ?>" value="<?= e($ln) ?>">
+                    <select name="local_type[<?= $k ?>]" class="form-select w-auto" aria-label="Typ der eigenen Spalte <?= $k + 1 ?>">
+                        <option value="boolean" <?= $lt === 'boolean' ? 'selected' : '' ?>>Ja/Nein</option>
+                        <option value="number"  <?= $lt === 'number'  ? 'selected' : '' ?>>Zahl</option>
+                        <option value="text"    <?= $lt === 'text'    ? 'selected' : '' ?>>Text</option>
+                    </select>
+                    <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" value="1"
+                               name="local_coach[<?= $k ?>]" id="local_coach_<?= $k ?>" <?= !empty($_POST['local_coach'][$k]) ? 'checked' : '' ?>>
+                        <label class="form-check-label mb-0 small" for="local_coach_<?= $k ?>">nur Koordinatoren</label>
+                    </div>
+                </div>
+                <?php endfor; ?>
+                <button type="button" class="btn btn-sm btn-outline-secondary min-touch d-none" data-local-add>
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Spalte hinzufügen
+                </button>
+            </div>
+
             <button type="submit" class="btn btn-primary min-touch" data-series-submit>Liste anlegen</button>
             <a href="<?= e($return_to) ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
         </form>
     </div>
 </div>
+
+<script>
+// Eigene Spalten: nur ausgefüllte Zeilen zeigen, weitere über "Spalte hinzufügen".
+// Ohne JavaScript bleiben alle Zeilen sichtbar.
+(function () {
+    var box = document.querySelector('[data-local-cols]');
+    if (!box) return;
+    var rows = Array.prototype.slice.call(box.querySelectorAll('[data-local-col]'));
+    var add  = box.querySelector('[data-local-add]');
+    rows.forEach(function (r) { if (r.querySelector('input[type=text]').value.trim() === '') r.classList.add('d-none'); });
+    function sync() { add.classList.toggle('d-none', !rows.some(function (r) { return r.classList.contains('d-none'); })); }
+    add.addEventListener('click', function () {
+        var next = rows.filter(function (r) { return r.classList.contains('d-none'); })[0];
+        if (next) { next.classList.remove('d-none'); next.querySelector('input[type=text]').focus(); }
+        sync();
+    });
+    sync();
+})();
+</script>
 
 <?php if ($is_member_list): ?>
 <script>

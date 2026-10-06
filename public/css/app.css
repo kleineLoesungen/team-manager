@@ -508,6 +508,13 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 /* Ressourcen-Auslastung: Uhrzeit links in fester Breite, Tabellenziffern */
 .tm-usage-time { min-width: 5.5rem; font-variant-numeric: tabular-nums; }
 
+/* Auswahl-Chips (viele Ressourcen): Häkchen nur, wenn ausgewählt */
+.tm-chip            { display: inline-flex; align-items: center; gap: .25rem; }
+.tm-chip-check      { display: none; }
+.btn-check:checked + .tm-chip .tm-chip-check { display: inline; }
+.btn-check:checked + .tm-chip { --bs-btn-active-bg: var(--blue-bg); --bs-btn-active-color: var(--blue); font-weight: 600; }
+.btn-check:focus-visible + .tm-chip { outline: 2px solid var(--blue); outline-offset: 2px; }
+
 /* Filter-Pills */
 .tm-filters { display: flex; gap: .25rem; flex-wrap: wrap; }
 

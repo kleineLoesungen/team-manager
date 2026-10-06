@@ -142,7 +142,7 @@ const LIST_SERIES_REPEATS = [
     'yearly'    => ['label' => 'Jährlich',        'months' => 12],
 ];
 const LIST_SERIES_MAX = 52;
-const LIST_CREATE_LOCAL_COLUMNS = 3;   // Zeilen für eigene Spalten im Anlegen-Formular
+const LIST_CREATE_LOCAL_COLUMNS = 5;   // Zeilen für eigene Spalten im Anlegen-Formular
 
 /**
  * Dates of a list series, starting with $start (Y-m-d). Monthly steps keep the start day and

@@ -191,6 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
             $new_date = '';
         }
+        $new_description = mb_substr(trim($_POST['description'] ?? ''), 0, 500);
         $new_location = trim($_POST['location'] ?? '');
         if (mb_strlen($new_location) > 255) {
             $new_location = mb_substr($new_location, 0, 255);
@@ -229,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $upd = $pdo->prepare(
                     "UPDATE lists SET name = ?, visibility = ?, show_all_rows = ?, is_hidden = ?,
-                            date = ?, location = ?, time_start = ?, time_end = ?,
+                            description = ?, date = ?, location = ?, time_start = ?, time_end = ?,
                             -- Regel wird wieder scharf, sobald sie selbst, Datum oder Beginn sich ändern
                             -- (SET-Ausdrücke sehen die alten Werte der Zeile)
                             auto_visibility_done_at = CASE
@@ -248,6 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ts_val    = $new_time_start !== '' ? $new_time_start : null;
                 $upd->execute([
                     $new_name, $new_visibility, $new_show_all_rows, $new_is_hidden,
+                    $new_description !== '' ? $new_description : null,
                     $date_val,
                     $new_location !== '' ? $new_location : null,
                     $ts_val,
@@ -290,48 +292,13 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                            value="<?= e($list['name']) ?>">
                 </div>
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Sichtbarkeit</label>
-                    <select name="visibility" class="form-select">
-                        <option value="public"    <?= $list['visibility'] === 'public'    ? 'selected' : '' ?>>
-                            Öffentlich — Mitglieder bearbeiten eigene Zeile
-                        </option>
-                        <option value="protected" <?= $list['visibility'] === 'protected' ? 'selected' : '' ?>>
-                            Geschützt — Mitglieder sehen eigene Zeile (nur lesen)
-                        </option>
-                        <option value="private"   <?= $list['visibility'] === 'private'   ? 'selected' : '' ?>>
-                            Privat — Nur Koordinator sieht und bearbeitet
-                        </option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Zeilen anderer Mitglieder</label>
-                    <div class="form-check form-switch d-flex align-items-center gap-2">
-                        <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
-                               name="show_all_rows" id="show_all_rows" value="1"
-                               <?= $list['show_all_rows'] ? 'checked' : '' ?>>
-                        <label class="form-check-label mb-0" for="show_all_rows">
-                            Mitglieder sehen Einträge anderer Mitglieder
-                        </label>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Sichtbarkeit in der Übersicht</label>
-                    <div class="form-check form-switch d-flex align-items-center gap-2">
-                        <input class="form-check-input" type="checkbox" role="switch"
-                               style="width:3em;height:1.75em;cursor:pointer;"
-                               name="is_hidden" id="is_hidden" value="1"
-                               <?= $list['is_hidden'] ? 'checked' : '' ?>>
-                        <label class="form-check-label mb-0" for="is_hidden">
-                            Liste verstecken (erscheint eingeklappt am Ende der Übersicht)
-                        </label>
-                    </div>
+                    <label for="list_description" class="form-label fw-semibold">Beschreibung <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea id="list_description" name="description" class="form-control" rows="2" maxlength="500"><?= e($list['description'] ?? '') ?></textarea>
                 </div>
                 <div class="mb-4">
                     <label for="list_date" class="form-label fw-semibold">Datum <span class="text-muted fw-normal">(optional)</span></label>
                     <input type="date" id="list_date" name="date" class="form-control"
                            value="<?= e($list['date'] ?? '') ?>">
-                    <div class="form-text">z. B. Datum des Spiels oder Trainings</div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Uhrzeit <span class="text-muted fw-normal">(optional)</span></label>
@@ -349,6 +316,27 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                         </div>
                     </div>
                     <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
+                </div>
+                <div class="mb-4">
+                    <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="text" id="list_location" name="location"
+                           class="form-control" maxlength="255"
+                           value="<?= e($list['location'] ?? '') ?>">
+                </div>
+                <?php render_resource_picker($resources, $resource_selected, true); ?>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Sichtbarkeit</label>
+                    <select name="visibility" class="form-select">
+                        <option value="public"    <?= $list['visibility'] === 'public'    ? 'selected' : '' ?>>
+                            Öffentlich — Mitglieder bearbeiten eigene Zeile
+                        </option>
+                        <option value="protected" <?= $list['visibility'] === 'protected' ? 'selected' : '' ?>>
+                            Geschützt — Mitglieder sehen eigene Zeile (nur lesen)
+                        </option>
+                        <option value="private"   <?= $list['visibility'] === 'private'   ? 'selected' : '' ?>>
+                            Privat — Nur Koordinator sieht und bearbeitet
+                        </option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label for="auto_visibility" class="form-label fw-semibold">Sichtbarkeit automatisch umstellen <span class="text-muted fw-normal">(optional)</span></label>
@@ -372,14 +360,22 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                     <?php render_auto_visibility_hint($list); ?>
                 </div>
                 <div class="mb-4">
-                    <label for="list_location" class="form-label fw-semibold">Ort <span class="text-muted fw-normal">(optional)</span></label>
-                    <input type="text" id="list_location" name="location"
-                           class="form-control" maxlength="255"
-                           value="<?= e($list['location'] ?? '') ?>">
-                    <div class="form-text">z. B. Sportplatz Mitte, Turnhalle Schule</div>
+                    <label class="form-label fw-semibold">Anzeige</label>
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               name="show_all_rows" id="show_all_rows" value="1"
+                               <?= $list['show_all_rows'] ? 'checked' : '' ?>>
+                        <label class="form-check-label mb-0" for="show_all_rows">Mitglieder sehen Einträge anderer Mitglieder</label>
+                    </div>
+                    <div class="form-check form-switch d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                               name="is_hidden" id="is_hidden" value="1"
+                               <?= $list['is_hidden'] ? 'checked' : '' ?>>
+                        <label class="form-check-label mb-0" for="is_hidden">Liste verstecken</label>
+                    </div>
+                    <div class="form-text mt-0">Versteckte Listen erscheinen eingeklappt am Ende der Übersicht.</div>
                 </div>
-                <?php render_resource_picker($resources, $resource_selected, true); ?>
-                <button type="submit" class="btn btn-primary min-touch">Speichern</button>
+                <button type="submit" class="btn btn-primary min-touch">Liste speichern</button>
                 <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
             </form>
         </div>
