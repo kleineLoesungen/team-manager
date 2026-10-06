@@ -95,8 +95,11 @@ cp config.example.php config.php
 ```
 
 ```bash
-docker compose up --build
+docker compose --profile db up --build
 ```
+
+Die Datenbank ist optional (Compose-Profil `db`). Ohne `--profile db` starten nur nginx und php;
+die App verbindet sich dann mit `DB_HOST` aus der Env-Datei (siehe `docker-compose.yml`).
 
 Die App ist danach unter **http://localhost:8080** erreichbar.
 
@@ -126,7 +129,7 @@ Admin-Zugangsdaten werden in [.env.docker](.env.docker) konfiguriert.
 ### Datenbank zurücksetzen
 
 ```bash
-docker compose down -v && docker compose up
+docker compose --profile db down -v && docker compose --profile db up
 ```
 
 `-v` löscht das Postgres-Volume — die Initialisierungsskripte laufen beim nächsten Start neu durch.
@@ -407,7 +410,7 @@ Für Server-Umgebungen mit Docker-Unterstützung (VPS, Root-Server, etc.). Verwe
 `.env.docker` als Vorlage kopieren und mit Produktionswerten befüllen:
 
 ```bash
-cp .env.docker .env.production
+cp .env.production.example .env.production
 ```
 
 Dann `.env.production` anpassen:
@@ -431,9 +434,10 @@ BASE_URL=ihre-domain.de
 ### 2. Starten
 
 ```bash
-docker compose --env-file .env.production up -d --build
+docker compose --profile db --env-file .env.production up -d --build
 ```
 
+- `--profile db` startet die mitgelieferte PostgreSQL mit (ohne: externe Datenbank, siehe unten)
 - `-d` startet im Hintergrund
 - `--build` baut das PHP-Image neu (bei Updates notwendig)
 - Beim ersten Start legt PostgreSQL automatisch Schema, Benutzer und Berechtigungen an
@@ -533,16 +537,16 @@ BASE_URL=ihre-domain.de
 #### Nur App-Container starten
 
 ```bash
-docker compose --env-file .env.production up -d --build --no-deps php nginx
+docker compose --env-file .env.production up -d --build
 ```
 
-`--no-deps` verhindert, dass Docker Compose den `db`-Container mitstartet, obwohl `php` ihn als Abhängigkeit deklariert.
+Ohne `--profile db` startet kein `db`-Container; `php` verbindet sich mit `DB_HOST` aus `.env.production`.
 
 #### Updates
 
 ```bash
 git pull
-docker compose --env-file .env.production up -d --build --no-deps php nginx
+docker compose --env-file .env.production up -d --build
 ```
 
 Die externe Datenbank wird nicht berührt. Schema-Änderungen werden **nicht** automatisch

@@ -1,20 +1,32 @@
+# Team Manager — Docker
+#
+# Die App (nginx + php) läuft immer. Die PostgreSQL-Datenbank ist optional (Profil "db"):
+#
+#   Entwicklung mit eigener DB:   docker compose --profile db up
+#   Produktion mit eigener DB:    docker compose --profile db --env-file .env.production up -d --build
+#   Produktion mit externer DB:   docker compose --env-file .env.production up -d --build
+#
+# Alle Werte (DB-Host, Zugangsdaten, Admin, Mail) stehen in genau einer Env-Datei:
+# APP_ENV_FILE, Standard .env.docker. Mit --env-file .env.production setzt diese Datei
+# APP_ENV_FILE=.env.production selbst. Das Compose-File liest bewusst keine DB-Werte per
+# ${…} ein — Compose lädt sonst automatisch eine .env aus dem Projektordner, und die kann
+# Zugangsdaten einer ganz anderen (Produktions-)Datenbank enthalten.
+
 services:
 
   db:
     image: postgres:15-alpine
+    profiles: ["db"]
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: team_manager_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+    env_file: ${APP_ENV_FILE:-.env.docker}   # POSTGRES_* für den Superuser, DB_USER/DB_PASS für den App-Benutzer
     volumes:
-      - ./docker/postgres/01-user.sql:/docker-entrypoint-initdb.d/01-user.sql
+      - ./docker/postgres/01-user.sh:/docker-entrypoint-initdb.d/01-user.sh
       - ./database/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
       - ./database/rls_policies.sql:/docker-entrypoint-initdb.d/03-rls.sql
-      - ./docker/postgres/04-grants.sql:/docker-entrypoint-initdb.d/04-grants.sql
+      - ./docker/postgres/04-grants.sh:/docker-entrypoint-initdb.d/04-grants.sh
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -24,19 +36,17 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www/html
-    env_file: .env.docker
-    environment:
-      DB_HOST: db
-      DB_PORT: "5432"
+    env_file: ${APP_ENV_FILE:-.env.docker}
     depends_on:
       db:
         condition: service_healthy
+        required: false   # ohne Profil "db" startet php allein (externe Datenbank)
 
   nginx:
     image: nginx:1.25-alpine
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "${APP_PORT:-8080}:80"
     volumes:
       - .:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf

@@ -22,7 +22,7 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - Native PHP-Templates, native Sessions (`httponly`, `samesite=Strict`, `use_strict_mode`)
 - `password_hash()` / `password_verify()`, CSRF-Tokens aus `random_bytes()`
 - Kein JS-Framework: Formulare funktionieren ohne JavaScript (progressive enhancement)
-- Lokale Entwicklung: `docker compose up` (siehe README)
+- Lokale Entwicklung: `docker compose --profile db up` (DB optional, siehe README)
 
 ## Conventions
 
