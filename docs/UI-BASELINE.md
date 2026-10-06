@@ -49,7 +49,9 @@ Deshalb kein `form-control-sm`, auch nicht in gruppierten Abschnitts-Cards.
 
 - Header: Vereinslogo, Vereinsname, rechts Profil-/Abmelde-Zugang. Höhe aus `--topbar-h`.
 - Navigation: **Bottom-Nav, maximal fünf Punkte.** Identisch aufgebaut für alle Rollen,
-  nur die Punkte unterscheiden sich. Der fünfte Punkt ist „Mehr", sobald eine Rolle mehr braucht.
+  nur die Punkte unterscheiden sich. Der Reiter für Listen, Dokumente und Termine heißt „Inhalte".
+  Weitere Seiten einer Rolle bekommen keinen eigenen Reiter, sondern eine Kachel am Ende von
+  Profil bzw. Einstellungen (siehe Kacheln).
   Die öffentliche Ticker-Seite nutzt dasselbe Layout ohne Navigation.
 - Die Nav berücksichtigt `env(safe-area-inset-bottom)`.
 - `<title>`: `{Seitentitel} · {Vereinsname}`, Sprache `lang="de"`.
@@ -87,7 +89,27 @@ Auf dem Smartphone läuft die Tabelle randlos bis an den Bildschirmrand.
 
 **Formularfelder.** Gruppiert in Abschnitts-Cards mit Abschnittsüberschrift.
 Label immer sichtbar über dem Feld, Pflichtfelder mit `*`, Hilfetext unter dem Feld.
-Boolesche Werte als `form-switch`.
+Boolesche Werte als `form-switch` mit kurzem Label; Erklärungen stehen als Hilfetext darunter,
+nicht in Klammern im Label.
+
+Reihenfolge bei Inhalten (Liste, Termin): Name, Beschreibung, Datum, Uhrzeit, Wiederholen,
+Ort, Ressourcen — dann Sichtbarkeit und Anzeige — dann Spalten (globale vor eigenen).
+Optionale Wiederholungen von Feldgruppen (z. B. eigene Spalten) erscheinen erst über einen
+Button „… hinzufügen", nicht als leere Vorgabezeilen; ohne JavaScript bleiben alle Zeilen sichtbar.
+
+**Mehrfachauswahl.** Bis fünf Optionen ein `form-switch` je Option, darüber umbrechende Chips
+(`btn-check`, ausgewählt mit Häkchen). Komponente: `render_resource_picker()`.
+
+**Hinweise vor dem Speichern.** Was nicht verboten, aber wahrscheinlich ungewollt ist
+(z. B. eine schon belegte Ressource), zeigt ein gelber Alert direkt unter dem betroffenen Feld,
+sobald die Eingabe es erkennen lässt. Speichern bleibt möglich; der Hinweis sagt das.
+
+**Ort.** Ein Ort ist ein Button, der die Karten-App des Geräts öffnet (`render_place()`),
+daneben die belegten Ressourcen als Badges.
+
+**Kacheln.** Verweise auf Unterseiten am Ende von Profil und Einstellungen sind eine gruppierte
+`list-group`: Icon, Titel, eine Zeile Erklärung, Chevron (`render_tile_group()`, einzeln
+`render_link_tile()`). „Abmelden" steht darunter in einer eigenen roten Zeile.
 
 **Fehler.** Roter Alert oben im Content, oberhalb des Formulars. Der Text nennt die Ursache
 und den nächsten Schritt: „Der Listenname ist schon vergeben. Wähle einen anderen."
@@ -123,7 +145,8 @@ Mindesthöhe 44 px für alles Antippbare.
 - Eine Aktion behält ihren Namen über den ganzen Ablauf: Der Button „Liste löschen"
   führt zur Seite „Liste löschen?" und meldet danach „Liste gelöscht."
 - Datum `TT.MM.JJJJ`, in Listen kurz `Sa 14.09.`, Uhrzeit `HH:MM`.
-- Ein Ding heißt in jeder Rolle gleich: Liste, Spalte, Eintrag, Mitglied, Koordinator, Team, Ticker.
+- Ein Ding heißt in jeder Rolle gleich: Inhalt, Liste, Termin, Dokument, Spalte, Eintrag,
+  Ressource, Mitglied, Koordinator, Team, Ticker.
 
 ## 7. Qualitätsboden
 
