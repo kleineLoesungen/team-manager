@@ -28,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location    = trim($_POST['location'] ?? '');
     $icon        = trim($_POST['icon'] ?? 'bi-calendar-event');
     $date        = trim($_POST['date'] ?? '');
-    $is_all_day  = !empty($_POST['is_all_day']);
-    $time_start  = trim($_POST['time_start'] ?? '');
-    $time_end    = trim($_POST['time_end'] ?? '');
+    $time_start  = preg_match('/^\d{2}:\d{2}$/', trim($_POST['time_start'] ?? '')) ? trim($_POST['time_start']) : '';
+    $time_end    = preg_match('/^\d{2}:\d{2}$/', trim($_POST['time_end'] ?? '')) ? trim($_POST['time_end']) : '';
+    $is_all_day  = $time_start === '';   // ohne Beginn ganztägig
     $visibility  = in_array($_POST['visibility'] ?? '', ['protected', 'private'], true)
         ? $_POST['visibility'] : 'protected';
     $is_hidden   = isset($_POST['is_hidden']) && $_POST['is_hidden'] === '1';

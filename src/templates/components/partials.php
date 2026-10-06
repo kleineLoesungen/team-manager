@@ -721,6 +721,71 @@ function render_place(?string $location, array $resource_names): void {
 }
 
 /**
+ * Series fields for create forms (lists, events): "Wiederholen" + "bis einschließlich", with the
+ * number of dates shown live (same calculation as list_series_dates() in PHP; the server checks
+ * again when saving). The form's submit button [data-series-submit] then reads "5 Termine anlegen".
+ * Expects the form's first date field to be named "date". Values survive a failed submit.
+ * @param string $plural    "Listen" | "Termine" (for the button)
+ * @param string $one_label Button text without a series ("Liste anlegen")
+ */
+function render_series_fields(string $plural, string $one_label): void {
+    $repeat = (string)($_POST['repeat'] ?? '');
+    ?>
+    <div class="mb-4" data-series>
+        <label for="series_repeat" class="form-label fw-semibold">Wiederholen <span class="text-muted fw-normal">(optional)</span></label>
+        <select id="series_repeat" name="repeat" class="form-select mb-2">
+            <option value="">Nicht wiederholen</option>
+            <?php foreach (LIST_SERIES_REPEATS as $key => $r): ?>
+            <option value="<?= $key ?>" <?= $repeat === $key ? 'selected' : '' ?>><?= e($r['label']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <label for="series_until" class="form-label small text-muted mb-1">bis einschließlich</label>
+        <input type="date" id="series_until" name="repeat_until" class="form-control" value="<?= e((string)($_POST['repeat_until'] ?? '')) ?>">
+        <div class="form-text" data-series-info aria-live="polite">
+            Legt für jeden Termin einen eigenen Eintrag an, mit allen Einstellungen dieses Formulars.
+            Jeder lässt sich danach einzeln bearbeiten oder löschen.
+        </div>
+    </div>
+    <script>
+    (function () {
+        var box = document.currentScript.previousElementSibling, form = box.closest('form');
+        var rep = box.querySelector('[name=repeat]'), until = box.querySelector('[name=repeat_until]');
+        var start = form.elements['date'], info = box.querySelector('[data-series-info]');
+        var plain = info.textContent, months = { monthly: 1, quarterly: 3, yearly: 12 }, max = <?= LIST_SERIES_MAX ?>;
+        var one = <?= json_encode($one_label) ?>, plural = <?= json_encode($plural) ?>;
+        var verb = one.split(' ').slice(1).join(' ');
+        var wd = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+        function iso(d) { return d.toISOString().slice(0, 10); }
+        function nth(s, r, k) {
+            var d = new Date(s + 'T00:00:00Z');
+            if (r === 'weekly') { d.setUTCDate(d.getUTCDate() + 7 * k); return d; }
+            var day = d.getUTCDate(), m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + k * months[r], 1));
+            var last = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 0)).getUTCDate();
+            m.setUTCDate(Math.min(day, last)); return m;
+        }
+        function label(t) { var b = form.querySelector('[data-series-submit]'); if (b) b.textContent = t; }
+        function update() {
+            var r = rep.value;
+            until.disabled = !r;
+            if (!r) { info.textContent = plain; info.classList.remove('text-danger'); label(one); return; }
+            if (!start.value || !until.value) { info.textContent = 'Datum (erster Termin) und Enddatum wählen.'; info.classList.remove('text-danger'); label(one); return; }
+            var n = 0, last = null;
+            while (n <= max) { var d = nth(start.value, r, n); if (iso(d) > until.value) break; last = d; n++; }
+            var bad = n < 2 || n > max;
+            info.classList.toggle('text-danger', bad);
+            info.textContent = n > max ? 'Mehr als ' + max + ' Termine — wähle ein früheres Enddatum.'
+                : n < 2 ? 'Bis zu diesem Datum gibt es nur einen Termin.'
+                : n + ' Termine, letzter am ' + wd[last.getUTCDay()] + ' ' + iso(last).split('-').reverse().join('.') + '.';
+            label(bad ? one : n + ' ' + plural + ' ' + verb);
+        }
+        [rep, until, start].forEach(function (el) { el.addEventListener('input', update); el.addEventListener('change', update); });
+        document.addEventListener('DOMContentLoaded', update);   // Button steht weiter unten im Formular
+    })();
+    </script>
+    <?php
+}
+
+/**
  * Link tile: icon, title, one line of explanation, chevron — leads to another page
  * (Ressourcen in der Übersicht, Ticker aller Teams, Admin-Einstellungen).
  */

@@ -193,6 +193,28 @@ function list_series_dates_until(string $start, string $repeat, string $until): 
     return $dates;
 }
 
+/**
+ * Series from the form (repeat + repeat_until), for lists and events: the dates to create
+ * and an error message. Without repeat it is just [$date]. $what names the item in errors
+ * ("die Liste", "der Termin").
+ * @return array{repeat: string, dates: list<string>, error: string}
+ */
+function series_from_post(string $date, string $what): array {
+    $repeat = array_key_exists($_POST['repeat'] ?? '', LIST_SERIES_REPEATS) ? $_POST['repeat'] : '';
+    if ($repeat === '') return ['repeat' => '', 'dates' => [$date], 'error' => ''];
+    $until = trim($_POST['repeat_until'] ?? '');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $until)) $until = '';
+    $dates = ($date !== '' && $until !== '' && $until >= $date) ? list_series_dates_until($date, $repeat, $until) : [];
+    $error = match (true) {
+        $date === ''                       => 'Für eine Serie braucht ' . $what . ' ein Datum — es ist der erste Termin.',
+        $until === '' || $until < $date    => 'Gib an, bis wann die Serie läuft — ein Datum ab dem ersten Termin.',
+        count($dates) < 2                  => 'Bis zu diesem Datum gibt es nur einen Termin. Wähle ein späteres Enddatum.',
+        count($dates) > LIST_SERIES_MAX    => 'Das wären mehr als ' . LIST_SERIES_MAX . ' Termine. Wähle ein früheres Enddatum.',
+        default                            => '',
+    };
+    return ['repeat' => $repeat, 'dates' => $dates, 'error' => $error];
+}
+
 /** Return target after creating content: one of the list views, else the overview. */
 function coordinator_lists_return_to(?string $url): string {
     $url = (string)$url;

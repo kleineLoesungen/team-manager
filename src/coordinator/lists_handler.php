@@ -51,6 +51,7 @@ $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 // Nach dem Speichern: so viele Listen/Termine teilen sich eine Ressource mit einer anderen Belegung
 $conflicts = max(0, (int)($_GET['conflicts'] ?? 0));
 $success = match (true) {
+    !empty($_GET['deleted'])              => 'Termin gelöscht.',
     ($_GET['success'] ?? '') === 'series' => max(2, (int)($_GET['count'] ?? 0)) . ' Termine angelegt. Jeder lässt sich einzeln bearbeiten.',
     !empty($_GET['success'])              => 'Gespeichert.',
     default                               => '',

@@ -43,7 +43,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
             <div class="mb-4">
                 <label for="list_date" class="form-label fw-semibold">Datum <span class="text-muted fw-normal">(optional)</span></label>
                 <input type="date" id="list_date" name="date" class="form-control" value="<?= e($old('date')) ?>">
-                <div class="form-text">z. B. Datum des Spiels oder Trainings<?= $is_member_list ? ' — bei einer Serie der erste Termin' : '' ?></div>
+                <div class="form-text">z. B. Datum des Spiels oder Trainings — bei einer Serie der erste Termin</div>
             </div>
 
             <!-- Uhrzeit -->
@@ -63,24 +63,8 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                 <div class="form-text">Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
             </div>
 
-            <?php if ($is_member_list): ?>
             <!-- Serie: mehrere eigenständige Listen bis zu einem Enddatum -->
-            <div class="mb-4" data-series>
-                <label for="list_repeat" class="form-label fw-semibold">Wiederholen <span class="text-muted fw-normal">(optional)</span></label>
-                <select id="list_repeat" name="repeat" class="form-select mb-2">
-                    <option value="">Nicht wiederholen</option>
-                    <?php foreach (LIST_SERIES_REPEATS as $key => $r): ?>
-                    <option value="<?= $key ?>" <?= $old('repeat') === $key ? 'selected' : '' ?>><?= e($r['label']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <label for="list_repeat_until" class="form-label small text-muted mb-1">bis einschließlich</label>
-                <input type="date" id="list_repeat_until" name="repeat_until" class="form-control" value="<?= e($old('repeat_until')) ?>">
-                <div class="form-text" data-series-info aria-live="polite">
-                    Legt für jeden Termin eine eigene Liste an, mit allen Einstellungen dieses Formulars.
-                    Jede lässt sich danach einzeln bearbeiten oder löschen.
-                </div>
-            </div>
-            <?php endif; ?>
+            <?php render_series_fields('Listen', 'Liste anlegen'); ?>
 
             <!-- Ort -->
             <div class="mb-4">
@@ -254,7 +238,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
             <!-- Eigene Spalten: leere Zeilen blendet das Skript unten aus, "Spalte hinzufügen" zeigt die nächste -->
             <div class="mb-4" data-local-cols>
                 <label class="form-label fw-semibold">Eigene Spalten <span class="text-muted fw-normal">(optional)</span></label>
-                <div class="form-text mt-0 mb-2">Nur für diese Liste<?= $is_member_list ? ' — bei einer Serie in jeder Liste' : '' ?>. Leere Zeilen werden ignoriert.</div>
+                <div class="form-text mt-0 mb-2">Nur für diese Liste — bei einer Serie in jeder Liste. Leere Zeilen werden ignoriert.</div>
                 <?php for ($k = 0; $k < LIST_CREATE_LOCAL_COLUMNS; $k++):
                     $ln = (string)($_POST['local_name'][$k] ?? '');
                     $lt = (string)($_POST['local_type'][$k] ?? 'boolean'); ?>
@@ -303,42 +287,3 @@ $is_member_list = ($list_type ?? 'member') === 'member';
 })();
 </script>
 
-<?php if ($is_member_list): ?>
-<script>
-// Serie: Anzahl Termine live anzeigen (gleiche Rechnung wie list_series_dates() in PHP).
-// Nur Anzeige — der Server rechnet beim Speichern selbst und prüft die Grenzen.
-(function () {
-    var box = document.querySelector('[data-series]');
-    if (!box) return;
-    var rep = document.getElementById('list_repeat'), until = document.getElementById('list_repeat_until');
-    var start = document.getElementById('list_date'), info = box.querySelector('[data-series-info]');
-    var submit = document.querySelector('[data-series-submit]');
-    var plain = info.textContent, months = { monthly: 1, quarterly: 3, yearly: 12 }, max = <?= LIST_SERIES_MAX ?>;
-    var wd = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-    function iso(d) { return d.toISOString().slice(0, 10); }
-    function nth(s, r, k) {
-        var d = new Date(s + 'T00:00:00Z');
-        if (r === 'weekly') { d.setUTCDate(d.getUTCDate() + 7 * k); return d; }
-        var day = d.getUTCDate(), m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + k * months[r], 1));
-        var last = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 0)).getUTCDate();
-        m.setUTCDate(Math.min(day, last)); return m;
-    }
-    function update() {
-        var r = rep.value;
-        until.disabled = !r;
-        if (!r) { info.textContent = plain; info.classList.remove('text-danger'); if (submit) submit.textContent = 'Liste anlegen'; return; }
-        if (!start.value || !until.value) { info.textContent = 'Datum (erster Termin) und Enddatum wählen.'; info.classList.remove('text-danger'); return; }
-        var n = 0, last = null;
-        while (n <= max) { var d = nth(start.value, r, n); if (iso(d) > until.value) break; last = d; n++; }
-        var bad = n < 2 || n > max;
-        info.classList.toggle('text-danger', bad);
-        info.textContent = n > max ? 'Mehr als ' + max + ' Termine — wähle ein früheres Enddatum.'
-            : n < 2 ? 'Bis zu diesem Datum gibt es nur einen Termin.'
-            : n + ' Termine, letzter am ' + wd[last.getUTCDay()] + ' ' + iso(last).split('-').reverse().join('.') + '.';
-        if (submit) submit.textContent = bad ? 'Liste anlegen' : n + ' Listen anlegen';
-    }
-    [rep, until, start].forEach(function (el) { el.addEventListener('input', update); el.addEventListener('change', update); });
-    update();
-})();
-</script>
-<?php endif; ?>

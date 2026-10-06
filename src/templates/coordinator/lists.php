@@ -289,7 +289,7 @@ $render_card = function(array $item) use ($vis_badge): void {
 (function() {
     // Erfolgsmeldung nur einmal: success/count aus der Adresse entfernen
     var u = new URL(location.href);
-    u.searchParams.delete('success'); u.searchParams.delete('count'); u.searchParams.delete('conflicts');
+    u.searchParams.delete('success'); u.searchParams.delete('count'); u.searchParams.delete('conflicts'); u.searchParams.delete('deleted');
     var url = u.pathname + u.search;
     if (url !== location.pathname + location.search) history.replaceState(null, '', url);
     sessionStorage.setItem('coordinator_lists_url', url);

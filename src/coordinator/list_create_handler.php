@@ -92,26 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Serie bis Enddatum: so viele eigenständige Listen wie Termine (danach einzeln bearbeitbar)
-    $repeat = array_key_exists($_POST['repeat'] ?? '', LIST_SERIES_REPEATS) ? $_POST['repeat'] : '';
-    $until  = trim($_POST['repeat_until'] ?? '');
-    if ($until !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $until)) $until = '';
-    $series = ($repeat !== '' && $date !== '' && $until !== '' && $until >= $date)
-        ? list_series_dates_until($date, $repeat, $until) : [];
+    $series = series_from_post($date, 'die Liste');
 
     if (empty($name)) {
         $error = 'Name ist erforderlich.';
     } elseif (!in_array($visibility, ['public', 'protected', 'private'])) {
         $error = 'Ungültiger Sichtbarkeits-Status.';
-    } elseif ($repeat !== '' && $list_type !== 'member') {
-        $error = 'Serien gibt es nur für Mitgliederlisten.';
-    } elseif ($repeat !== '' && $date === '') {
-        $error = 'Für eine Serie braucht die Liste ein Datum — es ist der erste Termin.';
-    } elseif ($repeat !== '' && ($until === '' || $until < $date)) {
-        $error = 'Gib an, bis wann die Serie läuft — ein Datum ab dem ersten Termin.';
-    } elseif ($repeat !== '' && count($series) < 2) {
-        $error = 'Bis zu diesem Datum gibt es nur einen Termin. Wähle ein späteres Enddatum.';
-    } elseif ($repeat !== '' && count($series) > LIST_SERIES_MAX) {
-        $error = 'Das wären mehr als ' . LIST_SERIES_MAX . ' Termine. Wähle ein früheres Enddatum.';
+    } elseif ($series['error'] !== '') {
+        $error = $series['error'];
     } elseif (!in_array($auto, ['', 'public', 'protected', 'private'], true)) {
         $error = 'Ungültige automatische Sichtbarkeit.';
     } elseif ($auto !== '' && $auto_hours === false) {
@@ -119,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($auto !== '' && $date === '') {
         $error = 'Für die automatische Umstellung braucht die Liste ein Datum.';
     } else {
-        $dates = $repeat !== '' ? $series : [$date];
+        $dates = $series['dates'];
         try {
             $pdo->beginTransaction();
             $resource_ids = resources_from_post();

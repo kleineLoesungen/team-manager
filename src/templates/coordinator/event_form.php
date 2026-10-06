@@ -12,12 +12,22 @@ $v_title      = $is_edit ? $event['title']       : '';
 $v_desc       = $is_edit ? ($event['description'] ?? '') : '';
 $v_icon       = $is_edit ? ($event['icon'] ?? 'bi-calendar-event') : 'bi-calendar-event';
 $v_date       = $is_edit ? $event['date']         : '';
-$v_all_day    = $is_edit ? (bool)$event['is_all_day'] : true;
 $v_time_start = $is_edit ? (substr((string)($event['time_start'] ?? ''), 0, 5)) : '';
 $v_time_end   = $is_edit ? (substr((string)($event['time_end']   ?? ''), 0, 5)) : '';
 $v_location   = $is_edit ? ($event['location']    ?? '') : '';
 $v_hidden     = $is_edit ? (bool)$event['is_hidden'] : true;
 $v_visibility = $is_edit ? $event['visibility']   : 'protected';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {   // nach einem Fehler: Eingaben behalten
+    $v_title      = (string)($_POST['title'] ?? '');
+    $v_desc       = (string)($_POST['description'] ?? '');
+    $v_icon       = (string)($_POST['icon'] ?? $v_icon);
+    $v_date       = (string)($_POST['date'] ?? '');
+    $v_time_start = (string)($_POST['time_start'] ?? '');
+    $v_time_end   = (string)($_POST['time_end'] ?? '');
+    $v_location   = (string)($_POST['location'] ?? '');
+    $v_hidden     = !empty($_POST['is_hidden']);
+    $v_visibility = ($_POST['visibility'] ?? '') === 'private' ? 'private' : 'protected';
+}
 
 $icons = [
     'bi-calendar-event'       => 'Termin',
@@ -88,31 +98,27 @@ $icons = [
                        value="<?= e($v_date) ?>" required>
             </div>
 
-            <!-- All-day switch -->
+            <!-- Uhrzeit: ohne Beginn ganztägig -->
             <div class="mb-3">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch"
-                           id="is_all_day" name="is_all_day"
-                           <?= $v_all_day ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="is_all_day">Ganztägig</label>
+                <label class="form-label">Uhrzeit <span class="text-muted small">(optional)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <div>
+                        <label for="event_time_start" class="form-label small text-muted mb-1">Beginn</label>
+                        <input type="time" id="event_time_start" class="form-control" name="time_start" value="<?= e($v_time_start) ?>">
+                    </div>
+                    <div class="pt-3 text-muted">–</div>
+                    <div>
+                        <label for="event_time_end" class="form-label small text-muted mb-1">Ende</label>
+                        <input type="time" id="event_time_end" class="form-control" name="time_end" value="<?= e($v_time_end) ?>">
+                    </div>
                 </div>
+                <div class="form-text">Ohne Beginn ganztägig. Ohne Ende: Kalender zeigt 1 Stunde Dauer an.</div>
             </div>
 
-            <!-- Time fields (hidden when all-day) -->
-            <div id="time_fields" <?= $v_all_day ? 'class="d-none"' : '' ?>>
-                <div class="row g-3 mb-3">
-                    <div class="col-6">
-                        <label class="form-label">Von</label>
-                        <input type="time" class="form-control" name="time_start"
-                               value="<?= e($v_time_start) ?>">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label">Bis <span class="text-muted small">(optional)</span></label>
-                        <input type="time" class="form-control" name="time_end"
-                               value="<?= e($v_time_end) ?>">
-                    </div>
-                </div>
-            </div>
+            <?php if (!$is_edit): ?>
+            <!-- Serie: mehrere eigenständige Termine bis zu einem Enddatum -->
+            <?php render_series_fields('Termine', 'Termin anlegen'); ?>
+            <?php endif; ?>
 
             <!-- Location -->
             <div class="mb-3">
@@ -164,30 +170,23 @@ $icons = [
     </div>
 
     <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary min-touch">
-            <i class="bi bi-floppy me-2"></i><?= $is_edit ? 'Speichern' : 'Termin erstellen' ?>
-        </button>
-        <?php if ($is_edit): ?>
-        <form method="POST" action="/coordinator/events/<?= (int)$event['id'] ?>/delete"
-              onsubmit="return confirm('Termin «<?= e($event['title']) ?>» löschen?')">
-            <?= csrf_field() ?>
-            <input type="hidden" name="_back" id="js-delete-back-url" value="/coordinator/lists">
-            <button type="submit" class="btn btn-outline-danger min-touch">
-                <i class="bi bi-trash me-1"></i>Löschen
-            </button>
-        </form>
-        <?php endif; ?>
+        <button type="submit" class="btn btn-primary min-touch" data-series-submit><?= $is_edit ? 'Termin speichern' : 'Termin anlegen' ?></button>
+        <a href="/coordinator/lists" class="btn btn-outline-secondary min-touch" data-back-link>Abbrechen</a>
     </div>
 </form>
 
+<?php if ($is_edit):
+    ob_start(); ?>
+    <form method="POST" action="/coordinator/events/<?= (int)$event['id'] ?>/delete">
+        <?= csrf_field() ?>
+        <input type="hidden" name="_back" id="js-delete-back-url" value="/coordinator/lists">
+        <button type="submit" class="btn btn-outline-danger min-touch">Termin löschen</button>
+    </form>
+    <?php render_danger_zone('Termin löschen', 'Löscht diesen Termin und seine Ressourcen-Belegung unwiderruflich. Du bestätigst auf der nächsten Seite.', ob_get_clean());
+endif; ?>
+
 <script>
 (function () {
-    var allDayChk = document.getElementById('is_all_day');
-    var timeFields = document.getElementById('time_fields');
-    allDayChk.addEventListener('change', function () {
-        timeFields.classList.toggle('d-none', this.checked);
-    });
-
     document.querySelectorAll('.js-icon-btn').forEach(function (lbl) {
         lbl.addEventListener('click', function () {
             document.querySelectorAll('.js-icon-btn').forEach(function (b) {
@@ -204,6 +203,7 @@ $icons = [
     if (listsUrl) {
         document.getElementById('js-back-btn').href = listsUrl;
         document.getElementById('js-back-url').value = listsUrl;
+        document.querySelectorAll('[data-back-link]').forEach(function (a) { a.href = listsUrl; });
         var delBack = document.getElementById('js-delete-back-url');
         if (delBack) delBack.value = listsUrl;
     }

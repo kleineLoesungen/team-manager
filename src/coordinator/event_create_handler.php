@@ -1,5 +1,7 @@
 <?php
 // src/coordinator/event_create_handler.php — GET+POST /coordinator/events/create
+// Einzelner Termin oder Serie (wie bei Listen: eigenständige Termine bis zu einem Enddatum).
+// Ohne Uhrzeit-Beginn ist ein Termin ganztägig.
 
 declare(strict_types=1);
 
@@ -16,17 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location    = trim($_POST['location'] ?? '');
     $icon        = trim($_POST['icon'] ?? 'bi-calendar-event');
     $date        = trim($_POST['date'] ?? '');
-    $is_all_day  = !empty($_POST['is_all_day']);
-    $time_start  = trim($_POST['time_start'] ?? '');
-    $time_end    = trim($_POST['time_end'] ?? '');
+    $time_start  = preg_match('/^\d{2}:\d{2}$/', trim($_POST['time_start'] ?? '')) ? trim($_POST['time_start']) : '';
+    $time_end    = preg_match('/^\d{2}:\d{2}$/', trim($_POST['time_end'] ?? '')) ? trim($_POST['time_end']) : '';
+    $is_all_day  = $time_start === '';
     $visibility  = in_array($_POST['visibility'] ?? '', ['protected', 'private'], true)
         ? $_POST['visibility'] : 'protected';
     $is_hidden   = isset($_POST['is_hidden']) && $_POST['is_hidden'] === '1';
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) $date = '';
+    $series      = series_from_post($date, 'der Termin');
 
     if ($title === '' || mb_strlen($title) > 200) {
         $error = 'Titel erforderlich (max. 200 Zeichen).';
-    } elseif ($date === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+    } elseif ($date === '') {
         $error = 'Datum erforderlich.';
+    } elseif ($series['error'] !== '') {
+        $error = $series['error'];
     } else {
         $pdo = get_db();
         $team_id = (int)$_SESSION['team_id'];
@@ -36,26 +42,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "INSERT INTO events (team_id, title, description, location, icon, date, is_all_day, time_start, time_end, visibility, is_hidden)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
         );
-        $stmt->execute([
-            $team_id,
-            $title,
-            $description !== '' ? $description : null,
-            $location !== '' ? $location : null,
-            $icon !== '' ? $icon : 'bi-calendar-event',
-            $date,
-            $is_all_day ? 'true' : 'false',
-            (!$is_all_day && $time_start !== '') ? $time_start : null,
-            (!$is_all_day && $time_end !== '') ? $time_end : null,
-            $visibility,
-            $is_hidden ? 'true' : 'false',
-        ]);
-        $event_id     = (int)$stmt->fetchColumn();
         $resource_ids = resources_from_post();
-        resources_save($pdo, $team_id, 'event', $event_id, $resource_ids);
+        $created      = [];
+        $pdo->beginTransaction();
+        foreach ($series['dates'] as $event_date) {
+            $stmt->execute([
+                $team_id,
+                $title,
+                $description !== '' ? $description : null,
+                $location !== '' ? $location : null,
+                $icon !== '' ? $icon : 'bi-calendar-event',
+                $event_date,
+                $is_all_day ? 'true' : 'false',
+                $is_all_day ? null : $time_start,
+                (!$is_all_day && $time_end !== '') ? $time_end : null,
+                $visibility,
+                $is_hidden ? 'true' : 'false',
+            ]);
+            $event_id  = (int)$stmt->fetchColumn();
+            $created[] = $event_id;
+            resources_save($pdo, $team_id, 'event', $event_id, $resource_ids);
+        }
+        $pdo->commit();
+
         $back = $_POST['_back'] ?? '';
         $back = preg_match('#^/coordinator/lists(\?[^<>"\']*)?$#', $back) ? $back : '/coordinator/lists';
-        $conflicts = $resource_ids ? resources_conflict_count($pdo, 'event', [$event_id]) : 0;
-        redirect($back . (str_contains($back, '?') ? '&' : '?') . 'success=1' . ($conflicts ? '&conflicts=' . $conflicts : ''));
+        $conflicts = $resource_ids ? resources_conflict_count($pdo, 'event', $created) : 0;
+        $done      = count($created) > 1 ? 'success=series&count=' . count($created) : 'success=1';
+        redirect($back . (str_contains($back, '?') ? '&' : '?') . $done . ($conflicts ? '&conflicts=' . $conflicts : ''));
     }
 }
 
