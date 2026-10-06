@@ -205,26 +205,7 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
         ['/admin/notify',     'bi-envelope',     'Benachrichtigungen', 'Nachricht an die Koordinatoren senden'],
         ['/admin/columns',    'bi-columns-gap',  'Systemspalten',    'Spalten, die allen Teams zur Verfügung stehen'],
     ];
-    render_collection_group('Verwaltung', function () use ($tiles) { ?>
-    <div class="list-group mb-4">
-        <?php foreach ($tiles as [$href, $icon, $title, $line]): ?>
-        <a href="<?= e($href) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-            <i class="bi <?= e($icon) ?> text-muted" aria-hidden="true"></i>
-            <span class="flex-grow-1 min-w-0">
-                <span class="d-block fw-semibold"><?= e($title) ?></span>
-                <span class="d-block small text-muted text-truncate"><?= e($line) ?></span>
-            </span>
-            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
-        </a>
-        <?php endforeach; ?>
-    </div>
-    <?php }); ?>
-
-    <div class="list-group">
-        <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
-            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-            <span class="flex-grow-1 fw-semibold">Abmelden</span>
-        </a>
-    </div>
+    render_tile_group('Verwaltung', $tiles);
+    ?>
     <?php
 });

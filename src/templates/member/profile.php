@@ -160,27 +160,14 @@ foreach ($attr_groups as $g) {
 
 <?php render_install_app(); ?>
 
-<div class="list-group mt-4">
-    <a href="/member/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-person-badge fs-5"></i>
-        <span class="flex-grow-1">Koordinatoren</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <a href="/member/member-profile" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-clock-history fs-5"></i>
-        <span class="flex-grow-1">Verlauf</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <?php require_once ROOT_PATH . '/src/db/team_switch.php';
-          if (count(team_switch_options(get_db())) > 1): ?>
-    <a href="/member/switch-team" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-arrow-left-right fs-5"></i>
-        <span class="flex-grow-1">Team wechseln</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <?php endif; ?>
-    <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
-        <i class="bi bi-box-arrow-right fs-5"></i>
-        <span class="flex-grow-1">Abmelden</span>
-    </a>
+<div class="mt-4">
+<?php
+require_once ROOT_PATH . '/src/db/team_switch.php';
+render_tile_group('Mehr', [
+    ['/member/coordinators',   'bi-person-badge',   'Koordinatoren', 'Deine Ansprechpartner, mit Kontakt'],
+    ['/member/member-profile', 'bi-clock-history',  'Verlauf',       'Deine Teams und Werte über die Zeit'],
+    count(team_switch_options(get_db())) > 1
+        ? ['/member/switch-team', 'bi-arrow-left-right', 'Team wechseln', 'Zu einem anderen deiner Teams'] : null,
+]);
+?>
 </div>

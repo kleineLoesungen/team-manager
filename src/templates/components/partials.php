@@ -682,6 +682,37 @@ function render_link_tile(string $href, string $icon, string $title, string $sub
 }
 
 /**
+ * Group of link tiles at the end of a settings or profile page (Admin-Einstellungen, Profile):
+ * heading, then per tile icon, title, one line of explanation, chevron. Then "Abmelden".
+ * @param array $tiles list of [href, icon, title, line]; null entries are skipped
+ */
+function render_tile_group(string $label, array $tiles): void {
+    $tiles = array_values(array_filter($tiles));
+    render_collection_group($label, function () use ($tiles) { ?>
+    <div class="list-group mb-4">
+        <?php foreach ($tiles as [$href, $icon, $title, $line]): ?>
+        <a href="<?= e($href) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi <?= e($icon) ?> text-muted" aria-hidden="true"></i>
+            <span class="flex-grow-1 min-w-0">
+                <span class="d-block fw-semibold"><?= e($title) ?></span>
+                <span class="d-block small text-muted text-truncate"><?= e($line) ?></span>
+            </span>
+            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+        </a>
+        <?php endforeach; ?>
+    </div>
+    <?php });
+    ?>
+    <div class="list-group">
+        <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            <span class="flex-grow-1 fw-semibold">Abmelden</span>
+        </a>
+    </div>
+    <?php
+}
+
+/**
  * Share button. Opens the system share sheet where available (phones), otherwise copies the
  * link and confirms with "Link kopiert" (layout script, [data-share-url]).
  * @param string $label Button text, verb + object ("Ticker teilen")

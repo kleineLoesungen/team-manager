@@ -176,32 +176,15 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
 
 <?php render_install_app(); ?>
 
-<div class="list-group mt-4">
-    <a href="/coordinator/coordinators" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-person-badge"></i>
-        <span class="flex-grow-1">Koordinatoren</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <a href="/coordinator/settings" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-gear"></i>
-        <span class="flex-grow-1">Einstellungen</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <a href="/coordinator/logo" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-image"></i>
-        <span class="flex-grow-1">Team-Logo</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <?php require_once ROOT_PATH . '/src/db/team_switch.php';
-          if (count(team_switch_options(get_db())) > 1): ?>
-    <a href="/coordinator/switch-team" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-        <i class="bi bi-arrow-left-right"></i>
-        <span class="flex-grow-1">Team wechseln</span>
-        <i class="bi bi-chevron-right text-muted small"></i>
-    </a>
-    <?php endif; ?>
-    <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
-        <i class="bi bi-box-arrow-right"></i>
-        <span class="flex-grow-1">Abmelden</span>
-    </a>
+<div class="mt-4">
+<?php
+require_once ROOT_PATH . '/src/db/team_switch.php';
+render_tile_group('Verwaltung', [
+    ['/coordinator/coordinators', 'bi-person-badge', 'Koordinatoren', 'Wer das Team betreut, mit Kontakt'],
+    ['/coordinator/settings',     'bi-gear',         'Einstellungen', 'Globale Spalten und Ticker-Tags'],
+    ['/coordinator/logo',         'bi-image',        'Team-Logo',     'Logo in der Kopfzeile ändern'],
+    count(team_switch_options(get_db())) > 1
+        ? ['/coordinator/switch-team', 'bi-arrow-left-right', 'Team wechseln', 'Zu einem anderen deiner Teams'] : null,
+]);
+?>
 </div>
