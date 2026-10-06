@@ -17,7 +17,7 @@ render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public'], fun
     <?php endif; ?>
 
     <div class="mb-3">
-        <?php render_ticker_status($ticker); ?>
+        <?php render_ticker_status($ticker, true); ?>
     </div>
     <div class="mb-4"><?php render_share_button('Ticker teilen', '/ticker/' . (int)$ticker['id'], $ticker['name'], 'Live-Ticker ' . $team['name'] . ': ' . $ticker['name']); ?></div>
 

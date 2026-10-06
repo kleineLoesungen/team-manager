@@ -290,6 +290,17 @@ function render_layout_foot(): void {
             }
         });
 
+        /* Ort (render_place): Standard-Karten-App des Geräts statt Google Maps im Browser */
+        (function() {
+            var ua = navigator.userAgent, apple = /iPhone|iPad|iPod|Macintosh/.test(ua), android = /Android/.test(ua);
+            if (!apple && !android) return;
+            document.querySelectorAll('[data-maps]').forEach(function(a) {
+                var q = encodeURIComponent(a.getAttribute('data-maps'));
+                a.href = apple ? 'https://maps.apple.com/?q=' + q : 'geo:0,0?q=' + q;
+                if (android) a.removeAttribute('target');
+            });
+        })();
+
         /* theme toggle */
         function tmApply(t) {
             document.documentElement.setAttribute('data-theme', t);
@@ -338,13 +349,13 @@ function render_page(array $opts, callable $body): void {
     $tab_maps = [
         'coordinator' => [
             'members' => ['href' => '/coordinator/members', 'icon' => 'bi-person-vcard',  'label' => 'Mitglieder'],
-            'lists'   => ['href' => '/coordinator/lists',   'icon' => 'bi-collection',     'label' => 'Listen'],
+            'lists'   => ['href' => '/coordinator/lists',   'icon' => 'bi-collection',     'label' => 'Inhalte'],
             'ticker'  => ['href' => '/coordinator/ticker',  'icon' => 'bi-megaphone',      'label' => 'Ticker'],
             'stats'   => ['href' => '/coordinator/stats',   'icon' => 'bi-graph-up',       'label' => 'Statistik'],
             'profile' => ['href' => '/coordinator/profile', 'icon' => 'bi-person-circle',  'label' => 'Profil'],
         ],
         'member' => [
-            'lists'   => ['href' => '/member/lists',   'icon' => 'bi-collection',   'label' => 'Listen'],
+            'lists'   => ['href' => '/member/lists',   'icon' => 'bi-collection',   'label' => 'Inhalte'],
             'ticker'  => ['href' => '/member/ticker',  'icon' => 'bi-megaphone',     'label' => 'Ticker'],
             'stats'   => ['href' => '/member/stats',   'icon' => 'bi-graph-up',      'label' => 'Statistik'],
             'profile' => ['href' => '/member/profile', 'icon' => 'bi-person-circle', 'label' => 'Profil'],

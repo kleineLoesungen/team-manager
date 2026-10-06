@@ -69,10 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $resources          = resources_active($pdo);
 $resource_selected  = $_SERVER['REQUEST_METHOD'] === 'POST' ? resources_from_post() : resources_booked_ids($pdo, 'event', $event_id);
 $resource_conflicts = resources_conflicts($pdo, 'event', $event_id);
+$resource_names     = resources_booked_names($pdo, 'event', $event_id);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Termin bearbeiten', 'lists', function() use ($error, $event, $resources, $resource_selected, $resource_conflicts) {
+render_coach_page('Termin bearbeiten', 'lists', function() use ($error, $event, $resources, $resource_selected, $resource_conflicts, $resource_names) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/event_form.php';
 });

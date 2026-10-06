@@ -117,21 +117,19 @@ $logo_deleted = !empty($_GET['logo_deleted']);
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted) {
+// Ressourcen für die Kachel am Ende (Namen der aktiven, Anzahl deaktivierter)
+$resource_rows   = get_db()->query("SELECT name, is_active FROM resources ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+$resource_active = array_column(array_filter($resource_rows, fn($r) => in_array($r['is_active'], [true, 1, '1', 't'], true)), 'name');
+$resource_off    = count($resource_rows) - count($resource_active);
+$resource_line   = $resource_active
+    ? implode(', ', $resource_active) . ($resource_off ? ' · ' . $resource_off . ' deaktiviert' : '')
+    : 'Noch keine — Plätze, Hallen, Busse für alle Teams anlegen';
+
+render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted, $resource_line) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
     <?php if ($logo_deleted ?? false): ?><div class="alert alert-success">Standard-Logo gelöscht.</div><?php endif; ?>
-    <div class="list-group mb-4">
-        <a href="/admin/resources" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-            <i class="bi bi-box-seam text-muted" aria-hidden="true"></i>
-            <span class="flex-grow-1">
-                <span class="d-block fw-semibold">Ressourcen</span>
-                <span class="d-block small text-muted">Plätze, Hallen, Busse für alle Teams</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
-        </a>
-    </div>
     <div class="card shadow-sm">
         <div class="card-body">
             <form method="POST" action="/admin/settings" enctype="multipart/form-data">
@@ -200,25 +198,32 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
         </div>
     </div>
 
-    <div class="list-group mt-4">
-        <a href="/admin/attributes" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-            <i class="bi bi-tags fs-5"></i>
-            <span class="flex-grow-1">Attribut-Gruppen</span>
-            <i class="bi bi-chevron-right text-muted small"></i>
+    <?php
+    $tiles = [
+        ['/admin/resources',  'bi-box-seam',     'Ressourcen',       $resource_line],
+        ['/admin/attributes', 'bi-tags',         'Attribut-Gruppen', 'Eigene Felder für Mitgliederprofile'],
+        ['/admin/notify',     'bi-envelope',     'Benachrichtigungen', 'Nachricht an die Koordinatoren senden'],
+        ['/admin/columns',    'bi-columns-gap',  'Systemspalten',    'Spalten, die allen Teams zur Verfügung stehen'],
+    ];
+    render_collection_group('Verwaltung', function () use ($tiles) { ?>
+    <div class="list-group mb-4">
+        <?php foreach ($tiles as [$href, $icon, $title, $line]): ?>
+        <a href="<?= e($href) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi <?= e($icon) ?> text-muted" aria-hidden="true"></i>
+            <span class="flex-grow-1 min-w-0">
+                <span class="d-block fw-semibold"><?= e($title) ?></span>
+                <span class="d-block small text-muted text-truncate"><?= e($line) ?></span>
+            </span>
+            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
         </a>
-        <a href="/admin/notify" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-            <i class="bi bi-envelope fs-5"></i>
-            <span class="flex-grow-1">Benachrichtigungen</span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
-        <a href="/admin/columns" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-            <i class="bi bi-columns-gap fs-5"></i>
-            <span class="flex-grow-1">Systemspalten</span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
+        <?php endforeach; ?>
+    </div>
+    <?php }); ?>
+
+    <div class="list-group">
         <a href="/logout" class="list-group-item list-group-item-action d-flex align-items-center gap-3 text-danger">
-            <i class="bi bi-box-arrow-right fs-5"></i>
-            <span class="flex-grow-1">Abmelden</span>
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            <span class="flex-grow-1 fw-semibold">Abmelden</span>
         </a>
     </div>
     <?php

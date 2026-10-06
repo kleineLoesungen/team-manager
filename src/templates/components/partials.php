@@ -505,12 +505,6 @@ function render_dashboard(array $d, string $role): void {
             <?php endforeach; ?>
         </div>
     </section>
-    <?php else: ?>
-    <p class="small mb-4"><i class="bi bi-megaphone me-1 text-muted" aria-hidden="true"></i><a href="/ticker">Ticker aller Teams</a></p>
-    <?php endif; ?>
-
-    <?php if (!empty($d['has_resources'])): ?>
-    <p class="small mb-4"><i class="bi bi-box-seam me-1 text-muted" aria-hidden="true"></i><a href="<?= $base ?>/resources">Auslastung der Ressourcen</a></p>
     <?php endif; ?>
 
     <section class="mb-4" aria-labelledby="dash-next">
@@ -537,6 +531,13 @@ function render_dashboard(array $d, string $role): void {
     </section>
     <?php endif; ?>
 
+    <?php if (!empty($d['has_resources'])): ?>
+    <section aria-labelledby="dash-resources">
+        <h2 class="h3 mb-2" id="dash-resources">Ressourcen</h2>
+        <?php render_link_tile($base . '/resources', 'bi-box-seam', 'Auslastung', 'Plätze, Hallen … aller Teams, ab heute'); ?>
+    </section>
+    <?php endif; ?>
+
     <?php if (!$is_coord && !empty($d['columns'])): ?>
     <section class="mb-4" aria-labelledby="dash-values">
         <div class="d-flex align-items-baseline justify-content-between mb-2">
@@ -558,11 +559,12 @@ function render_dashboard(array $d, string $role): void {
 }
 
 /**
- * Ticker status: "Live" from the start (date + time, Europe/Berlin), before that when it
- * begins (waiting), "Beendet" once closed. Without a date an active ticker is live.
+ * Ticker status: "Live" from the start (date + time, Europe/Berlin), "Beendet" once closed.
+ * Before the start "Geplant" — or, where the page shows no date ($with_start), when it begins.
+ * Without a date an active ticker is live.
  * @param array $t Ticker row with status, event_date, start_time
  */
-function render_ticker_status(array $t): void {
+function render_ticker_status(array $t, bool $with_start = false): void {
     if ($t['status'] !== 'active') {
         render_badge('dim', 'Beendet');
         return;
@@ -572,6 +574,10 @@ function render_ticker_status(array $t): void {
     $start = !empty($t['event_date']) ? new DateTimeImmutable($t['event_date'] . ' ' . ($time ?? '00:00'), $tz) : null;
     if ($start === null || $start <= new DateTimeImmutable('now', $tz)) {
         render_badge('ok', 'Live');
+        return;
+    }
+    if (!$with_start) {
+        render_badge('warn', 'Geplant', 'bi-clock');
         return;
     }
     require_once ROOT_PATH . '/src/db/dashboard.php';
@@ -629,6 +635,48 @@ function render_resource_conflicts(array $conflicts): void {
             </li>
             <?php endforeach; ?>
         </ul>
+    </div>
+    <?php
+}
+
+/**
+ * Place of a list or event: the location as a button that opens the device's maps/navigation
+ * app (layout script [data-maps]: Apple Karten, Android geo:, otherwise Google Maps — also the
+ * fallback without JavaScript), followed by the booked resources. Renders nothing when empty.
+ * @param string[] $resource_names
+ */
+function render_place(?string $location, array $resource_names): void {
+    $location = trim((string)$location);
+    if ($location === '' && !$resource_names) return;
+    ?>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <?php if ($location !== ''): ?>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query=<?= e(rawurlencode($location)) ?>"
+           data-maps="<?= e($location) ?>" target="_blank" rel="noopener"
+           class="btn btn-sm btn-outline-secondary min-touch text-start" title="Im Navi öffnen">
+            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i><?= e($location) ?>
+        </a>
+        <?php endif; ?>
+        <?php foreach ($resource_names as $rn) render_badge('dim', $rn, 'bi-box-seam'); ?>
+    </div>
+    <?php
+}
+
+/**
+ * Link tile: icon, title, one line of explanation, chevron — leads to another page
+ * (Ressourcen in der Übersicht, Ticker aller Teams, Admin-Einstellungen).
+ */
+function render_link_tile(string $href, string $icon, string $title, string $subtitle): void {
+    ?>
+    <div class="list-group mb-4">
+        <a href="<?= e($href) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi <?= e($icon) ?> text-muted" aria-hidden="true"></i>
+            <span class="flex-grow-1 min-w-0">
+                <span class="d-block fw-semibold"><?= e($title) ?></span>
+                <span class="d-block small text-muted"><?= e($subtitle) ?></span>
+            </span>
+            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+        </a>
     </div>
     <?php
 }

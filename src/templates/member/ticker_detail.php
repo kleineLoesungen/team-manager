@@ -16,7 +16,7 @@
 <?php endif; ?>
 
 <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-    <?php render_ticker_status($ticker); ?>
+    <?php render_ticker_status($ticker, true); ?>
     <?php render_ticker_viewers($ticker, $viewer_counts); ?>
 </div>
 

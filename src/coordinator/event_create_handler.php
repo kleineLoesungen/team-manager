@@ -64,10 +64,11 @@ $event = null;
 $resources          = resources_active($pdo);
 $resource_selected  = $_SERVER['REQUEST_METHOD'] === 'POST' ? resources_from_post() : [];
 $resource_conflicts = [];
+$resource_names     = [];
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Termin erstellen', 'lists', function() use ($error, $event, $resources, $resource_selected, $resource_conflicts) {
+render_coach_page('Termin erstellen', 'lists', function() use ($error, $event, $resources, $resource_selected, $resource_conflicts, $resource_names) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/event_form.php';
 });

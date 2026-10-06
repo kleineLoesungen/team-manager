@@ -38,6 +38,7 @@ $icons = [
     </a>
 </div>
 
+<?php if ($is_edit) render_place($event['location'] ?? null, $resource_names); ?>
 <?php render_resource_conflicts($resource_conflicts); ?>
 
 <form method="POST" action="<?= e($action) ?>" novalidate>

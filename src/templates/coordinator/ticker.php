@@ -77,3 +77,7 @@ $other_tickers ??= [];
 </div>
 <?php }); ?>
 <?php endif; ?>
+
+<div class="mt-4">
+<?php render_link_tile('/ticker', 'bi-megaphone', 'Ticker aller Teams', 'Öffentliche Live-Ticker, ohne Anmeldung teilbar'); ?>
+</div>

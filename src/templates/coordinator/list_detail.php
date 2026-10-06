@@ -45,8 +45,8 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
         <?php if (!empty($list['date'])): ?>
         <span class="text-muted small"><?= e((new DateTime($list['date']))->format('d.m.Y')) ?><?php if (!empty($list['time_start'])): ?> &middot; <?= e(substr((string)$list['time_start'], 0, 5)) ?><?php if (!empty($list['time_end'])): ?> – <?= e(substr((string)$list['time_end'], 0, 5)) ?><?php endif; ?><?php endif; ?></span>
         <?php endif; ?>
-        <?php foreach ($resource_names as $rn) render_badge('dim', $rn, 'bi-box-seam'); ?>
     </div>
+    <?php render_place($list['location'] ?? null, $resource_names); ?>
     <?php render_resource_conflicts($resource_conflicts); ?>
     <?php if (empty($list['auto_visibility_done_at'])) render_auto_visibility_hint($list); ?>
     <div class="d-flex gap-2 flex-wrap">

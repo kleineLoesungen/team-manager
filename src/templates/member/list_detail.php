@@ -15,7 +15,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 
 <div class="mb-3">
     <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+        <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
 
@@ -30,6 +30,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
         <i class="bi bi-share me-1"></i>Teilen
     </button>
 </div>
+<?php render_place($list['location'] ?? null, $list['resource_names'] ?? []); ?>
 <?php render_auto_visibility_member_hint($list); ?>
 <?php if (!empty($list['description'])): ?>
 <p class="text-muted small mb-3"><?= e($list['description']) ?></p>
@@ -163,7 +164,7 @@ function shareFallback(text, btn) {
 
 <div class="mt-4">
     <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
-        <i class="bi bi-arrow-left me-1"></i>Zurück zu Listen
+        <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
 <script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>
