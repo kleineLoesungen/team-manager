@@ -10,7 +10,7 @@ $pdo = get_db();
 
 // Verify this ticker belongs to the member's team
 $stmt = $pdo->prepare(
-    "SELECT id, name, description, status FROM tickers WHERE id = ? AND team_id = ?"
+    "SELECT id, name, description, status, event_date, start_time FROM tickers WHERE id = ? AND team_id = ?"
 );
 $stmt->execute([$ticker_id, $_SESSION['team_id']]);
 $ticker = $stmt->fetch(PDO::FETCH_ASSOC);

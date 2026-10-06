@@ -554,6 +554,29 @@ function render_dashboard(array $d, string $role): void {
 }
 
 /**
+ * Ticker status: "Live" from the start (date + time, Europe/Berlin), before that when it
+ * begins (waiting), "Beendet" once closed. Without a date an active ticker is live.
+ * @param array $t Ticker row with status, event_date, start_time
+ */
+function render_ticker_status(array $t): void {
+    if ($t['status'] !== 'active') {
+        render_badge('dim', 'Beendet');
+        return;
+    }
+    $tz    = new DateTimeZone('Europe/Berlin');
+    $time  = !empty($t['start_time']) ? substr((string)$t['start_time'], 0, 5) : null;
+    $start = !empty($t['event_date']) ? new DateTimeImmutable($t['event_date'] . ' ' . ($time ?? '00:00'), $tz) : null;
+    if ($start === null || $start <= new DateTimeImmutable('now', $tz)) {
+        render_badge('ok', 'Live');
+        return;
+    }
+    require_once ROOT_PATH . '/src/db/dashboard.php';
+    $day = dashboard_day_label($t['event_date']);
+    $day = in_array($day, ['Heute', 'Morgen'], true) ? mb_strtolower($day) : $day;
+    render_badge('warn', 'Beginnt ' . $day . ($time ? ' ' . $time : ''), 'bi-clock');
+}
+
+/**
  * Share button. Opens the system share sheet where available (phones), otherwise copies the
  * link and confirms with "Link kopiert" (layout script, [data-share-url]).
  * @param string $label Button text, verb + object ("Ticker teilen")

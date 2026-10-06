@@ -16,7 +16,7 @@
 <?php endif; ?>
 
 <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-    <?php $ticker['status'] === 'active' ? render_badge('ok', 'Aktiv') : render_badge('dim', 'Geschlossen'); ?>
+    <?php render_ticker_status($ticker); ?>
     <?php render_ticker_viewers($ticker, $viewer_counts); ?>
 </div>
 

@@ -9,7 +9,7 @@ $pdo = get_db();
 
 // Show all team tickers
 $stmt = $pdo->prepare(
-    "SELECT t.id, t.name, t.description, t.status, t.created_at
+    "SELECT t.id, t.name, t.description, t.status, t.event_date, t.start_time, t.created_at
      FROM tickers t
      WHERE t.team_id = ?
      ORDER BY (t.status = 'active') DESC, t.created_at DESC"
@@ -24,7 +24,7 @@ ticker_mark_seen($pdo, (int)$_SESSION['user_id'], (int)$_SESSION['team_id']);
 // Tickers from other teams this member also belongs to (same profile)
 set_admin_context($pdo);
 $other_stmt = $pdo->prepare(
-    "SELECT DISTINCT t.id, t.name, t.description, t.status, t.created_at,
+    "SELECT DISTINCT t.id, t.name, t.description, t.status, t.event_date, t.start_time, t.created_at,
             tm.name AS team_name,
             (t.status = 'active') AS is_active_ticker
      FROM users u

@@ -10,7 +10,7 @@ $pdo = get_db();
 
 // Try current team first (cheap path)
 $stmt = $pdo->prepare(
-    "SELECT id, name, description, status, team_id FROM tickers WHERE id = ? AND team_id = ?"
+    "SELECT id, name, description, status, event_date, start_time, team_id FROM tickers WHERE id = ? AND team_id = ?"
 );
 $stmt->execute([$ticker_id, $_SESSION['team_id']]);
 $ticker = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -19,7 +19,7 @@ if (!$ticker) {
     // Check if ticker belongs to another team this coordinator manages
     set_admin_context($pdo);
     $stmt = $pdo->prepare(
-        "SELECT t.id, t.name, t.description, t.status, t.team_id
+        "SELECT t.id, t.name, t.description, t.status, t.event_date, t.start_time, t.team_id
          FROM tickers t
          JOIN coordinator_teams ct ON ct.team_id = t.team_id AND ct.left_at IS NULL
          WHERE t.id = ? AND ct.user_id = ?"

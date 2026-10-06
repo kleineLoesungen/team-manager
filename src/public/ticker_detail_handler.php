@@ -17,7 +17,7 @@ $pdo = get_db();
 // This is necessary because we don't know team_id until we read the ticker
 set_admin_context($pdo);
 
-$stmt = $pdo->prepare("SELECT id, team_id, name, description, status FROM tickers WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, team_id, name, description, status, event_date, start_time FROM tickers WHERE id = ?");
 $stmt->execute([$ticker_id]);
 $ticker = $stmt->fetch(PDO::FETCH_ASSOC);
 

@@ -21,11 +21,7 @@ $other_tickers ??= [];
             <div class="flex-grow-1 me-2 min-w-0">
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
-                    <?php if ($t['status'] === 'active'): ?>
-                        <?php render_badge('ok', 'Aktiv'); ?>
-                    <?php else: ?>
-                        <?php render_badge('dim', 'Beendet'); ?>
-                    <?php endif; ?>
+                    <?php render_ticker_status($t); ?>
                     <?php if (ticker_is_new($t, $seen_before)) render_badge('info', 'Neu'); ?>
                 </div>
                 <?php if ($t['description']): ?>
@@ -58,11 +54,7 @@ $other_tickers ??= [];
             <div class="flex-grow-1 me-2 min-w-0">
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span class="fw-semibold text-body"><?= e($t['name']) ?></span>
-                    <?php if ($t['status'] === 'active'): ?>
-                        <?php render_badge('ok', 'Aktiv'); ?>
-                    <?php else: ?>
-                        <?php render_badge('dim', 'Beendet'); ?>
-                    <?php endif; ?>
+                    <?php render_ticker_status($t); ?>
                 </div>
                 <p class="mb-1 text-muted small"><?= e($t['team_name']) ?></p>
                 <?php if ($t['description']): ?>

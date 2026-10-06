@@ -14,7 +14,7 @@
 
 <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
     <?php if ($ticker['status'] === 'active'): ?>
-    <?php render_badge('ok', 'Aktiv'); ?>
+    <?php render_ticker_status($ticker); ?>
     <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/close" class="d-inline">
         <?= csrf_field() ?>
         <button type="submit" class="btn btn-sm btn-outline-warning">
@@ -23,7 +23,7 @@
     </form>
     <?php render_ticker_viewers($ticker, $viewer_counts); ?>
     <?php else: ?>
-    <?php render_badge('dim', 'Beendet'); ?>
+    <?php render_ticker_status($ticker); ?>
     <?php render_ticker_viewers($ticker, $viewer_counts); ?>
     <form method="POST" action="/coordinator/ticker/<?= (int)$ticker['id'] ?>/reopen" class="d-inline">
         <?= csrf_field() ?>

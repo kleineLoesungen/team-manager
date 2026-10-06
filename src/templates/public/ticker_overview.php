@@ -26,7 +26,7 @@ render_page(['title' => $app_title ?? 'Live-Ticker', 'role' => 'public'], functi
                 <div class="flex-grow-1 me-2 min-w-0">
                     <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
                         <span class="fw-semibold"><?= e($t['name']) ?></span>
-                        <?php render_badge('ok', 'Live'); ?>
+                        <?php render_ticker_status($t); ?>
                     </div>
                     <?php if ($t['description']): ?>
                     <p class="text-muted small text-truncate mb-2"><?= e($t['description']) ?></p>
@@ -65,7 +65,7 @@ render_page(['title' => $app_title ?? 'Live-Ticker', 'role' => 'public'], functi
                         <div class="flex-grow-1 me-2 min-w-0">
                             <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
                                 <span class="fw-semibold"><?= e($t['name']) ?></span>
-                                <?php render_badge('dim', 'Geschlossen'); ?>
+                                <?php render_ticker_status($t); ?>
                             </div>
                             <p class="text-muted small">
                                 <?php if ($t['event_date']): ?>
