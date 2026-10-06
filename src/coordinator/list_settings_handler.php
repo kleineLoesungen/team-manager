@@ -270,8 +270,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $resource_selected = ($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== '')
     ? resources_from_post() : resources_booked_ids($pdo, 'list', $list_id);
+$resource_conflicts = $resource_selected ? resources_conflicts($pdo, 'list', $list_id) : [];
 
-render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns, $resources, $resource_selected) {
+render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns, $resources, $resource_selected, $resource_conflicts) {
     ?>
     <div class="mb-3">
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
@@ -323,7 +324,7 @@ render_coach_page('Listen-Einstellungen', 'lists', function() use ($list, $error
                            class="form-control" maxlength="255"
                            value="<?= e($list['location'] ?? '') ?>">
                 </div>
-                <?php render_resource_picker($resources, $resource_selected, true); ?>
+                <?php render_resource_picker($resources, $resource_selected, true, 'list:' . (int)$list['id'], $resource_conflicts); ?>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Sichtbarkeit</label>
                     <select name="visibility" class="form-select">

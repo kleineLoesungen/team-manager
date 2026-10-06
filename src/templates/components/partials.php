@@ -587,13 +587,19 @@ function render_ticker_status(array $t, bool $with_start = false): void {
 }
 
 /**
- * Resource selection for lists and events: one switch per active resource (resource_ids[]).
- * Renders nothing when the admin has not set up any resources.
- * @param array $resources resources_active()
- * @param int[] $selected  Booked/posted resource ids
- * @param bool  $needs_date Show that only dated lists count (lists can be undated)
+ * Resource selection for lists and events: one switch per active resource (resource_ids[]),
+ * chips when there are many. Renders nothing when the admin has not set up any resources.
+ * Below it the check before saving: on every change of date, time, series or selection the
+ * form asks /coordinator/resources/check and shows overlaps (warning only). Without
+ * JavaScript $conflicts (saved state) is shown and the check happens after saving.
+ * @param array   $resources resources_active()
+ * @param int[]   $selected  Booked/posted resource ids
+ * @param bool    $needs_date Show that only dated lists count (lists can be undated)
+ * @param ?string $exclude   The item being edited, "list:12" / "event:3" (not its own conflict)
+ * @param array   $conflicts resources_conflicts() of the saved item, shown until the first check
  */
-function render_resource_picker(array $resources, array $selected, bool $needs_date = false): void {
+function render_resource_picker(array $resources, array $selected, bool $needs_date = false,
+                                ?string $exclude = null, array $conflicts = []): void {
     if (!$resources) return;
     $chips = count($resources) > RESOURCE_PICKER_SWITCH_MAX;   // viele Ressourcen: kompakte Chips statt Schalterliste
     ?>
@@ -624,16 +630,53 @@ function render_resource_picker(array $resources, array $selected, bool $needs_d
             Überschneidungen mit anderen Teams werden angezeigt, aber nicht verhindert.
             <a href="<?= ($_SESSION['role'] ?? '') === 'coordinator' ? '/coordinator/resources' : '/member/resources' ?>">Auslastung ansehen</a>
         </div>
+        <div class="mt-2" data-resource-check="<?= e((string)$exclude) ?>" aria-live="polite"><?php render_resource_conflicts($conflicts, $conflicts ? 'Speichern ist trotzdem möglich.' : null); ?></div>
     </fieldset>
+    <script>
+    // Prüfung vor dem Speichern: Ressourcen + Datum/Uhrzeit (+ Serie) an den Server, Hinweis anzeigen
+    (function () {
+        var box  = document.currentScript.previousElementSibling.querySelector('[data-resource-check]');
+        var form = box && box.closest('form');
+        if (!form) return;
+        var fields = ['date', 'time_start', 'time_end', 'is_all_day', 'repeat', 'repeat_until'];
+        var timer = null, seq = 0;
+        function check() {
+            var q = new URLSearchParams(), any = false;
+            form.querySelectorAll('input[name="resource_ids[]"]:checked').forEach(function (i) { q.append('resource_ids[]', i.value); any = true; });
+            fields.forEach(function (n) {
+                var el = form.elements[n];
+                if (!el || el.disabled) return;
+                if (el.type === 'checkbox') { if (el.checked) q.set(n, '1'); } else if (el.value) q.set(n, el.value);
+            });
+            if (!any || !q.get('date')) { box.innerHTML = ''; return; }
+            if (box.getAttribute('data-resource-check')) q.set('exclude', box.getAttribute('data-resource-check'));
+            var mine = ++seq;
+            fetch('/coordinator/resources/check?' + q.toString(), { credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.text() : ''; })
+                .then(function (html) { if (mine === seq) box.innerHTML = html; })
+                .catch(function () {});
+        }
+        function later() { clearTimeout(timer); timer = setTimeout(check, 300); }
+        form.addEventListener('change', function (e) {
+            if (e.target.name === 'resource_ids[]' || fields.indexOf(e.target.name) !== -1) later();
+        });
+        form.addEventListener('input', function (e) { if (fields.indexOf(e.target.name) !== -1) later(); });
+        check();
+    })();
+    </script>
     <?php
 }
 
 /**
  * Warning for a list or event whose resources are also booked at the same time.
- * @param array $conflicts resources_conflicts()
+ * Long lists (a series) are cut after 8 entries ("und 3 weitere").
+ * @param array $conflicts resources_conflicts() / resources_check()
+ * @param ?string $note    Extra line below the list (e.g. "Speichern ist trotzdem möglich.")
  */
-function render_resource_conflicts(array $conflicts): void {
+function render_resource_conflicts(array $conflicts, ?string $note = null): void {
     if (!$conflicts) return;
+    $more      = max(0, count($conflicts) - 8);
+    $conflicts = array_slice($conflicts, 0, 8);
     require_once ROOT_PATH . '/src/db/resources.php';
     require_once ROOT_PATH . '/src/db/dashboard.php';
     ?>
@@ -647,7 +690,9 @@ function render_resource_conflicts(array $conflicts): void {
                 · <?= e(dashboard_day_label($c['date'])) ?> <?= e(resources_slot_time($c)) ?>
             </li>
             <?php endforeach; ?>
+            <?php if ($more): ?><li>und <?= $more ?> weitere</li><?php endif; ?>
         </ul>
+        <?php if ($note): ?><div class="small mt-1"><?= e($note) ?></div><?php endif; ?>
     </div>
     <?php
 }

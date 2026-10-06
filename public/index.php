@@ -385,6 +385,9 @@ match (true) {
         => require ROOT_PATH . '/src/coordinator/columns_create_handler.php',
 
     // ── Coordinator: Statistics ────────────────────────────────────────
+    $path === '/coordinator/resources/check'
+        => require ROOT_PATH . '/src/coordinator/resource_check_handler.php',
+
     $path === '/coordinator/resources'
         => require ROOT_PATH . '/src/coordinator/resources_handler.php',
 

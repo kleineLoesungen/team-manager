@@ -169,6 +169,52 @@ function resources_conflicts(PDO $pdo, string $kind, int $id): array {
     return array_map(fn($r) => resources_present_slot($r, $team, $role), $rows);
 }
 
+/**
+ * Check before saving: which bookings of the given resources overlap a planned time window
+ * on each of $dates (a list, a series or an event, not yet saved). Same window rules as
+ * resources_slots_sql(). The item being edited ($exclude_kind/$exclude_id) is left out.
+ * @param int[]    $resource_ids
+ * @param string[] $dates Y-m-d
+ * @return list<array> presented slot rows (resources_present_slot), ordered by time
+ */
+function resources_check(PDO $pdo, array $resource_ids, array $dates, ?string $start, ?string $end,
+                         bool $all_day, ?string $exclude_kind = null, ?int $exclude_id = null): array {
+    $resource_ids = array_values(array_filter(array_map('intval', $resource_ids)));
+    $dates        = array_values(array_filter($dates, fn($d) => (bool)preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)));
+    if (!$resource_ids || !$dates) return [];
+    $start = ($all_day || !$start || !preg_match('/^\d{2}:\d{2}/', $start)) ? null : substr($start, 0, 5);
+    $end   = ($start && $end && preg_match('/^\d{2}:\d{2}/', $end)) ? substr($end, 0, 5) : null;
+
+    $rows = resources_as_admin($pdo, function () use ($pdo, $resource_ids, $dates, $start, $end, $exclude_kind, $exclude_id) {
+        $slots = resources_slots_sql();
+        $stmt  = $pdo->prepare(
+            "WITH s AS ($slots),
+             w AS (
+                 SELECT d + COALESCE(CAST(:start AS time), TIME '00:00') AS w_start,
+                        CASE WHEN CAST(:start2 AS time) IS NULL THEN d + INTERVAL '1 day'
+                             WHEN CAST(:end AS time) > CAST(:start3 AS time) THEN d + CAST(:end2 AS time)
+                             ELSE d + CAST(:start4 AS time) + INTERVAL '1 hour' END AS w_end
+                 FROM unnest(CAST(:dates AS date[])) AS d
+             )
+             SELECT DISTINCT s.* FROM s JOIN w ON s.starts_at < w.w_end AND s.ends_at > w.w_start
+             WHERE s.resource_id = ANY(CAST(:ids AS int[]))
+               AND NOT (s.kind = :kind AND s.item_id = :item)
+             ORDER BY s.starts_at, s.resource_name"
+        );
+        $stmt->execute([
+            ':start' => $start, ':start2' => $start, ':start3' => $start, ':start4' => $start,
+            ':end' => $end, ':end2' => $end,
+            ':dates' => '{' . implode(',', $dates) . '}',
+            ':ids'   => '{' . implode(',', $resource_ids) . '}',
+            ':kind'  => (string)$exclude_kind, ':item' => (int)$exclude_id,
+        ]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    });
+    $team = (int)($_SESSION['team_id'] ?? 0);
+    $role = (string)($_SESSION['role'] ?? 'member');
+    return array_map(fn($r) => resources_present_slot($r, $team, $role), $rows);
+}
+
 /** How many of the given lists/events overlap another booking (for the message after saving). */
 function resources_conflict_count(PDO $pdo, string $kind, array $ids): int {
     if (!$ids) return 0;

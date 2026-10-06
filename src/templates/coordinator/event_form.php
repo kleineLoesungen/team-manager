@@ -39,7 +39,6 @@ $icons = [
 </div>
 
 <?php if ($is_edit) render_place($event['location'] ?? null, $resource_names); ?>
-<?php render_resource_conflicts($resource_conflicts); ?>
 
 <form method="POST" action="<?= e($action) ?>" novalidate>
     <?= csrf_field() ?>
@@ -124,7 +123,7 @@ $icons = [
             </div>
 
             <!-- Ressourcen (Platz, Halle …) -->
-            <?php render_resource_picker($resources, $resource_selected); ?>
+            <?php render_resource_picker($resources, $resource_selected, false, $is_edit ? 'event:' . (int)$event['id'] : null, $resource_conflicts); ?>
 
             <!-- Visibility -->
             <div class="mb-3">
