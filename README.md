@@ -1,6 +1,13 @@
 # Team Manager
 
-Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen. Listen mit Datum, Uhrzeit und Ort erscheinen in einer Kalenderansicht (Woche/Monat/Liste) — inklusive Token-geschütztem ICS-Abo für Gerätekalender.
+Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen.
+
+Weitere Bausteine:
+
+- **Inhalte** (Listen, Dokumente, Termine) in den Ansichten Übersicht, Monat und Liste, mit Token-geschütztem ICS-Abo für Gerätekalender. Listen und Termine lassen sich als Serie bis zu einem Enddatum anlegen.
+- **Ressourcen** (Platz, Halle, Bus …) für alle Teams: Belegung durch Listen und Termine, Prüfung auf Überschneidungen vor dem Speichern, Auslastung und ein ICS-Abo je Ressource.
+- **Termine durch Mitglieder:** pro Team freischaltbar.
+- **Live-Ticker** mit öffentlicher Seite und Push-Benachrichtigungen.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
 
@@ -8,7 +15,7 @@ Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Lis
 
 ## Datenmodell
 
-Die Anwendung gliedert sich in vier Bereiche: Teamverwaltung, Listen/Spalten/Zellen (EAV), Live-Ticker und Mitgliedsprofile.
+Die Anwendung gliedert sich in fünf Bereiche: Teamverwaltung, Inhalte (Listen/Spalten/Zellen als EAV, Dokumente, Termine), Ressourcen, Live-Ticker und Mitgliedsprofile. Das Diagramm zeigt die wichtigsten Tabellen; die vollständige Liste steht in `CLAUDE.md`.
 
 ```mermaid
 erDiagram
@@ -18,6 +25,8 @@ erDiagram
     teams ||--o{ ticker_tags : ""
     teams ||--o{ users : ""
     teams ||--o{ coordinator_teams : ""
+    teams ||--o{ events : ""
+    teams ||--o{ files : ""
 
     users ||--o{ coordinator_teams : ""
     users }o--o| members : ""
@@ -36,6 +45,13 @@ erDiagram
     columns ||--o{ list_global_columns : ""
     columns ||--o{ cells : ""
 
+    lists ||--o{ free_list_rows : "frei"
+
+    resources ||--o{ resource_bookings : ""
+    lists ||--o{ resource_bookings : ""
+    events ||--o{ resource_bookings : ""
+    users ||--o{ events : "created_by"
+
     tickers ||--o{ ticker_messages : ""
     tickers ||--o{ ticker_members : ""
     ticker_tags }o--o{ ticker_messages : ""
@@ -52,6 +68,10 @@ erDiagram
 | `teams → columns (global)` | Globale Spalten (`list_id IS NULL`) stehen teamweit zur Verfügung; Systemspalten (`team_id IS NULL`, `is_system = TRUE`) gelten für alle Teams. |
 | `list_global_columns` | Steuert, welche globalen/System-Spalten in welcher Liste aktiv sind; Entfernen löscht die zugehörigen Zellen. |
 | `lists + columns → cells` | Speichert EAV-Werte: eine Zeile pro (Liste, Spalte, Mitglied); der Wert wird als `TEXT` abgelegt und per `data_type` interpretiert. |
+| `lists → free_list_rows` | Freie Listen haben eigene, frei benannte Zeilen statt Mitgliedern; ihre Zellen hängen an `free_list_rows.id`. |
+| `teams → events` | Termine eines Teams (ohne Spalten). `created_by` merkt, wer ihn angelegt hat; Mitglieder dürfen das nur, wenn `teams.members_create_events` gesetzt ist. |
+| `teams → files` | Markdown-Dokumente eines Teams. |
+| `resources → resource_bookings ← lists / events` | Ressourcen pflegt der Admin für alle Teams. Eine Belegung verbindet eine Ressource mit genau einer Liste oder einem Termin; die Zeit kommt aus Datum und Uhrzeit des Eintrags. |
 | `teams → tickers` | Ein Team kann mehrere Live-Ticker führen (z. B. pro Spiel). |
 | `tickers → ticker_messages` | Nachrichten werden chronologisch einem Ticker zugeordnet und können optional einen Tag tragen. |
 | `tickers → ticker_members ← users` | Steuert, welche Mitglieder Schreibzugriff auf einen Ticker haben. |
@@ -140,12 +160,10 @@ Die SQL-Dateien unter `database/` werden beim ersten Start in dieser Reihenfolge
 |-------|--------|
 | `docker/postgres/01-user.sql` | Legt den App-Benutzer `team_app` an |
 | `database/schema.sql` | Erstellt Schema `team_manager` und alle Tabellen |
-| `database/rls_policies.sql` | Aktiviert Row-Level Security auf `users` |
+| `database/rls_policies.sql` | Aktiviert Row-Level Security mit Richtlinien auf allen Tabellen |
 | `docker/postgres/04-grants.sql` | Erteilt `team_app` die nötigen Rechte |
 
-**Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Koordinator/Mitglied-Requests setzen `app.current_team_id`.
-
-**Hinweis zu selbst-initialisierenden Tabellen:** Die Tabellen `files` und `free_list_rows` werden beim ersten Seitenaufruf automatisch per `IF NOT EXISTS` angelegt (via Self-Init in den Handlern), nicht über `schema.sql`.
+**Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Koordinator/Mitglied-Requests setzen `app.current_team_id`, `app.current_role` und `app.current_user_id`. Teamübergreifende Ansichten (Ressourcen-Auslastung, Ticker anderer Teams) lesen kurz im Admin-Kontext und stellen danach den Kontext der Rolle wieder her.
 
 ---
 
@@ -253,10 +271,28 @@ leere Datenbank wird das Schema aus `db_init_schema()` angelegt — das ist alle
 Datenbanken werden nie automatisch verändert.
 
 `database/schema.sql` und `database/rls_policies.sql` sind die Wahrheitsquelle für den
-aktuellen Stand. Es liegen **keine** Migrationsskripte im Repository: Eine Schema-Änderung
-wird als Einmal-Skript geschrieben, von Hand gegen jede Umgebung eingespielt und danach
-wieder entfernt — die beiden Dateien oben werden im selben Zug nachgezogen. Der Wortlaut
-eines bereits eingespielten Skripts bleibt über die Git-Historie auffindbar.
+aktuellen Stand; `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` legen dasselbe
+in einer leeren Datenbank an. Alle drei werden bei einer Schema-Änderung im selben Commit
+nachgezogen.
+
+Eine Schema-Änderung kommt als Einmal-Skript nach `database/migrations/JJJJMMTT_thema.sql`.
+Es wird **vor** dem Deployment von Hand gegen jede Umgebung eingespielt und danach im nächsten
+Commit wieder gelöscht. Dauerhaft liegen also keine Migrationsskripte im Repository; der
+Wortlaut eines eingespielten Skripts bleibt über die Git-Historie auffindbar.
+
+Aufbau eines Skripts (Vorlage: ein beliebiges früheres Skript in der Git-Historie):
+
+```sql
+BEGIN;
+SET LOCAL search_path TO SCHEMA_EINTRAGEN;   -- DB_SCHEMA aus der config.php
+DO $$ BEGIN
+    IF to_regclass('teams') IS NULL THEN RAISE EXCEPTION 'falsches Schema'; END IF;
+END $$;
+-- idempotente Änderungen: ADD COLUMN IF NOT EXISTS, DROP POLICY IF EXISTS + CREATE POLICY …
+COMMIT;
+```
+
+Es ist reines SQL ohne `psql`-Befehle wie `\set`, damit es auch in pgAdmin (F5) läuft.
 
 Beim Schreiben eines solchen Skripts zu beachten:
 
@@ -267,11 +303,13 @@ Beim Schreiben eines solchen Skripts zu beachten:
   ```sql
   SELECT table_schema FROM information_schema.tables WHERE table_name = 'teams';
   ```
-  Das Skript setzt den Namen an genau einer Stelle per `SET search_path TO <schema>, public;`
-  und verwendet danach unqualifizierte Tabellennamen.
+  Das Skript setzt den Namen an genau einer Stelle per `SET LOCAL search_path TO <schema>;`
+  und verwendet danach unqualifizierte Tabellennamen. Die Prüfung per `to_regclass` bricht
+  ab, bevor etwas geändert wird, falls das Schema nicht stimmt.
 - **RLS:** Jede Tabelle hat Row-Level-Security-Richtlinien, die
-  `current_setting('app.is_admin', true) = 'true'` prüfen. Ohne ein einleitendes
-  `SET app.is_admin = true;` betreffen `UPDATE`/`DELETE` kommentarlos 0 Zeilen.
+  `current_setting('app.is_admin', true) = 'true'` prüfen. Ändert ein Skript Daten, braucht es
+  ein einleitendes `SET LOCAL app.is_admin = true;` — sonst betreffen `UPDATE`/`DELETE`
+  kommentarlos 0 Zeilen. Reine Struktur-Änderungen (Spalten, Richtlinien) brauchen das nicht.
 - **Rechte:** `ALTER`/`DROP` benötigen den Tabelleneigentümer; der App-Datenbankbenutzer
   hat diese Rechte nicht.
 - **Transaktion:** GUI-Clients wie pgAdmin oder DBeaver fassen ein Skript oft in eine
@@ -297,12 +335,38 @@ Pro Team existieren genau **zwei** Tokens, gespeichert auf der Tabelle `teams`:
 Die Rolle ergibt sich ausschließlich daraus, **welche Spalte** auf das Token passt — sie kann
 nicht über einen Request-Parameter beeinflusst werden.
 
-Den Link findet man jeweils unten auf der Kalenderansicht (`/coordinator/lists`
-bzw. `/member/lists`). Koordinatoren können beide Tokens unter „Mein Profil" neu erzeugen,
+Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/lists?view=month`
+bzw. `/member/lists?view=month`). Koordinatoren können beide Tokens unter „Mein Profil" neu erzeugen,
 falls ein Link öffentlich geworden ist.
+
+**Ressourcen** haben je einen eigenen Feed: `/ics/resource/{token}.ics` (Spalte
+`resources.calendar_token`, beim ersten Aufruf der Auslastung erzeugt). Er enthält die
+Belegungen aller Teams als „Team: Titel"; private Einträge erscheinen nur als „Belegt".
+Den Link zeigt die Auslastungsseite, sobald eine Ressource ausgewählt ist.
 
 > **Hinweis:** Die Tokens gelten teamweit, nicht pro Person. Ein erneuertes Token macht das
 > Abo für **alle** Abonnenten dieses Feeds ungültig — alle müssen den Link neu eintragen.
+
+---
+
+## Ressourcen und Termine
+
+**Ressourcen** legt der Admin unter Einstellungen → Ressourcen an (Name genügt); deaktivierte
+Ressourcen sind nicht mehr auswählbar, ihre Belegungen bleiben gespeichert. Koordinatoren
+wählen Ressourcen beim Anlegen einer Liste (auch für eine ganze Serie), in den
+Listen-Einstellungen und bei Terminen. Die Belegungszeit ergibt sich aus dem Eintrag:
+ohne Uhrzeit der ganze Tag, ohne Ende eine Stunde, Listen ohne Datum belegen nichts.
+Überschneidungen werden schon im Formular angezeigt (`/…/resources/check`), sind aber erlaubt.
+Die Auslastung aller Teams (`/coordinator/resources`, `/member/resources`) sehen alle
+Angemeldeten; Einträge, die das eigene Team nicht sehen darf, heißen dort „Belegt".
+Code: `src/db/resources.php`.
+
+**Termine durch Mitglieder:** Koordinatoren schalten das unter Profil → Einstellungen →
+Termine frei (`teams.members_create_events`, Standard aus). Mitglieder legen dann einzelne
+Termine an (ohne Serie, immer für das ganze Team sichtbar) und bearbeiten oder löschen nur
+ihre eigenen (`events.created_by`). Koordinatoren sehen, wer einen Termin angelegt hat, und
+können alle ändern. Die Regeln stehen doppelt: in `src/db/events.php` und als RLS auf
+`events` und `resource_bookings`.
 
 ---
 
@@ -312,10 +376,15 @@ Die App liefert ein Web App Manifest (`public/manifest.webmanifest`) und einen I
 lässt sich also unter Android und iOS zum Startbildschirm hinzufügen und startet dann ohne
 Browser-Leiste.
 
-Bewusst **ohne** Service Worker: Das Deployment läuft per FTP ohne Build-Schritt, es gibt also
-kein Cache-Busting über Dateinamen. Ein Cache würde Nutzer dauerhaft auf veralteten Stylesheets
-festhalten. Folge: Chrome zeigt keinen automatischen Installations-Dialog — die Installation
-läuft über das Browser-Menü. Unter iOS war das ohnehin immer so.
+Der Service Worker (`public/sw.js`) ist bewusst minimal: Er macht die App unter Chrome/Android
+per Button installierbar, zeigt ohne Netz eine Hinweisseite (`public/offline.html`) und
+empfängt Push-Benachrichtigungen für Ticker. Seiten und Daten speichert er **nicht**
+zwischen — Mitgliederdaten landen nie im Cache des Geräts, und nach einem FTP-Deployment
+gibt es keine veralteten Stände. Nach Änderungen an `offline.html` die Cache-Version in
+`sw.js` erhöhen.
+
+Das VAPID-Schlüsselpaar für Push wird beim ersten Gebrauch erzeugt und in `settings`
+(`vapid_keys`) gespeichert.
 
 Icons werden aus einem Skript erzeugt und sind reproduzierbar:
 
@@ -485,26 +554,34 @@ angewendet — nötige Schema-Anpassungen vorher von Hand einspielen (siehe Date
 
 ```
 public/             Webroot (index.php — Front Controller, .htaccess)
+  css/app.css       Das einzige eigene Stylesheet (Tokens, siehe docs/UI-BASELINE.md)
   manifest.webmanifest  Web App Manifest (Installation auf dem Startbildschirm)
+  sw.js, offline.html   Service Worker (Installation, Offline-Hinweis, Push) — ohne Seiten-Cache
   icons/            App-Icons (192/512/maskable/apple-touch)
 src/
-  admin/            Admin-Handler (Teams, Koordinatoren, Einstellungen)
-  auth/             Login, Logout, Session
-  coordinator/      Koordinator-Handler (Listen, Spalten, Mitglieder, Statistik, Dateien, Logo)
-  member/           Mitglieder-Handler (Listen, Statistik, Dateien)
-  ics_token_handler.php  Token-geschützter ICS-Feed (/ics/{token}.ics)
-  db/               PDO-Verbindung, Sichtbarkeits-Helpers, Schema-Initialisierung
+  admin/            Admin-Handler (Teams, Koordinatoren, Mitglieder, Klubs, Ressourcen, Einstellungen)
+  auth/             Login, Logout, Session, Umleitung bei falscher Rolle
+  coordinator/      Koordinator-Handler (Inhalte, Termine, Spalten, Mitglieder, Statistik, Dateien, Ticker, Ressourcen, Logo)
+  member/           Mitglieder-Handler (Inhalte, Termine, Statistik, Dateien, Ticker, Ressourcen, Profil)
+  public/           Öffentliche Ticker-Seiten (ohne Anmeldung)
+  ics_token_handler.php     Token-geschützter ICS-Feed je Team (/ics/{token}.ics)
+  ics_resource_handler.php  ICS-Feed je Ressource (/ics/resource/{token}.ics)
+  db/               PDO-Verbindung + Schema-Initialisierung, fachliche Abfragen (Übersicht,
+                    Termine, Ressourcen, Sichtbarkeit, Ticker, Statistik)
   templates/
+    components/     Gemeinsame Bausteine (partials.php, Termin-Formular, Ressourcen-Auslastung)
     admin/          Admin-Templates
     coordinator/    Koordinator-Templates
     member/         Mitglieder-Templates
-    layout.php      Gemeinsames Login-Layout
+    public/         Öffentliche Ticker-Templates
+    layout.php      Gemeinsames Layout aller Rollen (render_page)
     login.php       Login-Seite
   utils/
     calendar.php    Kalender-Hilfsfunktionen (Wochen-/Monatsgrenzen, ICS-Formatierung)
     csrf.php        CSRF-Token-Generierung und -Validierung
     helpers.php     Hilfsfunktionen (redirect, htmle, require_*)
-database/           SQL-Schema und RLS-Richtlinien (Wahrheitsquelle, keine Migrationsdateien)
+database/           SQL-Schema und RLS-Richtlinien (Wahrheitsquelle); migrations/ nur vorübergehend
+docs/               UI-Baseline (verbindlich für jede Frontend-Arbeit)
 bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)
 landing/            Statische Produkt-Landingpage (nicht Teil der App)

@@ -11,7 +11,7 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - **Stack**: PHP + PostgreSQL — kein Framework-Wechsel; JS-Framework nur wenn unvermeidbar
 - **Sprache**: Vollständig Deutsch in der UI
 - **Mobile-first**: Alle Views primär für Smartphone-Bildschirme gestaltet
-- **Keine E-Mail**: Kein SMTP-Setup, kein Mailversand
+- **E-Mail nur für Benachrichtigungen**: von Hand ausgelöst (Koordinator → Mitglieder zu Liste/Dokument, Admin → Koordinatoren), je eine Mail pro Empfänger; kein Login oder Passwort per Mail
 - **Einfachheit**: Modernes, schlichtes Design — keine Überladung mit Features
 
 ## Technology Stack
@@ -43,16 +43,20 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - POST-redirect-GET pattern for all form submissions (error via `?error=` query param)
 
 ### Security
-- CSRF token on every POST form — generate with `generate_csrf_token()`, validate with `validate_csrf_token()`
+- CSRF token on every POST form — `csrf_field()` in the form (field `_csrf`), `require_csrf()` at the top of the POST branch
 - `require_coordinator()` / `require_member()` called at top of every protected handler
 - Triple-constraint ownership check on row edits: id + team_id + role
 - Credentials shown via `credential_modal.php` (full-page include with `Cache-Control: no-store`)
 
 ### Templates
-- `src/templates/layout.php` — shared login page layout
-- `src/templates/admin/layout.php` — admin layout using `render_admin_page(callable $body)`
-- `src/templates/coordinator/layout.php` — coordinator layout
-- `src/templates/member/layout.php` — member layout
+- `src/templates/layout.php` — the one layout for all roles (`render_page`), plus login
+- `src/templates/admin/layout.php`, `coordinator/layout.php`, `member/layout.php` — thin wrappers
+  (`render_admin_page`, `render_coach_page`, `render_member_page`)
+- `src/templates/components/partials.php` — shared building blocks: flash, empty state, badges,
+  collection groups, danger zone, content rows, tile groups (`render_tile_group`, `render_link_tile`),
+  place with maps link (`render_place`), resource picker + live check (`render_resource_picker`),
+  series fields (`render_series_fields`), ticker status
+- `src/templates/components/event_form.php` — event form for coordinators and members (`$event_role`)
 - Bootstrap 5.3 via CDN (no build step)
 
 ### UI Patterns
@@ -79,7 +83,9 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 - `set_team_context()` called at session start — sets `app.current_role`, `app.current_user_id`, `app.current_team_id` for RLS
 - EAV pattern: `columns` table (structure) + `cells` table (values); global columns have `list_id IS NULL`
 - Settings stored in `settings` table as key/value pairs (e.g. `app_title`, `default_team_logo`)
-- No migration files in repo — schema is idempotent via `IF NOT EXISTS`; live DB patched per-task then schema updated
+- Schema changes: update `database/schema.sql`, `database/rls_policies.sql` and `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` together; ship a one-time script in `database/migrations/` (pure SQL for pgAdmin, `SET LOCAL search_path TO SCHEMA_EINTRAGEN`, `to_regclass` guard, idempotent). The user runs it before deploying; delete it in the next commit once they confirm.
+- Cross-team reads (resource usage, other teams' tickers) run briefly in admin context and restore the role's context (`resources_as_admin()`)
+- Events: members write only their own (`events.created_by`) and only if `teams.members_create_events`; enforced in `src/db/events.php` and by RLS on `events` + `resource_bookings`
 
 ### Deployment
 - `deploy.sh` lftp FTP script for Hetzner Shared Hosting — mirrors repo root + `public/` into `public_html/team-manager/` (no separate apps folder)
@@ -93,20 +99,24 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 ```
 public/             Webroot — index.php front controller + .htaccess
 src/
-  admin/            Admin handlers (teams, coordinators, settings, players)
-  auth/             Login, logout, session
-  coordinator/      Coordinator handlers (lists, columns, members, stats, files, logo, ticker)
-  member/           Member handlers (lists, stats, files, ticker, coordinators, profile)
+  admin/            Admin handlers (teams, coordinators, members, clubs, resources, settings)
+  auth/             Login, logout, session, role mismatch redirect (role_redirect.php)
+  coordinator/      Coordinator handlers (lists, events, columns, members, stats, files, logo, ticker, resources)
+  member/           Member handlers (lists, events, stats, files, ticker, resources, coordinators, profile)
   public/           Public (unauthenticated) handlers — ticker overview + detail
   lib/
     phpmailer/      PHPMailer library (bundled, no Composer)
-  db/               PDO connection + visibility helpers
+  db/               PDO connection + schema init, domain queries (dashboard, events, resources,
+                    visibility, list auto-visibility, ticker, stats, team switch)
+  ics_token_handler.php     Team ICS feed (/ics/{token}.ics)
+  ics_resource_handler.php  Resource ICS feed (/ics/resource/{token}.ics)
   templates/
+    components/     Shared building blocks (partials.php, event_form.php, resource_usage.php)
     admin/          Admin HTML templates
     coordinator/    Coordinator HTML templates
     member/         Member HTML templates
     public/         Public HTML templates (ticker_overview, ticker_detail)
-    layout.php      Shared login layout
+    layout.php      The one layout for all roles (render_page) + login layout
     login.php       Login page
   utils/
     csrf.php        CSRF token generation + validation
@@ -114,6 +124,7 @@ src/
 database/
   schema.sql        Idempotent schema (all tables)
   rls_policies.sql  Row-Level Security policies
+  migrations/       One-time scripts, only until applied (see Database)
 docker/             Docker Compose setup for local dev
 landing/            Static product landing page (not part of app)
 uploads/            Logo uploads (HTTP-blocked via .htaccess)
@@ -135,7 +146,7 @@ Browser → public/index.php (front controller)
 
 | Table | Purpose |
 |-------|---------|
-| `teams` | Teams with name, active flag, logo path |
+| `teams` | Teams with name, active flag, logo path, ICS tokens, `members_create_events` |
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
 | `players` | Player profiles linked to users via `player_id` |
@@ -148,8 +159,9 @@ Browser → public/index.php (front controller)
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
 | `list_global_columns` | Which global columns appear in each list |
 | `cells` | EAV values — one row per (list, column, player) |
-| `files` | Markdown documents (coordinator + member, own table, self-init) |
-| `free_list_rows` | Custom rows for free-type lists (self-init) |
+| `files` | Markdown documents per team |
+| `events` | Team events (title, date, optional time, place, icon, visibility protected/private, `created_by`) |
+| `free_list_rows` | Custom rows for free-type lists |
 | `tickers` | Live ticker events per team (status: active/closed, event_date, start_time) |
 | `ticker_tags` | Tag labels + color per team for ticker messages |
 | `ticker_messages` | Messages posted to a ticker (with optional tag_id) |
