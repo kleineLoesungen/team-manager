@@ -133,6 +133,10 @@ Keine Modals, kein JavaScript-Confirm.
 **Filter.** Pills als GET-Links, die aktive Auswahl ist als gefüllte Pill erkennbar.
 Nach dem Filtern wird die Scroll-Position wiederhergestellt (bestehendes Muster).
 
+**Zurück.** Ein Zurück-Link trägt das Symbol `bi-arrow-left` (oder `data-back`) und führt an
+dieselbe Stelle zurück, an der die Zielseite verlassen wurde — das Layout erledigt das für
+jeden solchen Link. Andere Links (Tabs, Filter, Navigation) beginnen oben.
+
 **Buttons.** In Formularen vollbreit gestapelt, Primäraktion oben, Abbrechen darunter als Link.
 `btn-sm` nur in Tabellenzeilen und Filterleisten, nie für die Primäraktion.
 Mindesthöhe 44 px für alles Antippbare.
