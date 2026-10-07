@@ -42,7 +42,7 @@ if ($show_all_teams) {
          JOIN members p ON p.id = u.member_id
          LEFT JOIN organizations cl ON cl.id = p.organization_id
          WHERE ct.team_id != ? AND ct.left_at IS NULL
-         ORDER BY t.name ASC, p.first_name ASC, p.last_name ASC"
+         ORDER BY t.sort_order ASC, t.name ASC, p.first_name ASC, p.last_name ASC"   // Teams in der Reihenfolge aus dem Admin
     );
     $other_stmt->execute([$_SESSION['team_id'], $_SESSION['team_id']]);
     foreach ($other_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
