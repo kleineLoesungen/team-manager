@@ -352,8 +352,8 @@ Pro Team existieren genau **zwei** Tokens, gespeichert auf der Tabelle `teams`:
 Die Rolle ergibt sich ausschließlich daraus, **welche Spalte** auf das Token passt — sie kann
 nicht über einen Request-Parameter beeinflusst werden.
 
-Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/lists?view=month`
-bzw. `/member/lists?view=month`). Koordinatoren können beide Tokens unter „Mein Profil" neu erzeugen,
+Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/contents?view=month`
+bzw. `/member/contents?view=month`). Koordinatoren können beide Tokens unter „Mein Profil" neu erzeugen,
 falls ein Link öffentlich geworden ist.
 
 **Ressourcen** haben je einen eigenen Feed: `/ics/resource/{token}.ics` (Spalte

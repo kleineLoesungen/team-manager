@@ -19,7 +19,7 @@ $file_stmt->execute([$file_id, $_SESSION['team_id']]);
 $file = $file_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$file) {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 // Determine recipient role + preview link based on visibility (D-02)
@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Benachrichtigung prüfen', 'lists', function() use (
+render_coach_page('Benachrichtigung prüfen', 'contents', function() use (
     $file, $with_email, $without_email, $subject_prefilled, $content_link, $error, $selected_ids
 ) {
     if ($error) echo '<div class="alert alert-danger mb-3">' . e($error) . '</div>';

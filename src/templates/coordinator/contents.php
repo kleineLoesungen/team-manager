@@ -1,5 +1,5 @@
 <?php
-// src/templates/coordinator/lists.php — overview tabs: Übersicht (default) | Monat | Liste
+// src/templates/coordinator/contents.php — overview tabs: Übersicht (default) | Monat | Liste
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
 //            $month, $ics_url, $dashboard
 
@@ -11,7 +11,7 @@ $day_header = function(string $date) use ($de_days): string {
 };
 
 // ── URL builder helpers ───────────────────────────────────────────────────────
-$base_url  = '/coordinator/lists';
+$base_url  = '/coordinator/contents';
 $cal_url   = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&offset=' . $off;
 
 // ── Visibility badge helper ───────────────────────────────────────────────────
@@ -292,6 +292,6 @@ $render_card = function(array $item) use ($vis_badge): void {
     u.searchParams.delete('success'); u.searchParams.delete('count'); u.searchParams.delete('conflicts'); u.searchParams.delete('deleted');
     var url = u.pathname + u.search;
     if (url !== location.pathname + location.search) history.replaceState(null, '', url);
-    sessionStorage.setItem('coordinator_lists_url', url);
+    sessionStorage.setItem('coordinator_contents_url', url);
 })();
 </script>

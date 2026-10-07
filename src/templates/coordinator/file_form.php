@@ -2,7 +2,7 @@
 // src/templates/coordinator/file_form.php — create new file form
 ?>
 <div class="mb-3">
-    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a href="/coordinator/contents" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
@@ -41,12 +41,12 @@
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary min-touch">Anlegen</button>
-        <a href="/coordinator/lists" class="btn btn-outline-secondary min-touch">Abbrechen</a>
+        <a href="/coordinator/contents" class="btn btn-outline-secondary min-touch">Abbrechen</a>
     </div>
 </form>
 
 <div class="mt-4">
-    <a href="/coordinator/lists" class="btn btn-sm btn-outline-secondary">
+    <a href="/coordinator/contents" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>

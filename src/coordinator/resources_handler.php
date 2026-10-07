@@ -11,4 +11,4 @@ require_once ROOT_PATH . '/src/templates/components/resource_usage.php';
 $page = resource_usage_page_data(get_db());
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
-render_coach_page('Ressourcen', 'lists', fn() => render_resource_usage($page, '/coordinator/resources'));
+render_coach_page('Ressourcen', 'contents', fn() => render_resource_usage($page, '/coordinator/resources'));

@@ -7,7 +7,7 @@
 $is_edit   = $event !== null;
 $is_member = ($event_role ?? 'coordinator') === 'member';
 $base      = $is_member ? '/member' : '/coordinator';
-$lists_url = $base . '/lists';
+$contents_url = $base . '/lists';
 $action    = $is_edit
     ? $base . '/events/' . (int)$event['id'] . '/edit'
     : $base . '/events/create';
@@ -47,7 +47,7 @@ $icons = [
 <?php if ($_GET['success'] ?? null): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3">
-    <a href="<?= $is_member && $is_edit ? $base . '/events/' . (int)$event['id'] : $lists_url ?>" id="js-back-btn" class="btn btn-sm btn-outline-secondary">
+    <a href="<?= $is_member && $is_edit ? $base . '/events/' . (int)$event['id'] : $contents_url ?>" id="js-back-btn" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
 </div>
@@ -59,7 +59,7 @@ $icons = [
 
 <form method="POST" action="<?= e($action) ?>" novalidate>
     <?= csrf_field() ?>
-    <input type="hidden" name="_back" id="js-back-url" value="<?= e($lists_url) ?>">
+    <input type="hidden" name="_back" id="js-back-url" value="<?= e($contents_url) ?>">
 
     <div class="card mb-3">
         <div class="card-header fw-semibold"><?= $is_edit ? 'Termin bearbeiten' : 'Neuer Termin' ?></div>
@@ -182,7 +182,7 @@ $icons = [
 
     <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary min-touch" data-series-submit><?= $is_edit ? 'Termin speichern' : 'Termin anlegen' ?></button>
-        <a href="<?= $is_member && $is_edit ? $base . '/events/' . (int)$event['id'] : $lists_url ?>" class="btn btn-outline-secondary min-touch"<?= $is_member && $is_edit ? '' : ' data-back-link' ?>>Abbrechen</a>
+        <a href="<?= $is_member && $is_edit ? $base . '/events/' . (int)$event['id'] : $contents_url ?>" class="btn btn-outline-secondary min-touch"<?= $is_member && $is_edit ? '' : ' data-back-link' ?>>Abbrechen</a>
     </div>
 </form>
 
@@ -190,7 +190,7 @@ $icons = [
     ob_start(); ?>
     <form method="POST" action="<?= $base ?>/events/<?= (int)$event['id'] ?>/delete">
         <?= csrf_field() ?>
-        <input type="hidden" name="_back" id="js-delete-back-url" value="<?= e($lists_url) ?>">
+        <input type="hidden" name="_back" id="js-delete-back-url" value="<?= e($contents_url) ?>">
         <button type="submit" class="btn btn-outline-danger min-touch">Termin löschen</button>
     </form>
     <?php render_danger_zone('Termin löschen', 'Löscht diesen Termin und seine Ressourcen-Belegung unwiderruflich. Du bestätigst auf der nächsten Seite.', ob_get_clean());
@@ -210,7 +210,7 @@ endif; ?>
     });
 
     // Restore lists view state (view, offset, scroll) via sessionStorage
-    var listsUrl = sessionStorage.getItem(<?= json_encode($is_member ? 'member_lists_url' : 'coordinator_lists_url') ?>);
+    var listsUrl = sessionStorage.getItem(<?= json_encode($is_member ? 'member_contents_url' : 'coordinator_contents_url') ?>);
     if (listsUrl) {
         if (!<?= json_encode($is_member && $is_edit) ?>) document.getElementById('js-back-btn').href = listsUrl;
         document.getElementById('js-back-url').value = listsUrl;

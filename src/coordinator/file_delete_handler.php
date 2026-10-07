@@ -6,7 +6,7 @@ declare(strict_types=1);
 require_coordinator();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 require_csrf();
@@ -20,13 +20,13 @@ $stmt->execute([$file_id, $_SESSION['team_id']]);
 $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$file) {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 if ($confirm !== 1) {
-    render_coach_page('Datei löschen', 'lists', function() use ($file) {
+    render_coach_page('Datei löschen', 'contents', function() use ($file) {
         ?>
         <div class="alert alert-danger">
             Datei <strong><?= e($file['name']) ?></strong> wirklich löschen?
@@ -46,10 +46,10 @@ if ($confirm !== 1) {
 try {
     $del = $pdo->prepare("DELETE FROM files WHERE id = ? AND team_id = ?");
     $del->execute([$file_id, $_SESSION['team_id']]);
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 } catch (PDOException $e) {
     error_log('File delete error: ' . $e->getMessage());
-    render_coach_page('Datei löschen', 'lists', function() {
+    render_coach_page('Datei löschen', 'contents', function() {
         echo '<div class="alert alert-danger">Ein Fehler ist aufgetreten. Die Datei konnte nicht gelöscht werden.</div>';
     });
 }

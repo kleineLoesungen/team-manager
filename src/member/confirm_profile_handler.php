@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET confirmed_at = COALESCE(confirmed_at, NOW()) WHERE id = ?")
             ->execute([$user_id]);
         $_SESSION['confirmed_at'] = $_SESSION['confirmed_at'] ?? date('c');
-        redirect($is_first_confirm ? '/member/lists' : '/member/profile');
+        redirect($is_first_confirm ? '/member/contents' : '/member/profile');
     }
 }
 

@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Zeile bearbeiten', 'lists', function() use ($list, $player, $columns, $existing_cells, $error) {
+render_member_page('Zeile bearbeiten', 'contents', function() use ($list, $player, $columns, $existing_cells, $error) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/member/list_row_form.php';
 });

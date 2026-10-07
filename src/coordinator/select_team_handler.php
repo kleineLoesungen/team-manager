@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     unset($_SESSION['pending_team_pick']);
     // Keep available_teams in session for switch-team functionality
     set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 // GET: Teams immer frisch laden (Zuordnungen können sich seit dem Login geändert haben)
@@ -49,6 +49,6 @@ if (!$is_switch && !empty($_SESSION['pending_team_pick']) && !empty($_SESSION['a
 }
 $error       = !empty($_GET['error']);
 $form_action = '/coordinator/select-team';
-$back_url    = '/coordinator/lists';
+$back_url    = '/coordinator/contents';
 
 require ROOT_PATH . '/src/templates/coordinator/select_team.php';

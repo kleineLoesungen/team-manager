@@ -22,9 +22,9 @@ if (is_authenticated()) {
     }
     // Role-based redirect for already-authenticated users — per D-02
     if (($_SESSION['role'] ?? '') === 'coordinator') {
-        redirect('/coordinator/lists');
+        redirect('/coordinator/contents');
     } else {
-        redirect('/member/lists');
+        redirect('/member/contents');
     }
 }
 
@@ -164,9 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (is_valid_return_to($return_to)) {
                             redirect($return_to);
                         } elseif ($role === 'coordinator') {
-                            redirect('/coordinator/lists');
+                            redirect('/coordinator/contents');
                         } else {
-                            redirect('/member/lists');
+                            redirect('/member/contents');
                         }
                     }
                 } else {

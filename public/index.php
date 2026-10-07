@@ -246,7 +246,7 @@ match (true) {
     // ── Coordinator: Members ───────────────────────────────────────────
     // Startseite der Koordinatoren ist die Übersicht (Reiter "Inhalte")
     $path === '/coordinator'
-        => redirect('/coordinator/lists'),
+        => redirect('/coordinator/contents'),
 
     $path === '/coordinator/members'
         => require ROOT_PATH . '/src/coordinator/members_handler.php',
@@ -276,8 +276,8 @@ match (true) {
         })(),
 
     // ── Coordinator: Lists ─────────────────────────────────────────────
-    $path === '/coordinator/lists'
-        => require ROOT_PATH . '/src/coordinator/lists_handler.php',
+    $path === '/coordinator/contents'
+        => require ROOT_PATH . '/src/coordinator/contents_handler.php',
 
     $path === '/coordinator/lists/create'
         => require ROOT_PATH . '/src/coordinator/list_create_handler.php',
@@ -507,8 +507,8 @@ match (true) {
         => require ROOT_PATH . '/src/member/member_profile_handler.php',
 
     // ── Member: Lists ─────────────────────────────────────────────────
-    $path === '/member' || $path === '/member/lists'
-        => require ROOT_PATH . '/src/member/lists_handler.php',
+    $path === '/member' || $path === '/member/contents'
+        => require ROOT_PATH . '/src/member/contents_handler.php',
 
     // /member/lists/{id}/rows/{member_id}/edit — GET/POST: edit own row (CELL-01)
     (bool)preg_match('#^/member/lists/(\d+)/rows/(\d+)/edit$#', $path, $matches)

@@ -102,7 +102,7 @@ $list['resource_names'] = resources_booked_names($pdo, 'list', $list_id);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $current_user_id, $success) {
+render_member_page(e($list['name']), 'contents', function() use ($list, $columns, $players, $cells, $current_user_id, $success) {
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/member/list_detail.php';
 });

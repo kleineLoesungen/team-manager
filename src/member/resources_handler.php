@@ -11,4 +11,4 @@ require_once ROOT_PATH . '/src/templates/components/resource_usage.php';
 $page = resource_usage_page_data(get_db());
 
 require ROOT_PATH . '/src/templates/member/layout.php';
-render_member_page('Ressourcen', 'lists', fn() => render_resource_usage($page, '/member/resources'));
+render_member_page('Ressourcen', 'contents', fn() => render_resource_usage($page, '/member/resources'));

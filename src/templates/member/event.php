@@ -9,7 +9,7 @@ $end   = $event['time_end'] ? substr((string)$event['time_end'], 0, 5) : null;
 <?php if (!empty($_GET['conflicts'])) render_resource_conflict_notice((int)$_GET['conflicts'], '/member/resources'); ?>
 
 <div class="mb-3">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/member/contents">
         <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Zurück zur Übersicht
     </a>
 </div>
@@ -37,4 +37,4 @@ $end   = $event['time_end'] ? substr((string)$event['time_end'], 0, 5) : null;
 </a>
 <?php endif; ?>
 
-<script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>
+<script>(function(){var s=sessionStorage.getItem('member_contents_url');if(s)document.querySelectorAll('.back-to-contents').forEach(function(a){a.href=s;});})();</script>

@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pdo = $pdo ?? get_db();
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Neue Datei', 'lists', function() use ($error) {
+render_coach_page('Neue Datei', 'contents', function() use ($error) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/file_form.php';
 });

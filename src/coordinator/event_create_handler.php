@@ -31,7 +31,7 @@ $resource_names     = [];
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Termin erstellen', 'lists', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
+render_coach_page('Termin erstellen', 'contents', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
     if ($error) render_flash('error', $error);
     require ROOT_PATH . '/src/templates/components/event_form.php';
 });

@@ -117,7 +117,7 @@ function event_update(PDO $pdo, int $team_id, int $event_id, array $f, array $re
 
 /** Where to go after saving/deleting: the overview view the user came from (validated). */
 function event_back_url(string $role): string {
-    $base = $role === 'member' ? '/member/lists' : '/coordinator/lists';
+    $base = $role === 'member' ? '/member/contents' : '/coordinator/contents';
     $back = (string)($_POST['_back'] ?? '');
     return preg_match('#^' . preg_quote($base, '#') . '(\?[^<>"\']*)?$#', $back) ? $back : $base;
 }

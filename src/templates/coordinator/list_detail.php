@@ -20,7 +20,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 <?php if ($success): render_flash('success', $success); endif; ?>
 
 <div class="mb-3">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/coordinator/contents">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
@@ -465,14 +465,14 @@ $show_full_form = $is_free_list
 <?php endif; // is_free_list ?>
 
 <div class="mt-3">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/coordinator/contents">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
 <script>
 (function() {
-    var saved = sessionStorage.getItem('coordinator_lists_url');
-    if (saved) document.querySelectorAll('.back-to-lists').forEach(function(a){ a.href = saved; });
+    var saved = sessionStorage.getItem('coordinator_contents_url');
+    if (saved) document.querySelectorAll('.back-to-contents').forEach(function(a){ a.href = saved; });
 })();
 
 function shareItem(btn) {

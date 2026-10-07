@@ -270,6 +270,6 @@ $resource_conflicts = $resource_names ? resources_conflicts($pdo, 'list', $list_
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($list['name']), 'lists', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients, $resource_names, $resource_conflicts) {
+render_coach_page(e($list['name']), 'contents', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients, $resource_names, $resource_conflicts) {
     require ROOT_PATH . '/src/templates/coordinator/list_detail.php';
 });

@@ -1,5 +1,5 @@
 <?php
-// src/templates/member/lists.php — overview tabs: Übersicht (default) | Monat | Liste
+// src/templates/member/contents.php — overview tabs: Übersicht (default) | Monat | Liste
 // Variables: $items, $view, $showCalendar, $periodView, $offset, $boundaries,
 //            $month, $ics_url, $dashboard, $can_create_events
 
@@ -11,7 +11,7 @@ $day_header = function(string $date) use ($de_days): string {
 };
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
-$base_url = '/member/lists';
+$base_url = '/member/contents';
 $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&offset=' . $off;
 ?>
 
@@ -202,6 +202,6 @@ $render_card = function(array $item): void {
     ['success', 'deleted', 'conflicts', 'error'].forEach(function (k) { u.searchParams.delete(k); });
     var url = u.pathname + u.search;
     if (url !== location.pathname + location.search) history.replaceState(null, '', url);
-    sessionStorage.setItem('member_lists_url', url);
+    sessionStorage.setItem('member_contents_url', url);
 })();
 </script>

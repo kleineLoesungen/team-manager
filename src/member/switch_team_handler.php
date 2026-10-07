@@ -11,7 +11,7 @@ require_once ROOT_PATH . '/src/db/team_switch.php';
 $pdo     = get_db();
 $options = team_switch_options($pdo);
 if (count($options) < 2) {
-    redirect('/member/lists');
+    redirect('/member/contents');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,12 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['team_name']     = $target['team_name'];
     $_SESSION['confirmed_at']  = $confirmed_at ?: null;
     $_SESSION['last_activity'] = time();
-    redirect('/member/lists');
+    redirect('/member/contents');
 }
 
 $available_teams = $options;
 $is_switch       = true;
 $error           = !empty($_GET['error']);
 $form_action     = '/member/switch-team';
-$back_url        = '/member/lists';
+$back_url        = '/member/contents';
 require ROOT_PATH . '/src/templates/coordinator/select_team.php';

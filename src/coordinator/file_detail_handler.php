@@ -13,7 +13,7 @@ $stmt->execute([$file_id, $_SESSION['team_id']]);
 $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$file) {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 // Determine notify button state for file notifications
@@ -79,7 +79,7 @@ if (!empty($_GET['notify_success'])) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($file['name']), 'lists', function() use ($file, $error, $success, $has_notify_recipients) {
+render_coach_page(e($file['name']), 'contents', function() use ($file, $error, $success, $has_notify_recipients) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/file_detail.php';

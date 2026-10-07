@@ -10,7 +10,7 @@ require_once ROOT_PATH . '/src/db/events.php';
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
 if (!events_members_may_create($pdo, $team_id)) {
-    redirect('/member/lists?error=' . urlencode('In diesem Team legen nur Koordinatoren Termine an.'));
+    redirect('/member/contents?error=' . urlencode('In diesem Team legen nur Koordinatoren Termine an.'));
 }
 
 $error = '';
@@ -34,7 +34,7 @@ $resource_names     = [];
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Termin anlegen', 'lists', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
+render_member_page('Termin anlegen', 'contents', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
     if ($error) render_flash('error', $error);
     require ROOT_PATH . '/src/templates/components/event_form.php';
 });

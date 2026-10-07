@@ -12,7 +12,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 ?>
 
 <div class="mb-3 d-flex gap-2 flex-wrap">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/coordinator/contents">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
     <button type="button"
@@ -181,8 +181,8 @@ document.getElementById('edit-tab') && document.getElementById('edit-tab').addEv
 </script>
 
 <div class="mt-3">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/coordinator/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/coordinator/contents">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
-<script>(function(){var s=sessionStorage.getItem('coordinator_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>
+<script>(function(){var s=sessionStorage.getItem('coordinator_contents_url');if(s)document.querySelectorAll('.back-to-contents').forEach(function(a){a.href=s;});})();</script>

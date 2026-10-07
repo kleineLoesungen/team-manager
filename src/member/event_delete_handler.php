@@ -7,20 +7,20 @@ declare(strict_types=1);
 require_member();
 require_once ROOT_PATH . '/src/db/events.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/member/lists');
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/member/contents');
 require_csrf();
 
 $event_id = (int)($_REQUEST['event_id'] ?? 0);
 $pdo      = get_db();
 $team_id  = (int)$_SESSION['team_id'];
 $event    = event_load($pdo, $event_id, $team_id);
-if (!$event || !event_member_may_edit($pdo, $event, (int)$_SESSION['user_id'])) redirect('/member/lists');
+if (!$event || !event_member_may_edit($pdo, $event, (int)$_SESSION['user_id'])) redirect('/member/contents');
 
 $back = event_back_url('member');
 
 if ((int)($_POST['confirm'] ?? 0) !== 1) {
     require ROOT_PATH . '/src/templates/member/layout.php';
-    render_member_page('Termin löschen', 'lists', function () use ($event, $back) { ?>
+    render_member_page('Termin löschen', 'contents', function () use ($event, $back) { ?>
         <div class="alert alert-danger">
             Termin <strong><?= e($event['title']) ?></strong> vom <?= e(date('d.m.Y', strtotime($event['date']))) ?> wirklich löschen?
             Das lässt sich nicht rückgängig machen.

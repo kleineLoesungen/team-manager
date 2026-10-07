@@ -6,7 +6,7 @@ declare(strict_types=1);
 require_coordinator();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 require_csrf();
@@ -21,14 +21,14 @@ $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$list) {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 if ($confirm !== 1) {
     // Step 1: Show confirmation page — no delete yet
-    render_coach_page('Liste löschen', 'lists', function() use ($list) {
+    render_coach_page('Liste löschen', 'contents', function() use ($list) {
         ?>
         <div class="alert alert-danger">
             Liste <strong><?= e($list['name']) ?></strong> wirklich löschen?
@@ -49,10 +49,10 @@ if ($confirm !== 1) {
 try {
     $del = $pdo->prepare("DELETE FROM lists WHERE id = ? AND team_id = ?");
     $del->execute([$list_id, $_SESSION['team_id']]);
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 } catch (PDOException $e) {
     error_log('List delete error: ' . $e->getMessage());
-    render_coach_page('Liste löschen', 'lists', function() {
+    render_coach_page('Liste löschen', 'contents', function() {
         ?>
         <div class="alert alert-danger">Ein Fehler ist aufgetreten. Die Liste konnte nicht gelöscht werden.</div>
         <?php

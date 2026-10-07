@@ -128,7 +128,7 @@
         <button type="submit" class="btn btn-primary min-touch">
             <i class="bi bi-floppy me-2"></i>Änderungen speichern
         </button>
-        <a href="/member/lists" class="btn btn-outline-secondary min-touch">Abbrechen</a>
+        <a href="/member/contents" class="btn btn-outline-secondary min-touch">Abbrechen</a>
     </div>
     <?php endif; ?>
 </form>

@@ -38,7 +38,7 @@ $list_type = in_array($_GET['type'] ?? '', ['member', 'free']) ? $_GET['type'] :
 // Woher kam der Koordinator (Übersicht, Monat, Liste)? Dorthin geht es nach einer Serie zurück.
 $referer_path = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_PATH) ?: '';
 $referer_qs   = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_QUERY);
-$return_to    = coordinator_lists_return_to($_POST['return_to'] ?? ($referer_path . ($referer_qs ? '?' . $referer_qs : '')));
+$return_to    = coordinator_contents_return_to($_POST['return_to'] ?? ($referer_path . ($referer_qs ? '?' . $referer_qs : '')));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
@@ -218,6 +218,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = ($list_type === 'free') ? 'Neue freie Liste' : 'Neue Mitgliederliste';
-render_coach_page($page_title, 'lists', function() use ($error, $global_columns, $system_columns, $list_type, $return_to, $resources) {
+render_coach_page($page_title, 'contents', function() use ($error, $global_columns, $system_columns, $list_type, $return_to, $resources) {
     require ROOT_PATH . '/src/templates/coordinator/list_form.php';
 });

@@ -216,8 +216,8 @@ function series_from_post(string $date, string $what): array {
 }
 
 /** Return target after creating content: one of the list views, else the overview. */
-function coordinator_lists_return_to(?string $url): string {
+function coordinator_contents_return_to(?string $url): string {
     $url = (string)$url;
-    return preg_match('#^/coordinator/lists(\?[A-Za-z0-9_=&%.-]*)?$#', $url) ? $url : '/coordinator/lists';
+    return preg_match('#^/coordinator/contents(\?[A-Za-z0-9_=&%.-]*)?$#', $url) ? $url : '/coordinator/contents';
 }
 

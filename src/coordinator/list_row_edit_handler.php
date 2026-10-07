@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Zeile bearbeiten', 'lists', function() use ($list, $player, $columns, $existing_cells, $error) {
+render_coach_page('Zeile bearbeiten', 'contents', function() use ($list, $player, $columns, $existing_cells, $error) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/list_row_form.php';
 });

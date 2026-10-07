@@ -30,7 +30,7 @@ function render_resource_usage(array $page, string $base): void {
         if ((int)$r['id'] === $selected) $name = $r['name'];
     }
     ?>
-    <?php render_page_header('Ressourcen', str_starts_with($base, '/coordinator') ? '/coordinator/lists' : '/member/lists'); ?>
+    <?php render_page_header('Ressourcen', str_starts_with($base, '/coordinator') ? '/coordinator/contents' : '/member/contents'); ?>
 
     <?php if (!$page['resources']): ?>
         <?php render_empty('box-seam', 'Keine Ressourcen', 'Der Admin hat noch keine Ressourcen angelegt.'); ?>

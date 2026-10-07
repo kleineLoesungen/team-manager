@@ -17,7 +17,7 @@ $stmt->execute([$file_id]);
 $file = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$file) {
-    redirect('/member/lists');
+    redirect('/member/contents');
 }
 
 $error   = '';
@@ -45,7 +45,7 @@ if (!empty($_GET['success'])) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page(e($file['name']), 'lists', function() use ($file, $error, $success) {
+render_member_page(e($file['name']), 'contents', function() use ($file, $error, $success) {
     if ($error)   echo '<div class="alert alert-danger">'  . e($error)   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . e($success) . '</div>';
     require ROOT_PATH . '/src/templates/member/file_detail.php';

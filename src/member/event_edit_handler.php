@@ -11,7 +11,7 @@ $event_id = (int)($_REQUEST['event_id'] ?? 0);
 $pdo      = get_db();
 $team_id  = (int)$_SESSION['team_id'];
 $event    = event_load($pdo, $event_id, $team_id);
-if (!$event) redirect('/member/lists');
+if (!$event) redirect('/member/contents');
 if (!event_member_may_edit($pdo, $event, (int)$_SESSION['user_id'])) redirect('/member/events/' . $event_id);
 
 $error = '';
@@ -35,7 +35,7 @@ $resource_names     = resources_booked_names($pdo, 'event', $event_id);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Termin bearbeiten', 'lists', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
+render_member_page('Termin bearbeiten', 'contents', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
     if ($error) render_flash('error', $error);
     require ROOT_PATH . '/src/templates/components/event_form.php';
 });

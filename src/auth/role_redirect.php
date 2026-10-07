@@ -31,8 +31,8 @@ function role_mismatch(string $required_role): never {
 /** Member opened a coordinator URL: same content in the member area, if the member may see it. */
 function role_member_from_coordinator_path(string $path): never {
     $simple = [
-        '/coordinator'         => '/member/lists',
-        '/coordinator/lists'   => '/member/lists',
+        '/coordinator'         => '/member/contents',
+        '/coordinator/contents'   => '/member/contents',
         '/coordinator/stats'   => '/member/stats',
         '/coordinator/ticker'  => '/member/ticker',
         '/coordinator/profile' => '/member/profile',
@@ -84,8 +84,8 @@ function role_member_from_coordinator_path(string $path): never {
 /** Coordinator opened a member URL: the coordinator view of the same content. */
 function role_coordinator_from_member_path(string $path): never {
     $simple = [
-        '/member'         => '/coordinator/lists',
-        '/member/lists'   => '/coordinator/lists',
+        '/member'         => '/coordinator/contents',
+        '/member/contents'   => '/coordinator/contents',
         '/member/stats'   => '/coordinator/stats',
         '/member/ticker'  => '/coordinator/ticker',
         '/member/profile' => '/coordinator/profile',
@@ -106,7 +106,7 @@ function role_coordinator_from_member_path(string $path): never {
 function role_forbidden(string $reason, int $status = 403, bool $offer_switch = false): never {
     http_response_code($status);
     $role = ($_SESSION['role'] ?? '') === 'coordinator' ? 'coordinator' : 'member';
-    $home = $role === 'coordinator' ? '/coordinator/lists' : '/member/lists';
+    $home = $role === 'coordinator' ? '/coordinator/contents' : '/member/contents';
     $switch = null;
     if ($offer_switch) {
         require_once ROOT_PATH . '/src/db/team_switch.php';

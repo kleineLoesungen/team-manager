@@ -1,5 +1,5 @@
 <?php
-// src/coordinator/lists_handler.php — GET /coordinator/lists — overview for coordinator
+// src/coordinator/contents_handler.php — GET /coordinator/contents — overview for coordinator
 
 declare(strict_types=1);
 
@@ -91,8 +91,8 @@ if ($view === 'overview') {
     $dashboard = dashboard_data($pdo, 'coordinator');
 }
 
-render_coach_page('Inhalte', 'lists', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard, $conflicts) {
+render_coach_page('Inhalte', 'contents', function() use ($items, $error, $success, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard, $conflicts) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($conflicts) render_resource_conflict_notice($conflicts, '/coordinator/resources');
-    require ROOT_PATH . '/src/templates/coordinator/lists.php';
+    require ROOT_PATH . '/src/templates/coordinator/contents.php';
 });

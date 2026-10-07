@@ -14,7 +14,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 
 <div class="mb-3">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/member/contents">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
@@ -163,8 +163,8 @@ function shareFallback(text, btn) {
 </script>
 
 <div class="mt-4">
-    <a class="back-to-lists btn btn-sm btn-outline-secondary" href="/member/lists">
+    <a class="back-to-contents btn btn-sm btn-outline-secondary" href="/member/contents">
         <i class="bi bi-arrow-left me-1"></i>Zurück zur Übersicht
     </a>
 </div>
-<script>(function(){var s=sessionStorage.getItem('member_lists_url');if(s)document.querySelectorAll('.back-to-lists').forEach(function(a){a.href=s;});})();</script>
+<script>(function(){var s=sessionStorage.getItem('member_contents_url');if(s)document.querySelectorAll('.back-to-contents').forEach(function(a){a.href=s;});})();</script>

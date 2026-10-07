@@ -1,5 +1,5 @@
 <?php
-// src/member/lists_handler.php — GET /member/lists — overview for member
+// src/member/contents_handler.php — GET /member/contents — overview for member
 
 declare(strict_types=1);
 
@@ -85,9 +85,9 @@ $cal_token = $tstmt->fetchColumn();
 $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
 
-render_member_page('Inhalte', 'lists', function() use ($items, $success, $error, $conflicts, $can_create_events, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
+render_member_page('Inhalte', 'contents', function() use ($items, $success, $error, $conflicts, $can_create_events, $view, $showCalendar, $periodView, $offset, $boundaries, $month, $ics_url, $dashboard) {
     if ($error !== '') render_flash('error', $error);
     if ($success) render_flash('success', $success);
     if ($conflicts) render_resource_conflict_notice($conflicts, '/member/resources');
-    require ROOT_PATH . '/src/templates/member/lists.php';
+    require ROOT_PATH . '/src/templates/member/contents.php';
 });

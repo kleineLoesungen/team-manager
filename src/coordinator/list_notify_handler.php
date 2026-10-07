@@ -29,7 +29,7 @@ $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$list) {
-    redirect('/coordinator/lists');
+    redirect('/coordinator/contents');
 }
 
 // Determine recipient group based on visibility (D-02)
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Benachrichtigung prüfen', 'lists', function() use (
+render_coach_page('Benachrichtigung prüfen', 'contents', function() use (
     $list, $with_email, $without_email, $subject_prefilled, $content_link, $error, $success, $selected_ids
 ) {
     if ($error)   echo '<div class="alert alert-danger mb-3">'  . e($error)   . '</div>';

@@ -12,7 +12,7 @@ $pdo      = get_db();
 $team_id  = (int)$_SESSION['team_id'];
 
 $event = event_load($pdo, $event_id, $team_id);
-if (!$event) redirect('/coordinator/lists');
+if (!$event) redirect('/coordinator/contents');
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -34,7 +34,7 @@ $resource_names     = resources_booked_names($pdo, 'event', $event_id);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Termin bearbeiten', 'lists', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
+render_coach_page('Termin bearbeiten', 'contents', function() use ($error, $event, $event_role, $resources, $resource_selected, $resource_conflicts, $resource_names) {
     if ($error) render_flash('error', $error);
     require ROOT_PATH . '/src/templates/components/event_form.php';
 });
