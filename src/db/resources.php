@@ -238,17 +238,18 @@ function resources_conflict_count(PDO $pdo, string $kind, array $ids): int {
 
 /**
  * Usage of the given resources (the team's department, or one of them) from $from (Y-m-d) on,
- * bookings of all teams, grouped by date.
+ * up to (excluding) $to if given — bookings of all teams, grouped by start date.
  * Each row is presented for the viewer and carries 'overlap' (another booking at that time).
  * @return array<string, list<array>> date => rows, ordered by time
  */
-function resources_usage(PDO $pdo, array $resource_ids, string $from, int $limit = 300): array {
+function resources_usage(PDO $pdo, array $resource_ids, string $from, ?string $to = null, int $limit = 500): array {
     $resource_ids = array_values(array_filter(array_map('intval', $resource_ids)));
     if (!$resource_ids) return [];
-    $rows = resources_as_admin($pdo, function () use ($pdo, $resource_ids, $from, $limit) {
+    $rows = resources_as_admin($pdo, function () use ($pdo, $resource_ids, $from, $to, $limit) {
         $slots  = resources_slots_sql();
         $params = [$from, '{' . implode(',', $resource_ids) . '}'];
         $filter = ' AND me.resource_id = ANY(CAST(? AS int[]))';
+        if ($to !== null) { $filter .= ' AND me.date < ?::date'; $params[] = $to; }
         $stmt = $pdo->prepare(
             "WITH s AS ($slots)
              SELECT me.*, EXISTS (
@@ -274,6 +275,21 @@ function resources_usage(PDO $pdo, array $resource_ids, string $from, int $limit
         $days[$r['date']][] = $r;
     }
     return $days;
+}
+
+/** Is any of the resources booked on or after $date (Y-m-d)? For "Weitere Einträge anzeigen". */
+function resources_booked_from(PDO $pdo, array $resource_ids, string $date): bool {
+    $resource_ids = array_values(array_filter(array_map('intval', $resource_ids)));
+    if (!$resource_ids) return false;
+    return (bool)resources_as_admin($pdo, function () use ($pdo, $resource_ids, $date) {
+        $slots = resources_slots_sql();
+        $stmt  = $pdo->prepare(
+            "WITH s AS ($slots) SELECT EXISTS (
+                 SELECT 1 FROM s WHERE resource_id = ANY(CAST(? AS int[])) AND date >= ?::date)"
+        );
+        $stmt->execute(['{' . implode(',', $resource_ids) . '}', $date]);
+        return in_array($stmt->fetchColumn(), [true, 1, '1', 't', 'true'], true);
+    });
 }
 
 /** Calendar token of a resource, created on first use. Admin context required to create. */
