@@ -73,11 +73,10 @@
         <h2 class="card-title">Attribut löschen</h2>
         <p class="card-text small text-muted mb-3">
             Alle gespeicherten Werte für dieses Attribut bei allen Mitgliedern gehen unwiderruflich verloren.
+            Du bestätigst auf der nächsten Seite.
         </p>
-        <form method="POST" action="/admin/attributes/<?= $group_id ?>/attributes/<?= (int)$attr['id'] ?>/edit"
-              onsubmit="return confirm('Attribut „<?= e($attr['name']) ?>" wirklich löschen?')">
+        <form method="POST" action="/admin/attributes/<?= $group_id ?>/attributes/<?= (int)$attr['id'] ?>/delete">
             <?= csrf_field() ?>
-            <input type="hidden" name="action" value="delete">
             <button type="submit" class="btn btn-outline-danger min-touch">
                 <i class="bi bi-trash me-1"></i>Attribut löschen
             </button>

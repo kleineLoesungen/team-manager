@@ -4,7 +4,7 @@
 //            $departments (departments_list()), $department (?int filter)
 ?>
 <?php if (!empty($_GET['success'])): ?>
-<?php render_flash('success', 'Aktion erfolgreich.'); ?>
+<?php render_flash('success', $_GET['success'] === '1' ? 'Gespeichert.' : (string)$_GET['success']); ?>
 <?php endif; ?>
 <?php if (!empty($error)): ?>
 <?php render_flash('error', $error); ?>
@@ -85,14 +85,6 @@
                         <button type="submit" class="btn btn-sm btn-outline-primary min-touch">Gruppe speichern</button>
                     </div>
                 </form>
-                <!-- Delete group -->
-                <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/delete">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="confirm_delete" value="1">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </form>
             </div>
         </div>
     </div>
@@ -155,16 +147,18 @@
                                     <label class="form-check-label" for="edit_<?= (int)$attr['id'] ?>">Editierbar</label>
                                 </div>
                             </div>
-                            <div class="col-12 d-flex justify-content-between align-items-center">
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-floppy me-1"></i>Speichern
-                                </button>
-                                <button type="submit" class="btn btn-link btn-sm text-danger px-0"
-                                        onclick="this.form.querySelector('[name=action]').value='delete';return confirm('Attribut „<?= e($attr['name']) ?>" löschen?')">
-                                    <i class="bi bi-trash me-1"></i>Löschen
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-sm min-touch">
+                                    <i class="bi bi-floppy me-1"></i>Attribut speichern
                                 </button>
                             </div>
                         </div>
+                    </form>
+                    <form method="POST" action="/admin/attributes/<?= (int)$group['id'] ?>/attributes/<?= (int)$attr['id'] ?>/delete" class="mt-3">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-sm btn-outline-danger min-touch">
+                            <i class="bi bi-trash me-1" aria-hidden="true"></i>Attribut löschen
+                        </button>
                     </form>
                 </div>
             </details>
@@ -220,6 +214,16 @@
                 </div>
             </form>
         </div>
+    </div>
+    <!-- Gefahrenzone der Gruppe: Bestätigung auf eigener Seite -->
+    <div class="card-footer d-flex align-items-center gap-2 flex-wrap">
+        <span class="small text-muted flex-grow-1">Löscht die Gruppe mit allen Attributen und gespeicherten Werten.</span>
+        <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/delete">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-sm btn-outline-danger min-touch">
+                <i class="bi bi-trash me-1" aria-hidden="true"></i>Gruppe löschen
+            </button>
+        </form>
     </div>
 </div>
 <?php endforeach; ?>

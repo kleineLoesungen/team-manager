@@ -180,6 +180,39 @@ function render_filter_pills(array $pills, string $base_url = ''): void {
 }
 
 /**
+ * Confirmation page for a destructive action (UI-Baseline: Gefahrenzone, dann eigene Seite).
+ * Names the concrete consequences and offers "Abbrechen" as a link. The form posts confirm=1.
+ * @param string   $title        Page heading, e.g. "Gruppe löschen?"
+ * @param string   $question     e.g. "Attributgruppe „Fußball“ wirklich löschen?"
+ * @param string[] $consequences Concrete effects, e.g. "3 Attribute", "41 gespeicherte Werte von 17 Mitgliedern"
+ * @param string   $action       POST target
+ * @param string   $button       Verb + Objekt, e.g. "Gruppe endgültig löschen"
+ */
+function render_delete_confirmation(string $title, string $question, array $consequences,
+                                    string $action, string $button, string $cancel_url): void {
+    ?>
+    <?php render_page_header($title, $cancel_url); ?>
+    <div class="alert alert-danger">
+        <p class="fw-semibold mb-2"><?= e($question) ?></p>
+        <?php if ($consequences): ?>
+        <p class="mb-1">Dabei geht unwiderruflich verloren:</p>
+        <ul class="mb-0 ps-3">
+            <?php foreach ($consequences as $c): ?><li><?= e($c) ?></li><?php endforeach; ?>
+        </ul>
+        <?php else: ?>
+        <p class="mb-0">Das lässt sich nicht rückgängig machen.</p>
+        <?php endif; ?>
+    </div>
+    <form method="POST" action="<?= e($action) ?>" class="d-grid gap-3">
+        <?= csrf_field() ?>
+        <input type="hidden" name="confirm" value="1">
+        <button type="submit" class="btn btn-danger min-touch"><?= e($button) ?></button>
+        <a href="<?= e($cancel_url) ?>" class="btn btn-outline-secondary min-touch">Abbrechen</a>
+    </form>
+    <?php
+}
+
+/**
  * Danger zone card. Replaces inline danger zone patterns.
  * @param string $action_label  Text for the trigger button (e.g. "Liste löschen")
  * @param string $description   Short explanation of the destructive action

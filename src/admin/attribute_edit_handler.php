@@ -28,11 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action = $_POST['action'] ?? 'save';
 
-    if ($action === 'delete') {
-        $pdo->prepare("DELETE FROM member_attributes WHERE id = ?")->execute([$attr_id]);
-        redirect('/admin/attributes?success=1');
-    }
-
     $name       = trim($_POST['name'] ?? '');
     $sort_order = (int)($_POST['sort_order'] ?? 0);
     $visible    = !empty($_POST['visible_to_player']);

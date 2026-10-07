@@ -51,10 +51,41 @@ if ($action === 'create') {
     redirect('/admin/attributes');
 
 } elseif ($action === 'delete') {
-    if ($group_id <= 0) redirect('/admin/attributes');
-    // ON DELETE CASCADE will remove child attributes and their values
+    // Zwei Schritte: Bestätigungsseite mit den Folgen, dann (confirm=1) löschen.
+    // ON DELETE CASCADE entfernt die Attribute der Gruppe und alle gespeicherten Werte.
+    $stmt = $pdo->prepare(
+        "SELECT g.name,
+                (SELECT COUNT(*) FROM member_attributes a WHERE a.group_id = g.id) AS attributes,
+                (SELECT COUNT(*) FROM member_attribute_values v JOIN member_attributes a ON a.id = v.attribute_id
+                 WHERE a.group_id = g.id AND v.value <> '') AS values_count,
+                (SELECT COUNT(DISTINCT v.member_id) FROM member_attribute_values v JOIN member_attributes a ON a.id = v.attribute_id
+                 WHERE a.group_id = g.id AND v.value <> '') AS members
+         FROM member_attribute_groups g WHERE g.id = ?"
+    );
+    $stmt->execute([$group_id]);
+    $group = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$group) redirect('/admin/attributes');
+
+    if ((int)($_POST['confirm'] ?? 0) !== 1) {
+        require ROOT_PATH . '/src/templates/admin/layout.php';
+        render_admin_page('Gruppe löschen', 'settings', function () use ($group, $group_id) {
+            render_delete_confirmation(
+                'Gruppe löschen?',
+                'Attributgruppe „' . $group['name'] . '“ wirklich löschen?',
+                array_values(array_filter([
+                    (int)$group['attributes'] ? (int)$group['attributes'] . ' Attribut' . ((int)$group['attributes'] === 1 ? '' : 'e') . ' dieser Gruppe' : null,
+                    (int)$group['values_count'] ? (int)$group['values_count'] . ((int)$group['values_count'] === 1 ? ' gespeicherter Wert' : ' gespeicherte Werte')
+                        . ' von ' . (int)$group['members'] . ' Mitglied' . ((int)$group['members'] === 1 ? '' : 'ern') : null,
+                ])),
+                '/admin/attributes/groups/' . $group_id . '/delete',
+                'Gruppe endgültig löschen',
+                '/admin/attributes'
+            );
+        });
+        return;
+    }
     $pdo->prepare("DELETE FROM member_attribute_groups WHERE id=?")->execute([$group_id]);
-    redirect('/admin/attributes');
+    redirect('/admin/attributes?success=' . urlencode('Gruppe „' . $group['name'] . '“ gelöscht.'));
 
 } else {
     redirect('/admin/attributes');
