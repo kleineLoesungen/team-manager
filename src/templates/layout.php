@@ -69,13 +69,43 @@ function render_layout_foot(): void {
             crossorigin="anonymous"></script>
     <script>
     (function(){
-        /* scroll restore */
-        var skey = 'scroll:' + location.pathname.replace(/\?.*$/, '');
-        var ssaved = sessionStorage.getItem(skey);
-        if (ssaved !== null) { window.scrollTo(0, +ssaved); sessionStorage.removeItem(skey); }
-        document.addEventListener('click', function(e) {
-            var a = e.target.closest('[data-save-scroll]');
-            if (a) sessionStorage.setItem('scroll:' + location.pathname.replace(/\?.*$/, ''), window.scrollY);
+        /* Scroll-Position (UI-Baseline: Zurück führt an dieselbe Stelle)
+           Beim Verlassen merkt sich jede Seite ihre Position je Adresse. Ein Zurück-Link
+           (Pfeil-links-Symbol oder data-back) lässt die Zielseite dorthin springen.
+           data-save-scroll: Bearbeiten-Links in Sammlungen — nach Bearbeiten und Speichern
+           (Weiterleitung zurück, ggf. mit ?success=) steht die Sammlung wieder an derselben Stelle. */
+        var tmHere = function () { return location.pathname + location.search; };
+        var tmStore = {
+            get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+            set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} },
+            del: function (k) { try { sessionStorage.removeItem(k); } catch (e) {} }
+        };
+        window.addEventListener('pagehide', function () { tmStore.set('scroll:' + tmHere(), String(window.scrollY)); });
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest ? e.target.closest('a[href]') : null;
+            if (!a) return;
+            var target = null, hops = 0;
+            if (a.hasAttribute('data-back') || a.querySelector('.bi-arrow-left')) {
+                var u = new URL(a.href, location.href);
+                if (u.origin === location.origin) target = u.pathname + u.search;
+            } else if (a.hasAttribute('data-save-scroll')) {
+                target = tmHere(); hops = 2;   // Bearbeiten-Seite, dann zurück
+            }
+            if (target) tmStore.set('scroll:restore', JSON.stringify({ url: target, hops: hops }));
+        });
+        window.addEventListener('load', function () {   // erst mit Stylesheets/Bildern hat die Seite ihre volle Höhe
+            var want = null;
+            try { want = JSON.parse(tmStore.get('scroll:restore') || 'null'); } catch (e) {}
+            if (!want) return;
+            if (want.url === tmHere() || want.url.split('?')[0] === location.pathname) {
+                tmStore.del('scroll:restore');
+                var y = tmStore.get('scroll:' + want.url);
+                if (y !== null) window.scrollTo(0, +y);
+            } else if (want.hops > 0) {
+                want.hops--; tmStore.set('scroll:restore', JSON.stringify(want));
+            } else {
+                tmStore.del('scroll:restore');
+            }
         });
 
         /* Service Worker (public/sw.js): Installierbarkeit + Offline-Hinweis, kein Daten-Cache */

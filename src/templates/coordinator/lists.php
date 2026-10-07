@@ -293,13 +293,5 @@ $render_card = function(array $item) use ($vis_badge): void {
     var url = u.pathname + u.search;
     if (url !== location.pathname + location.search) history.replaceState(null, '', url);
     sessionStorage.setItem('coordinator_lists_url', url);
-    var saved = sessionStorage.getItem('coordinator_lists_scroll');
-    if (saved !== null) {
-        sessionStorage.removeItem('coordinator_lists_scroll');
-        window.scrollTo(0, parseInt(saved, 10));
-    }
-    window.addEventListener('beforeunload', function() {
-        sessionStorage.setItem('coordinator_lists_scroll', window.scrollY);
-    });
 })();
 </script>
