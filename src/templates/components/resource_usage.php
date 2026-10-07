@@ -17,7 +17,7 @@ function resource_usage_page_data(PDO $pdo): array {
     return [
         'resources' => $resources,
         'selected'  => $selected,
-        'days'      => $resources ? resources_usage($pdo, $selected, $today) : [],
+        'days'      => resources_usage($pdo, $selected !== null ? [$selected] : $ids, $today),   // nur Ressourcen der Abteilung
         'ics_url'   => $token ? absolute_url('/ics/resource/' . $token . '.ics') : null,
     ];
 }

@@ -60,9 +60,20 @@ function maybe_init_db(PDO $pdo): void {
 function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("SET search_path TO {$s}, public");
 
+    // departments — group teams and resources; a fresh install starts with "Allgemein"
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.departments (
+        id          SERIAL PRIMARY KEY,
+        name        VARCHAR(100) NOT NULL,
+        is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )");
+    $pdo->exec("INSERT INTO {$s}.departments (name)
+        SELECT 'Allgemein' WHERE NOT EXISTS (SELECT 1 FROM {$s}.departments)");
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.teams (
         id                          SERIAL PRIMARY KEY,
         name                        VARCHAR(100) NOT NULL,
+        department_id               INTEGER NOT NULL REFERENCES {$s}.departments(id),
         is_active                   BOOLEAN NOT NULL DEFAULT TRUE,
         sort_order                  INTEGER NOT NULL DEFAULT 0,
         logo_path                   VARCHAR(500) NULL,
@@ -71,6 +82,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,
         created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_teams_department ON {$s}.teams(department_id)");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.users (
         id             SERIAL PRIMARY KEY,
@@ -378,6 +390,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.resources (
         id             SERIAL PRIMARY KEY,
         name           VARCHAR(100) NOT NULL,
+        department_id  INTEGER NOT NULL REFERENCES {$s}.departments(id),
         is_active      BOOLEAN NOT NULL DEFAULT TRUE,
         calendar_token CHAR(64) NULL UNIQUE,
         created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -392,6 +405,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         CHECK (num_nonnulls(list_id, event_id) = 1)
     )");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_resources_department ON {$s}.resources(department_id)");
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_list  ON {$s}.resource_bookings(resource_id, list_id)  WHERE list_id  IS NOT NULL");
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_event ON {$s}.resource_bookings(resource_id, event_id) WHERE event_id IS NOT NULL");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_resource_bookings_list  ON {$s}.resource_bookings(list_id)");
@@ -1082,6 +1096,22 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
             AND created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer
             AND EXISTS (SELECT 1 FROM {$s}.teams t WHERE t.id = events.team_id AND t.members_create_events))
+    )");
+    // ── departments RLS ───────────────────────────────────────────────────────
+    $pdo->exec("ALTER TABLE {$s}.departments ENABLE ROW LEVEL SECURITY");
+    $pdo->exec("ALTER TABLE {$s}.departments FORCE ROW LEVEL SECURITY");
+    $pdo->exec("CREATE POLICY departments_select ON {$s}.departments FOR SELECT USING (
+        current_setting('app.is_admin', true) = 'true'
+        OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
+    )");
+    $pdo->exec("CREATE POLICY departments_insert ON {$s}.departments FOR INSERT WITH CHECK (
+        current_setting('app.is_admin', true) = 'true'
+    )");
+    $pdo->exec("CREATE POLICY departments_update ON {$s}.departments FOR UPDATE USING (
+        current_setting('app.is_admin', true) = 'true'
+    )");
+    $pdo->exec("CREATE POLICY departments_delete ON {$s}.departments FOR DELETE USING (
+        current_setting('app.is_admin', true) = 'true'
     )");
     // ── resources RLS ─────────────────────────────────────────────────────────
     $pdo->exec("ALTER TABLE {$s}.resources ENABLE ROW LEVEL SECURITY");

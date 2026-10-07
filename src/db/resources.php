@@ -1,8 +1,8 @@
 <?php
 // src/db/resources.php — Ressourcen (Platz, Halle, Bus …) und ihre Belegung durch Listen und Termine
 //
-// Der Admin pflegt die Ressourcen für alle Teams. Koordinatoren wählen sie bei Listen und
-// Terminen aus (resource_bookings). Die Zeit einer Belegung kommt immer aus Datum und Uhrzeit
+// Der Admin pflegt die Ressourcen, jede gehört zu einer Abteilung. Teams wählen nur Ressourcen
+// ihrer Abteilung bei Listen und Terminen aus (resource_bookings) und sehen nur deren Auslastung. Die Zeit einer Belegung kommt immer aus Datum und Uhrzeit
 // der Liste bzw. des Termins:
 //   ohne Uhrzeit oder ganztägig  → der ganze Tag
 //   ohne Ende                    → 1 Stunde (wie im Kalender-Export)
@@ -12,10 +12,19 @@ declare(strict_types=1);
 
 const RESOURCE_PICKER_SWITCH_MAX = 5;   // bis hier ein Schalter je Ressource, darüber Chips
 
-/** Active resources (id, name), for the selection in forms. Works in any team context. */
-function resources_active(PDO $pdo): array {
-    return $pdo->query("SELECT id, name FROM resources WHERE is_active = TRUE ORDER BY name")
-               ->fetchAll(PDO::FETCH_ASSOC);
+/**
+ * Active resources (id, name) of the team's department — what the team may select and see.
+ * Default team: the signed-in one.
+ */
+function resources_active(PDO $pdo, ?int $team_id = null): array {
+    $team_id ??= (int)($_SESSION['team_id'] ?? 0);
+    $stmt = $pdo->prepare(
+        "SELECT id, name FROM resources
+         WHERE is_active = TRUE AND department_id = (SELECT department_id FROM teams WHERE id = ?)
+         ORDER BY name"
+    );
+    $stmt->execute([$team_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /** Resource ids booked by one list or event (own team, RLS). */
@@ -44,19 +53,21 @@ function resources_from_post(): array {
 }
 
 /**
- * Replace the bookings of one list or event with $resource_ids. Inactive resources that are
- * already booked stay booked (they are not shown in the form); unknown ids are ignored.
- * Caller provides the coordinator's team context (RLS) and, if wanted, the transaction.
+ * Replace the bookings of one list or event with $resource_ids. Only the resources the form
+ * offers (active, team's department) are touched; other bookings stay as they are, unknown
+ * ids are ignored. Caller provides the team context (RLS) and, if wanted, the transaction.
  */
 function resources_save(PDO $pdo, int $team_id, string $kind, int $id, array $resource_ids): void {
     $col = $kind === 'event' ? 'event_id' : 'list_id';
     $pdo->prepare(
         "DELETE FROM resource_bookings
-         WHERE $col = ? AND resource_id IN (SELECT id FROM resources WHERE is_active = TRUE)"
-    )->execute([$id]);
+         WHERE $col = ? AND resource_id IN (
+             SELECT id FROM resources
+             WHERE is_active = TRUE AND department_id = (SELECT department_id FROM teams WHERE id = ?))"
+    )->execute([$id, $team_id]);
     if (!$resource_ids) return;
 
-    $active = array_column(resources_active($pdo), 'id');
+    $active = array_column(resources_active($pdo, $team_id), 'id');
     $active = array_map('intval', $active);
     $ins = $pdo->prepare(
         "INSERT INTO resource_bookings (resource_id, team_id, $col) VALUES (?, ?, ?)
@@ -235,16 +246,18 @@ function resources_conflict_count(PDO $pdo, string $kind, array $ids): int {
 }
 
 /**
- * Usage of all (or one) resource from $from (Y-m-d) on, all teams, grouped by date.
+ * Usage of the given resources (the team's department, or one of them) from $from (Y-m-d) on,
+ * bookings of all teams, grouped by date.
  * Each row is presented for the viewer and carries 'overlap' (another booking at that time).
  * @return array<string, list<array>> date => rows, ordered by time
  */
-function resources_usage(PDO $pdo, ?int $resource_id, string $from, int $limit = 300): array {
-    $rows = resources_as_admin($pdo, function () use ($pdo, $resource_id, $from, $limit) {
+function resources_usage(PDO $pdo, array $resource_ids, string $from, int $limit = 300): array {
+    $resource_ids = array_values(array_filter(array_map('intval', $resource_ids)));
+    if (!$resource_ids) return [];
+    $rows = resources_as_admin($pdo, function () use ($pdo, $resource_ids, $from, $limit) {
         $slots  = resources_slots_sql();
-        $params = [$from];
-        $filter = '';
-        if ($resource_id !== null) { $filter = ' AND me.resource_id = ?'; $params[] = $resource_id; }
+        $params = [$from, '{' . implode(',', $resource_ids) . '}'];
+        $filter = ' AND me.resource_id = ANY(CAST(? AS int[]))';
         $stmt = $pdo->prepare(
             "WITH s AS ($slots)
              SELECT me.*, EXISTS (

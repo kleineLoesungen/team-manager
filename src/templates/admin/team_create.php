@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/team_create.php — Create team form
-// Variables: $error (string)
+// Variables: $error (string), $departments (departments_list())
 ?>
 <?php if (!empty($error)): render_flash('error', $error); endif; ?>
 
@@ -23,6 +23,7 @@
                placeholder="z.B. U17 Herren"
                autofocus>
     </div>
+    <?php render_department_select($departments, null, 'Das Team sieht nur Ressourcen seiner Abteilung.'); ?>
     <div class="mb-4">
         <label for="sort_order" class="form-label fw-semibold">Sortiernummer</label>
         <input type="number"

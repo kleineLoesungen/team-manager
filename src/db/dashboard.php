@@ -13,6 +13,8 @@
 
 declare(strict_types=1);
 
+require_once ROOT_PATH . '/src/db/resources.php';
+
 const DASHBOARD_DAYS = 7;
 const DASHBOARD_VALUES_SHOWN = 4;   // weitere Spalten werden als "+n" zusammengefasst
 
@@ -313,7 +315,7 @@ function dashboard_data(PDO $pdo, string $role): array {
         'values'   => [],
         'columns'  => [],
         'totals'   => [],
-        'has_resources' => (bool)$pdo->query("SELECT 1 FROM resources WHERE is_active = TRUE LIMIT 1")->fetchColumn(),
+        'has_resources' => (bool)resources_active($pdo, $team_id),   // Ressourcen der eigenen Abteilung
     ];
 
     if (!$is_coordinator) {

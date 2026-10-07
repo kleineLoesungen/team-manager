@@ -792,3 +792,21 @@ CREATE POLICY resource_bookings_delete ON team_manager.resource_bookings FOR DEL
                     WHERE e.id = resource_bookings.event_id AND e.team_id = resource_bookings.team_id
                       AND e.created_by = NULLIF(current_setting('app.current_user_id', true), '')::integer))
 );
+
+-- ── Departments RLS ──────────────────────────────────────────────────────────
+-- Everyone signed in reads them (team/resource context); only the admin changes them.
+ALTER TABLE team_manager.departments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.departments FORCE ROW LEVEL SECURITY;
+CREATE POLICY departments_select ON team_manager.departments FOR SELECT USING (
+    current_setting('app.is_admin', true) = 'true'
+    OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
+);
+CREATE POLICY departments_insert ON team_manager.departments FOR INSERT WITH CHECK (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY departments_update ON team_manager.departments FOR UPDATE USING (
+    current_setting('app.is_admin', true) = 'true'
+);
+CREATE POLICY departments_delete ON team_manager.departments FOR DELETE USING (
+    current_setting('app.is_admin', true) = 'true'
+);

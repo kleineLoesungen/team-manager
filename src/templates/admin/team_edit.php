@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/team_edit.php — Edit team form
-// Variables: $team (array with id, name, sort_order), $error (string)
+// Variables: $team (array with id, name, sort_order, department_id), $error (string), $departments
 ?>
 <?php if (!empty($error)): render_flash('error', $error); endif; ?>
 
@@ -23,6 +23,8 @@
                maxlength="100"
                autofocus>
     </div>
+    <?php render_department_select($departments, (int)$team['department_id'],
+        'Wechselt das Team die Abteilung, bleiben gebuchte Ressourcen der alten Abteilung bestehen, sind aber nicht mehr auswählbar.'); ?>
     <div class="mb-4">
         <label for="sort_order" class="form-label fw-semibold">Sortiernummer</label>
         <input type="number"
@@ -35,7 +37,7 @@
         <div class="form-text">Niedrigere Zahl = weiter oben. 0 = keine Sortierung.</div>
     </div>
     <button type="submit" class="btn btn-primary min-touch">
-        <i class="bi bi-check-lg me-1"></i>Speichern
+        <i class="bi bi-check-lg me-1"></i>Team speichern
     </button>
 </form>
 

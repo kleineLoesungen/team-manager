@@ -1,6 +1,7 @@
 <?php
 // src/templates/public/ticker_overview.php — Public ticker list (no auth)
-// Variables: $teams_with_tickers (array of {team, tickers[]}), $app_title (string)
+// Variables: $teams_with_tickers (array of {team (id, name, department_name), tickers[]}, ordered by
+//            department, then team), $app_title (string). Grouped: Abteilung → Team → aktiv / geschlossen.
 require_once dirname(__DIR__, 2) . '/templates/layout.php';
 render_page(['title' => $app_title ?? 'Live-Ticker', 'role' => 'public'], function() use ($teams_with_tickers, $app_title) {
     ?>
@@ -8,14 +9,18 @@ render_page(['title' => $app_title ?? 'Live-Ticker', 'role' => 'public'], functi
     <?php render_empty('megaphone', 'Keine Ticker vorhanden', 'Es sind derzeit keine Live-Ticker aktiv.'); ?>
     <?php else: ?>
 
-    <?php foreach ($teams_with_tickers as $entry):
+    <?php $prev_department = null;
+    foreach ($teams_with_tickers as $entry):
         $team    = $entry['team'];
         $tickers = $entry['tickers'];
         $active  = array_values(array_filter($tickers, fn($t) => $t['status'] === 'active'));
         $closed  = array_values(array_filter($tickers, fn($t) => $t['status'] === 'closed'));
     ?>
 
-    <h2 class="h6 fw-semibold text-muted mb-2 <?= $entry !== reset($teams_with_tickers) ? 'mt-4' : '' ?>"><?= e($team['name']) ?></h2>
+    <?php if ($team['department_name'] !== $prev_department): $prev_department = $team['department_name']; ?>
+    <h2 class="h3 mb-2 <?= $entry !== reset($teams_with_tickers) ? 'mt-4' : '' ?>"><?= e($team['department_name']) ?></h2>
+    <?php endif; ?>
+    <h3 class="h6 fw-semibold text-muted mb-2 mt-3"><?= e($team['name']) ?></h3>
 
     <?php if (!empty($active)): ?>
     <div class="list-group mb-3">

@@ -4,8 +4,13 @@
 declare(strict_types=1);
 
 require_admin();
+require_once ROOT_PATH . '/src/db/departments.php';
 
 $pdo = get_db();
+
+// Abteilungen als Filter (?department=): dann nur Teams dieser Abteilung mit ihren Koordinatoren
+$departments = departments_list($pdo);
+$department  = department_filter($departments);
 
 // All coordinators with full data — personal info from players (canonical person table)
 $coordinators_stmt = $pdo->query(
@@ -35,9 +40,13 @@ foreach ($ct_stmt->fetchAll() as $row) {
 }
 
 // Active teams in sort order — for grouped display
-$active_teams = $pdo->query(
-    "SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY sort_order ASC, name ASC"
-)->fetchAll();
+$teams_stmt = $pdo->prepare(
+    "SELECT id, name FROM teams
+     WHERE is_active = TRUE AND (CAST(? AS int) IS NULL OR department_id = ?)
+     ORDER BY sort_order ASC, name ASC"
+);
+$teams_stmt->execute([$department, $department]);
+$active_teams = $teams_stmt->fetchAll();
 
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 $success = !empty($_GET['success']) ? e($_GET['success']) : '';
@@ -45,8 +54,8 @@ $success = !empty($_GET['success']) ? e($_GET['success']) : '';
 $active_coordinators   = array_filter($all_coordinators, fn($c) =>  $c['is_active']);
 $inactive_coordinators = array_filter($all_coordinators, fn($c) => !$c['is_active']);
 
-// Active coordinators with no team assignment
-$active_no_team = array_values(array_filter(
+// Active coordinators with no team assignment (no department — not shown when filtering)
+$active_no_team = $department !== null ? [] : array_values(array_filter(
     $active_coordinators,
     fn($c) => empty($team_coordinator_ids) || !array_reduce(
         $active_teams,
@@ -57,13 +66,24 @@ $active_no_team = array_values(array_filter(
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
+if ($department !== null) {
+    // Gefiltert: nur Koordinatoren mit einem Team dieser Abteilung zählen und zeigen
+    $in_department = [];
+    foreach ($active_teams as $t) {
+        foreach ($team_coordinator_ids[$t['id']] ?? [] as $uid) $in_department[$uid] = true;
+    }
+    $active_coordinators   = array_filter($active_coordinators, fn($c) => isset($in_department[(int)$c['id']]));
+    $inactive_coordinators = [];
+}
+
 render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
     $active_coordinators, $inactive_coordinators, $active_no_team,
     $active_teams, $team_coordinator_ids, $coordinator_team_names,
-    $coordinators_by_id, $error, $success
+    $coordinators_by_id, $error, $success, $departments, $department
 ) {
     if ($error)   echo '<div class="alert alert-danger">'  . $error   . '</div>';
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
+    render_department_filter($departments, $department, '/admin/coordinators');
     ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <span class="text-muted"><?= count($active_coordinators) ?> aktive Koordinatoren</span>

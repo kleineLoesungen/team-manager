@@ -793,6 +793,44 @@ function render_resource_conflict_notice(int $count, string $usage_url): void {
     <?php
 }
 
+/** Filter pills "Alle" + one per department, keeping other query parameters. */
+function render_department_filter(array $departments, ?int $selected, string $base): void {
+    if (count($departments) < 2) return;   // eine Abteilung: nichts zu filtern
+    $url = function (?int $id) use ($base): string {
+        $q = $_GET;
+        unset($q['department'], $q['success'], $q['error']);
+        if ($id !== null) $q['department'] = $id;
+        return $base . ($q ? '?' . http_build_query($q) : '');
+    };
+    $pills = [['label' => 'Alle', 'url' => $url(null), 'active' => $selected === null]];
+    foreach ($departments as $d) {
+        $pills[] = ['label' => $d['name'], 'url' => $url((int)$d['id']), 'active' => (int)$d['id'] === $selected];
+    }
+    render_filter_pills($pills);
+}
+
+/**
+ * Required department select (admin: teams, resources). Shows active departments plus the
+ * current one, even if it was deactivated, so saving does not silently move the item.
+ * @param array $departments departments_list()
+ */
+function render_department_select(array $departments, ?int $selected, string $hint = ''): void {
+    $shown = array_filter($departments, fn($d) => in_array($d['is_active'], [true, 1, '1', 't'], true)
+                                                 || (int)$d['id'] === $selected);
+    ?>
+    <div class="mb-3">
+        <label for="department_id" class="form-label fw-semibold">Abteilung <span class="text-danger">*</span></label>
+        <select id="department_id" name="department_id" class="form-select" required>
+            <?php if ($selected === null && count($shown) > 1): ?><option value="">Abteilung wählen</option><?php endif; ?>
+            <?php foreach ($shown as $d): ?>
+            <option value="<?= (int)$d['id'] ?>" <?= (int)$d['id'] === $selected ? 'selected' : '' ?>><?= e($d['name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <?php if ($hint !== ''): ?><div class="form-text"><?= e($hint) ?></div><?php endif; ?>
+    </div>
+    <?php
+}
+
 /**
  * Link tile: icon, title, one line of explanation, chevron — leads to another page
  * (Ressourcen in der Übersicht, Ticker aller Teams, Admin-Einstellungen).

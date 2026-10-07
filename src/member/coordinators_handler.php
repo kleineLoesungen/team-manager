@@ -1,7 +1,8 @@
 <?php
 // src/member/coordinators_handler.php — GET /member/coordinators
 // Own team's coordinators are always shown.
-// When 'show_coordinators_for_members' is enabled, coordinators from all other active teams are shown too.
+// When 'show_coordinators_for_members' is enabled, coordinators of the other active teams in the
+// same department (Abteilung) are shown too — not those of other departments.
 
 declare(strict_types=1);
 
@@ -36,13 +37,14 @@ if ($show_all_teams) {
                 t.name AS team_name
          FROM coordinator_teams ct
          JOIN teams t ON t.id = ct.team_id AND t.is_active = TRUE
+                     AND t.department_id = (SELECT department_id FROM teams WHERE id = ?)
          JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
          JOIN members p ON p.id = u.member_id
          LEFT JOIN organizations cl ON cl.id = p.organization_id
          WHERE ct.team_id != ? AND ct.left_at IS NULL
          ORDER BY t.name ASC, p.first_name ASC, p.last_name ASC"
     );
-    $other_stmt->execute([$_SESSION['team_id']]);
+    $other_stmt->execute([$_SESSION['team_id'], $_SESSION['team_id']]);
     foreach ($other_stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $team = $row['team_name'];
         if (!isset($other_teams[$team])) {

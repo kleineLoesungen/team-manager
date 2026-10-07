@@ -31,6 +31,7 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
                 <?php endif; ?>
                 <?= e($team['name']) ?>
                 <?php render_badge('ok', 'Aktiv'); ?>
+                <?php render_badge('dim', $team['department_name'], 'bi-diagram-3'); ?>
             </div>
         </div>
         <?php
@@ -73,6 +74,7 @@ $inactive_teams = array_filter($teams, fn($t) => !$t['is_active']);
             <div class="fw-semibold text-muted">
                 <?= e($team['name']) ?>
                 <?php render_badge('dim', 'Inaktiv'); ?>
+                <?php render_badge('dim', $team['department_name'], 'bi-diagram-3'); ?>
             </div>
         </div>
         <?php

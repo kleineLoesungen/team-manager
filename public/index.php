@@ -107,6 +107,24 @@ match (true) {
         => require ROOT_PATH . '/src/admin/notify_coordinators_handler.php',
 
     // ── Admin: Organizations ────────────────────────────────────────────────────
+    $path === '/admin/departments'
+        => require ROOT_PATH . '/src/admin/departments_handler.php',
+
+    // /admin/departments/{id}/edit — GET+POST: rename
+    (bool)preg_match('#^/admin/departments/(\d+)/edit$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['department_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/department_edit_handler.php';
+        })(),
+
+    // /admin/departments/{id}/(deactivate|reactivate) — POST actions
+    (bool)preg_match('#^/admin/departments/(\d+)/(deactivate|reactivate)$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['department_id'] = (int)$matches[1];
+            $_REQUEST['action']        = $matches[2];
+            require ROOT_PATH . '/src/admin/department_action_handler.php';
+        })(),
+
     $path === '/admin/resources'
         => require ROOT_PATH . '/src/admin/resources_handler.php',
 

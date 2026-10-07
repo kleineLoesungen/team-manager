@@ -125,7 +125,11 @@ $resource_line   = $resource_active
     ? implode(', ', $resource_active) . ($resource_off ? ' · ' . $resource_off . ' deaktiviert' : '')
     : 'Noch keine — Plätze, Hallen, Busse für alle Teams anlegen';
 
-render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted, $resource_line) {
+// Abteilungen für die Kachel (Namen der aktiven)
+$department_line = implode(', ', array_column(get_db()->query("SELECT name FROM departments WHERE is_active = TRUE ORDER BY name")->fetchAll(PDO::FETCH_ASSOC), 'name'))
+    ?: 'Noch keine — gruppieren Teams und Ressourcen';
+
+render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted, $resource_line, $department_line) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
@@ -165,17 +169,17 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
                     <div class="form-text">Wird nur für Teams verwendet, die noch kein eigenes Logo hochgeladen haben. Max. 2 MB. PNG, JPEG, GIF, WebP, SVG.</div>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label fw-semibold">Koordinatoren aller Teams</label>
+                    <label class="form-label fw-semibold">Koordinatoren der Abteilung</label>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox"
                                id="show_coordinators_for_members"
                                name="show_coordinators_for_members" value="1"
                                <?= $show_coordinators_for_members ? 'checked' : '' ?>>
                         <label class="form-check-label" for="show_coordinators_for_members">
-                            Koordinatoren aller Teams für Mitglieder anzeigen
+                            Koordinatoren aller Teams der Abteilung für Mitglieder anzeigen
                         </label>
                     </div>
-                    <div class="form-text">Mitglieder sehen immer die Koordinatoren ihres eigenen Teams. Wenn aktiviert, werden zusätzlich Koordinatoren aller anderen Teams angezeigt.</div>
+                    <div class="form-text">Mitglieder sehen immer die Koordinatoren ihres eigenen Teams. Wenn aktiviert, zusätzlich die der anderen Teams derselben Abteilung — nie die anderer Abteilungen.</div>
                 </div>
                 <button type="submit" class="btn btn-primary min-touch">Speichern</button>
             </form>
@@ -200,6 +204,7 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
 
     <?php
     $tiles = [
+        ['/admin/departments', 'bi-diagram-3',   'Abteilungen',      $department_line],
         ['/admin/resources',  'bi-box-seam',     'Ressourcen',       $resource_line],
         ['/admin/attributes', 'bi-tags',         'Attribut-Gruppen', 'Eigene Felder für Mitgliederprofile'],
         ['/admin/notify',     'bi-envelope',     'Benachrichtigungen', 'Nachricht an die Koordinatoren senden'],

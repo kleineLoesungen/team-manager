@@ -6,10 +6,22 @@
 CREATE SCHEMA IF NOT EXISTS team_manager;
 SET search_path TO team_manager, public;
 
+-- Departments — group teams and resources within the organisation (e.g. Fußball, Tennis).
+-- Every team and every resource belongs to exactly one; members and organisations do not.
+CREATE TABLE IF NOT EXISTS team_manager.departments (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO team_manager.departments (name)
+SELECT 'Allgemein' WHERE NOT EXISTS (SELECT 1 FROM team_manager.departments);
+
 -- Teams table
 CREATE TABLE IF NOT EXISTS team_manager.teams (
     id                          SERIAL PRIMARY KEY,
     name                        VARCHAR(100) NOT NULL,
+    department_id               INTEGER NOT NULL REFERENCES team_manager.departments(id),
     is_active                   BOOLEAN NOT NULL DEFAULT TRUE,
     sort_order                  INTEGER NOT NULL DEFAULT 0,
     logo_path                   VARCHAR(500)         NULL,
@@ -18,6 +30,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
     members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,   -- Mitglieder dürfen Termine anlegen
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS idx_teams_department ON team_manager.teams(department_id);
 
 -- Users table — coordinators and members only (admin is in config.php, per D-02)
 -- member_id: FK to members (canonical identity); organization_id: coordinator's home organization
@@ -371,6 +384,7 @@ CREATE INDEX IF NOT EXISTS idx_events_date    ON team_manager.events(date);
 CREATE TABLE IF NOT EXISTS team_manager.resources (
     id             SERIAL PRIMARY KEY,
     name           VARCHAR(100) NOT NULL,
+    department_id  INTEGER NOT NULL REFERENCES team_manager.departments(id),   -- nur Teams dieser Abteilung belegen sie
     is_active      BOOLEAN NOT NULL DEFAULT TRUE,
     calendar_token CHAR(64) NULL UNIQUE,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -386,6 +400,7 @@ CREATE TABLE IF NOT EXISTS team_manager.resource_bookings (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (num_nonnulls(list_id, event_id) = 1)
 );
+CREATE INDEX IF NOT EXISTS idx_resources_department ON team_manager.resources(department_id);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_list  ON team_manager.resource_bookings(resource_id, list_id)  WHERE list_id  IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_event ON team_manager.resource_bookings(resource_id, event_id) WHERE event_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_resource_bookings_list  ON team_manager.resource_bookings(list_id);

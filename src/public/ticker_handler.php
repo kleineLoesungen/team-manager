@@ -9,9 +9,12 @@ $pdo = get_db();
 // Admin bypass lets us query all teams + tickers without a team context
 set_admin_context($pdo);
 
-// Fetch all active teams
+// Fetch all active teams, grouped by department (Abteilung → Team)
 $teams_rows = $pdo->query(
-    "SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY name"
+    "SELECT t.id, t.name, d.name AS department_name
+     FROM teams t JOIN departments d ON d.id = t.department_id
+     WHERE t.is_active = TRUE
+     ORDER BY d.name, t.sort_order, t.name"
 )->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($teams_rows)) {

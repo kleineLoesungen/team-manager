@@ -15,10 +15,12 @@ Weitere Bausteine:
 
 ## Datenmodell
 
-Die Anwendung gliedert sich in fünf Bereiche: Teamverwaltung, Inhalte (Listen/Spalten/Zellen als EAV, Dokumente, Termine), Ressourcen, Live-Ticker und Mitgliedsprofile. Das Diagramm zeigt die wichtigsten Tabellen; die vollständige Liste steht in `CLAUDE.md`.
+Die Anwendung gliedert sich in fünf Bereiche: Teamverwaltung (Abteilungen, Teams, Koordinatoren), Inhalte (Listen/Spalten/Zellen als EAV, Dokumente, Termine), Ressourcen, Live-Ticker und Mitgliedsprofile (mit Organisationen). Das Diagramm zeigt die wichtigsten Tabellen; die vollständige Liste steht in `CLAUDE.md`.
 
 ```mermaid
 erDiagram
+    departments ||--o{ teams : ""
+    departments ||--o{ resources : ""
     teams ||--o{ lists : ""
     teams ||--o{ columns : "global"
     teams ||--o{ tickers : ""
@@ -62,7 +64,8 @@ erDiagram
 | `teams → users` | Ein Team hat mehrere Koordinatoren und Mitglieder; `users.team_id` gibt das Ursprungsteam an. |
 | `teams → coordinator_teams ← users` | Koordinatoren können mehreren Teams zugeordnet sein; `coordinator_teams` ist die Wahrheitsquelle für aktive Zugehörigkeiten. |
 | `users → members` | Jeder Benutzeraccount ist mit einem dauerhaften Mitgliedsprofil verknüpft, das teamübergreifend gültig ist. |
-| `organizations → members` | Ein Verein bündelt Mitglieder; ein Mitglied gehört optional zu genau einem Verein. |
+| `departments → teams / resources` | Eine Abteilung (z. B. Fußball, Tennis) gruppiert Teams und Ressourcen; beides gehört zu genau einer Abteilung. Ein Team sieht nur die Ressourcen seiner Abteilung. Mitglieder und Organisationen gehören zu keiner Abteilung. |
+| `organizations → members` | Eine Organisation (z. B. ein Verein) bündelt Mitglieder; ein Mitglied gehört optional zu genau einer Organisation. Auch Koordinatoren haben eine Organisation. |
 | `teams → lists` | Ein Team verwaltet beliebig viele Listen (z. B. Trainings, Spiele). |
 | `lists → columns (lokal)` | Lokale Spalten (`columns.list_id IS NOT NULL`) gehören ausschließlich zu einer Liste und können vom Typ Text, Zahl oder Ja/Nein sein. |
 | `teams → columns (global)` | Globale Spalten (`list_id IS NULL`) stehen teamweit zur Verfügung; Systemspalten (`team_id IS NULL`, `is_system = TRUE`) gelten für alle Teams. |
@@ -368,14 +371,19 @@ Den Link zeigt die Auslastungsseite, sobald eine Ressource ausgewählt ist.
 
 ## Ressourcen und Termine
 
-**Ressourcen** legt der Admin unter Einstellungen → Ressourcen an (Name genügt); deaktivierte
+**Abteilungen** legt der Admin unter Einstellungen → Abteilungen an. Jedes Team und jede
+Ressource gehört zu genau einer; die Admin-Listen für Teams, Koordinatoren und Ressourcen lassen
+sich danach filtern. Mitglieder sehen in der Koordinatorenübersicht nur Teams ihrer Abteilung,
+der öffentliche Ticker gruppiert nach Abteilung und Team. Code: `src/db/departments.php`.
+
+**Ressourcen** legt der Admin unter Einstellungen → Ressourcen an (Name und Abteilung); deaktivierte
 Ressourcen sind nicht mehr auswählbar, ihre Belegungen bleiben gespeichert. Koordinatoren
 wählen Ressourcen beim Anlegen einer Liste (auch für eine ganze Serie), in den
 Listen-Einstellungen und bei Terminen. Die Belegungszeit ergibt sich aus dem Eintrag:
 ohne Uhrzeit der ganze Tag, ohne Ende eine Stunde, Listen ohne Datum belegen nichts.
 Überschneidungen werden schon im Formular angezeigt (`/…/resources/check`), sind aber erlaubt.
-Die Auslastung aller Teams (`/coordinator/resources`, `/member/resources`) sehen alle
-Angemeldeten; Einträge, die das eigene Team nicht sehen darf, heißen dort „Belegt".
+Die Auslastung (`/coordinator/resources`, `/member/resources`) zeigt die Ressourcen der eigenen
+Abteilung mit den Belegungen aller Teams; Einträge, die das eigene Team nicht sehen darf, heißen dort „Belegt".
 Code: `src/db/resources.php`.
 
 **Termine durch Mitglieder:** Koordinatoren schalten das unter Profil → Einstellungen →
@@ -587,7 +595,7 @@ public/             Webroot (index.php — Front Controller, .htaccess)
   sw.js, offline.html   Service Worker (Installation, Offline-Hinweis, Push) — ohne Seiten-Cache
   icons/            App-Icons (192/512/maskable/apple-touch)
 src/
-  admin/            Admin-Handler (Teams, Koordinatoren, Mitglieder, Klubs, Ressourcen, Einstellungen)
+  admin/            Admin-Handler (Abteilungen, Teams, Koordinatoren, Mitglieder, Organisationen, Ressourcen, Einstellungen)
   auth/             Login, Logout, Session, Umleitung bei falscher Rolle
   coordinator/      Koordinator-Handler (Inhalte, Termine, Spalten, Mitglieder, Statistik, Dateien, Ticker, Ressourcen, Logo)
   member/           Mitglieder-Handler (Inhalte, Termine, Statistik, Dateien, Ticker, Ressourcen, Profil)

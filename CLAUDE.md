@@ -85,6 +85,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 - Settings stored in `settings` table as key/value pairs (e.g. `app_title`, `default_team_logo`)
 - Schema changes: update `database/schema.sql`, `database/rls_policies.sql` and `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` together; ship a one-time script in `database/migrations/` (pure SQL for pgAdmin, `SET LOCAL search_path TO SCHEMA_EINTRAGEN`, `to_regclass` guard, idempotent). The user runs it before deploying; delete it in the next commit once they confirm.
 - Cross-team reads (resource usage, other teams' tickers) run briefly in admin context and restore the role's context (`resources_as_admin()`)
+- Departments: a team only sees resources of its department (`resources_active()` filters by the team); naming follows the domain — `organizations` (not clubs), contents overview `/…/contents` (single lists stay `/…/lists/{id}`)
 - Events: members write only their own (`events.created_by`) and only if `teams.members_create_events`; enforced in `src/db/events.php` and by RLS on `events` + `resource_bookings`
 
 ### Deployment
@@ -99,7 +100,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 ```
 public/             Webroot — index.php front controller + .htaccess
 src/
-  admin/            Admin handlers (teams, coordinators, members, organizations, resources, settings)
+  admin/            Admin handlers (departments, teams, coordinators, members, organizations, resources, settings)
   auth/             Login, logout, session, role mismatch redirect (role_redirect.php)
   coordinator/      Coordinator handlers (lists, events, columns, members, stats, files, logo, ticker, resources)
   member/           Member handlers (lists, events, stats, files, ticker, resources, coordinators, profile)
@@ -146,14 +147,15 @@ Browser → public/index.php (front controller)
 
 | Table | Purpose |
 |-------|---------|
-| `teams` | Teams with name, active flag, logo path, ICS tokens, `members_create_events` |
+| `departments` | Departments (e.g. Fußball, Tennis) grouping teams and resources; members and organizations have none |
+| `teams` | Teams with name, `department_id`, active flag, logo path, ICS tokens, `members_create_events` |
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
-| `players` | Player profiles linked to users via `player_id` |
-| `organizations` | Organizations that players belong to |
-| `player_attribute_groups` | Groups for custom player attributes (e.g. "Medizin") |
-| `player_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
-| `player_attribute_values` | Attribute values per player |
+| `members` | Member profiles (the person, across teams), linked from `users.member_id`; `organization_id` |
+| `organizations` | Organizations (e.g. clubs) that members and coordinators belong to — formerly `clubs` |
+| `member_attribute_groups` | Groups for custom member attributes (e.g. "Medizin") |
+| `member_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
+| `member_attribute_values` | Attribute values per member |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |
 | `lists` | Team lists with visibility, type (member/free), date, description |
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
@@ -172,7 +174,7 @@ Browser → public/index.php (front controller)
 | `ticker_subscriptions` | Opt-in per ticker and user: start notice + every new entry |
 | `ticker_push_state` | Marks a ticker's start notice as sent (exactly once) |
 | `ticker_seen` | When a user last opened the ticker overview per team (dot on the Ticker tab, "Neu" badge) |
-| `resources` | Bookable resources for all teams (pitch, hall, bus), managed by the admin; ics token per resource |
+| `resources` | Bookable resources (pitch, hall, bus) of one department, managed by the admin; ics token per resource |
 | `resource_bookings` | Which list or event uses a resource (time comes from the list/event; overlaps only warn) |
 
 Admin credentials live in `config.php` / environment variables — not in the DB.
