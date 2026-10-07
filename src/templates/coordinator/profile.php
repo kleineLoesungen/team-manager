@@ -14,7 +14,7 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
     <div>
         <strong>Willkommen!</strong> Bitte überprüfe und bestätige deine Kontaktdaten, bevor du fortfährst.
         Deine Bestätigung ist nach §&nbsp;6 DSGVO für die Verarbeitung personenbezogener Daten
-        durch den Verein erforderlich.
+        durch die Organisation erforderlich.
     </div>
 </div>
 <?php endif; ?>

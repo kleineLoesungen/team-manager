@@ -31,9 +31,9 @@ $cancel_url         = $from_profile > 0 ? '/coordinator/member-profiles/' . $fro
 // Profiles not already linked to another user on this team (current member's profile is included)
 set_admin_context($pdo);
 $lp_stmt = $pdo->prepare(
-    "SELECT p.id, p.first_name, p.last_name, c.name AS club_name
+    "SELECT p.id, p.first_name, p.last_name, c.name AS organization_name
      FROM members p
-     LEFT JOIN clubs c ON c.id = p.club_id
+     LEFT JOIN organizations c ON c.id = p.organization_id
      WHERE NOT EXISTS (
          SELECT 1 FROM users u WHERE u.member_id = p.id AND u.team_id = ? AND u.id != ?
      )

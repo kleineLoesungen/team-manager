@@ -18,9 +18,9 @@ $other_teams ??= [];
     <?php foreach ($coordinators as $c): ?>
     <div class="list-group-item">
         <div class="fw-semibold mb-1"><?= e($c['first_name'] . ' ' . $c['last_name']) ?></div>
-        <?php if (!empty($c['club_name'])): ?>
+        <?php if (!empty($c['organization_name'])): ?>
         <div class="text-muted small">
-            <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
+            <i class="bi bi-building me-1"></i><?= e($c['organization_name']) ?>
         </div>
         <?php endif; ?>
         <?php if (!empty($c['phone'])): ?>
@@ -46,9 +46,9 @@ $other_teams ??= [];
     <?php foreach ($members as $c): ?>
     <div class="list-group-item">
         <div class="fw-semibold mb-1"><?= e($c['first_name'] . ' ' . $c['last_name']) ?></div>
-        <?php if (!empty($c['club_name'])): ?>
+        <?php if (!empty($c['organization_name'])): ?>
         <div class="text-muted small">
-            <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
+            <i class="bi bi-building me-1"></i><?= e($c['organization_name']) ?>
         </div>
         <?php endif; ?>
         <?php if (!empty($c['phone'])): ?>

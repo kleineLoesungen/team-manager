@@ -60,7 +60,7 @@
             <option value="<?= (int)$p['id'] ?>"
                     <?= ((int)($_POST['member_id_link'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>>
                 <?= e($p['first_name'] . ' ' . $p['last_name']) ?>
-                <?php if (!empty($p['club_name'])): ?> — <?= e($p['club_name']) ?><?php endif; ?>
+                <?php if (!empty($p['organization_name'])): ?> — <?= e($p['organization_name']) ?><?php endif; ?>
             </option>
             <?php endforeach; ?>
         </select>

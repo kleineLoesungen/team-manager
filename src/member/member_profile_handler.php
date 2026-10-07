@@ -24,14 +24,14 @@ $history          = [];
 if ($member_id) {
     $member_id = (int)$member_id;
 
-    // Fetch profile record + club name
+    // Fetch profile record + organization name
     // RLS: members can read their own profile via users.member_id subquery
     set_admin_context($pdo);
     $p_stmt = $pdo->prepare(
         "SELECT p.first_name, p.last_name, p.description,
-                c.name AS club_name
+                c.name AS organization_name
          FROM members p
-         LEFT JOIN clubs c ON c.id = p.club_id
+         LEFT JOIN organizations c ON c.id = p.organization_id
          WHERE p.id = ?"
     );
     $p_stmt->execute([$member_id]);

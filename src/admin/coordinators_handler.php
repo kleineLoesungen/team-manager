@@ -10,10 +10,10 @@ $pdo = get_db();
 // All coordinators with full data — personal info from players (canonical person table)
 $coordinators_stmt = $pdo->query(
     "SELECT u.id, p.first_name, p.last_name, u.username, u.is_active, p.email, p.phone,
-            u.confirmed_at, cl.name AS club_name
+            u.confirmed_at, cl.name AS organization_name
      FROM users u
      JOIN members p ON p.id = u.member_id
-     LEFT JOIN clubs cl ON cl.id = p.club_id
+     LEFT JOIN organizations cl ON cl.id = p.organization_id
      WHERE u.role = 'coordinator'
      ORDER BY p.last_name, p.first_name"
 );
@@ -95,9 +95,9 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                 </div>
                 <div class="text-muted small">@<?= e($c['username']) ?></div>
             </div>
-            <?php if (!empty($c['club_name'])): ?>
+            <?php if (!empty($c['organization_name'])): ?>
             <div class="text-muted small mt-1">
-                <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
+                <i class="bi bi-building me-1"></i><?= e($c['organization_name']) ?>
             </div>
             <?php endif; ?>
             <?php if (!empty($my_teams)): ?>
@@ -183,9 +183,9 @@ render_admin_page('Koordinatoren verwalten', 'coordinators', function() use (
                         </div>
                         <code class="text-muted small flex-shrink-0"><?= e($coordinator['username']) ?></code>
                     </div>
-                    <?php if (!empty($coordinator['club_name'])): ?>
+                    <?php if (!empty($coordinator['organization_name'])): ?>
                     <div class="text-muted small mb-1">
-                        <i class="bi bi-building me-1"></i><?= e($coordinator['club_name']) ?>
+                        <i class="bi bi-building me-1"></i><?= e($coordinator['organization_name']) ?>
                     </div>
                     <?php endif; ?>
                     <div class="d-flex gap-2 flex-wrap mt-2">

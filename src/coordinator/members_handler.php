@@ -18,10 +18,10 @@ $stmt = $pdo->prepare(
             p.first_name, p.last_name,
             p.id AS member_profile_id, p.email AS player_email, p.phone AS player_phone,
             p.contact_name, p.contact_phone, p.contact_email, p.description,
-            c.name AS club_name
+            c.name AS organization_name
      FROM users u
      JOIN members p ON p.id = u.member_id
-     LEFT JOIN clubs c ON c.id = p.club_id
+     LEFT JOIN organizations c ON c.id = p.organization_id
      WHERE u.role = 'member'
      ORDER BY u.is_active DESC, p.first_name ASC, p.last_name ASC"
 );

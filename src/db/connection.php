@@ -266,8 +266,8 @@ function db_init_schema(PDO $pdo, string $s): void {
         PRIMARY KEY (user_id, team_id)
     )");
 
-    // ── Phase 8: Member & Club Management ─────────────────────────────────
-    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.clubs (
+    // ── Phase 8: Member & Organization Management ─────────────────────────────────
+    $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.organizations (
         id         SERIAL PRIMARY KEY,
         name       VARCHAR(100) NOT NULL,
         is_active  BOOLEAN NOT NULL DEFAULT TRUE,
@@ -283,7 +283,7 @@ function db_init_schema(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.members (
         id           SERIAL PRIMARY KEY,
-        club_id      INTEGER REFERENCES {$s}.clubs(id) ON DELETE SET NULL,
+        organization_id      INTEGER REFERENCES {$s}.organizations(id) ON DELETE SET NULL,
         first_name   VARCHAR(100) NOT NULL,
         last_name    VARCHAR(100) NOT NULL,
         email        VARCHAR(255) NULL,
@@ -296,7 +296,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         confirmed_at  TIMESTAMPTZ NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_members_club ON {$s}.members(club_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_members_organization ON {$s}.members(organization_id)");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.coordinator_teams (
         id        SERIAL PRIMARY KEY,
@@ -336,7 +336,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("ALTER TABLE {$s}.users
         ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES {$s}.members(id) ON DELETE SET NULL");
     $pdo->exec("ALTER TABLE {$s}.users
-        ADD COLUMN IF NOT EXISTS club_id INTEGER REFERENCES {$s}.clubs(id) ON DELETE SET NULL");
+        ADD COLUMN IF NOT EXISTS organization_id INTEGER REFERENCES {$s}.organizations(id) ON DELETE SET NULL");
 
     // files — Markdown documents visible to team members
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.files (
@@ -824,24 +824,24 @@ function db_init_rls(PDO $pdo, string $s): void {
         OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
     )");
 
-    // ── Phase 8: Member & Club Management RLS ─────────────────────────────
-    $pdo->exec("ALTER TABLE {$s}.clubs ENABLE ROW LEVEL SECURITY");
+    // ── Phase 8: Member & Organization Management RLS ─────────────────────────────
+    $pdo->exec("ALTER TABLE {$s}.organizations ENABLE ROW LEVEL SECURITY");
     try {
-        $pdo->exec("ALTER TABLE {$s}.clubs FORCE ROW LEVEL SECURITY");
+        $pdo->exec("ALTER TABLE {$s}.organizations FORCE ROW LEVEL SECURITY");
     } catch (PDOException $e) {
-        error_log('db_init_rls: FORCE RLS clubs skipped (non-fatal) — ' . $e->getMessage());
+        error_log('db_init_rls: FORCE RLS organizations skipped (non-fatal) — ' . $e->getMessage());
     }
-    $pdo->exec("CREATE POLICY clubs_select ON {$s}.clubs FOR SELECT USING (
+    $pdo->exec("CREATE POLICY organizations_select ON {$s}.organizations FOR SELECT USING (
         current_setting('app.is_admin', true) = 'true'
         OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
     )");
-    $pdo->exec("CREATE POLICY clubs_insert ON {$s}.clubs FOR INSERT WITH CHECK (
+    $pdo->exec("CREATE POLICY organizations_insert ON {$s}.organizations FOR INSERT WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY clubs_update ON {$s}.clubs FOR UPDATE USING (
+    $pdo->exec("CREATE POLICY organizations_update ON {$s}.organizations FOR UPDATE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
-    $pdo->exec("CREATE POLICY clubs_delete ON {$s}.clubs FOR DELETE USING (
+    $pdo->exec("CREATE POLICY organizations_delete ON {$s}.organizations FOR DELETE USING (
         current_setting('app.is_admin', true) = 'true'
     )");
 

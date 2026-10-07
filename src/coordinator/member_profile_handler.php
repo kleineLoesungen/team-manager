@@ -16,9 +16,9 @@ $user_id = (int)$_SESSION['user_id'];
 set_admin_context($pdo);
 
 $p_stmt = $pdo->prepare(
-    "SELECT p.*, c.name AS club_name
+    "SELECT p.*, c.name AS organization_name
      FROM members p
-     LEFT JOIN clubs c ON c.id = p.club_id
+     LEFT JOIN organizations c ON c.id = p.organization_id
      WHERE p.id = ?"
 );
 $p_stmt->execute([$profile_id]);
@@ -57,7 +57,7 @@ if (!empty($all_user_ids)) {
     $cross_stats = $cs_stmt->fetchAll();
 }
 
-$clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
+$organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
 reset_rls_context($pdo);
 set_team_context($pdo, $team_id, 'coordinator', $user_id);
@@ -100,7 +100,7 @@ $success = !empty($_GET['success']);
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Mitgliedsprofil', 'members', function() use (
-    $profile, $profile_id, $clubs,
+    $profile, $profile_id, $organizations,
     $my_linked, $other_linked, $unlinked_my_members,
     $attr_groups, $cross_stats,
     $error, $success

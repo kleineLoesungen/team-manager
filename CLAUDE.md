@@ -99,7 +99,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 ```
 public/             Webroot — index.php front controller + .htaccess
 src/
-  admin/            Admin handlers (teams, coordinators, members, clubs, resources, settings)
+  admin/            Admin handlers (teams, coordinators, members, organizations, resources, settings)
   auth/             Login, logout, session, role mismatch redirect (role_redirect.php)
   coordinator/      Coordinator handlers (lists, events, columns, members, stats, files, logo, ticker, resources)
   member/           Member handlers (lists, events, stats, files, ticker, resources, coordinators, profile)
@@ -150,7 +150,7 @@ Browser → public/index.php (front controller)
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
 | `players` | Player profiles linked to users via `player_id` |
-| `clubs` | Clubs that players belong to |
+| `organizations` | Organizations that players belong to |
 | `player_attribute_groups` | Groups for custom player attributes (e.g. "Medizin") |
 | `player_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
 | `player_attribute_values` | Attribute values per player |

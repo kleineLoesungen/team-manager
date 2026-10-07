@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contact_phone = trim($_POST['contact_phone'] ?? '');
     $contact_email = trim($_POST['contact_email'] ?? '');
     $description   = trim($_POST['description']   ?? '');
-    $club_id       = (int)($_POST['club_id']      ?? 0);
+    $organization_id       = (int)($_POST['organization_id']      ?? 0);
 
     if (empty($first_name) || empty($last_name)) {
         $error = 'Vor- und Nachname sind erforderlich.';
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         set_admin_context($pdo);
         $pdo->prepare(
             "UPDATE members SET first_name=?, last_name=?, email=?, phone=?,
-              contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
+              contact_name=?, contact_phone=?, contact_email=?, description=?, organization_id=? WHERE id=?"
         )->execute([
             $first_name, $last_name,
             $email_raw !== '' ? $email_raw : null,
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $contact_phone !== '' ? $contact_phone : null,
             $contact_email !== '' ? $contact_email : null,
             $description !== '' ? $description : null,
-            $club_id > 0 ? $club_id : null,
+            $organization_id > 0 ? $organization_id : null,
             $profile_id,
         ]);
         reset_rls_context($pdo);
@@ -64,16 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 set_admin_context($pdo);
 
 $p_stmt = $pdo->prepare(
-    "SELECT p.*, c.name AS club_name
+    "SELECT p.*, c.name AS organization_name
      FROM members p
-     LEFT JOIN clubs c ON c.id = p.club_id
+     LEFT JOIN organizations c ON c.id = p.organization_id
      WHERE p.id = ?"
 );
 $p_stmt->execute([$profile_id]);
 $profile = $p_stmt->fetch();
 if (!$profile) redirect('/coordinator/member-profiles');
 
-$clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
+$organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
 reset_rls_context($pdo);
 set_team_context($pdo, $team_id, 'coordinator', $user_id);
@@ -88,12 +88,12 @@ if ($error) {
         'contact_phone' => $_POST['contact_phone'] ?? '',
         'contact_email' => $_POST['contact_email'] ?? '',
         'description'   => $_POST['description']   ?? '',
-        'club_id'       => (int)($_POST['club_id'] ?? 0),
+        'organization_id'       => (int)($_POST['organization_id'] ?? 0),
     ]);
 }
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Mitglied bearbeiten', 'members', function() use ($profile, $profile_id, $clubs, $error) {
+render_coach_page('Mitglied bearbeiten', 'members', function() use ($profile, $profile_id, $organizations, $error) {
     require ROOT_PATH . '/src/templates/coordinator/member_profile_edit.php';
 });

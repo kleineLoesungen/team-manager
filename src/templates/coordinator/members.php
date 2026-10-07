@@ -29,7 +29,7 @@ $fmt_attr = function(array $a): string {
 
 <!-- Mode switcher -->
 <div class="d-flex gap-1 flex-wrap mb-3">
-    <button class="btn btn-sm" data-mode-btn="club">Verein</button>
+    <button class="btn btn-sm" data-mode-btn="organization">Organisation</button>
     <button class="btn btn-sm btn-outline-secondary" data-mode-btn="contact">Kontakt</button>
     <button class="btn btn-sm btn-outline-secondary" data-mode-btn="description">Beschreibung</button>
     <button class="btn btn-sm btn-outline-secondary" data-mode-btn="attr-visible">Attribute (sichtbar)</button>
@@ -51,9 +51,9 @@ $fmt_attr = function(array $a): string {
                 </div>
                 <div class="text-muted small">@<?= e($m['username']) ?></div>
 
-                <div class="info-mode mt-1" data-mode="club">
-                    <?php if (!empty($m['club_name'])): ?>
-                    <span class="text-muted small"><i class="bi bi-building me-1"></i><?= e($m['club_name']) ?></span>
+                <div class="info-mode mt-1" data-mode="organization">
+                    <?php if (!empty($m['organization_name'])): ?>
+                    <span class="text-muted small"><i class="bi bi-building me-1"></i><?= e($m['organization_name']) ?></span>
                     <?php else: ?>
                     <span class="text-muted small">—</span>
                     <?php endif; ?>
@@ -174,7 +174,7 @@ $fmt_attr = function(array $a): string {
 <script>
 (function () {
     var STORAGE_KEY = 'members-info-mode';
-    var current = sessionStorage.getItem(STORAGE_KEY) || 'club';
+    var current = sessionStorage.getItem(STORAGE_KEY) || 'organization';
 
     function setMode(mode) {
         current = mode;

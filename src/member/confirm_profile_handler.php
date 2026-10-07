@@ -17,20 +17,20 @@ $link_stmt->execute([$user_id]);
 $player_id = (int)($link_stmt->fetchColumn() ?: 0);
 
 $player = null;
-$clubs  = [];
+$organizations  = [];
 $error  = '';
 
 if ($player_id) {
     set_admin_context($pdo);
     $p_stmt = $pdo->prepare(
-        "SELECT p.*, c.name AS club_name
-         FROM members p LEFT JOIN clubs c ON c.id = p.club_id
+        "SELECT p.*, c.name AS organization_name
+         FROM members p LEFT JOIN organizations c ON c.id = p.organization_id
          WHERE p.id = ?"
     );
     $p_stmt->execute([$player_id]);
     $player = $p_stmt->fetch();
 
-    $clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
+    $organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name")->fetchAll();
     reset_rls_context($pdo);
     set_team_context($pdo, (int)$_SESSION['team_id'], 'member', $user_id);
 }
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contact_phone = trim($_POST['contact_phone'] ?? '');
         $contact_email = trim($_POST['contact_email'] ?? '');
         $description   = trim($_POST['description']   ?? '');
-        $club_id       = (int)($_POST['club_id']      ?? 0);
+        $organization_id       = (int)($_POST['organization_id']      ?? 0);
 
         if (empty($first_name) || empty($last_name)) {
             $error = 'Vor- und Nachname sind erforderlich.';
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_admin_context($pdo);
             $pdo->prepare(
                 "UPDATE members SET first_name=?, last_name=?, email=?, phone=?,
-                  contact_name=?, contact_phone=?, contact_email=?, description=?, club_id=? WHERE id=?"
+                  contact_name=?, contact_phone=?, contact_email=?, description=?, organization_id=? WHERE id=?"
             )->execute([
                 $first_name, $last_name,
                 $email_raw !== '' ? $email_raw : null,
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $contact_phone !== '' ? $contact_phone : null,
                 $contact_email !== '' ? $contact_email : null,
                 $description !== '' ? $description : null,
-                $club_id > 0 ? $club_id : null,
+                $organization_id > 0 ? $organization_id : null,
                 $player_id,
             ]);
             reset_rls_context($pdo);
@@ -90,7 +90,7 @@ require ROOT_PATH . '/src/templates/member/layout.php';
 render_member_page(
     $is_first_confirm ? 'Profil bestätigen' : 'Profil bearbeiten',
     'profile',
-    function() use ($player, $clubs, $error, $is_first_confirm) {
+    function() use ($player, $organizations, $error, $is_first_confirm) {
         require ROOT_PATH . '/src/templates/member/confirm_profile.php';
     }
 );

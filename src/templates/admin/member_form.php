@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/member_form.php — Create member profile form
-// Variables: $clubs (array), $teams (array), $error (string), $form (array)
+// Variables: $organizations (array), $teams (array), $error (string), $form (array)
 ?>
 <?php if (!empty($_GET['success'])): ?>
 <?php render_flash('success', 'Mitglied erfolgreich angelegt.'); ?>
@@ -34,11 +34,11 @@
     </div>
 
     <div class="mb-3">
-        <label for="club_id" class="form-label fw-semibold">Klub <span class="text-muted fw-normal">(optional)</span></label>
-        <select id="club_id" name="club_id" class="form-select">
-            <option value="0">— kein Klub —</option>
-            <?php foreach ($clubs as $c): ?>
-            <option value="<?= (int)$c['id'] ?>" <?= (int)$form['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
+        <label for="organization_id" class="form-label fw-semibold">Organisation <span class="text-muted fw-normal">(optional)</span></label>
+        <select id="organization_id" name="organization_id" class="form-select">
+            <option value="0">— keine Organisation —</option>
+            <?php foreach ($organizations as $c): ?>
+            <option value="<?= (int)$c['id'] ?>" <?= (int)$form['organization_id'] === (int)$c['id'] ? 'selected' : '' ?>>
                 <?= e($c['name']) ?>
             </option>
             <?php endforeach; ?>

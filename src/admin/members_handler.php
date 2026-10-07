@@ -1,5 +1,5 @@
 <?php
-// src/admin/members_handler.php — GET: list all member profiles with search + club/team filter
+// src/admin/members_handler.php — GET: list all member profiles with search + organization/team filter
 
 declare(strict_types=1);
 
@@ -9,14 +9,14 @@ $pdo = get_db();
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
 $search         = trim($_GET['q'] ?? '');
-$filter_club_id = (int)($_GET['club_id'] ?? 0);
+$filter_organization_id = (int)($_GET['organization_id'] ?? 0);
 $filter_team_id = (int)($_GET['team_id'] ?? 0);
 
 $sql    = "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.contact_email, p.description,
                   p.is_active,
-                  c.id AS club_id, c.name AS club_name
+                  c.id AS organization_id, c.name AS organization_name
            FROM members p
-           LEFT JOIN clubs c ON c.id = p.club_id
+           LEFT JOIN organizations c ON c.id = p.organization_id
            WHERE NOT EXISTS (
                SELECT 1 FROM users u WHERE u.member_id = p.id AND u.role = 'coordinator'
            )";
@@ -28,9 +28,9 @@ if ($search !== '') {
     $params[] = $like;
     $params[] = $like;
 }
-if ($filter_club_id > 0) {
-    $sql     .= " AND p.club_id = ?";
-    $params[] = $filter_club_id;
+if ($filter_organization_id > 0) {
+    $sql     .= " AND p.organization_id = ?";
+    $params[] = $filter_organization_id;
 }
 if ($filter_team_id > 0) {
     $sql     .= " AND EXISTS (SELECT 1 FROM users u WHERE u.member_id = p.id AND u.team_id = ? AND u.role = 'member')";
@@ -68,7 +68,7 @@ if (!empty($all_profiles)) {
 $unlinked_by_team = [];
 $has_unlinked     = false;
 
-$clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
+$organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name")->fetchAll();
 $teams = $pdo->query("SELECT id, name, is_active FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
 // Load attribute values for all profiles
@@ -96,9 +96,9 @@ if (!empty($all_profiles)) {
 }
 
 render_admin_page('Mitglieder', 'players', function() use (
-    $profiles, $inactive_profiles, $clubs, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
+    $profiles, $inactive_profiles, $organizations, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
     $player_attr_visible, $player_attr_hidden,
-    $search, $filter_club_id, $filter_team_id
+    $search, $filter_organization_id, $filter_team_id
 ) {
     require ROOT_PATH . '/src/templates/admin/members.php';
 });

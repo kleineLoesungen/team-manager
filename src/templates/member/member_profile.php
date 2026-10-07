@@ -22,9 +22,9 @@ declare(strict_types=1);
         <h2 class="card-title h5 fw-bold mb-1">
             <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
         </h2>
-        <?php if (!empty($player['club_name'])): ?>
+        <?php if (!empty($player['organization_name'])): ?>
         <div class="text-muted mb-2">
-            <i class="bi bi-building me-1"></i><?= e($player['club_name']) ?>
+            <i class="bi bi-building me-1"></i><?= e($player['organization_name']) ?>
         </div>
         <?php endif; ?>
         <?php if (!empty($player['description'])): ?>

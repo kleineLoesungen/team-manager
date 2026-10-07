@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/member_edit.php — Edit member profile form
-// Variables: $profile (array), $clubs (array), $error (string)
+// Variables: $profile (array), $organizations (array), $error (string)
 ?>
 <?php if (!empty($_GET['success'])): ?>
 <?php render_flash('success', 'Änderungen gespeichert.'); ?>
@@ -47,12 +47,12 @@
                    required>
         </div>
         <div class="col-12">
-            <label for="club_id" class="form-label fw-semibold">Klub</label>
-            <select id="club_id" name="club_id" class="form-select min-touch">
-                <option value="0">— kein Klub —</option>
-                <?php foreach ($clubs as $c): ?>
+            <label for="organization_id" class="form-label fw-semibold">Organisation</label>
+            <select id="organization_id" name="organization_id" class="form-select min-touch">
+                <option value="0">— keine Organisation —</option>
+                <?php foreach ($organizations as $c): ?>
                 <option value="<?= (int)$c['id'] ?>"
-                    <?= (int)$profile['club_id'] === (int)$c['id'] ? 'selected' : '' ?>>
+                    <?= (int)$profile['organization_id'] === (int)$c['id'] ? 'selected' : '' ?>>
                     <?= e($c['name']) ?>
                 </option>
                 <?php endforeach; ?>

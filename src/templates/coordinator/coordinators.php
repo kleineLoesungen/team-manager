@@ -14,9 +14,9 @@
         <?php foreach ($team['coordinators'] as $c): ?>
         <div class="list-group-item">
             <div class="fw-semibold"><?= e($c['first_name'] . ' ' . $c['last_name']) ?></div>
-            <?php if (!empty($c['club_name'])): ?>
+            <?php if (!empty($c['organization_name'])): ?>
             <div class="text-muted small mb-1">
-                <i class="bi bi-building me-1"></i><?= e($c['club_name']) ?>
+                <i class="bi bi-building me-1"></i><?= e($c['organization_name']) ?>
             </div>
             <?php endif; ?>
             <?php if (!empty($c['phone'])): ?>

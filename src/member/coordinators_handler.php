@@ -17,11 +17,11 @@ $show_all_teams = $setting_stmt->fetchColumn() === 'true';
 
 // Always fetch own team's coordinators
 $stmt = $pdo->prepare(
-    "SELECT u.id, p.first_name, p.last_name, p.phone, p.email, cl.name AS club_name
+    "SELECT u.id, p.first_name, p.last_name, p.phone, p.email, cl.name AS organization_name
      FROM coordinator_teams ct
      JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
      JOIN members p ON p.id = u.member_id
-     LEFT JOIN clubs cl ON cl.id = p.club_id
+     LEFT JOIN organizations cl ON cl.id = p.organization_id
      WHERE ct.team_id = ? AND ct.left_at IS NULL
      ORDER BY p.first_name ASC, p.last_name ASC"
 );
@@ -32,13 +32,13 @@ $coordinators = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $other_teams = [];
 if ($show_all_teams) {
     $other_stmt = $pdo->prepare(
-        "SELECT u.id, p.first_name, p.last_name, p.phone, p.email, cl.name AS club_name,
+        "SELECT u.id, p.first_name, p.last_name, p.phone, p.email, cl.name AS organization_name,
                 t.name AS team_name
          FROM coordinator_teams ct
          JOIN teams t ON t.id = ct.team_id AND t.is_active = TRUE
          JOIN users u ON u.id = ct.user_id AND u.is_active = TRUE
          JOIN members p ON p.id = u.member_id
-         LEFT JOIN clubs cl ON cl.id = p.club_id
+         LEFT JOIN organizations cl ON cl.id = p.organization_id
          WHERE ct.team_id != ? AND ct.left_at IS NULL
          ORDER BY t.name ASC, p.first_name ASC, p.last_name ASC"
     );

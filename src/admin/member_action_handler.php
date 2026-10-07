@@ -32,7 +32,7 @@ if (!$profile) {
 if ($action === 'edit') {
     $first_name   = trim($_POST['first_name']   ?? '');
     $last_name    = trim($_POST['last_name']    ?? '');
-    $club_id      = (int)($_POST['club_id']     ?? 0);
+    $organization_id      = (int)($_POST['organization_id']     ?? 0);
     $email_raw    = trim($_POST['email']        ?? '');
     $phone        = trim($_POST['phone']        ?? '');
     $contact_name  = trim($_POST['contact_name']  ?? '');
@@ -51,11 +51,11 @@ if ($action === 'edit') {
     }
 
     $pdo->prepare(
-        "UPDATE members SET club_id = ?, first_name = ?, last_name = ?, email = ?,
+        "UPDATE members SET organization_id = ?, first_name = ?, last_name = ?, email = ?,
                             phone = ?, contact_name = ?, contact_phone = ?, contact_email = ?, description = ?
          WHERE id = ?"
     )->execute([
-        $club_id > 0 ? $club_id : null,
+        $organization_id > 0 ? $organization_id : null,
         $first_name, $last_name,
         $email_raw !== '' ? $email_raw : null,
         $phone !== '' ? $phone : null,

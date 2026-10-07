@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/profile.php — Full member data edit page
-// Variables (via use()): $player (array|null), $clubs (array), $attr_groups (array), $error (string), $success (bool)
+// Variables (via use()): $player (array|null), $organizations (array), $attr_groups (array), $error (string), $success (bool)
 ?>
 <?php if ($error): render_flash('error', $error); endif; ?>
 <?php if ($success): render_flash('success', 'Deine Daten wurden gespeichert.'); endif; ?>
@@ -37,14 +37,14 @@
                            value="<?= e($player['phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
-                <?php if (!empty($clubs)): ?>
+                <?php if (!empty($organizations)): ?>
                 <div class="col-12">
-                    <label for="club_id" class="form-label">Verein <span class="text-muted small">(optional)</span></label>
-                    <select id="club_id" name="club_id" class="form-select">
+                    <label for="organization_id" class="form-label">Organisation <span class="text-muted small">(optional)</span></label>
+                    <select id="organization_id" name="organization_id" class="form-select">
                         <option value="0">— keinen auswählen —</option>
-                        <?php foreach ($clubs as $cl): ?>
+                        <?php foreach ($organizations as $cl): ?>
                         <option value="<?= (int)$cl['id'] ?>"
-                            <?= ((int)($player['club_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
+                            <?= ((int)($player['organization_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
                             <?= e($cl['name']) ?>
                         </option>
                         <?php endforeach; ?>

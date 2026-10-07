@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
 );
 
 -- Users table — coordinators and members only (admin is in config.php, per D-02)
--- member_id: FK to members (canonical identity); club_id: coordinator's home club
+-- member_id: FK to members (canonical identity); organization_id: coordinator's home organization
 CREATE TABLE IF NOT EXISTS team_manager.users (
     id            SERIAL PRIMARY KEY,
     team_id       INTEGER REFERENCES team_manager.teams(id) ON DELETE SET NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS team_manager.users (
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
     confirmed_at   TIMESTAMPTZ          NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    -- member_id and club_id added via ALTER TABLE below (forward reference to members/clubs)
+    -- member_id and organization_id added via ALTER TABLE below (forward reference to members/organizations)
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON team_manager.users(username);
@@ -245,10 +245,10 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_seen (
     PRIMARY KEY (user_id, team_id)
 );
 
--- ── Phase 8: Member & Club Management ─────────────────────────────────────────
+-- ── Phase 8: Member & Organization Management ─────────────────────────────────────────
 
--- Clubs — permanent home of members, independent of team assignments
-CREATE TABLE IF NOT EXISTS team_manager.clubs (
+-- Organizations — permanent home of members, independent of team assignments
+CREATE TABLE IF NOT EXISTS team_manager.organizations (
     id         SERIAL PRIMARY KEY,
     name       VARCHAR(100) NOT NULL,
     is_active  BOOLEAN NOT NULL DEFAULT TRUE,
@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS team_manager.member_attribute_groups (
 -- confirmed_at: set on first GDPR-consent login
 CREATE TABLE IF NOT EXISTS team_manager.members (
     id           SERIAL PRIMARY KEY,
-    club_id      INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL,
+    organization_id      INTEGER REFERENCES team_manager.organizations(id) ON DELETE SET NULL,
     first_name   VARCHAR(100) NOT NULL,
     last_name    VARCHAR(100) NOT NULL,
     email        VARCHAR(255) NULL,
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS team_manager.members (
     confirmed_at  TIMESTAMPTZ NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_members_club ON team_manager.members(club_id);
+CREATE INDEX IF NOT EXISTS idx_members_organization ON team_manager.members(organization_id);
 
 -- Coordinator-teams — multi-team coordinator membership (replaces single users.team_id conceptually)
 -- users.team_id is KEPT and synced to active session team to preserve existing RLS pattern
@@ -325,11 +325,11 @@ CREATE TABLE IF NOT EXISTS team_manager.member_attribute_values (
 );
 CREATE INDEX IF NOT EXISTS idx_mav_member ON team_manager.member_attribute_values(member_id);
 
--- Forward-reference columns on users (require members + clubs to exist first)
+-- Forward-reference columns on users (require members + organizations to exist first)
 ALTER TABLE team_manager.users
     ADD COLUMN IF NOT EXISTS member_id INTEGER REFERENCES team_manager.members(id) ON DELETE SET NULL;
 ALTER TABLE team_manager.users
-    ADD COLUMN IF NOT EXISTS club_id INTEGER REFERENCES team_manager.clubs(id) ON DELETE SET NULL;
+    ADD COLUMN IF NOT EXISTS organization_id INTEGER REFERENCES team_manager.organizations(id) ON DELETE SET NULL;
 
 -- Files — Markdown documents (coordinator-authored, member-readable per visibility)
 CREATE TABLE IF NOT EXISTS team_manager.files (

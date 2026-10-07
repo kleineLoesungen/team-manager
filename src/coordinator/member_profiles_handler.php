@@ -13,11 +13,11 @@ $error   = !empty($_GET['error']) ? e($_GET['error']) : '';
 // Team-scoped member profile list: only profiles linked to a member user on this team
 $stmt = $pdo->prepare(
     "SELECT p.id, p.first_name, p.last_name, p.email, p.phone, p.contact_name, p.contact_phone, p.contact_email,
-            c.name AS club_name,
+            c.name AS organization_name,
             u.id AS linked_user_id, u.username AS linked_username, u.is_active AS user_active
      FROM users u
      JOIN members p ON p.id = u.member_id
-     LEFT JOIN clubs c ON c.id = p.club_id
+     LEFT JOIN organizations c ON c.id = p.organization_id
      WHERE u.team_id = ? AND u.role = 'member'
      ORDER BY p.first_name ASC, p.last_name ASC"
 );
@@ -38,9 +38,9 @@ $linkable_profiles = [];
 if (!empty($unlinked_members)) {
     set_admin_context($pdo);
     $lp_stmt = $pdo->prepare(
-        "SELECT p.id, p.first_name, p.last_name, c.name AS club_name
+        "SELECT p.id, p.first_name, p.last_name, c.name AS organization_name
          FROM members p
-         LEFT JOIN clubs c ON c.id = p.club_id
+         LEFT JOIN organizations c ON c.id = p.organization_id
          WHERE NOT EXISTS (
              SELECT 1 FROM users u
              WHERE u.member_id = p.id AND u.team_id = ? AND u.role = 'member'

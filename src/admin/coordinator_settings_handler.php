@@ -1,6 +1,6 @@
 <?php
 // src/admin/coordinator_settings_handler.php — GET /admin/coordinators/{id}/settings
-// Admin-only: manage coordinator team assignments and club relation.
+// Admin-only: manage coordinator team assignments and organization relation.
 
 declare(strict_types=1);
 
@@ -14,10 +14,10 @@ if ($coordinator_id <= 0) {
 $pdo = get_db();
 
 $check = $pdo->prepare(
-    "SELECT u.id, u.member_id, u.username, p.first_name, p.last_name, p.email, p.phone, p.club_id, cl.name AS club_name
+    "SELECT u.id, u.member_id, u.username, p.first_name, p.last_name, p.email, p.phone, p.organization_id, cl.name AS organization_name
      FROM users u
      JOIN members p ON p.id = u.member_id
-     LEFT JOIN clubs cl ON cl.id = p.club_id
+     LEFT JOIN organizations cl ON cl.id = p.organization_id
      WHERE u.id = ? AND u.role = 'coordinator'"
 );
 $check->execute([$coordinator_id]);
@@ -69,7 +69,7 @@ $assigned_ids   = array_column($assigned_teams, 'team_id');
 $all_teams       = $pdo->query("SELECT id, name FROM teams WHERE is_active = TRUE ORDER BY sort_order ASC, name ASC")->fetchAll();
 $available_teams = array_filter($all_teams, fn($t) => !in_array($t['id'], $assigned_ids));
 
-$clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name")->fetchAll();
+$organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
 $error   = !empty($_GET['error'])   ? e($_GET['error'])   : '';
 $success = !empty($_GET['success']) ? e($_GET['success']) : '';
@@ -79,7 +79,7 @@ require ROOT_PATH . '/src/templates/admin/layout.php';
 render_admin_page(
     'Einstellungen — ' . e($coordinator['first_name'] . ' ' . $coordinator['last_name']),
     'coordinators',
-    function() use ($coordinator, $assigned_teams, $available_teams, $clubs, $error, $success) {
+    function() use ($coordinator, $assigned_teams, $available_teams, $organizations, $error, $success) {
         require ROOT_PATH . '/src/templates/admin/coordinator_settings.php';
     }
 );

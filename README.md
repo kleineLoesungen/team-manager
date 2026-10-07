@@ -32,7 +32,7 @@ erDiagram
     users }o--o| members : ""
     users ||--o{ ticker_members : ""
 
-    clubs ||--o{ members : ""
+    organizations ||--o{ members : ""
     members ||--o{ member_attribute_values : ""
 
     member_attribute_groups ||--o{ member_attributes : ""
@@ -62,7 +62,7 @@ erDiagram
 | `teams → users` | Ein Team hat mehrere Koordinatoren und Mitglieder; `users.team_id` gibt das Ursprungsteam an. |
 | `teams → coordinator_teams ← users` | Koordinatoren können mehreren Teams zugeordnet sein; `coordinator_teams` ist die Wahrheitsquelle für aktive Zugehörigkeiten. |
 | `users → members` | Jeder Benutzeraccount ist mit einem dauerhaften Mitgliedsprofil verknüpft, das teamübergreifend gültig ist. |
-| `clubs → members` | Ein Verein bündelt Mitglieder; ein Mitglied gehört optional zu genau einem Verein. |
+| `organizations → members` | Ein Verein bündelt Mitglieder; ein Mitglied gehört optional zu genau einem Verein. |
 | `teams → lists` | Ein Team verwaltet beliebig viele Listen (z. B. Trainings, Spiele). |
 | `lists → columns (lokal)` | Lokale Spalten (`columns.list_id IS NOT NULL`) gehören ausschließlich zu einer Liste und können vom Typ Text, Zahl oder Ja/Nein sein. |
 | `teams → columns (global)` | Globale Spalten (`list_id IS NULL`) stehen teamweit zur Verfügung; Systemspalten (`team_id IS NULL`, `is_system = TRUE`) gelten für alle Teams. |

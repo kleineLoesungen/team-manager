@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/confirm_profile.php
-// Variables (via use()): $player (array|null), $clubs (array), $error (string), $is_first_confirm (bool)
+// Variables (via use()): $player (array|null), $organizations (array), $error (string), $is_first_confirm (bool)
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 <?php if ($error): render_flash('error', $error); endif; ?>
@@ -11,7 +11,7 @@
     <div>
         <strong>Willkommen!</strong> Bitte überprüfe und bestätige deine Daten, bevor du fortfährst.
         Deine Bestätigung ist nach §&nbsp;6 DSGVO für die Verarbeitung personenbezogener Daten
-        durch den Verein erforderlich.
+        durch die Organisation erforderlich.
     </div>
 </div>
 <?php endif; ?>
@@ -48,14 +48,14 @@
                            value="<?= e($player['phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
-                <?php if (!empty($clubs)): ?>
+                <?php if (!empty($organizations)): ?>
                 <div class="col-12">
-                    <label for="club_id" class="form-label">Verein <span class="text-muted small">(optional)</span></label>
-                    <select id="club_id" name="club_id" class="form-select">
+                    <label for="organization_id" class="form-label">Organisation <span class="text-muted small">(optional)</span></label>
+                    <select id="organization_id" name="organization_id" class="form-select">
                         <option value="0">— keinen auswählen —</option>
-                        <?php foreach ($clubs as $cl): ?>
+                        <?php foreach ($organizations as $cl): ?>
                         <option value="<?= (int)$cl['id'] ?>"
-                            <?= ((int)($player['club_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
+                            <?= ((int)($player['organization_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
                             <?= e($cl['name']) ?>
                         </option>
                         <?php endforeach; ?>

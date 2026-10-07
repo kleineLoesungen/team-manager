@@ -82,26 +82,26 @@
     </div>
 </div>
 
-<!-- Club assignment -->
+<!-- Organization assignment -->
 <div class="card mb-4">
-    <div class="card-header fw-semibold">Verein</div>
+    <div class="card-header fw-semibold">Organisation</div>
     <div class="card-body">
-        <?php if (empty($clubs)): ?>
+        <?php if (empty($organizations)): ?>
         <p class="text-muted small mb-0">
-            Keine aktiven Vereine vorhanden.
-            <a href="/admin/clubs">Verein anlegen</a>
+            Keine aktiven Organisationen vorhanden.
+            <a href="/admin/organizations">Organisation anlegen</a>
         </p>
         <?php else: ?>
-        <form method="POST" action="/admin/coordinators/<?= (int)$coordinator['id'] ?>/set-club">
+        <form method="POST" action="/admin/coordinators/<?= (int)$coordinator['id'] ?>/set-organization">
             <?= csrf_field() ?>
             <div class="mb-3">
-                <label for="club_id" class="form-label">Verein</label>
-                <select name="club_id" id="club_id" class="form-select">
-                    <option value="">— Kein Verein —</option>
-                    <?php foreach ($clubs as $club): ?>
-                    <option value="<?= (int)$club['id'] ?>"
-                            <?= (int)$coordinator['club_id'] === (int)$club['id'] ? 'selected' : '' ?>>
-                        <?= e($club['name']) ?>
+                <label for="organization_id" class="form-label">Organisation</label>
+                <select name="organization_id" id="organization_id" class="form-select">
+                    <option value="">— Keine Organisation —</option>
+                    <?php foreach ($organizations as $organization): ?>
+                    <option value="<?= (int)$organization['id'] ?>"
+                            <?= (int)$coordinator['organization_id'] === (int)$organization['id'] ? 'selected' : '' ?>>
+                        <?= e($organization['name']) ?>
                     </option>
                     <?php endforeach; ?>
                 </select>

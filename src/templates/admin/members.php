@@ -1,7 +1,7 @@
 <?php
 // src/templates/admin/players.php — Admin player list
-// Variables: $profiles, $inactive_profiles, $clubs, $teams, $linked_users_map,
-//            $unlinked_by_team, $has_unlinked, $search, $filter_club_id, $filter_team_id
+// Variables: $profiles, $inactive_profiles, $organizations, $teams, $linked_users_map,
+//            $unlinked_by_team, $has_unlinked, $search, $filter_organization_id, $filter_team_id
 $fmt_attr = function(array $a): string {
     $val = $a['value'];
     if (($a['data_type'] ?? 'text') === 'date' && $val !== '') {
@@ -37,10 +37,10 @@ $fmt_attr = function(array $a): string {
             </div>
         </div>
         <div class="col-6">
-            <select name="club_id" class="form-select">
-                <option value="0">Alle Klubs</option>
-                <?php foreach ($clubs as $c): ?>
-                <option value="<?= (int)$c['id'] ?>" <?= $filter_club_id === (int)$c['id'] ? 'selected' : '' ?>>
+            <select name="organization_id" class="form-select">
+                <option value="0">Alle Organisationen</option>
+                <?php foreach ($organizations as $c): ?>
+                <option value="<?= (int)$c['id'] ?>" <?= $filter_organization_id === (int)$c['id'] ? 'selected' : '' ?>>
                     <?= e($c['name']) ?>
                 </option>
                 <?php endforeach; ?>
@@ -60,7 +60,7 @@ $fmt_attr = function(array $a): string {
             <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Filter</button>
         </div>
     </div>
-    <?php if ($search !== '' || $filter_club_id > 0 || $filter_team_id > 0): ?>
+    <?php if ($search !== '' || $filter_organization_id > 0 || $filter_team_id > 0): ?>
     <div class="mt-1">
         <a href="/admin/members" class="small text-muted">Filter zurücksetzen</a>
     </div>
@@ -75,7 +75,7 @@ $fmt_attr = function(array $a): string {
 
 <!-- Mode switcher -->
 <div class="d-flex gap-1 flex-wrap mb-3">
-    <button class="btn btn-sm" data-mode-btn="club">Verein</button>
+    <button class="btn btn-sm" data-mode-btn="organization">Organisation</button>
     <button class="btn btn-sm btn-outline-secondary" data-mode-btn="contact">Kontakt</button>
     <button class="btn btn-sm btn-outline-secondary" data-mode-btn="description">Beschreibung</button>
     <button class="btn btn-sm btn-outline-secondary" data-mode-btn="attr-visible">Attribute (sichtbar)</button>
@@ -84,7 +84,7 @@ $fmt_attr = function(array $a): string {
 
 <?php if (empty($profiles)): ?>
 <?php
-$empty_action = ($search === '' && $filter_club_id === 0 && $filter_team_id === 0)
+$empty_action = ($search === '' && $filter_organization_id === 0 && $filter_team_id === 0)
     ? '<a href="/admin/members/create" class="btn btn-outline-primary mt-3">Mitglied hinzufügen</a>'
     : null;
 render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitglied an, um loszulegen.', $empty_action);
@@ -100,10 +100,10 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
             <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold"><?= e($p['last_name']) ?>, <?= e($p['first_name']) ?></div>
 
-                <div class="info-mode mt-1" data-mode="club">
-                    <?php if (!empty($p['club_name'])): ?>
+                <div class="info-mode mt-1" data-mode="organization">
+                    <?php if (!empty($p['organization_name'])): ?>
                     <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
-                        <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>
+                        <i class="bi bi-building me-1"></i><?= e($p['organization_name']) ?>
                     </span>
                     <?php else: ?>
                     <span class="text-muted small">—</span>
@@ -240,9 +240,9 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
                         <?= e($p['last_name']) ?>, <?= e($p['first_name']) ?>
                         <?php render_badge('dim', 'Inaktiv'); ?>
                     </div>
-                    <?php if (!empty($p['club_name'])): ?>
+                    <?php if (!empty($p['organization_name'])): ?>
                     <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle mt-1">
-                        <i class="bi bi-building me-1"></i><?= e($p['club_name']) ?>
+                        <i class="bi bi-building me-1"></i><?= e($p['organization_name']) ?>
                     </span>
                     <?php endif; ?>
                 </div>
@@ -302,7 +302,7 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
 <script>
 (function () {
     var STORAGE_KEY = 'admin-members-info-mode';
-    var current = sessionStorage.getItem(STORAGE_KEY) || 'club';
+    var current = sessionStorage.getItem(STORAGE_KEY) || 'organization';
 
     function setMode(mode) {
         current = mode;

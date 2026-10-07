@@ -104,25 +104,25 @@ if ($action === 'reset-password') {
         redirect($settings_url . '?error=' . urlencode('Koordinator ist bereits in diesem Team.'));
     }
 
-} elseif ($action === 'set-club') {
-    $club_id      = (int)($_POST['club_id'] ?? 0);
+} elseif ($action === 'set-organization') {
+    $organization_id      = (int)($_POST['organization_id'] ?? 0);
     $settings_url = '/admin/coordinators/' . $coordinator_id . '/settings';
 
-    if ($club_id > 0) {
-        $club_check = $pdo->prepare("SELECT id FROM clubs WHERE id = ? AND is_active = TRUE");
-        $club_check->execute([$club_id]);
-        if (!$club_check->fetch()) {
-            redirect($settings_url . '?error=' . urlencode('Verein nicht gefunden oder inaktiv.'));
+    if ($organization_id > 0) {
+        $organization_check = $pdo->prepare("SELECT id FROM organizations WHERE id = ? AND is_active = TRUE");
+        $organization_check->execute([$organization_id]);
+        if (!$organization_check->fetch()) {
+            redirect($settings_url . '?error=' . urlencode('Organisation nicht gefunden oder inaktiv.'));
         }
     }
 
-    // Write club to players (canonical person table). admin context already active via require_admin().
+    // Write organization to players (canonical person table). admin context already active via require_admin().
     $pdo->prepare(
-        "UPDATE members SET club_id = ?
+        "UPDATE members SET organization_id = ?
          WHERE id = (SELECT member_id FROM users WHERE id = ? AND role = 'coordinator')"
-    )->execute([$club_id > 0 ? $club_id : null, $coordinator_id]);
+    )->execute([$organization_id > 0 ? $organization_id : null, $coordinator_id]);
 
-    redirect($settings_url . '?success=' . urlencode('Verein gespeichert.'));
+    redirect($settings_url . '?success=' . urlencode('Organisation gespeichert.'));
 
 } elseif ($action === 'delete') {
     // Safety guard: only allow deleting deactivated coordinators

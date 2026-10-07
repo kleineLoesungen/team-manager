@@ -394,7 +394,7 @@ function render_page(array $opts, callable $body): void {
             'teams'        => ['href' => '/admin/teams',        'icon' => 'bi-people-fill',  'label' => 'Teams'],
             'coordinators' => ['href' => '/admin/coordinators', 'icon' => 'bi-person-badge', 'label' => 'Koordinatoren'],
             'players'      => ['href' => '/admin/members',      'icon' => 'bi-person-vcard', 'label' => 'Mitglieder'],
-            'clubs'        => ['href' => '/admin/clubs',        'icon' => 'bi-building',     'label' => 'Klubs'],
+            'organizations'        => ['href' => '/admin/organizations',        'icon' => 'bi-building',     'label' => 'Organisationen'],
             'settings'     => ['href' => '/admin/settings',     'icon' => 'bi-gear-fill',    'label' => 'Einstellungen'],
         ],
     ];

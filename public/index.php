@@ -106,7 +106,7 @@ match (true) {
     $path === '/admin/notify'
         => require ROOT_PATH . '/src/admin/notify_coordinators_handler.php',
 
-    // ── Admin: Clubs ────────────────────────────────────────────────────
+    // ── Admin: Organizations ────────────────────────────────────────────────────
     $path === '/admin/resources'
         => require ROOT_PATH . '/src/admin/resources_handler.php',
 
@@ -125,25 +125,25 @@ match (true) {
             require ROOT_PATH . '/src/admin/resource_action_handler.php';
         })(),
 
-    $path === '/admin/clubs'
-        => require ROOT_PATH . '/src/admin/clubs_handler.php',
+    $path === '/admin/organizations'
+        => require ROOT_PATH . '/src/admin/organizations_handler.php',
 
-    $path === '/admin/clubs/create'
-        => require ROOT_PATH . '/src/admin/club_create_handler.php',
+    $path === '/admin/organizations/create'
+        => require ROOT_PATH . '/src/admin/organization_create_handler.php',
 
-    // /admin/clubs/{id}/edit — GET+POST: dedicated edit page
-    (bool)preg_match('#^/admin/clubs/(\d+)/edit$#', $path, $matches)
+    // /admin/organizations/{id}/edit — GET+POST: dedicated edit page
+    (bool)preg_match('#^/admin/organizations/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['club_id'] = (int)$matches[1];
-            require ROOT_PATH . '/src/admin/club_edit_handler.php';
+            $_REQUEST['organization_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/admin/organization_edit_handler.php';
         })(),
 
-    // /admin/clubs/{id}/(deactivate|reactivate) — POST actions
-    (bool)preg_match('#^/admin/clubs/(\d+)/(deactivate|reactivate)$#', $path, $matches)
+    // /admin/organizations/{id}/(deactivate|reactivate) — POST actions
+    (bool)preg_match('#^/admin/organizations/(\d+)/(deactivate|reactivate)$#', $path, $matches)
         => (function() use ($matches) {
-            $_REQUEST['club_id'] = (int)$matches[1];
+            $_REQUEST['organization_id'] = (int)$matches[1];
             $_REQUEST['action']  = $matches[2];
-            require ROOT_PATH . '/src/admin/club_action_handler.php';
+            require ROOT_PATH . '/src/admin/organization_action_handler.php';
         })(),
 
     // ── Admin: Members ────────────────────────────────────────────────────
@@ -175,14 +175,14 @@ match (true) {
             require ROOT_PATH . '/src/admin/coordinator_edit_email_handler.php';
         })(),
 
-    // /admin/coordinators/{id}/settings — GET: team + club assignment settings
+    // /admin/coordinators/{id}/settings — GET: team + organization assignment settings
     (bool)preg_match('#^/admin/coordinators/(\d+)/settings$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['coordinator_id'] = (int)$matches[1];
             require ROOT_PATH . '/src/admin/coordinator_settings_handler.php';
         })(),
 
-    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password|add-team|remove-team|delete|set-club)$#', $path, $matches)
+    (bool)preg_match('#^/admin/coordinators/(\d+)/(deactivate|reactivate|reset-password|add-team|remove-team|delete|set-organization)$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['coordinator_id'] = (int)$matches[1];
             $_REQUEST['action']         = $matches[2];

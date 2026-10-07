@@ -24,9 +24,9 @@ $active_teams = array_filter(
                 <h2 class="card-title h5 fw-bold mb-1">
                     <?= e($profile['first_name'] . ' ' . $profile['last_name']) ?>
                 </h2>
-                <?php if (!empty($profile['club_name'])): ?>
+                <?php if (!empty($profile['organization_name'])): ?>
                 <div class="text-muted small mb-1">
-                    <i class="bi bi-building me-1"></i><?= e($profile['club_name']) ?>
+                    <i class="bi bi-building me-1"></i><?= e($profile['organization_name']) ?>
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($active_teams)): ?>

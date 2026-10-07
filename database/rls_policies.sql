@@ -510,22 +510,22 @@ CREATE POLICY ticker_seen_all ON team_manager.ticker_seen FOR ALL USING (
     OR user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
 );
 
--- ── Phase 8: Member & Club Management RLS ─────────────────────────────────────
+-- ── Phase 8: Member & Organization Management RLS ─────────────────────────────────────
 
-ALTER TABLE team_manager.clubs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_manager.clubs FORCE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_manager.organizations FORCE ROW LEVEL SECURITY;
 
-CREATE POLICY clubs_select ON team_manager.clubs FOR SELECT USING (
+CREATE POLICY organizations_select ON team_manager.organizations FOR SELECT USING (
     current_setting('app.is_admin', true) = 'true'
     OR NULLIF(current_setting('app.current_team_id', true), '') IS NOT NULL
 );
-CREATE POLICY clubs_insert ON team_manager.clubs FOR INSERT WITH CHECK (
+CREATE POLICY organizations_insert ON team_manager.organizations FOR INSERT WITH CHECK (
     current_setting('app.is_admin', true) = 'true'
 );
-CREATE POLICY clubs_update ON team_manager.clubs FOR UPDATE USING (
+CREATE POLICY organizations_update ON team_manager.organizations FOR UPDATE USING (
     current_setting('app.is_admin', true) = 'true'
 );
-CREATE POLICY clubs_delete ON team_manager.clubs FOR DELETE USING (
+CREATE POLICY organizations_delete ON team_manager.organizations FOR DELETE USING (
     current_setting('app.is_admin', true) = 'true'
 );
 

@@ -13,7 +13,7 @@ if ($profile_id <= 0) {
 
 $pdo  = get_db();
 $stmt = $pdo->prepare(
-    "SELECT p.id, p.first_name, p.last_name, p.club_id, p.email, p.phone,
+    "SELECT p.id, p.first_name, p.last_name, p.organization_id, p.email, p.phone,
             p.contact_name, p.contact_phone, p.contact_email, p.description, p.is_active
      FROM members p
      WHERE p.id = ?"
@@ -25,7 +25,7 @@ if (!$profile) {
     redirect('/admin/members');
 }
 
-$clubs = $pdo->query("SELECT id, name FROM clubs WHERE is_active = TRUE ORDER BY name ASC")->fetchAll();
+$organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name ASC")->fetchAll();
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $first_name    = trim($_POST['first_name']    ?? '');
     $last_name     = trim($_POST['last_name']     ?? '');
-    $club_id       = (int)($_POST['club_id']      ?? 0);
+    $organization_id       = (int)($_POST['organization_id']      ?? 0);
     $email_raw     = trim($_POST['email']         ?? '');
     $phone         = trim($_POST['phone']         ?? '');
     $contact_name  = trim($_POST['contact_name']  ?? '');
@@ -52,11 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $pdo->prepare(
-        "UPDATE members SET club_id = ?, first_name = ?, last_name = ?, email = ?,
+        "UPDATE members SET organization_id = ?, first_name = ?, last_name = ?, email = ?,
                             phone = ?, contact_name = ?, contact_phone = ?, contact_email = ?, description = ?
          WHERE id = ?"
     )->execute([
-        $club_id > 0 ? $club_id : null,
+        $organization_id > 0 ? $organization_id : null,
         $first_name, $last_name,
         $email_raw !== '' ? $email_raw : null,
         $phone !== '' ? $phone : null,
@@ -75,6 +75,6 @@ $error = !empty($_GET['error']) ? e($_GET['error']) : '';
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Mitglied bearbeiten', 'players', function() use ($profile, $clubs, $error) {
+render_admin_page('Mitglied bearbeiten', 'players', function() use ($profile, $organizations, $error) {
     require ROOT_PATH . '/src/templates/admin/member_edit.php';
 });

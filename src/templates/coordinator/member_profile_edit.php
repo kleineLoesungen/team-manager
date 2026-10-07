@@ -1,6 +1,6 @@
 <?php
 // src/templates/coordinator/member_profile_edit.php — Edit member profile form (coordinator)
-// Variables: $profile (array), $clubs (array), $profile_id (int), $error (string)
+// Variables: $profile (array), $organizations (array), $profile_id (int), $error (string)
 ?>
 <?php if ($error): ?>
 <div class="alert alert-danger"><?= $error ?></div>
@@ -35,14 +35,14 @@
             <input type="text" id="phone" name="phone" class="form-control min-touch"
                    value="<?= e($profile['phone'] ?? '') ?>" placeholder="optional">
         </div>
-        <?php if (!empty($clubs)): ?>
+        <?php if (!empty($organizations)): ?>
         <div class="col-12">
-            <label for="club_id" class="form-label fw-semibold">Verein</label>
-            <select id="club_id" name="club_id" class="form-select min-touch">
-                <option value="0">— kein Verein —</option>
-                <?php foreach ($clubs as $c): ?>
+            <label for="organization_id" class="form-label fw-semibold">Organisation</label>
+            <select id="organization_id" name="organization_id" class="form-select min-touch">
+                <option value="0">— keine Organisation —</option>
+                <?php foreach ($organizations as $c): ?>
                 <option value="<?= (int)$c['id'] ?>"
-                    <?= ((int)($profile['club_id'] ?? 0) === (int)$c['id']) ? 'selected' : '' ?>>
+                    <?= ((int)($profile['organization_id'] ?? 0) === (int)$c['id']) ? 'selected' : '' ?>>
                     <?= e($c['name']) ?>
                 </option>
                 <?php endforeach; ?>
