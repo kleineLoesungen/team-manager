@@ -103,10 +103,17 @@ die App verbindet sich dann mit `DB_HOST` aus der Env-Datei (siehe `docker-compo
 
 Die App ist danach unter **http://localhost:8080** erreichbar.
 
-Beim ersten Start:
-- PostgreSQL initialisiert die Datenbank und legt das Schema `team_manager` an
-- Der App-Benutzer `team_app` wird mit den nötigen Berechtigungen angelegt
+Beim ersten Start mit `--profile db`:
+- PostgreSQL legt die Datenbank, das Schema `team_manager` und alle Tabellen mit RLS an
+- Der App-Benutzer aus `DB_USER`/`DB_PASS` wird mit den nötigen Rechten angelegt
 - Der Admin-Passwort-Hash wird automatisch aus `ADMIN_PASSWORD` generiert
+
+Die Zugangsdaten kommen ausschließlich aus der Env-Datei (`APP_ENV_FILE`, Standard
+`.env.docker`). `docker-compose.yml` liest bewusst keine DB-Werte per `${…}` ein: Compose lädt
+automatisch eine `.env` aus dem Projektordner, und dort können Zugangsdaten einer anderen
+Datenbank liegen (z. B. für das Shared Hosting). Enthält diese `.env` ein `$` (etwa im
+Admin-Hash), meldet Compose „variable is not set" — harmlos, verschwindet aber erst, wenn die
+Datei umbenannt wird.
 
 ### Login
 
@@ -122,9 +129,9 @@ Admin-Zugangsdaten werden in [.env.docker](.env.docker) konfiguriert.
 
 | Service | Image | Port |
 |---------|-------|------|
-| nginx | nginx:1.25-alpine | 8080 → 80 |
+| nginx | nginx:1.25-alpine | `APP_PORT` (8080) → 80 |
 | php | php:8.3-fpm-alpine | intern (9000) |
-| db | postgres:15-alpine | intern (5432) |
+| db | postgres:15-alpine | intern (5432), nur mit `--profile db` |
 
 ### Datenbank zurücksetzen
 
@@ -136,17 +143,24 @@ docker compose --profile db down -v && docker compose --profile db up
 
 ### Konfiguration
 
-Alle Umgebungsvariablen für die Dev-Umgebung stehen in [.env.docker](.env.docker):
+Alle Umgebungsvariablen für die Dev-Umgebung stehen in [.env.docker](.env.docker), die für
+Produktion in `.env.production` (Vorlage: [.env.production.example](.env.production.example)):
 
 | Variable | Beschreibung | Standard |
 |----------|-------------|---------|
+| `APP_ENV_FILE` | Welche Env-Datei die Container bekommen (steht in der Datei selbst) | `.env.docker` |
+| `APP_PORT` | Port auf dem Host | `8080` |
+| `DB_HOST` | Datenbank-Host: `db` für den mitgelieferten Container, sonst der externe Host | `db` |
+| `DB_PORT` | Datenbank-Port | `5432` |
 | `DB_NAME` | Datenbankname | `team_manager_db` |
-| `DB_SCHEMA` | PostgreSQL-Schema | `team_manager` |
-| `DB_USER` | App-Datenbankbenutzer | `team_app` |
+| `DB_SCHEMA` | PostgreSQL-Schema (mitgelieferte DB: immer `team_manager`) | `team_manager` |
+| `DB_USER` | App-Datenbankbenutzer (kein Superuser, sonst greift RLS nicht) | `team_app` |
 | `DB_PASS` | Passwort des App-Benutzers | `team_app_dev` |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Nur mitgelieferte DB: Datenbank und Superuser des Containers | `team_manager_db` / `postgres` / `postgres` |
 | `ADMIN_USERNAME` | Admin-Benutzername | `admin` |
 | `ADMIN_PASSWORD` | Klartextpasswort (wird beim Start gehasht) | `admin123` |
 | `APP_ENV` | Umgebung | `development` |
+| `BASE_URL` | Adresse der App (für Links und Kalender-Abos) | `localhost:8080` |
 | `MAIL_DRIVER` | E-Mail-Versand: `mail` (PHP mail()) oder `smtp` | `mail` |
 | `MAIL_FROM_ADDRESS` | Absenderadresse | `noreply@localhost` |
 | `MAIL_FROM_NAME` | Absendername | `Team Manager` |
@@ -157,14 +171,14 @@ Alle Umgebungsvariablen für die Dev-Umgebung stehen in [.env.docker](.env.docke
 
 ### Datenbankstruktur
 
-Die SQL-Dateien unter `database/` werden beim ersten Start in dieser Reihenfolge ausgeführt:
+Der mitgelieferte DB-Container führt beim ersten Start (leeres Volume) in dieser Reihenfolge aus:
 
 | Datei | Inhalt |
 |-------|--------|
-| `docker/postgres/01-user.sql` | Legt den App-Benutzer `team_app` an |
+| `docker/postgres/01-user.sh` | Legt den App-Benutzer aus `DB_USER`/`DB_PASS` an |
 | `database/schema.sql` | Erstellt Schema `team_manager` und alle Tabellen |
 | `database/rls_policies.sql` | Aktiviert Row-Level Security mit Richtlinien auf allen Tabellen |
-| `docker/postgres/04-grants.sql` | Erteilt `team_app` die nötigen Rechte |
+| `docker/postgres/04-grants.sh` | Erteilt dem App-Benutzer die Rechte aus `database/grants.sql` |
 
 **Hinweis zur Row-Level Security:** Die App verbindet sich als `team_app` (kein Superuser), damit RLS greift. Admin-Requests setzen `app.is_admin = true`, Koordinator/Mitglied-Requests setzen `app.current_team_id`, `app.current_role` und `app.current_user_id`. Teamübergreifende Ansichten (Ressourcen-Auslastung, Ticker anderer Teams) lesen kurz im Admin-Kontext und stellen danach den Kontext der Rolle wieder her.
 
@@ -399,27 +413,32 @@ php bin/generate-pwa-icons.php
 
 ## Deployment (Docker-Container)
 
-Für Server-Umgebungen mit Docker-Unterstützung (VPS, Root-Server, etc.). Verwendet dieselbe `docker-compose.yml` wie die Dev-Umgebung — nur die Umgebungsvariablen werden ausgetauscht.
+Für Server-Umgebungen mit Docker-Unterstützung (VPS, Root-Server, etc.). Verwendet dieselbe `docker-compose.yml` wie die Dev-Umgebung — nur die Env-Datei wird ausgetauscht.
 
-**Zwei Varianten:**
-- **Inkl. eigener PostgreSQL-Instanz** (Standard, Abschnitte 1–6 unten) — alle drei Container (nginx, php, db) laufen zusammen
-- **Mit externer Datenbank** (z. B. Managed PostgreSQL beim Hoster) — nur nginx + php als Container, DB läuft woanders → [direkt zu dieser Variante](#variante-externe-datenbank)
+**Zwei Varianten, ein Compose-File:**
+- **Mit eigener PostgreSQL** (`--profile db`, Abschnitte 1–6 unten) — nginx, php und db laufen zusammen
+- **Mit externer Datenbank** (ohne Profil, z. B. Managed PostgreSQL beim Hoster) — nur nginx + php, `DB_HOST` zeigt auf die vorhandene DB → [direkt zu dieser Variante](#variante-externe-datenbank)
 
 ### 1. Konfigurationsdatei anlegen
 
-`.env.docker` als Vorlage kopieren und mit Produktionswerten befüllen:
+Die Vorlage kopieren und mit Produktionswerten befüllen:
 
 ```bash
 cp .env.production.example .env.production
 ```
 
-Dann `.env.production` anpassen:
+Dann `.env.production` anpassen (Auszug):
 
 ```env
+APP_ENV_FILE=.env.production   # muss so bleiben: damit bekommen die Container diese Datei
+
+DB_HOST=db
 DB_NAME=team_manager_db
 DB_SCHEMA=team_manager
 DB_USER=team_app
 DB_PASS=sicheres-datenbankpasswort
+
+POSTGRES_PASSWORD=sicheres-superuser-passwort
 
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=sicheres-adminpasswort   # wird beim Start automatisch gehasht
@@ -440,16 +459,15 @@ docker compose --profile db --env-file .env.production up -d --build
 - `--profile db` startet die mitgelieferte PostgreSQL mit (ohne: externe Datenbank, siehe unten)
 - `-d` startet im Hintergrund
 - `--build` baut das PHP-Image neu (bei Updates notwendig)
-- Beim ersten Start legt PostgreSQL automatisch Schema, Benutzer und Berechtigungen an
+- Beim ersten Start legt PostgreSQL automatisch Schema, App-Benutzer und Berechtigungen an
 
 ### 3. Port und HTTPS
 
-Nginx hört standardmäßig auf Port `8080`. Für Produktion entweder Port auf `80` ändern oder (empfohlen) hinter einen Reverse Proxy stellen:
+Nginx hört standardmäßig auf Port `8080`. Für Produktion entweder den Port ändern oder (empfohlen) hinter einen Reverse Proxy stellen:
 
-**Port direkt auf 80 umstellen** — in `docker-compose.yml`:
-```yaml
-ports:
-  - "80:80"
+**Port direkt auf 80 umstellen** — in `.env.production`:
+```env
+APP_PORT=80
 ```
 
 **Reverse Proxy (z. B. Caddy)** — Nginx intern lassen, Caddy übernimmt TLS:
@@ -462,19 +480,19 @@ ihre-domain.de {
 ### 4. Datenbank-Backup
 
 ```bash
-docker exec $(docker compose ps -q db) pg_dump -U postgres team_manager_db > backup.sql
+docker compose --profile db --env-file .env.production exec -T db pg_dump -U postgres team_manager_db > backup.sql
 ```
 
 Wiederherstellen:
 ```bash
-docker exec -i $(docker compose ps -q db) psql -U postgres team_manager_db < backup.sql
+docker compose --profile db --env-file .env.production exec -T db psql -U postgres team_manager_db < backup.sql
 ```
 
 ### 5. Update einspielen
 
 ```bash
 git pull
-docker compose --env-file .env.production up -d --build
+docker compose --profile db --env-file .env.production up -d --build
 ```
 
 Das Postgres-Volume (`pgdata`) bleibt erhalten. Schema-Änderungen werden **nicht** automatisch
@@ -483,9 +501,9 @@ angewendet — nötige Schema-Anpassungen vorher von Hand einspielen (siehe Date
 ### 6. Logs
 
 ```bash
-docker compose logs -f          # alle Services
-docker compose logs -f php      # nur PHP-Fehler
-docker compose logs -f nginx    # nur Nginx-Zugriffe
+docker compose --profile db logs -f   # alle Services
+docker compose logs -f php            # nur PHP-Fehler
+docker compose logs -f nginx          # nur Nginx-Zugriffe
 ```
 
 ---
@@ -496,29 +514,35 @@ Wenn PostgreSQL bereits woanders läuft (Managed DB beim Hoster, eigener DB-Serv
 
 #### Datenbank einmalig einrichten
 
-Die SQL-Dateien müssen einmalig manuell gegen die externe DB ausgeführt werden (als Superuser):
+Einmalig gegen die externe DB ausführen, als Benutzer mit Rechten zum Anlegen von Schema und
+Rollen (Eigentümer der Tabellen):
 
 ```bash
-psql -h ihr-db-host -U postgres -d ihre-datenbank -f docker/postgres/01-user.sql
-psql -h ihr-db-host -U postgres -d ihre-datenbank -f database/schema.sql
-psql -h ihr-db-host -U postgres -d ihre-datenbank -f database/rls_policies.sql
-psql -h ihr-db-host -U postgres -d ihre-datenbank -f docker/postgres/04-grants.sql
+psql -h ihr-db-host -U ihr-admin -d ihre-datenbank -c "CREATE USER team_app WITH PASSWORD 'sicheres-datenbankpasswort';"
+psql -h ihr-db-host -U ihr-admin -d ihre-datenbank -f database/schema.sql
+psql -h ihr-db-host -U ihr-admin -d ihre-datenbank -f database/rls_policies.sql
+psql -h ihr-db-host -U ihr-admin -d ihre-datenbank -v app_user=team_app -f database/grants.sql
 ```
 
-| Datei | Was sie tut |
+| Schritt | Was er tut |
 |-------|------------|
-| `docker/postgres/01-user.sql` | Legt App-Benutzer `team_app` an |
+| `CREATE USER` | Legt den App-Benutzer an (Name und Passwort wie `DB_USER`/`DB_PASS`); kein Superuser, sonst greift RLS nicht |
 | `database/schema.sql` | Erstellt Schema `team_manager` und alle Tabellen |
 | `database/rls_policies.sql` | Aktiviert Row-Level Security |
-| `docker/postgres/04-grants.sql` | Erteilt `team_app` die nötigen Rechte |
+| `database/grants.sql` | Erteilt dem App-Benutzer (`-v app_user=…`) die nötigen Rechte |
 
-Falls ein anderer DB-Benutzername gewünscht ist, `01-user.sql` und `04-grants.sql` vor dem Ausführen anpassen.
+Beim Hoster lässt sich oft kein zusätzlicher Benutzer anlegen. Dann den vorhandenen
+Benutzer als `DB_USER` eintragen und den ersten Befehl weglassen — er darf aber kein
+Superuser sein. Ein anderer Schema-Name als `team_manager` erfordert angepasste Kopien von
+`schema.sql`, `rls_policies.sql` und `grants.sql`.
 
 #### Konfiguration
 
-`.env.production` wie oben anlegen, `DB_HOST` auf den externen Host zeigen lassen:
+`.env.production` wie oben anlegen, `DB_HOST` auf den externen Host zeigen lassen
+(`POSTGRES_*` entfällt):
 
 ```env
+APP_ENV_FILE=.env.production
 DB_HOST=ihr-db-host.beispiel.de
 DB_PORT=5432
 DB_NAME=ihre-datenbank
