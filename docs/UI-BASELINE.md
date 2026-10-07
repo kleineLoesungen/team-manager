@@ -47,14 +47,14 @@ Deshalb kein `form-control-sm`, auch nicht in gruppierten Abschnitts-Cards.
 
 ## 3. Layout
 
-- Header: Vereinslogo, Vereinsname, rechts Profil-/Abmelde-Zugang. Höhe aus `--topbar-h`.
+- Header: Teamlogo, Teamname, rechts Profil-/Abmelde-Zugang. Höhe aus `--topbar-h`.
 - Navigation: **Bottom-Nav, maximal fünf Punkte.** Identisch aufgebaut für alle Rollen,
   nur die Punkte unterscheiden sich. Der Reiter für Listen, Dokumente und Termine heißt „Inhalte".
   Weitere Seiten einer Rolle bekommen keinen eigenen Reiter, sondern eine Kachel am Ende von
   Profil bzw. Einstellungen (siehe Kacheln).
   Die öffentliche Ticker-Seite nutzt dasselbe Layout ohne Navigation.
 - Die Nav berücksichtigt `env(safe-area-inset-bottom)`.
-- `<title>`: `{Seitentitel} · {Vereinsname}`, Sprache `lang="de"`.
+- `<title>`: `{Seitentitel} — Team Manager`, Sprache `lang="de"`.
 
 ## 4. Seitenarchetypen
 
@@ -150,7 +150,10 @@ Mindesthöhe 44 px für alles Antippbare.
   führt zur Seite „Liste löschen?" und meldet danach „Liste gelöscht."
 - Datum `TT.MM.JJJJ`, in Listen kurz `Sa 14.09.`, Uhrzeit `HH:MM`.
 - Ein Ding heißt in jeder Rolle gleich: Inhalt, Liste, Termin, Dokument, Spalte, Eintrag,
-  Ressource, Mitglied, Koordinator, Team, Ticker.
+  Ressource, Mitglied, Koordinator, Team, Abteilung, Organisation, Ticker.
+- Derselbe Name gilt im Code: Tabellen, Routen, Dateien und Variablen folgen dem Begriff der
+  Oberfläche (Organisation → `organizations`, Inhalte → `/…/contents`). Wird ein Begriff
+  umbenannt, dann durchgängig — sonst entstehen Altlasten.
 
 ## 7. Qualitätsboden
 
