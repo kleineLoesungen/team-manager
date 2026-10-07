@@ -349,6 +349,7 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 .alert-success   { --bs-alert-bg: var(--ok-bg);     --bs-alert-color: var(--ok); }
 .alert-danger    { --bs-alert-bg: var(--bad-bg);    --bs-alert-color: var(--bad); }
 .alert-warning   { --bs-alert-bg: var(--warn-bg);   --bs-alert-color: var(--warn); }
+.alert-primary   { --bs-alert-bg: var(--blue-bg);   --bs-alert-color: var(--blue); }   /* Hinweis mit Handlungsbedarf, z. B. Update */
 .alert-info,
 .alert-light     { --bs-alert-bg: var(--surface-2); --bs-alert-color: var(--t2); }
 .alert-secondary { --bs-alert-bg: var(--surface-2); --bs-alert-color: var(--t3); }

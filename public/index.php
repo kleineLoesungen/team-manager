@@ -107,6 +107,9 @@ match (true) {
         => require ROOT_PATH . '/src/admin/notify_coordinators_handler.php',
 
     // ── Admin: Organizations ────────────────────────────────────────────────────
+    $path === '/admin/updates'
+        => require ROOT_PATH . '/src/admin/updates_handler.php',
+
     $path === '/admin/departments'
         => require ROOT_PATH . '/src/admin/departments_handler.php',
 

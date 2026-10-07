@@ -125,11 +125,22 @@ $resource_line   = $resource_active
     ? implode(', ', $resource_active) . ($resource_off ? ' · ' . $resource_off . ' deaktiviert' : '')
     : 'Noch keine — Plätze, Hallen, Busse für alle Teams anlegen';
 
+// Version für die Kachel (Issue #8)
+require_once ROOT_PATH . '/src/utils/updates.php';
+$update       = update_status(get_db());
+$version_line = ($update['installed'] ? version_label($update['installed']) : 'Version unbekannt') . ' · ' . match (true) {
+    !$update['enabled']            => 'Prüfung abgeschaltet',
+    (bool)$update['newer']         => 'Update auf ' . version_label($update['newer'][0]['version']) . ' verfügbar',
+    $update['installed'] === null  => 'CHANGELOG.md fehlt',
+    !$update['ok']                 => 'Prüfung nicht möglich',
+    default                        => 'aktuell',
+};
+
 // Abteilungen für die Kachel (Namen der aktiven)
 $department_line = implode(', ', array_column(get_db()->query("SELECT name FROM departments WHERE is_active = TRUE ORDER BY name")->fetchAll(PDO::FETCH_ASSOC), 'name'))
     ?: 'Noch keine — gruppieren Teams und Ressourcen';
 
-render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted, $resource_line, $department_line) {
+render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_color, $default_logo, $show_coordinators_for_members, $error, $success, $logo_deleted, $resource_line, $department_line, $version_line) {
     ?>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <?php if ($success): ?><div class="alert alert-success">Gespeichert.</div><?php endif; ?>
@@ -209,6 +220,7 @@ render_admin_page('Einstellungen', 'settings', function() use ($app_title, $app_
         ['/admin/attributes', 'bi-tags',         'Attribut-Gruppen', 'Eigene Felder für Mitgliederprofile'],
         ['/admin/notify',     'bi-envelope',     'Benachrichtigungen', 'Nachricht an die Koordinatoren senden'],
         ['/admin/columns',    'bi-columns-gap',  'Systemspalten',    'Spalten, die allen Teams zur Verfügung stehen'],
+        ['/admin/updates',    'bi-arrow-up-circle', 'Version',       $version_line],
     ];
     render_tile_group('Verwaltung', $tiles);
     ?>

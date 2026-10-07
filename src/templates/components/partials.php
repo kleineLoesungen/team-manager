@@ -180,6 +180,29 @@ function render_filter_pills(array $pills, string $base_url = ''): void {
 }
 
 /**
+ * Admin start page: "Update verfügbar" when the reference changelog has newer versions
+ * (src/utils/updates.php). Renders nothing when up to date, disabled or unknown.
+ */
+function render_update_notice(array $status): void {
+    if (!$status['newer']) return;
+    $latest     = $status['newer'][0]['version'];
+    $changes    = array_sum(array_map(fn($e) => count($e['items']), $status['newer']));
+    $migrations = array_sum(array_map(fn($e) => count($e['migrations']), $status['newer']));
+    ?>
+    <div class="alert alert-primary d-flex align-items-start gap-2">
+        <i class="bi bi-arrow-up-circle" aria-hidden="true"></i>
+        <div class="flex-grow-1">
+            <div class="fw-semibold">Update verfügbar: Version <?= e(version_label($latest)) ?></div>
+            <div class="small">
+                <?= $changes ?> Änderung<?= $changes === 1 ? '' : 'en' ?> seit deiner Version <?= e(version_label((string)$status['installed'])) ?><?= $migrations ? ' · <strong>Migration nötig</strong>' : '' ?>
+                · <a href="/admin/updates" class="alert-link">Änderungen ansehen</a>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+/**
  * Confirmation page for a destructive action (UI-Baseline: Gefahrenzone, dann eigene Seite).
  * Names the concrete consequences and offers "Abbrechen" as a link. The form posts confirm=1.
  * @param string   $title        Page heading, e.g. "Gruppe löschen?"

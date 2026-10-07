@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require_admin(); // Per D-08: every admin page checks is_admin
 require_once ROOT_PATH . '/src/db/departments.php';
+require_once ROOT_PATH . '/src/utils/updates.php';
 
 $pdo = get_db();
 
@@ -38,7 +39,11 @@ foreach ($coaches_stmt->fetchAll() as $coach) {
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Teams verwalten', 'teams', function() use ($teams, $coaches_by_team, $departments, $department) {
+// Update verfügbar? (höchstens einmal am Tag abgerufen, sonst aus dem Zwischenspeicher)
+$update = update_status($pdo);
+
+render_admin_page('Teams verwalten', 'teams', function() use ($teams, $coaches_by_team, $departments, $department, $update) {
+    render_update_notice($update);
     render_department_filter($departments, $department, '/admin/teams');
     require ROOT_PATH . '/src/templates/admin/dashboard.php';
 });

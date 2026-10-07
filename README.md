@@ -400,6 +400,32 @@ können alle ändern. Die Regeln stehen doppelt: in `src/db/events.php` und als 
 
 ---
 
+## Version und Updates
+
+Die Version einer Instanz ist die oberste Überschrift in `CHANGELOG.md` (Datum, z. B.
+`## 2026.10.15`, bei mehreren am Tag `## 2026.10.15.2`). Die Datei wird mit deployt.
+Der Admin sieht auf der Startseite „Update verfügbar“, sobald das `CHANGELOG.md` auf GitHub
+(`main`) eine neuere Version enthält, dazu unter Einstellungen → Version alle Änderungen seit
+der installierten Version und nötige Migrationen. Abgerufen wird höchstens einmal am Tag
+(„Jetzt erneut prüfen“ erzwingt es), mit 3 Sekunden Zeitlimit; ohne Netz läuft alles weiter.
+Code: `src/utils/updates.php`.
+
+Format eines Eintrags — Zeilen, die nicht so aussehen, werden ignoriert:
+
+```markdown
+## 2026.10.15
+- Ressourcen-Auslastung nach Wochen gruppiert
+- Migration: 20261015_beispiel.sql
+```
+
+**Ein Release ist ein Commit mit neuem Eintrag oben im `CHANGELOG.md`.** Ab dem Push auf
+`main` sehen alle Instanzen das Update — deshalb erst eintragen, wenn die Version wirklich
+zum Einspielen bereit ist. Commits ohne neuen Eintrag lösen keinen Hinweis aus.
+
+Andere Referenz oder abschalten: `UPDATE_CHECK_URL` in `config.php` (leer = aus).
+
+---
+
 ## Installation auf dem Startbildschirm (PWA)
 
 Die App liefert ein Web App Manifest (`public/manifest.webmanifest`) und einen Icon-Satz aus,

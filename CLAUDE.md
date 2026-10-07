@@ -88,9 +88,14 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 - Departments: a team only sees resources of its department (`resources_active()` filters by the team); naming follows the domain — `organizations` (not clubs), contents overview `/…/contents` (single lists stay `/…/lists/{id}`)
 - Events: members write only their own (`events.created_by`) and only if `teams.members_create_events`; enforced in `src/db/events.php` and by RLS on `events` + `resource_bookings`
 
+### Version / CHANGELOG.md
+- The instance version is the top `## YYYY.MM.DD` heading of `CHANGELOG.md`; every instance compares it with `CHANGELOG.md` on GitHub `main` and shows the admin "Update verfügbar" (`src/utils/updates.php`)
+- A new top entry pushed to `main` announces an update to all instances — only add/change CHANGELOG entries after the work is finished and after asking the user; mention migrations as `- Migration: datei.sql`
+
 ### Deployment
 - `deploy.sh` lftp FTP script for Hetzner Shared Hosting — mirrors repo root + `public/` into `public_html/team-manager/` (no separate apps folder)
 - `config.php` never overwritten by deploy (contains production secrets)
+- `CHANGELOG.md` is deployed (the instance reads its own version from it)
 - `uploads/` directory holds team logos; `.htaccess` blocks direct HTTP access to files
 
 ## Architecture

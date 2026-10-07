@@ -24,6 +24,10 @@ define('SESSION_TIMEOUT', 8 * 60 * 60); // 8 hours (per D-05)
 define('APP_ENV', getenv('APP_ENV') ?: 'production');
 define('BASE_URL', getenv('BASE_URL') ?: '');
 
+// Hinweis „Update verfügbar“ für den Admin (src/utils/updates.php): Referenz-Changelog.
+// Weglassen = GitHub (kleineLoesungen/team-manager, main); leer ('') = Prüfung abgeschaltet.
+// define('UPDATE_CHECK_URL', 'https://raw.githubusercontent.com/kleineLoesungen/team-manager/main/CHANGELOG.md');
+
 // Email configuration (Phase 5 — email notifications)
 // Set MAIL_DRIVER=smtp to use PHPMailer+SMTP (bundled in src/lib/phpmailer/ — no Composer needed)
 // Set MAIL_DRIVER=mail to use PHP's built-in mail() function
