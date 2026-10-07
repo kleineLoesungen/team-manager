@@ -289,6 +289,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.member_attribute_groups (
         id         SERIAL PRIMARY KEY,
         name       VARCHAR(100) NOT NULL,
+        department_id INTEGER NULL REFERENCES {$s}.departments(id),
         sort_order INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -1173,6 +1174,30 @@ function set_team_context(PDO $pdo, int $team_id, ?string $role = null, ?int $us
  */
 function set_admin_context(PDO $pdo): void {
     $pdo->exec("SELECT set_config('app.is_admin', 'true', false)");
+}
+
+/**
+ * Run $fn in admin context (cross-team reads: resource usage, a member's teams across
+ * departments) and restore the signed-in user's context afterwards — the team context of a
+ * coordinator/member, or the admin context on admin pages. Already in admin context: just runs $fn.
+ */
+function as_admin(PDO $pdo, callable $fn): mixed {
+    // Schon im Admin-Kontext (z. B. mitten in einem Handler): nichts umschalten, nichts zurücksetzen
+    if ($pdo->query("SELECT current_setting('app.is_admin', true)")->fetchColumn() === 'true') {
+        return $fn();
+    }
+    set_admin_context($pdo);
+    try {
+        return $fn();
+    } finally {
+        reset_rls_context($pdo);
+        if (($_SESSION['role'] ?? '') === 'admin' || !empty($_SESSION['is_admin'])) {
+            set_admin_context($pdo);
+        } elseif (!empty($_SESSION['team_id'])) {
+            set_team_context($pdo, (int)$_SESSION['team_id'], $_SESSION['role'] ?? null,
+                             isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null);
+        }
+    }
 }
 
 /**

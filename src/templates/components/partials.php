@@ -810,18 +810,21 @@ function render_department_filter(array $departments, ?int $selected, string $ba
 }
 
 /**
- * Required department select (admin: teams, resources). Shows active departments plus the
- * current one, even if it was deactivated, so saving does not silently move the item.
+ * Department select (admin). Required for teams and resources; optional for attribute groups,
+ * where "Alle Abteilungen" (empty value) means the group applies everywhere. Shows active
+ * departments plus the current one, even if deactivated, so saving does not silently move it.
  * @param array $departments departments_list()
  */
-function render_department_select(array $departments, ?int $selected, string $hint = ''): void {
+function render_department_select(array $departments, ?int $selected, string $hint = '',
+                                  bool $optional = false, string $id = 'department_id'): void {
     $shown = array_filter($departments, fn($d) => in_array($d['is_active'], [true, 1, '1', 't'], true)
                                                  || (int)$d['id'] === $selected);
     ?>
     <div class="mb-3">
-        <label for="department_id" class="form-label fw-semibold">Abteilung <span class="text-danger">*</span></label>
-        <select id="department_id" name="department_id" class="form-select" required>
-            <?php if ($selected === null && count($shown) > 1): ?><option value="">Abteilung wählen</option><?php endif; ?>
+        <label for="<?= e($id) ?>" class="form-label fw-semibold">Abteilung <?= $optional ? '<span class="text-muted fw-normal">(optional)</span>' : '<span class="text-danger">*</span>' ?></label>
+        <select id="<?= e($id) ?>" name="department_id" class="form-select" <?= $optional ? '' : 'required' ?>>
+            <?php if ($optional): ?><option value="" <?= $selected === null ? 'selected' : '' ?>>Alle Abteilungen</option>
+            <?php elseif ($selected === null && count($shown) > 1): ?><option value="">Abteilung wählen</option><?php endif; ?>
             <?php foreach ($shown as $d): ?>
             <option value="<?= (int)$d['id'] ?>" <?= (int)$d['id'] === $selected ? 'selected' : '' ?>><?= e($d['name']) ?></option>
             <?php endforeach; ?>

@@ -5,6 +5,7 @@
 declare(strict_types=1);
 
 require_member();
+require_once ROOT_PATH . '/src/db/departments.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') redirect('/member/profile');
 require_csrf();
@@ -20,11 +21,13 @@ $member_profile_id = (int)($link_stmt->fetchColumn() ?: 0);
 
 if ($member_profile_id <= 0) redirect('/member/profile');
 
-// Only save attributes that are both visible_to_player AND editable_by_player
+// Only save attributes that are visible_to_player AND editable_by_player, in a group the member
+// sees (general or a department of one of their teams)
 $allowed_stmt = $pdo->prepare(
-    "SELECT id FROM member_attributes WHERE visible_to_player = TRUE AND editable_by_player = TRUE"
+    "SELECT pa.id FROM member_attributes pa JOIN member_attribute_groups pag ON pag.id = pa.group_id
+     WHERE pa.visible_to_player = TRUE AND pa.editable_by_player = TRUE AND " . attribute_groups_scope_sql('pag')
 );
-$allowed_stmt->execute();
+$allowed_stmt->execute([departments_param(departments_of_member($pdo, $member_profile_id))]);
 $allowed_ids = array_flip(array_column($allowed_stmt->fetchAll(), 'id'));
 
 $values = $_POST['values'] ?? [];

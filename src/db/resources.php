@@ -116,16 +116,7 @@ function resources_slots_sql(): string {
 
 /** Run $fn in admin context and restore the signed-in user's team context afterwards. */
 function resources_as_admin(PDO $pdo, callable $fn): mixed {
-    set_admin_context($pdo);
-    try {
-        return $fn();
-    } finally {
-        reset_rls_context($pdo);
-        if (!empty($_SESSION['team_id'])) {
-            set_team_context($pdo, (int)$_SESSION['team_id'], $_SESSION['role'] ?? null,
-                             isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null);
-        }
-    }
+    return as_admin($pdo, $fn);
 }
 
 /**

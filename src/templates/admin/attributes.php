@@ -1,6 +1,7 @@
 <?php
 // src/templates/admin/attributes.php — Admin: Player attribute groups + nested attributes
-// Variables: $groups (array keyed by group_id), $error (string)
+// Variables: $groups (array keyed by group_id, with department_id/department_name), $error (string),
+//            $departments (departments_list()), $department (?int filter)
 ?>
 <?php if (!empty($_GET['success'])): ?>
 <?php render_flash('success', 'Aktion erfolgreich.'); ?>
@@ -26,6 +27,9 @@
                 <input type="text" class="form-control" name="name" maxlength="100" required
                        placeholder="z.B. Kontakt, Mitgliedsprofil …">
             </div>
+            <div class="col-12 col-sm-6">
+                <?php render_department_select($departments, $department, 'Ohne Abteilung gilt die Gruppe für alle, z. B. „Medizin“. Sonst nur für Teams dieser Abteilung, z. B. „Fußball“ mit der Position.', true, 'new_group_department'); ?>
+            </div>
             <div class="col-6 col-sm-3">
                 <label class="form-label mb-1">Reihenfolge</label>
                 <input type="number" class="form-control" name="sort_order" value="0" min="0">
@@ -39,6 +43,8 @@
     </div>
 </div>
 
+<?php render_department_filter($departments, $department, '/admin/attributes'); ?>
+
 <?php if (empty($groups)): ?>
 <?php render_empty('list-task', 'Noch keine Attributgruppen', 'Erstelle oben eine neue Gruppe, um Attribute zu verwalten.'); ?>
 <?php else: ?>
@@ -48,17 +54,36 @@
     <!-- Card header: group name + edit/delete forms -->
     <div class="card-header">
         <div class="d-flex flex-wrap align-items-center gap-2 justify-content-between">
-            <span class="fw-semibold"><?= e($group['name']) ?> <span class="text-muted small">(Reihenfolge: <?= (int)$group['sort_order'] ?>)</span></span>
+            <span class="fw-semibold"><?= e($group['name']) ?> <span class="text-muted small">(Reihenfolge: <?= (int)$group['sort_order'] ?>)</span>
+                <?php render_badge('dim', $group['department_name'] ?? 'Alle Abteilungen', 'bi-diagram-3'); ?></span>
             <div class="d-flex gap-2 flex-wrap align-items-center">
-                <!-- Inline edit form -->
+                <!-- Gruppe bearbeiten: Name, Abteilung, Reihenfolge untereinander (schmale Bildschirme) -->
                 <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/edit"
-                      class="d-flex gap-2 align-items-center">
+                      class="row g-2 align-items-end w-100">
                     <?= csrf_field() ?>
-                    <input type="text" class="form-control" name="name"
-                           value="<?= e($group['name']) ?>" maxlength="100" required>
-                    <input type="number" class="form-control" name="sort_order"
-                           value="<?= (int)$group['sort_order'] ?>" min="0">
-                    <button type="submit" class="btn btn-sm btn-outline-primary">Speichern</button>
+                    <div class="col-12">
+                        <label class="form-label small mb-1" for="group_name_<?= (int)$group['id'] ?>">Name</label>
+                        <input type="text" class="form-control" name="name" id="group_name_<?= (int)$group['id'] ?>"
+                               value="<?= e($group['name']) ?>" maxlength="100" required>
+                    </div>
+                    <div class="col-8">
+                        <label class="form-label small mb-1" for="group_dep_<?= (int)$group['id'] ?>">Abteilung</label>
+                        <select name="department_id" class="form-select" id="group_dep_<?= (int)$group['id'] ?>">
+                            <option value="" <?= $group['department_id'] === null ? 'selected' : '' ?>>Alle Abteilungen</option>
+                            <?php foreach ($departments as $d):
+                                if (!in_array($d['is_active'], [true, 1, '1', 't'], true) && (int)$d['id'] !== $group['department_id']) continue; ?>
+                            <option value="<?= (int)$d['id'] ?>" <?= (int)$d['id'] === $group['department_id'] ? 'selected' : '' ?>><?= e($d['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small mb-1" for="group_sort_<?= (int)$group['id'] ?>">Reihenfolge</label>
+                        <input type="number" class="form-control" name="sort_order" id="group_sort_<?= (int)$group['id'] ?>"
+                               value="<?= (int)$group['sort_order'] ?>" min="0">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-sm btn-outline-primary min-touch">Gruppe speichern</button>
+                    </div>
                 </form>
                 <!-- Delete group -->
                 <form method="POST" action="/admin/attributes/groups/<?= (int)$group['id'] ?>/delete">

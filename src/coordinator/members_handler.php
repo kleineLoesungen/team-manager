@@ -5,6 +5,7 @@
 declare(strict_types=1);
 
 require_coordinator();
+require_once ROOT_PATH . '/src/db/departments.php';
 
 $pdo     = get_db();
 $team_id = (int)$_SESSION['team_id'];
@@ -39,10 +40,11 @@ if (!empty($linked_player_ids)) {
         "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_player, pav.value
          FROM member_attribute_values pav
          JOIN member_attributes pa ON pa.id = pav.attribute_id
-         WHERE pav.member_id IN ($ph) AND pav.value != ''
+         JOIN member_attribute_groups pag ON pag.id = pa.group_id
+         WHERE pav.member_id IN ($ph) AND pav.value != '' AND " . attribute_groups_scope_sql('pag') . "
          ORDER BY pa.visible_to_player DESC, pa.sort_order ASC, pa.name ASC"
     );
-    $attr_stmt->execute($linked_player_ids);
+    $attr_stmt->execute([...$linked_player_ids, departments_param([team_department_id($pdo, $team_id)])]);
     foreach ($attr_stmt->fetchAll() as $row) {
         $pid = (int)$row['member_id'];
         if ($row['visible_to_player']) {

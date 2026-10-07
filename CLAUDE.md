@@ -84,7 +84,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 - EAV pattern: `columns` table (structure) + `cells` table (values); global columns have `list_id IS NULL`
 - Settings stored in `settings` table as key/value pairs (e.g. `app_title`, `default_team_logo`)
 - Schema changes: update `database/schema.sql`, `database/rls_policies.sql` and `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` together; ship a one-time script in `database/migrations/` (pure SQL for pgAdmin, `SET LOCAL search_path TO SCHEMA_EINTRAGEN`, `to_regclass` guard, idempotent). The user runs it before deploying; delete it in the next commit once they confirm.
-- Cross-team reads (resource usage, other teams' tickers) run briefly in admin context and restore the role's context (`resources_as_admin()`)
+- Cross-team reads (resource usage, a member's teams, other teams' tickers) run briefly in admin context via `as_admin()` (connection.php), which restores the signed-in context; already in admin context it just runs
 - Departments: a team only sees resources of its department (`resources_active()` filters by the team); naming follows the domain — `organizations` (not clubs), contents overview `/…/contents` (single lists stay `/…/lists/{id}`)
 - Events: members write only their own (`events.created_by`) and only if `teams.members_create_events`; enforced in `src/db/events.php` and by RLS on `events` + `resource_bookings`
 
@@ -153,7 +153,7 @@ Browser → public/index.php (front controller)
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
 | `members` | Member profiles (the person, across teams), linked from `users.member_id`; `organization_id` |
 | `organizations` | Organizations (e.g. clubs) that members and coordinators belong to — formerly `clubs` |
-| `member_attribute_groups` | Groups for custom member attributes (e.g. "Medizin") |
+| `member_attribute_groups` | Groups for custom member attributes (e.g. "Medizin"); `department_id` NULL = all departments, else only that department (coordinators: own team's; members: all of their teams') |
 | `member_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
 | `member_attribute_values` | Attribute values per member |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |

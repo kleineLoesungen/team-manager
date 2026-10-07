@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 require_member();
+require_once ROOT_PATH . '/src/db/departments.php';
 
 $pdo     = get_db();
 $user_id = (int)$_SESSION['user_id'];
@@ -41,10 +42,11 @@ if ($player_id) {
          FROM member_attribute_groups pag
          JOIN member_attributes pa ON pa.group_id = pag.id
          LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
-         WHERE pa.visible_to_player = TRUE
+         WHERE pa.visible_to_player = TRUE AND " . attribute_groups_scope_sql('pag') . "
          ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
     );
-    $attr_stmt->execute([$player_id]);
+    // allgemeine Gruppen + Gruppen der Abteilungen aller eigenen Teams
+    $attr_stmt->execute([$player_id, departments_param(departments_of_member($pdo, (int)$player_id))]);
     foreach ($attr_stmt->fetchAll() as $row) {
         $g = $row['group_name'];
         if (!isset($attr_groups[$g])) {

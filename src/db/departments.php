@@ -31,3 +31,30 @@ function department_filter(array $departments): ?int {
     $ids = array_map('intval', array_column($departments, 'id'));
     return in_array($id, $ids, true) ? $id : null;
 }
+
+/** Departments of a member's active teams (all roles of that person); cross-team, admin context. */
+function departments_of_member(PDO $pdo, int $member_id): array {
+    return as_admin($pdo, function () use ($pdo, $member_id) {
+        $stmt = $pdo->prepare(
+            "SELECT DISTINCT t.department_id FROM users u
+             JOIN teams t ON t.id = u.team_id AND t.is_active = TRUE
+             WHERE u.member_id = ? AND u.is_active = TRUE"
+        );
+        $stmt->execute([$member_id]);
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    });
+}
+
+/**
+ * Attribute groups (member_attribute_groups) a viewer sees: general ones (no department) plus
+ * those of the given departments. SQL condition for alias $g with one placeholder (int[]),
+ * value from departments_param().
+ */
+function attribute_groups_scope_sql(string $g): string {
+    return "($g.department_id IS NULL OR $g.department_id = ANY(CAST(? AS int[])))";
+}
+
+/** PostgreSQL int[] literal for a placeholder ('{1,2}'). */
+function departments_param(array $department_ids): string {
+    return '{' . implode(',', array_map('intval', $department_ids)) . '}';
+}

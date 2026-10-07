@@ -376,6 +376,11 @@ Ressource gehört zu genau einer; die Admin-Listen für Teams, Koordinatoren und
 sich danach filtern. Mitglieder sehen in der Koordinatorenübersicht nur Teams ihrer Abteilung,
 der öffentliche Ticker gruppiert nach Abteilung und Team. Code: `src/db/departments.php`.
 
+**Attributgruppen** der Mitgliederprofile können einer Abteilung gehören (z. B. „Fußball“ mit
+der Position, „Tennis“ mit dem Schlagarm); ohne Abteilung gelten sie für alle (z. B. „Medizin“).
+Koordinatoren sehen und bearbeiten allgemeine Gruppen und die ihrer Abteilung. Mitglieder sehen
+allgemeine Gruppen und die aller Abteilungen, in denen sie in einem Team sind.
+
 **Ressourcen** legt der Admin unter Einstellungen → Ressourcen an (Name und Abteilung); deaktivierte
 Ressourcen sind nicht mehr auswählbar, ihre Belegungen bleiben gespeichert. Koordinatoren
 wählen Ressourcen beim Anlegen einer Liste (auch für eine ganze Serie), in den

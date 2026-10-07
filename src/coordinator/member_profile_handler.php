@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 require_coordinator();
+require_once ROOT_PATH . '/src/db/departments.php';
 
 $profile_id = (int)($_REQUEST['profile_id'] ?? 0);
 if ($profile_id <= 0) redirect('/coordinator/member-profiles');
@@ -82,9 +83,11 @@ $attr_stmt = $pdo->prepare(
      FROM member_attribute_groups pag
      JOIN member_attributes pa ON pa.group_id = pag.id
      LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
+     WHERE " . attribute_groups_scope_sql('pag') . "
      ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
 );
-$attr_stmt->execute([$profile_id]);
+// allgemeine Gruppen + die der Abteilung des eigenen Teams
+$attr_stmt->execute([$profile_id, departments_param([team_department_id($pdo, (int)$_SESSION['team_id'])])]);
 $attr_groups = [];
 foreach ($attr_stmt->fetchAll() as $row) {
     $gname = $row['group_name'];
