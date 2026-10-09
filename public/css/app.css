@@ -354,8 +354,8 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 .alert-warning   { --bs-alert-bg: var(--warn-bg);   --bs-alert-color: var(--warn); }
 .alert-primary   { --bs-alert-bg: var(--blue-bg);   --bs-alert-color: var(--blue); }   /* Hinweis mit Handlungsbedarf, z. B. Update */
 .alert-info,
-.alert-light     { --bs-alert-bg: var(--surface-2); --bs-alert-color: var(--t2); }
-.alert-secondary { --bs-alert-bg: var(--surface-2); --bs-alert-color: var(--t3); }
+.alert-light     { --bs-alert-bg: var(--dim-bg);    --bs-alert-color: var(--t2); }   /* transparent getönt: auf Seite und Card sichtbar */
+.alert-secondary { --bs-alert-bg: var(--dim-bg);    --bs-alert-color: var(--t3); }
 .alert-link      { text-decoration: underline; }
 .alert i[class*="bi"] { vertical-align: middle; }
 
