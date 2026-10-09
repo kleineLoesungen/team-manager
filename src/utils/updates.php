@@ -66,6 +66,16 @@ function app_version(): ?string {
     return $entries[0]['version'] ?? null;
 }
 
+/**
+ * Entries of the deployed CHANGELOG.md, newest first (installed version + earlier ones).
+ * @return list<array{version: string, items: list<string>, migrations: list<string>}>
+ */
+function installed_changelog(int $limit): array {
+    $file = ROOT_PATH . '/CHANGELOG.md';
+    if (!is_readable($file)) return [];
+    return array_slice(changelog_parse((string)file_get_contents($file)), 0, $limit);
+}
+
 /** Fetch the reference changelog (HTTPS, short timeout); null on any failure. */
 function update_check_fetch(string $url): ?array {
     $body = false; $status = 0;

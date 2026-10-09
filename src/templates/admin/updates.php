@@ -1,8 +1,22 @@
 <?php
-// src/templates/admin/updates.php — Admin: installierte Version, neuere Versionen mit Änderungen
-// Variables: $status (update_status())
+// src/templates/admin/updates.php — Admin: installierte Version, neuere Versionen, Änderungen der installierten und früherer Versionen
+// Variables: $status (update_status()), $installed_entries (installed_changelog())
 $checked = $status['checked_at'] ? (new DateTimeImmutable('@' . $status['checked_at']))
     ->setTimezone(new DateTimeZone('Europe/Berlin'))->format('d.m.Y, H:i') : null;
+
+// Einträge einer Version als Gruppe: Änderungen, dann Migrationen
+$render_entry = function (string $title, array $entry): void {
+    render_collection_group($title, function () use ($entry) { ?>
+        <div class="list-group mb-3">
+            <?php foreach ($entry['items'] as $item): ?>
+            <div class="list-group-item small"><?= e($item) ?></div>
+            <?php endforeach; ?>
+            <?php foreach ($entry['migrations'] as $m): ?>
+            <div class="list-group-item small"><?php render_badge('warn', 'Migration', 'bi-database'); ?> <?= e($m) ?></div>
+            <?php endforeach; ?>
+        </div>
+    <?php });
+};
 ?>
 <?php if (!empty($_GET['checked'])): render_flash('success', 'Geprüft.'); endif; ?>
 <?php if (!empty($_GET['failed'])): render_flash('error', 'Die Prüfung war nicht möglich. Versuch es später erneut.'); endif; ?>
@@ -40,18 +54,7 @@ $checked = $status['checked_at'] ? (new DateTimeImmutable('@' . $status['checked
         <ul class="mb-0 ps-3 small"><?php foreach ($migrations as $m): ?><li><?= e($m) ?></li><?php endforeach; ?></ul>
     </div>
     <?php endif; ?>
-    <?php foreach ($status['newer'] as $entry):
-        render_collection_group('Version ' . version_label($entry['version']), function () use ($entry) { ?>
-        <div class="list-group mb-3">
-            <?php foreach ($entry['items'] as $item): ?>
-            <div class="list-group-item small"><?= e($item) ?></div>
-            <?php endforeach; ?>
-            <?php foreach ($entry['migrations'] as $m): ?>
-            <div class="list-group-item small"><?php render_badge('warn', 'Migration', 'bi-database'); ?> <?= e($m) ?></div>
-            <?php endforeach; ?>
-        </div>
-    <?php });
-    endforeach; ?>
+    <?php foreach ($status['newer'] as $entry) $render_entry('Version ' . version_label($entry['version']), $entry); ?>
 <?php endif; ?>
 
 <?php if ($status['enabled']): ?>
@@ -61,4 +64,13 @@ $checked = $status['checked_at'] ? (new DateTimeImmutable('@' . $status['checked
         <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Jetzt erneut prüfen
     </button>
 </form>
+<?php endif; ?>
+
+<?php if ($installed_entries): ?>
+    <h2 class="h6 fw-semibold text-muted mt-4 mb-2">In dieser Version</h2>
+    <?php $render_entry('Version ' . version_label($installed_entries[0]['version']), $installed_entries[0]); ?>
+    <?php if (count($installed_entries) > 1): ?>
+    <h2 class="h6 fw-semibold text-muted mt-4 mb-2">Frühere Versionen</h2>
+    <?php foreach (array_slice($installed_entries, 1) as $entry) $render_entry('Version ' . version_label($entry['version']), $entry); ?>
+    <?php endif; ?>
 <?php endif; ?>

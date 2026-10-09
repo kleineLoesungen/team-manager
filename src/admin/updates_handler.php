@@ -15,10 +15,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('/admin/updates?' . ($status['ok'] ? 'checked=1' : 'failed=1'));
 }
 
-$status = update_status($pdo);
+$status            = update_status($pdo);
+$installed_entries = installed_changelog(4);   // installierte Version + die 3 davor
 
 require ROOT_PATH . '/src/templates/admin/layout.php';
 
-render_admin_page('Version', 'settings', function () use ($status) {
+render_admin_page('Version', 'settings', function () use ($status, $installed_entries) {
     require ROOT_PATH . '/src/templates/admin/updates.php';
 });
