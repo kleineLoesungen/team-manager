@@ -31,6 +31,7 @@
   --warn: #92510A;  --warn-bg: #FEF0C7;
   --bad:  #B91C1C;  --bad-bg:  #FEE2E2;
   --blue: #1D4ED8;  --blue-bg: #DBEAFE;
+  --dim:  rgba(60, 60, 67, .75);  --dim-bg: rgba(60, 60, 67, .12);   /* neutrale Kennzeichen */
   --tab-bg: rgba(249, 249, 249, .94);
   /* --brand setzt layout.php aus der Admin-Einstellung app_color */
 
@@ -73,11 +74,12 @@
   --line:      rgba(255, 255, 255, .10);
   --t1:        #FFFFFF;
   --t2:        rgba(235, 235, 245, .80);
-  --t3:        rgba(235, 235, 245, .38);
+  --t3:        rgba(235, 235, 245, .60);      /* .38 lag unter Kontrast 4,5:1 */
   --ok:   #30D158;  --ok-bg:   #0D2818;
   --warn: #FFB340;  --warn-bg: #2A1A00;
   --bad:  #FF453A;  --bad-bg:  #330A08;
   --blue: #93C5FD;  --blue-bg: #1E3A5F;
+  --dim:  rgba(235, 235, 245, .80);  --dim-bg: rgba(235, 235, 245, .14);
   --tab-bg: rgba(28, 28, 30, .94);
 }
 
@@ -254,7 +256,8 @@ body.has-actionbar .app-content { padding-bottom: calc(var(--bar-h) + var(--tm-a
 .badge.bg-warning,                             .badge-warn { background-color: var(--warn-bg)   !important; color: var(--warn) !important; }
 .badge.bg-secondary,.badge.bg-secondary-subtle             { background-color: var(--surface-2) !important; color: var(--t3)   !important; }
 .badge.bg-primary,  .badge.bg-primary-subtle               { background-color: var(--blue-bg)   !important; color: var(--blue) !important; }
-.badge-dim { background-color: rgba(60,60,67,.12) !important; color: rgba(60,60,67,.75) !important; }
+.badge-dim { background-color: var(--dim-bg) !important; color: var(--dim) !important; }
+.badge.bg-light { background-color: var(--surface-2) !important; }   /* mit .text-dark → --t1, in beiden Themes lesbar */
 .badge.text-success-emphasis   { color: var(--ok)  !important; }
 .badge.text-danger-emphasis    { color: var(--bad) !important; }
 .badge.text-secondary-emphasis { color: var(--t3)  !important; }

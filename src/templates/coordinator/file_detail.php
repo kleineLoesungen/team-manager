@@ -78,7 +78,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="preview-pane" role="tabpanel">
-                    <div id="preview-output" class="border rounded p-3 bg-white"></div>
+                    <div id="preview-output" class="border rounded p-3"></div>
                 </div>
                 <div class="tab-pane fade" id="edit-pane" role="tabpanel">
                     <textarea id="content-editor" name="content" class="form-control font-monospace"
