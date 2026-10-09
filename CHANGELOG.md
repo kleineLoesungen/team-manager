@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2026.10.09.2
+- Version (Admin): Änderungen der installierten und der drei vorherigen Versionen
+
 ## 2026.10.09
 - Dark Mode: Kennzeichen, Kopfzeile, Spaltentyp-Kennzeichen, Hinweise und Dokumentvorschau besser lesbar
 
