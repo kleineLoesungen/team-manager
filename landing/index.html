@@ -183,6 +183,15 @@
     .facts dt { font-weight: 650; }
     .facts dd { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
 
+    /* ── Zuletzt verbessert (aus CHANGELOG.md auf GitHub) ── */
+    .changes h2 { font-size: 20px; margin-bottom: 16px; }
+    .changelog { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 14px; color: var(--muted); font-size: 15px; }
+    .changelog > li { display: grid; gap: 2px; }
+    .changelog time { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+    .changelog ul { margin: 0; padding-left: 18px; list-style: disc; }
+    .changes .more { display: inline-block; padding: 10px 0; color: var(--muted); font-size: 15px; }
+    .changes .more:hover { color: var(--fg); }
+
     footer {
       border-top: 1px solid var(--line);
       padding: 28px 0 calc(28px + env(safe-area-inset-bottom));
@@ -201,6 +210,7 @@
       .steps li { grid-template-columns: 1fr; }
       .steps li::before { grid-row: auto; margin-bottom: 8px; }
       .facts { grid-template-columns: repeat(4, 1fr); }
+      .changelog > li { grid-template-columns: 120px 1fr; gap: 16px; }
     }
     @media (min-width: 900px) {
       .hero { grid-template-columns: 1.1fr .9fr; align-items: center; padding-block: 56px 72px; }
@@ -348,6 +358,13 @@
       </dl>
     </div>
   </section>
+  <section class="changes" aria-labelledby="changes-title">
+    <div class="wrap">
+      <h2 id="changes-title">Zuletzt verbessert</h2>
+      <ol class="changelog" id="changelog" hidden></ol>
+      <a class="more" href="https://github.com/kleineLoesungen/team-manager/blob/main/CHANGELOG.md" rel="noopener">Alle Änderungen auf GitHub →</a>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -360,5 +377,41 @@
   </div>
 </footer>
 
+<script>
+  // Letzte 3 Versionen direkt aus CHANGELOG.md auf GitHub (main) — ohne Neu-Hochladen aktuell.
+  // Format wie in der App (src/utils/updates.php): „## JJJJ.MM.TT[.n]“, darunter „- Punkt“;
+  // „Migration:“-Punkte betreffen nur Betreiber und fehlen hier. Ohne Antwort bleibt nur der Link.
+  (async () => {
+    const url = 'https://raw.githubusercontent.com/kleineLoesungen/team-manager/main/CHANGELOG.md';
+    const list = document.getElementById('changelog');
+    try {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 5000);
+      const res = await fetch(url, { signal: ctrl.signal });
+      if (!res.ok) return;
+      const entries = [];
+      for (const line of (await res.text()).split(/\r?\n/)) {
+        const head = line.match(/^##\s+(\d{4})\.(\d{2})\.(\d{2})(?:\.\d+)?\s*$/);
+        const item = line.match(/^\s*[-*]\s+(.+?)\s*$/);
+        if (head) entries.push({ date: `${head[3]}.${head[2]}.${head[1]}`, iso: `${head[1]}-${head[2]}-${head[3]}`, items: [] });
+        else if (item && entries.length && !/^Migration:/i.test(item[1])) entries[entries.length - 1].items.push(item[1]);
+      }
+      // Mehrere Versionen am selben Tag unter einem Datum zusammenfassen
+      const days = [];
+      for (const e of entries.slice(0, 3)) {
+        const last = days[days.length - 1];
+        if (last && last.iso === e.iso) last.items.push(...e.items); else days.push({ ...e, items: [...e.items] });
+      }
+      for (const d of days.filter(d => d.items.length)) {
+        const li = list.appendChild(document.createElement('li'));
+        const time = li.appendChild(document.createElement('time'));
+        time.dateTime = d.iso; time.textContent = d.date;
+        const ul = li.appendChild(document.createElement('ul'));
+        for (const text of d.items) ul.appendChild(document.createElement('li')).textContent = text;
+      }
+      list.hidden = !list.children.length;
+    } catch (_) { /* GitHub nicht erreichbar: nur der Link */ }
+  })();
+</script>
 </body>
 </html>

@@ -651,7 +651,7 @@ database/           SQL-Schema und RLS-Richtlinien (Wahrheitsquelle); migrations
 docs/               UI-Baseline (verbindlich für jede Frontend-Arbeit)
 bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)
-landing/            Statische Produkt-Landingpage (nicht Teil der App)
+landing/            Statische Produkt-Landingpage (nicht Teil der App; zeigt die letzten 3 Versionen aus CHANGELOG.md auf GitHub)
 uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
 config.example.php  Vorlage für config.php (App-Konfiguration, liest Umgebungsvariablen)
 deploy.sh           Hetzner FTP-Deployment-Skript (Konfiguration per Umgebungsvariablen)
