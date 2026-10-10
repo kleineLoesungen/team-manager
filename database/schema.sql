@@ -11,6 +11,7 @@ SET search_path TO team_manager, public;
 CREATE TABLE IF NOT EXISTS team_manager.departments (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(100) NOT NULL,
+    icon        VARCHAR(16)  NULL,               -- Emoji vor den Einträgen der Team-Kalender (optional)
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

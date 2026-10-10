@@ -303,7 +303,9 @@ function render_layout_foot(): void {
             var title = b.getAttribute('data-share-title') || document.title;
             var text = b.getAttribute('data-share-text') || title;
             if (navigator.share) {
-                navigator.share({ title: title, text: text, url: url }).catch(function() {});
+                // Link im Text statt als eigenes Feld: WhatsApp auf dem iPhone übernimmt sonst
+                // nur den Text und verwirft den Link
+                navigator.share({ title: title, text: text + '\n' + url }).catch(function() {});
                 return;
             }
             var label = b.querySelector('[data-share-label]');

@@ -50,8 +50,8 @@ if ($team_id !== null) {
     set_team_context($pdo, $team_id, 'coordinator');
 
     $stmt = $pdo->prepare(
-        "SELECT l.id, l.team_id, t.name AS team_name, l.name, l.date, l.location, l.description, l.time_start, l.time_end
-         FROM lists l JOIN teams t ON t.id = l.team_id
+        "SELECT l.id, l.team_id, t.name AS team_name, d.icon AS dept_icon, l.name, l.date, l.location, l.description, l.time_start, l.time_end
+         FROM lists l JOIN teams t ON t.id = l.team_id LEFT JOIN departments d ON d.id = t.department_id
          WHERE l.team_id = ? AND l.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "' AND l.visibility IN ('public','protected','private')
          ORDER BY l.date ASC"
     );
@@ -65,9 +65,9 @@ if ($team_id !== null) {
     unset($list);
 
     $stmt = $pdo->prepare(
-        "SELECT e.id, e.team_id, t.name AS team_name, e.title, e.description, e.location, e.icon,
+        "SELECT e.id, e.team_id, t.name AS team_name, d.icon AS dept_icon, e.title, e.description, e.location, e.icon,
                 e.date, e.is_all_day, e.time_start, e.time_end
-         FROM events e JOIN teams t ON t.id = e.team_id
+         FROM events e JOIN teams t ON t.id = e.team_id LEFT JOIN departments d ON d.id = t.department_id
          WHERE e.team_id = ? AND e.visibility IN ('protected','private') AND e.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
          ORDER BY e.date ASC"
     );

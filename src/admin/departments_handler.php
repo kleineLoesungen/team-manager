@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $departments = $pdo->query(
-    "SELECT d.id, d.name, d.is_active,
+    "SELECT d.id, d.name, d.icon, d.is_active,
             (SELECT COUNT(*) FROM teams t WHERE t.department_id = d.id AND t.is_active = TRUE) AS teams,
             (SELECT COUNT(*) FROM resources r WHERE r.department_id = d.id AND r.is_active = TRUE) AS resources
      FROM departments d ORDER BY d.is_active DESC, d.name"

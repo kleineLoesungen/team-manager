@@ -410,7 +410,9 @@ Den Link zeigt die Auslastungsseite, sobald eine Ressource ausgewählt ist.
 **Abteilungen** legt der Admin unter Einstellungen → Abteilungen an. Jedes Team und jede
 Ressource gehört zu genau einer; die Admin-Listen für Teams, Koordinatoren und Ressourcen lassen
 sich danach filtern. Mitglieder sehen in der Koordinatorenübersicht nur Teams ihrer Abteilung,
-der öffentliche Ticker gruppiert nach Abteilung und Team. Code: `src/db/departments.php`.
+der öffentliche Ticker gruppiert nach Abteilung und Team. Optional trägt eine Abteilung ein
+Symbol (Emoji aus `DEPARTMENT_ICONS`), das in den Kalender-Abos der Teams vor jedem Eintrag
+steht, z. B. „⚽ U13 - Training“. Code: `src/db/departments.php`.
 
 **Attributgruppen** der Mitgliederprofile können einer Abteilung gehören (z. B. „Fußball“ mit
 der Position, „Tennis“ mit dem Schlagarm); ohne Abteilung gelten sie für alle (z. B. „Medizin“).

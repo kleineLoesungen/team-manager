@@ -35,13 +35,14 @@ function member_calendar_token(PDO $pdo, int $member_id, bool $renew = false): s
  */
 function member_calendar_feed(PDO $pdo, int $member_id): array {
     return as_admin($pdo, function () use ($pdo, $member_id) {
-        $accounts = "SELECT u.id AS user_id, u.team_id, t.name AS team_name
+        $accounts = "SELECT u.id AS user_id, u.team_id, t.name AS team_name, d.icon AS dept_icon
                      FROM users u JOIN teams t ON t.id = u.team_id AND t.is_active = TRUE
+                     LEFT JOIN departments d ON d.id = t.department_id
                      WHERE u.member_id = ? AND u.role = 'member' AND u.is_active = TRUE";
 
         $stmt = $pdo->prepare(
             "WITH a AS ($accounts)
-             SELECT l.id, l.team_id, a.team_name, l.name, l.date, l.location, l.description,
+             SELECT l.id, l.team_id, a.team_name, a.dept_icon, l.name, l.date, l.location, l.description,
                     l.time_start, l.time_end
              FROM a
              JOIN lists l ON l.team_id = a.team_id
@@ -61,7 +62,7 @@ function member_calendar_feed(PDO $pdo, int $member_id): array {
 
         $stmt = $pdo->prepare(
             "WITH a AS ($accounts)
-             SELECT e.id, e.team_id, a.team_name, e.title, e.description, e.location, e.icon,
+             SELECT e.id, e.team_id, a.team_name, a.dept_icon, e.title, e.description, e.location, e.icon,
                     e.date, e.is_all_day, e.time_start, e.time_end
              FROM a JOIN events e ON e.team_id = a.team_id
              WHERE e.visibility = 'protected' AND e.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'

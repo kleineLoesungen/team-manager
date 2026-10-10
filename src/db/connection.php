@@ -87,6 +87,7 @@ function db_init_schema(PDO $pdo, string $s): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.departments (
         id          SERIAL PRIMARY KEY,
         name        VARCHAR(100) NOT NULL,
+        icon        VARCHAR(16)  NULL,
         is_active   BOOLEAN NOT NULL DEFAULT TRUE,
         created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");

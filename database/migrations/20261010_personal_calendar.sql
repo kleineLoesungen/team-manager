@@ -1,5 +1,5 @@
 -- database/migrations/20261010_personal_calendar.sql
--- Team Manager — Migration: persönlicher Kalender (Issue #12)
+-- Team Manager — Migration: persönlicher Kalender (Issue #12), Symbol je Abteilung
 --
 -- VOR dem Deployment einspielen (Reihenfolge und Anleitung: Admin → Einstellungen → Version).
 -- - members.calendar_token: persönlicher Kalender-Link je Person (über alle ihre Teams),
@@ -10,6 +10,7 @@
 --   dann nur noch bei „Ja“. Alle anderen Listen bleiben ohne Spalte (erscheinen immer).
 -- - teams.calendar_token_member entfällt: Der bisherige Team-Kalender der Mitglieder wird
 --   abgeschaltet, alte Abos liefern danach nichts mehr. Der Koordinator-Kalender bleibt.
+-- - departments.icon: optionales Emoji je Abteilung, steht vor den Einträgen der Team-Kalender.
 --
 -- pgAdmin: Schema in der Zeile `SET LOCAL search_path` eintragen, dann das ganze Skript
 -- ausführen (F5). Reines SQL. Bei falschem Schema bricht es ab, bevor es etwas ändert.
@@ -25,8 +26,8 @@ DO $$
 BEGIN
     IF to_regclass('members') IS NULL OR to_regclass('lists') IS NULL
        OR to_regclass('columns') IS NULL OR to_regclass('teams') IS NULL
-       OR to_regclass('settings') IS NULL THEN
-        RAISE EXCEPTION 'search_path zeigt nicht auf das App-Schema (Tabellen members/lists/columns/teams/settings nicht gefunden)';
+       OR to_regclass('settings') IS NULL OR to_regclass('departments') IS NULL THEN
+        RAISE EXCEPTION 'search_path zeigt nicht auf das App-Schema (Tabellen members/lists/columns/teams/settings/departments nicht gefunden)';
     END IF;
 END $$;
 
@@ -38,6 +39,9 @@ ALTER TABLE lists
 
 ALTER TABLE teams
     DROP COLUMN IF EXISTS calendar_token_member;
+
+ALTER TABLE departments
+    ADD COLUMN IF NOT EXISTS icon VARCHAR(16) NULL;
 
 -- Bestehende Listen: genau eine sichtbare Ja/Nein-Spalte → als Kalender-Spalte setzen.
 -- Nur beim ersten Lauf: danach entscheiden die Koordinatoren (auch „Immer anzeigen“).

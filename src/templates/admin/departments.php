@@ -30,11 +30,11 @@ $count = fn(array $d) => (int)$d['teams'] . ' Team' . ((int)$d['teams'] === 1 ? 
     <?php foreach ($active as $d): ?>
     <div class="list-group-item d-flex align-items-center gap-2 flex-wrap">
         <span class="flex-grow-1 min-w-0">
-            <span class="d-block fw-semibold"><?= e($d['name']) ?></span>
+            <span class="d-block fw-semibold"><?= !empty($d['icon']) ? e($d['icon']) . ' ' : '' ?><?= e($d['name']) ?></span>
             <span class="d-block small text-muted"><?= e($count($d)) ?></span>
         </span>
         <a href="/admin/departments/<?= (int)$d['id'] ?>/edit" class="btn btn-sm btn-outline-secondary min-touch">
-            <i class="bi bi-pencil me-1" aria-hidden="true"></i>Umbenennen
+            <i class="bi bi-pencil me-1" aria-hidden="true"></i>Bearbeiten
         </a>
         <form method="POST" action="/admin/departments/<?= (int)$d['id'] ?>/deactivate">
             <?= csrf_field() ?>
@@ -53,7 +53,7 @@ $count = fn(array $d) => (int)$d['teams'] . ' Team' . ((int)$d['teams'] === 1 ? 
     <?php foreach ($inactive as $d): ?>
     <div class="list-group-item d-flex align-items-center gap-2 flex-wrap">
         <span class="flex-grow-1 min-w-0">
-            <span class="d-block fw-semibold text-muted"><?= e($d['name']) ?></span>
+            <span class="d-block fw-semibold text-muted"><?= !empty($d['icon']) ? e($d['icon']) . ' ' : '' ?><?= e($d['name']) ?></span>
             <span class="d-block small text-muted"><?= e($count($d)) ?></span>
         </span>
         <?php render_badge('dim', 'Deaktiviert'); ?>

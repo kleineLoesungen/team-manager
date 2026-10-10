@@ -1023,6 +1023,32 @@ function render_tile_group(string $label, array $tiles): void {
 }
 
 /**
+ * Pick one symbol (emoji) from a fixed set, as chips; first chip "Kein Symbol".
+ * @param array  $icons    [emoji => meaning], e.g. DEPARTMENT_ICONS
+ * @param string $selected Current emoji ('' = none)
+ */
+function render_icon_picker(string $name, array $icons, string $selected, string $legend, string $hint = ''): void {
+    $i = 0;
+    ?>
+    <fieldset class="mb-4">
+        <legend class="form-label fw-semibold fs-6 mb-2"><?= e($legend) ?> <span class="text-muted fw-normal">(optional)</span></legend>
+        <div class="d-flex flex-wrap gap-2">
+            <input type="radio" class="btn-check" name="<?= e($name) ?>" id="<?= e($name) ?>_none" value=""
+                   autocomplete="off" <?= $selected === '' ? 'checked' : '' ?>>
+            <label class="btn btn-sm btn-outline-secondary min-touch tm-chip" for="<?= e($name) ?>_none">Kein Symbol</label>
+            <?php foreach ($icons as $icon => $meaning): $id = $name . '_' . (++$i); ?>
+            <input type="radio" class="btn-check" name="<?= e($name) ?>" id="<?= e($id) ?>" value="<?= e($icon) ?>"
+                   autocomplete="off" <?= $selected === $icon ? 'checked' : '' ?>>
+            <label class="btn btn-sm btn-outline-secondary min-touch tm-chip tm-chip-icon" for="<?= e($id) ?>"
+                   title="<?= e($meaning) ?>" aria-label="<?= e($meaning) ?>"><?= e($icon) ?></label>
+            <?php endforeach; ?>
+        </div>
+        <?php if ($hint !== ''): ?><div class="form-text"><?= e($hint) ?></div><?php endif; ?>
+    </fieldset>
+    <?php
+}
+
+/**
  * Share button. Opens the system share sheet where available (phones), otherwise copies the
  * link and confirms with "Link kopiert" (layout script, [data-share-url]).
  * @param string $label Button text, verb + object ("Ticker teilen")

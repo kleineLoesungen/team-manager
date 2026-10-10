@@ -153,7 +153,7 @@ Browser → public/index.php (front controller)
 
 | Table | Purpose |
 |-------|---------|
-| `departments` | Departments (e.g. Fußball, Tennis) grouping teams and resources; members and organizations have none |
+| `departments` | Departments (e.g. Fußball, Tennis) grouping teams and resources; members and organizations have none; optional `icon` (emoji from `DEPARTMENT_ICONS`, in front of team calendar entries) |
 | `teams` | Teams with name, `department_id`, active flag, logo path, coordinator ICS token, `members_create_events` |
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |

@@ -113,7 +113,7 @@ match (true) {
     $path === '/admin/departments'
         => require ROOT_PATH . '/src/admin/departments_handler.php',
 
-    // /admin/departments/{id}/edit — GET+POST: rename
+    // /admin/departments/{id}/edit — GET+POST: name and symbol
     (bool)preg_match('#^/admin/departments/(\d+)/edit$#', $path, $matches)
         => (function() use ($matches) {
             $_REQUEST['department_id'] = (int)$matches[1];

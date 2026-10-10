@@ -88,7 +88,8 @@ function ics_morning_trigger(?string $time_start): string
 /**
  * Team feed (lists + events) as an ICS document. Rows need team_id; with $team_prefix the
  * summary starts with the team name ("U13 - Training"). A list row with 'rsvp' => [yes, total]
- * gets the count appended ("U13 - Training (13/14)", coordinator feed).
+ * gets the count appended ("U13 - Training (13/14)", coordinator feed). A row's 'dept_icon'
+ * (department symbol) goes in front of everything: "⚽ U13 - Training".
  * @param array  $lists     id, team_id, team_name, name, date, location, description, time_start, time_end
  * @param array  $events    id, team_id, team_name, title, description, location, icon, date, is_all_day, time_start, time_end
  * @param string $role_path 'coordinator' or 'member' — links point into this role's pages
@@ -96,6 +97,7 @@ function ics_morning_trigger(?string $time_start): string
 function ics_team_calendar(array $lists, array $events, string $base_url, string $role_path, bool $team_prefix = false): string
 {
     $dtstamp = gmdate('Ymd\THis\Z');
+    $lead    = fn(array $row) => !empty($row['dept_icon']) ? $row['dept_icon'] . ' ' : '';
     $prefix  = fn(array $row) => $team_prefix ? $row['team_name'] . ' - ' : '';
 
     $out  = "BEGIN:VCALENDAR\r\n";
@@ -107,7 +109,7 @@ function ics_team_calendar(array $lists, array $events, string $base_url, string
     foreach ($lists as $list) {
         $uid      = md5((string)$list['team_id'] . '-' . (string)$list['id']) . '@team-manager.local';
         $list_url = $base_url . '/' . $role_path . '/lists/' . (int)$list['id'];
-        $summary  = $prefix($list) . $list['name']
+        $summary  = $lead($list) . $prefix($list) . $list['name']
                   . (isset($list['rsvp']) ? ' (' . (int)$list['rsvp'][0] . '/' . (int)$list['rsvp'][1] . ')' : '');
 
         if (!empty($list['time_start'])) {
@@ -156,7 +158,7 @@ function ics_team_calendar(array $lists, array $events, string $base_url, string
 
     foreach ($events as $ev) {
         $uid     = md5('event-' . $ev['team_id'] . '-' . $ev['id']) . '@team-manager.local';
-        $summary = ($icon_emoji[$ev['icon'] ?? ''] ?? '📅') . ' ' . $prefix($ev) . $ev['title'];
+        $summary = $lead($ev) . ($icon_emoji[$ev['icon'] ?? ''] ?? '📅') . ' ' . $prefix($ev) . $ev['title'];
         $dt_date = str_replace('-', '', $ev['date']);
         $all_day = in_array($ev['is_all_day'], [true, 1, '1', 't', 'true'], true);
 

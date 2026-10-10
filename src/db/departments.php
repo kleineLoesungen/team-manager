@@ -8,10 +8,23 @@
 
 declare(strict_types=1);
 
-/** Departments (id, name, is_active), active first; $active_only for selections. */
+/**
+ * Symbols a department can carry (optional): an emoji, because calendar apps show only text.
+ * It goes in front of every entry of the team calendars. Emoji => what it stands for.
+ */
+const DEPARTMENT_ICONS = [
+    '⚽' => 'Fußball',      '🏀' => 'Basketball',  '🏐' => 'Volleyball',  '🤾' => 'Handball',
+    '🎾' => 'Tennis',       '🏓' => 'Tischtennis', '🏸' => 'Badminton',   '🏑' => 'Hockey',
+    '🏃' => 'Leichtathletik', '🏊' => 'Schwimmen', '🚴' => 'Radsport',    '🤸' => 'Turnen',
+    '🥋' => 'Kampfsport',   '🏋️' => 'Fitness',     '💃' => 'Tanz',        '🏇' => 'Reiten',
+    '⛳' => 'Golf',         '🏉' => 'Rugby',       '⚾' => 'Baseball',    '🛶' => 'Kanu',
+    '⛷️' => 'Ski',          '🎯' => 'Schießen',    '♟️' => 'Schach',      '⭐' => 'Allgemein',
+];
+
+/** Departments (id, name, icon, is_active), active first; $active_only for selections. */
 function departments_list(PDO $pdo, bool $active_only = false): array {
     return $pdo->query(
-        "SELECT id, name, is_active FROM departments"
+        "SELECT id, name, icon, is_active FROM departments"
         . ($active_only ? " WHERE is_active = TRUE" : "")
         . " ORDER BY is_active DESC, name"
     )->fetchAll(PDO::FETCH_ASSOC);
