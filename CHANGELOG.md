@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2026.10.10.3
+- [Koordinator, Mitglied] Erinnerung per Push am Tag des Anmeldeschlusses (automatische Umstellung)
+- [Koordinator, Mitglied] Kurzfristige Änderungen an Listen und Terminen per Push melden
+- [Koordinator, Mitglied] Einmaliger Hinweis „Push einschalten“ auf der Startseite
+- [Koordinator, Mitglied] Geteilte Ticker-Links mit Vorschau
+- [System] Einheitliche Begriffe in Code und Datenbank
+- Migration: 20261010_push_reminders.sql
+- Migration: 20261010_rename_member_columns.sql
+
 ## 2026.10.10.2
 - [Koordinator] Benachrichtigung zu Listen und Dokumenten wahlweise per Push statt E-Mail, mit eigenem kurzem Text
 - [Koordinator, Mitglied] Push-Benachrichtigungen im Profil ein- und ausschalten (je Gerät)
