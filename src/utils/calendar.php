@@ -69,6 +69,12 @@ function foldIcsLine(string $line): string
     return $result . $line;
 }
 
+/**
+ * How far back the ICS feeds go: lists, events and bookings from today minus this interval on.
+ * Older dates stay available in the app. Used inside SQL (PostgreSQL interval).
+ */
+const ICS_PAST_INTERVAL = "3 months";
+
 /** VALARM trigger: reminder at 08:00 on the day (relative to the start, or to midnight all day). */
 function ics_morning_trigger(?string $time_start): string
 {

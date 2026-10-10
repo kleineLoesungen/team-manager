@@ -99,6 +99,7 @@ $ics_url_coordinator = $calendar_token_coordinator ? ($scheme . '://' . $host . 
             Dein persönlicher Kalenderfeed für Apple Kalender, Google Calendar oder Outlook.
             Enthält alle sichtbaren Termine — auch private Einträge.
             Mitglieder haben einen eigenen, persönlichen Kalender unter Inhalte → Kalender.
+            Vergangene Termine reichen 3 Monate zurück, ältere stehen in der App.
         </p>
         <?php if (!empty($_GET['cal_reset'])): ?>
         <div class="alert alert-success py-2 small mb-3">

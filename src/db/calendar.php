@@ -11,6 +11,8 @@
 
 declare(strict_types=1);
 
+require_once ROOT_PATH . '/src/utils/calendar.php';   // ICS_PAST_INTERVAL
+
 /** Personal calendar token of a member (person); created on first use, or renewed. */
 function member_calendar_token(PDO $pdo, int $member_id, bool $renew = false): string {
     return as_admin($pdo, function () use ($pdo, $member_id, $renew) {
@@ -47,7 +49,7 @@ function member_calendar_feed(PDO $pdo, int $member_id): array {
                   AND c.is_active = TRUE AND c.data_type = 'boolean' AND c.coach_only = FALSE
              LEFT JOIN list_global_columns lgc ON lgc.list_id = l.id AND lgc.column_id = c.id
              LEFT JOIN cells ce ON ce.list_id = l.id AND ce.column_id = c.id AND ce.member_id = a.user_id
-             WHERE l.date IS NOT NULL AND l.visibility IN ('public', 'protected')
+             WHERE l.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "' AND l.visibility IN ('public', 'protected')
                AND (l.list_type <> 'member'
                     OR c.id IS NULL                                      -- keine (gültige) Spalte
                     OR NOT (c.list_id = l.id OR (c.list_id IS NULL AND lgc.list_id IS NOT NULL))
@@ -62,7 +64,7 @@ function member_calendar_feed(PDO $pdo, int $member_id): array {
              SELECT e.id, e.team_id, a.team_name, e.title, e.description, e.location, e.icon,
                     e.date, e.is_all_day, e.time_start, e.time_end
              FROM a JOIN events e ON e.team_id = a.team_id
-             WHERE e.visibility = 'protected'
+             WHERE e.visibility = 'protected' AND e.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
              ORDER BY e.date, e.time_start NULLS FIRST"
         );
         $stmt->execute([$member_id]);
@@ -110,7 +112,7 @@ function list_calendar_rsvp_counts(PDO $pdo, int $team_id): array {
              LEFT JOIN list_global_columns lgc ON lgc.list_id = l.id AND lgc.column_id = c.id
              JOIN users u ON u.team_id = l.team_id AND u.role = 'member' AND u.is_active = TRUE
              LEFT JOIN cells ce ON ce.list_id = l.id AND ce.column_id = c.id AND ce.member_id = u.id
-             WHERE l.team_id = ? AND l.list_type = 'member' AND l.date IS NOT NULL
+             WHERE l.team_id = ? AND l.list_type = 'member' AND l.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
                AND (c.list_id = l.id OR (c.list_id IS NULL AND lgc.list_id IS NOT NULL))
              GROUP BY l.id"
         );

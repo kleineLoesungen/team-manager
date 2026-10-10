@@ -116,7 +116,10 @@ endforeach; ?>
                 </button>
             </form>
         </div>
-        <p class="form-text mb-0 mt-2">Der Link gehört nur dir. Gib ihn nicht weiter – falls doch, erneuere ihn.</p>
+        <p class="form-text mb-0 mt-2">
+            Vergangene Termine reichen 3 Monate zurück – ältere findest du hier in der App.
+            Der Link gehört nur dir. Gib ihn nicht weiter – falls doch, erneuere ihn.
+        </p>
     </div>
 </div>
 <?php endif; ?>

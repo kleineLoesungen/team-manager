@@ -385,6 +385,8 @@ die Mitglieder sehen (keine Spalten „nur Koordinatoren“)
 persönlichen Feed nur bei „Ja“ — eingetragener Wert, sonst der Standardwert der Spalte in
 dieser Liste. Ohne Auswahl (Standard), bei freien Listen und bei Terminen erscheint der
 Eintrag immer. Code: `src/db/calendar.php`.
+Alle Feeds (auch Ressourcen) reichen 3 Monate in die Vergangenheit (`ICS_PAST_INTERVAL` in
+`src/utils/calendar.php`); ältere Einträge gibt es nur in der App.
 Im Koordinator-Feed steht vor jedem Eintrag der Teamname, bei Listen mit Kalender-Spalte
 dahinter die Zusagen: „U13 - Training 23.10.2026 (13/14)“ (Ja / aktive Mitglieder).
 

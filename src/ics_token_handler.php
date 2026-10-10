@@ -52,7 +52,7 @@ if ($team_id !== null) {
     $stmt = $pdo->prepare(
         "SELECT l.id, l.team_id, t.name AS team_name, l.name, l.date, l.location, l.description, l.time_start, l.time_end
          FROM lists l JOIN teams t ON t.id = l.team_id
-         WHERE l.team_id = ? AND l.date IS NOT NULL AND l.visibility IN ('public','protected','private')
+         WHERE l.team_id = ? AND l.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "' AND l.visibility IN ('public','protected','private')
          ORDER BY l.date ASC"
     );
     $stmt->execute([$team_id]);
@@ -68,7 +68,7 @@ if ($team_id !== null) {
         "SELECT e.id, e.team_id, t.name AS team_name, e.title, e.description, e.location, e.icon,
                 e.date, e.is_all_day, e.time_start, e.time_end
          FROM events e JOIN teams t ON t.id = e.team_id
-         WHERE e.team_id = ? AND e.visibility IN ('protected','private') AND e.date IS NOT NULL
+         WHERE e.team_id = ? AND e.visibility IN ('protected','private') AND e.date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
          ORDER BY e.date ASC"
     );
     $stmt->execute([$team_id]);

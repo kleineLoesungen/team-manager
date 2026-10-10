@@ -1,7 +1,7 @@
 <?php
 // src/ics_resource_handler.php — GET /ics/resource/{token}.ics — Belegung einer Ressource als Kalender
 // Kein Login: das Token steht für genau eine Ressource. Alle Teams; Titel nur, wenn ihn die
-// Mitglieder des belegenden Teams sehen dürfen, sonst "Belegt". Ab 90 Tagen zurück.
+// Mitglieder des belegenden Teams sehen dürfen, sonst "Belegt". Ab 3 Monaten zurück (ICS_PAST_INTERVAL).
 
 declare(strict_types=1);
 
@@ -29,7 +29,7 @@ if (!$resource) {
 $slots = resources_slots_sql();
 $stmt  = $pdo->prepare(
     "WITH s AS ($slots)
-     SELECT * FROM s WHERE resource_id = ? AND ends_at > CURRENT_DATE - 90
+     SELECT * FROM s WHERE resource_id = ? AND ends_at > CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
      ORDER BY starts_at"
 );
 $stmt->execute([(int)$resource['id']]);
