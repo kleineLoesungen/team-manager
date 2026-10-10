@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2026.10.10.2
+- [Koordinator] Benachrichtigung zu Listen und Dokumenten wahlweise per Push statt E-Mail, mit eigenem kurzem Text
+- [Koordinator, Mitglied] Push-Benachrichtigungen im Profil ein- und ausschalten (je Gerät)
+- [Mitglied] Kalender-Abo auch im Profil
+
 ## 2026.10.10
 - [Koordinator, Mitglied] Persönlicher Kalender für Mitglieder über alle ihre Teams; Listen auf Wunsch nur bei „Ja“ in einer gewählten Spalte
 - [Koordinator, Mitglied] Bestehende Listen mit genau einer Ja/Nein-Spalte erscheinen im persönlichen Kalender nur noch bei „Ja“
