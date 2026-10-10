@@ -21,6 +21,7 @@ $v_time_end   = $is_edit ? (substr((string)($event['time_end']   ?? ''), 0, 5)) 
 $v_location   = $is_edit ? ($event['location']    ?? '') : '';
 $v_hidden     = $is_edit ? (bool)$event['is_hidden'] : true;
 $v_visibility = $is_edit ? $event['visibility']   : 'protected';
+$v_guest      = $is_edit && in_array($event['guest_visible'] ?? false, [true, 1, '1', 't', 'true'], true);
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {   // nach einem Fehler: Eingaben behalten
     $v_title      = (string)($_POST['title'] ?? '');
     $v_desc       = (string)($_POST['description'] ?? '');
@@ -31,6 +32,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {   // nach einem Fehler: 
     $v_location   = (string)($_POST['location'] ?? '');
     $v_hidden     = !empty($_POST['is_hidden']);
     $v_visibility = ($_POST['visibility'] ?? '') === 'private' ? 'private' : 'protected';
+    $v_guest      = !empty($_POST['guest_visible']);
 }
 
 $icons = [
@@ -164,6 +166,7 @@ $icons = [
                         </label>
                     </div>
                 </div>
+                <?php render_guest_visible_switch($v_guest); ?>
             </div>
 
             <!-- Hidden in list view -->

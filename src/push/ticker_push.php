@@ -1,7 +1,9 @@
 <?php
 // src/push/ticker_push.php — Push-Benachrichtigungen für Live-Ticker
 //
-// Opt-in pro Ticker (ticker_subscriptions), nur für angemeldete Mitglieder und Koordinatoren.
+// Opt-in pro Ticker und GERÄT (ticker_subscriptions → push_subscriptions), für angemeldete
+// Mitglieder und Koordinatoren ebenso wie für Gäste ohne Konto (Issue #15). Das Gerät erkennt der
+// Server am Cookie tm_device (push_subscriptions.device_token), gesetzt bei /push/subscribe.
 // Abonnenten bekommen
 //   - die Startmeldung zur Startzeit (event_date + start_time, deutsche Ortszeit). Ohne Cronjob:
 //     geprüft bei Seitenaufrufen, höchstens einmal pro Minute (push_check_due_starts). Kommt
@@ -40,28 +42,65 @@ function push_vapid(PDO $pdo): array {
     return $vapid;
 }
 
-/** Store (or move to this user) the push subscription of the current device. */
-function push_save_subscription(PDO $pdo, int $user_id, string $endpoint, string $p256dh, string $auth): void {
+const PUSH_DEVICE_COOKIE = 'tm_device';
+
+/**
+ * Store the push subscription of the current device (for the signed-in account, or as guest
+ * device with user_id NULL) and remember the device in a long-lived cookie.
+ */
+function push_save_subscription(PDO $pdo, ?int $user_id, string $endpoint, string $p256dh, string $auth): void {
     // Admin-Kontext: dasselbe Gerät kann vorher einem anderen Nutzer gehört haben
-    set_admin_context($pdo);
-    $pdo->prepare(
-        "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)
-         ON CONFLICT (endpoint) DO UPDATE
-            SET user_id = EXCLUDED.user_id, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, updated_at = NOW()"
-    )->execute([$user_id, $endpoint, $p256dh, $auth]);
+    $token = as_admin($pdo, function () use ($pdo, $user_id, $endpoint, $p256dh, $auth) {
+        $stmt = $pdo->prepare(
+            "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, device_token) VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT (endpoint) DO UPDATE
+                SET user_id = EXCLUDED.user_id, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, updated_at = NOW(),
+                    device_token = COALESCE(push_subscriptions.device_token, EXCLUDED.device_token)
+             RETURNING device_token"
+        );
+        $stmt->execute([$user_id, $endpoint, $p256dh, $auth, bin2hex(random_bytes(32))]);
+        return (string)$stmt->fetchColumn();
+    });
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    setcookie(PUSH_DEVICE_COOKIE, $token, [
+        'expires' => time() + 400 * 86400, 'path' => '/', 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax',
+    ]);
 }
 
-function push_ticker_is_subscribed(PDO $pdo, int $ticker_id, int $user_id): bool {
-    $stmt = $pdo->prepare("SELECT 1 FROM ticker_subscriptions WHERE ticker_id = ? AND user_id = ?");
-    $stmt->execute([$ticker_id, $user_id]);
-    return (bool)$stmt->fetchColumn();
+/** Push device of this browser (from the cookie), or null. */
+function push_device_id(PDO $pdo): ?int {
+    $token = (string)($_COOKIE[PUSH_DEVICE_COOKIE] ?? '');
+    if (!preg_match('/^[0-9a-f]{64}$/', $token)) return null;
+    $id = as_admin($pdo, function () use ($pdo, $token) {
+        $stmt = $pdo->prepare("SELECT id FROM push_subscriptions WHERE device_token = ?");
+        $stmt->execute([$token]);
+        return $stmt->fetchColumn();
+    });
+    return $id === false ? null : (int)$id;
 }
 
-function push_ticker_set_subscribed(PDO $pdo, int $ticker_id, int $user_id, bool $on): void {
-    $pdo->prepare($on
-        ? "INSERT INTO ticker_subscriptions (ticker_id, user_id) VALUES (?, ?) ON CONFLICT DO NOTHING"
-        : "DELETE FROM ticker_subscriptions WHERE ticker_id = ? AND user_id = ?"
-    )->execute([$ticker_id, $user_id]);
+/** Whether this device has subscribed to the ticker. */
+function push_ticker_is_subscribed(PDO $pdo, int $ticker_id): bool {
+    $device = push_device_id($pdo);
+    if ($device === null) return false;
+    return (bool)as_admin($pdo, function () use ($pdo, $ticker_id, $device) {
+        $stmt = $pdo->prepare("SELECT 1 FROM ticker_subscriptions WHERE ticker_id = ? AND subscription_id = ?");
+        $stmt->execute([$ticker_id, $device]);
+        return $stmt->fetchColumn();
+    });
+}
+
+/** Subscribe or unsubscribe this device; false when the device is not registered for push. */
+function push_ticker_set_subscribed(PDO $pdo, int $ticker_id, bool $on): bool {
+    $device = push_device_id($pdo);
+    if ($device === null) return false;
+    as_admin($pdo, function () use ($pdo, $ticker_id, $device, $on) {
+        $pdo->prepare($on
+            ? "INSERT INTO ticker_subscriptions (ticker_id, subscription_id) VALUES (?, ?) ON CONFLICT DO NOTHING"
+            : "DELETE FROM ticker_subscriptions WHERE ticker_id = ? AND subscription_id = ?"
+        )->execute([$ticker_id, $device]);
+    });
+    return true;
 }
 
 /**
@@ -91,37 +130,30 @@ function push_defer(callable $fn): void {
 }
 
 /**
- * Send one notification to all subscribers of a ticker (all their devices).
- * Runs in admin context: it reads other users' devices. Removes devices the push service
- * reports as gone.
+ * Send one notification to all devices subscribed to a ticker (signed-in or guest), except the
+ * author's devices. Runs in admin context. Removes devices the push service reports as gone.
+ * The link is the public ticker page; it shows signed-in team members their own view.
  */
 function push_ticker_send(PDO $pdo, int $ticker_id, string $title, string $body, ?int $exclude_user_id, int $ttl): void {
     set_admin_context($pdo);
     $stmt = $pdo->prepare(
-        "SELECT ps.id, ps.endpoint, ps.p256dh, ps.auth, u.role
+        "SELECT ps.id, ps.endpoint, ps.p256dh, ps.auth
          FROM ticker_subscriptions ts
-         JOIN users u               ON u.id = ts.user_id AND u.is_active = TRUE
-         JOIN push_subscriptions ps ON ps.user_id = ts.user_id
-         WHERE ts.ticker_id = ? AND ts.user_id <> ?"
+         JOIN push_subscriptions ps ON ps.id = ts.subscription_id
+         LEFT JOIN users u          ON u.id = ps.user_id
+         WHERE ts.ticker_id = ?
+           AND (ps.user_id IS NULL OR (u.is_active = TRUE AND ps.user_id <> ?))"
     );
     $stmt->execute([$ticker_id, $exclude_user_id ?? 0]);
-    $by_role = [];
-    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $by_role[$row['role'] === 'coordinator' ? 'coordinator' : 'member'][$row['id']] = $row;
-    }
-    if (!$by_role) return;
+    $subs = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) $subs[$row['id']] = $row;
+    if (!$subs) return;
 
-    $vapid = push_vapid($pdo);
+    $payload = json_encode(['title' => $title, 'body' => $body, 'url' => "/ticker/{$ticker_id}"],
+                           JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $gone = [];
-    foreach ($by_role as $role => $subs) {
-        $payload = json_encode([
-            'title' => $title,
-            'body'  => $body,
-            'url'   => "/{$role}/ticker/{$ticker_id}",
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        foreach (webpush_send_all($subs, $payload, $vapid, $ttl, 'high') as $id => $status) {
-            if ($status === 404 || $status === 410) $gone[] = $id;
-        }
+    foreach (webpush_send_all($subs, $payload, push_vapid($pdo), $ttl, 'high') as $id => $status) {
+        if ($status === 404 || $status === 410) $gone[] = $id;
     }
     if ($gone) {
         $in = implode(',', array_fill(0, count($gone), '?'));

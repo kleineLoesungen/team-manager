@@ -673,7 +673,7 @@ match (true) {
     $path === '/member/calendar-reset'
         => require ROOT_PATH . '/src/member/calendar_reset_handler.php',
 
-    // ── Push-Benachrichtigungen (angemeldete Mitglieder und Koordinatoren) ──
+    // ── Push-Benachrichtigungen (angemeldet oder als Gast; Gerät per Cookie tm_device) ──
     $path === '/push/subscribe'
         => require ROOT_PATH . '/src/push/subscribe_handler.php',
 
@@ -692,6 +692,22 @@ match (true) {
             $_REQUEST['ticker_id'] = (int)$matches[2];
             require ROOT_PATH . '/src/push/ticker_notify_handler.php';
         })(),
+
+    // /ticker/{id}/notify — POST: Gast abonniert/beendet den Ticker auf diesem Gerät (Issue #15)
+    (bool)preg_match('#^/ticker/(\d+)/notify$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['role']      = 'guest';
+            $_REQUEST['ticker_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/push/ticker_notify_handler.php';
+        })(),
+
+    // ── Gastbereich ohne Anmeldung (Issue #15): Ticker | Termine | Ressourcen ──
+    $path === '/guest'
+        => redirect('/ticker'),
+    $path === '/guest/events'
+        => require ROOT_PATH . '/src/public/guest_events_handler.php',
+    $path === '/guest/resources'
+        => require ROOT_PATH . '/src/public/guest_resources_handler.php',
 
     // ── Public: Ticker (no auth) ─────────────────────────────────────────────
     $path === '/ticker'

@@ -243,7 +243,13 @@ function render_layout_foot(): void {
             var tmPushKey = tmPushForm.getAttribute('data-push-key');
             var tmPushCsrf = tmPushForm.querySelector('[name=_csrf]').value;
             tmPushForm.addEventListener('submit', function(e) {
-                if (tmPushForm.querySelector('[name=on]').value !== '1') return;
+                if (tmPushForm.querySelector('[name=on]').value !== '1') {
+                    // Abbestellen: Gerät erst auffrischen, damit der Server es am Cookie erkennt
+                    if (!tmCanPush || Notification.permission !== 'granted') return;
+                    e.preventDefault();
+                    tmRegisterDevice(tmPushKey, tmPushCsrf).catch(function() {}).then(function() { tmPushForm.submit(); });
+                    return;
+                }
                 e.preventDefault();
                 tmEnablePush(tmPushKey, tmPushCsrf).then(function() {
                     tmPushForm.submit();
@@ -252,9 +258,19 @@ function render_layout_foot(): void {
                     tmPushHint.classList.add('text-danger');
                 });
             });
-            // Schon abonniert und erlaubt: Gerät still auffrischen, Push-Endpunkte können wechseln
-            if (tmPushForm.getAttribute('data-push-on') === '1' && tmCanPush && Notification.permission === 'granted') {
-                tmRegisterDevice(tmPushKey, tmPushCsrf).catch(function() {});
+            // Push erlaubt: Gerät still auffrischen (Endpunkte können wechseln). Zeigte die Seite
+            // „nicht abonniert“, weil das Geräte-Cookie fehlte (z. B. erstes Mal seit dem Umbau auf
+            // Abos je Gerät), einmal neu laden — dann stimmt der Stand.
+            if (tmCanPush && Notification.permission === 'granted') {
+                navigator.serviceWorker.ready.then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+                    if (!sub) return;
+                    return tmRegisterDevice(tmPushKey, tmPushCsrf).then(function() {
+                        var k = 'tm-push-reload:' + location.pathname;
+                        var done = false;
+                        try { done = sessionStorage.getItem(k) === '1'; sessionStorage.setItem(k, '1'); } catch (e) { done = true; }
+                        if (tmPushForm.getAttribute('data-push-on') !== '1' && !done) location.reload();
+                    });
+                }).catch(function() {});
             }
         }
 
@@ -484,6 +500,13 @@ function render_page(array $opts, callable $body): void {
             'stats'   => ['href' => '/member/stats',   'icon' => 'bi-graph-up',      'label' => 'Statistik'],
             'profile' => ['href' => '/member/profile', 'icon' => 'bi-person-circle', 'label' => 'Profil'],
         ],
+        // Gastbereich ohne Anmeldung (Issue #15)
+        'public' => [
+            'ticker'    => ['href' => '/ticker',          'icon' => 'bi-megaphone',          'label' => 'Ticker'],
+            'events'    => ['href' => '/guest/events',    'icon' => 'bi-calendar3',          'label' => 'Termine'],
+            'resources' => ['href' => '/guest/resources', 'icon' => 'bi-box-seam',           'label' => 'Ressourcen'],
+            'login'     => ['href' => '/login?member=1',  'icon' => 'bi-box-arrow-in-right', 'label' => 'Anmelden'],
+        ],
         'admin' => [
             'teams'        => ['href' => '/admin/teams',        'icon' => 'bi-people-fill',  'label' => 'Teams'],
             'coordinators' => ['href' => '/admin/coordinators', 'icon' => 'bi-person-badge', 'label' => 'Koordinatoren'],
@@ -544,7 +567,7 @@ function render_page(array $opts, callable $body): void {
             <?php $body(); ?>
         </main>
 
-        <?php if ($role !== 'public' && isset($tab_maps[$role])): ?>
+        <?php if (isset($tab_maps[$role])): ?>
         <nav class="tabbar" aria-label="Hauptnavigation">
             <?php foreach ($tab_maps[$role] as $key => $tab): ?>
             <a href="<?= $tab['href'] ?>"

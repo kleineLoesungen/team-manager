@@ -87,6 +87,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 - Cross-team reads (resource usage, a member's teams, other teams' tickers) run briefly in admin context via `as_admin()` (connection.php), which restores the signed-in context; already in admin context it just runs
 - Departments: a team only sees resources of its department (`resources_active()` filters by the team); naming follows the domain — `organizations` (not clubs), contents overview `/…/contents` (single lists stay `/…/lists/{id}`)
 - Events: members write only their own (`events.created_by`) and only if `teams.members_create_events`; enforced in `src/db/events.php` and by RLS on `events` + `resource_bookings`
+- Guests (Issue #15): no account, no role — the guest area (`/ticker`, `/guest/events`, `/guest/resources`, role `public` in `render_page`) reads in admin context with explicit filters (`src/db/guest.php`): `guest_visible` AND not private; guest ticker push via device cookie
 
 ### Version / CHANGELOG.md
 - The instance version is the top `## YYYY.MM.DD` heading of `CHANGELOG.md`; every instance compares it with `CHANGELOG.md` on GitHub `main` and shows the admin "Update verfügbar" (`src/utils/updates.php`)
@@ -110,7 +111,7 @@ src/
   auth/             Login, logout, session, role mismatch redirect (role_redirect.php)
   coordinator/      Coordinator handlers (lists, events, columns, members, stats, files, logo, ticker, resources)
   member/           Member handlers (lists, events, stats, files, ticker, resources, coordinators, profile)
-  public/           Public (unauthenticated) handlers — ticker overview + detail
+  public/           Public (unauthenticated) handlers — guest area: ticker overview + detail, guest events, guest resources
   lib/
     phpmailer/      PHPMailer library (bundled, no Composer)
   db/               PDO connection + schema init, domain queries (dashboard, events, resources,
@@ -122,7 +123,7 @@ src/
     admin/          Admin HTML templates
     coordinator/    Coordinator HTML templates
     member/         Member HTML templates
-    public/         Public HTML templates (ticker_overview, ticker_detail)
+    public/         Public HTML templates (ticker_overview, ticker_detail, guest_events)
     layout.php      The one layout for all roles (render_page) + login layout
     login.php       Login page
   utils/
@@ -154,7 +155,7 @@ Browser → public/index.php (front controller)
 | Table | Purpose |
 |-------|---------|
 | `departments` | Departments (e.g. Fußball, Tennis) grouping teams and resources; members and organizations have none; optional `icon` (emoji from `DEPARTMENT_ICONS`, in front of team calendar entries) |
-| `teams` | Teams with name, `department_id`, active flag, logo path, coordinator ICS token, `members_create_events` |
+| `teams` | Teams with name, `department_id`, active flag, logo path, coordinator ICS token, guest ICS token, `members_create_events` |
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
 | `members` | Member profiles (the person, across teams), linked from `users.member_id`; `organization_id`; `calendar_token` (personal ICS feed across all teams) |
@@ -163,12 +164,12 @@ Browser → public/index.php (front controller)
 | `member_attributes` | Attribute definitions per group (visible_to_member, editable_by_member) |
 | `member_attribute_values` | Attribute values per member |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |
-| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always); `auto_reminder_sent_at` (push reminder on the day of the automatic visibility change, always) |
+| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always); `auto_reminder_sent_at` (push reminder on the day of the automatic visibility change, always); `guest_visible` |
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
 | `list_global_columns` | Which global columns appear in each list |
 | `cells` | EAV values — one row per (list, column, member) |
 | `files` | Markdown documents per team |
-| `events` | Team events (title, date, optional time, place, icon, visibility protected/private, `created_by`) |
+| `events` | Team events (title, date, optional time, place, icon, visibility protected/private, `created_by`, `guest_visible`) |
 | `free_list_rows` | Custom rows for free-type lists |
 | `tickers` | Live ticker events per team (status: active/closed, event_date, start_time) |
 | `ticker_tags` | Tag labels + color per team for ticker messages |
@@ -176,11 +177,11 @@ Browser → public/index.php (front controller)
 | `ticker_members` | Which members have write access to a ticker |
 | `ticker_viewers` | Current viewers: hash of session id + ticker id, last heartbeat (rows live minutes, cleared on close) |
 | `ticker_viewer_peaks` | Highest concurrent viewer count per ticker, kept until the ticker is deleted |
-| `push_subscriptions` | Push-capable devices per signed-in user (endpoint + encryption keys) |
-| `ticker_subscriptions` | Opt-in per ticker and user: start notice + every new entry |
+| `push_subscriptions` | Push-capable devices (endpoint + encryption keys); `user_id` NULL = guest device; `device_token` = cookie `tm_device` identifying the device |
+| `ticker_subscriptions` | Opt-in per ticker and DEVICE (`subscription_id`), signed-in or guest: start notice + every new entry |
 | `ticker_push_state` | Marks a ticker's start notice as sent (exactly once) |
 | `ticker_seen` | When a user last opened the ticker overview per team (dot on the Ticker tab, "Neu" badge) |
-| `resources` | Bookable resources (pitch, hall, bus) of one department, managed by the admin; ics token per resource |
+| `resources` | Bookable resources (pitch, hall, bus) of one department, managed by the admin; ics token per resource; `guest_visible` |
 | `resource_bookings` | Which list or event uses a resource (time comes from the list/event; overlaps only warn) |
 
 Admin credentials live in `config.php` / environment variables — not in the DB.

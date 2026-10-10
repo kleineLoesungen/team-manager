@@ -64,10 +64,24 @@
 
             <hr class="my-3">
 
-            <a href="/ticker" class="btn btn-outline-secondary w-100 min-touch">
-                <i class="bi bi-megaphone me-2"></i>Live-Ticker anzeigen
+            <a href="/ticker" class="btn btn-outline-secondary w-100 min-touch" data-guest-enter>
+                <i class="bi bi-person-walking me-2"></i>Als Gast weiter
             </a>
-            <p class="text-muted text-center mb-0 mt-2 text-xs">Verfolge Live-Events ohne Anmeldung</p>
+            <p class="text-muted text-center mb-0 mt-2 text-xs">Ticker, Termine und Ressourcen ohne Anmeldung</p>
         </div>
     </div><!-- /card -->
 </div><!-- /outer d-flex -->
+
+<script>
+// Gastbereich (Issue #15): Das Gerät merkt sich „Als Gast weiter“; die App startet dann dort.
+// „Anmelden“ im Gastbereich (/login?member=1) hebt das wieder auf.
+(function () {
+    var key = 'tm-guest';
+    try {
+        if (/[?&]member=1/.test(location.search)) localStorage.removeItem(key);
+        else if (localStorage.getItem(key) === '1' && !document.querySelector('.alert-danger')) { location.replace('/ticker'); return; }
+    } catch (e) {}
+    var btn = document.querySelector('[data-guest-enter]');
+    if (btn) btn.addEventListener('click', function () { try { localStorage.setItem(key, '1'); } catch (e) {} });
+})();
+</script>

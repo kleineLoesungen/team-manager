@@ -1,6 +1,6 @@
 <?php
 // src/templates/admin/resource_edit.php — Admin: rename a resource
-// Variables: $resource (id, name, department_id), $error (string), $departments
+// Variables: $resource (id, name, department_id, guest_visible), $error (string), $departments
 ?>
 <?php if ($error !== ''): render_flash('error', $error); endif; ?>
 
@@ -16,6 +16,7 @@
     </div>
     <?php render_department_select($departments, (int)$resource['department_id'],
         'Nur Teams dieser Abteilung können die Ressource belegen. Bestehende Belegungen bleiben erhalten.'); ?>
+    <div class="mb-4"><?php render_guest_visible_switch(in_array($resource['guest_visible'] ?? false, [true, 1, '1', 't', 'true'], true), 'resource'); ?></div>
     <div class="d-grid gap-3">
         <button type="submit" class="btn btn-primary min-touch">Ressource speichern</button>
         <a href="/admin/resources" class="btn btn-outline-secondary min-touch">Abbrechen</a>

@@ -78,5 +78,9 @@ $stmt->execute();
 $val = $stmt->fetchColumn();
 if ($val) $app_title = $val;
 
+// Ticker abonnieren als Gast: Abo hängt an diesem Gerät (Cookie tm_device, Issue #15)
+$push_subscribed = push_ticker_is_subscribed($pdo, $ticker_id);
+$push_key        = push_vapid($pdo)['public'];
+
 // Render public template (TICKER-05: auto-reload logic in template)
 require ROOT_PATH . '/src/templates/public/ticker_detail.php';

@@ -8,6 +8,7 @@ Weitere Bausteine:
 - **Ressourcen** (Platz, Halle, Bus …) für alle Teams: Belegung durch Listen und Termine, Prüfung auf Überschneidungen vor dem Speichern, Auslastung und ein ICS-Abo je Ressource.
 - **Termine durch Mitglieder:** pro Team freischaltbar.
 - **Live-Ticker** mit öffentlicher Seite und Push-Benachrichtigungen.
+- **Gastbereich** ohne Anmeldung: Ticker (mit Abo), freigegebene Termine mit Kalender-Abo und Ressourcen-Belegung.
 - **Benachrichtigungen** zu Listen und Dokumenten, von Hand durch Koordinatoren: per E-Mail oder per Push.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
@@ -439,6 +440,23 @@ können alle ändern. Die Regeln stehen doppelt: in `src/db/events.php` und als 
 `events` und `resource_bookings`.
 
 ---
+
+## Gastbereich (ohne Anmeldung)
+
+Gäste haben kein Konto. „Als Gast weiter“ auf der Anmeldeseite führt in den Gastbereich mit den
+Reitern **Ticker** (`/ticker`), **Termine** (`/guest/events`) und **Ressourcen** (`/guest/resources`);
+das Gerät merkt sich die Wahl (localStorage), eine installierte App startet dann dort. „Anmelden“
+(`/login?member=1`) hebt das wieder auf.
+
+- **Termine:** Listen und Termine mit „Für Gäste sichtbar“ (`guest_visible`, vom Koordinator
+  gesetzt), nur solange sie nicht privat sind — nur Titel, Ort, Datum und Zeit. Pro Team ein
+  Gast-Kalender-Abo (`teams.calendar_token_guest`, ohne Beschreibung und App-Links).
+- **Ressourcen:** nur Ressourcen „Für Gäste sichtbar“ (Admin). Alle nicht-privaten Belegungen;
+  den Titel nur bei Einträgen „Für Gäste sichtbar“, sonst „Belegt“.
+- **Ticker abonnieren:** Abos hängen am Gerät (`ticker_subscriptions.subscription_id`), für Gäste
+  wie für Angemeldete. Erkannt wird das Gerät am Cookie `tm_device`, gesetzt bei `/push/subscribe`.
+
+Gäste sehen nie Personen, Listen- oder Dokumentinhalte. Code: `src/db/guest.php`, `src/public/`.
 
 ## Version und Updates
 

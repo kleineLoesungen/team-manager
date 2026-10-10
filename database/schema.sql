@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
     sort_order                  INTEGER NOT NULL DEFAULT 0,
     logo_path                   VARCHAR(500)         NULL,
     calendar_token_coordinator  VARCHAR(64)  UNIQUE  NULL,
+    calendar_token_guest        VARCHAR(64)  UNIQUE  NULL,   -- Gast-Kalender (nur „Für Gäste sichtbar“)
     members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,   -- Mitglieder dürfen Termine anlegen
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -90,6 +91,7 @@ CREATE TABLE IF NOT EXISTS team_manager.lists (
                             CHECK (auto_visibility_hours BETWEEN 0 AND 720),
     auto_visibility_done_at TIMESTAMPTZ NULL,
     auto_reminder_sent_at   TIMESTAMPTZ NULL,                 -- Push-Erinnerung am Tag der Umstellung verschickt
+    guest_visible           BOOLEAN NOT NULL DEFAULT FALSE,   -- im Gastbereich (Titel, Ort, Zeit), nicht bei privat
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -232,8 +234,9 @@ CREATE TABLE IF NOT EXISTS team_manager.ticker_viewer_peaks (
 -- and auth come from PushManager.subscribe(); the server encrypts each notification for them.
 CREATE TABLE IF NOT EXISTS team_manager.push_subscriptions (
     id         SERIAL PRIMARY KEY,
-    user_id    INTEGER      NOT NULL REFERENCES team_manager.users(id) ON DELETE CASCADE,
+    user_id    INTEGER      NULL REFERENCES team_manager.users(id) ON DELETE CASCADE,   -- NULL = Gast-Gerät
     endpoint   TEXT         NOT NULL UNIQUE,
+    device_token CHAR(64)   NULL UNIQUE,   -- Cookie tm_device: erkennt das Gerät (auch ohne Anmeldung)
     p256dh     VARCHAR(100) NOT NULL,
     auth       VARCHAR(50)  NOT NULL,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
@@ -241,13 +244,14 @@ CREATE TABLE IF NOT EXISTS team_manager.push_subscriptions (
 );
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON team_manager.push_subscriptions(user_id);
 -- Ticker-Subscriptions — opt-in per ticker and user: start notice plus every new entry
+-- Ticker-Abo je Gerät (angemeldet oder Gast)
 CREATE TABLE IF NOT EXISTS team_manager.ticker_subscriptions (
-    ticker_id  INTEGER     NOT NULL REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
-    user_id    INTEGER     NOT NULL REFERENCES team_manager.users(id)   ON DELETE CASCADE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (ticker_id, user_id)
+    ticker_id       INTEGER     NOT NULL REFERENCES team_manager.tickers(id)            ON DELETE CASCADE,
+    subscription_id INTEGER     NOT NULL REFERENCES team_manager.push_subscriptions(id) ON DELETE CASCADE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (ticker_id, subscription_id)
 );
-CREATE INDEX IF NOT EXISTS idx_ticker_subscriptions_user ON team_manager.ticker_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_ticker_subscriptions_device ON team_manager.ticker_subscriptions(subscription_id);
 -- Ticker-Push-State — the start notice goes out exactly once (row = already sent)
 CREATE TABLE IF NOT EXISTS team_manager.ticker_push_state (
     ticker_id     INTEGER PRIMARY KEY REFERENCES team_manager.tickers(id) ON DELETE CASCADE,
@@ -374,6 +378,7 @@ CREATE TABLE IF NOT EXISTS team_manager.events (
     description TEXT NULL,
     location    VARCHAR(255) NULL,
     icon        VARCHAR(50) NULL DEFAULT 'bi-calendar-event',
+    guest_visible BOOLEAN NOT NULL DEFAULT FALSE,   -- im Gastbereich, nicht bei privat
     is_hidden   BOOLEAN NOT NULL DEFAULT TRUE,
     date        DATE NOT NULL,
     is_all_day  BOOLEAN NOT NULL DEFAULT TRUE,
@@ -393,6 +398,7 @@ CREATE TABLE IF NOT EXISTS team_manager.resources (
     name           VARCHAR(100) NOT NULL,
     department_id  INTEGER NOT NULL REFERENCES team_manager.departments(id),   -- nur Teams dieser Abteilung belegen sie
     is_active      BOOLEAN NOT NULL DEFAULT TRUE,
+    guest_visible  BOOLEAN NOT NULL DEFAULT FALSE,   -- Belegung im Gastbereich
     calendar_token CHAR(64) NULL UNIQUE,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -415,4 +421,4 @@ CREATE INDEX IF NOT EXISTS idx_resource_bookings_event ON team_manager.resource_
 
 -- Stand der Datenbank: dieses Schema enthält alle Migrationen bis einschließlich dieser.
 -- Bei jeder neuen Migration in database/migrations/ hier mitziehen (src/utils/updates.php).
-INSERT INTO team_manager.settings (key, value) VALUES ('db_migration', '20261010_rename_member_columns') ON CONFLICT DO NOTHING;
+INSERT INTO team_manager.settings (key, value) VALUES ('db_migration', '20261011_guests') ON CONFLICT DO NOTHING;

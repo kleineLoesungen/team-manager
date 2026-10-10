@@ -2,7 +2,9 @@
 // src/ics_token_handler.php - GET /ics/{token}.ics - ICS feed, no session required
 // The token is either
 //   - a team's coordinator token (teams.calendar_token_coordinator): everything of the team,
-//     shared by all its coordinators, or
+//     shared by all its coordinators,
+//   - a team's guest token (teams.calendar_token_guest): entries marked "Für Gäste sichtbar",
+//     title/place/date/time only (src/db/guest.php, Issue #15), or
 //   - a member's personal token (members.calendar_token): the person's lists and events across
 //     all their teams, filtered by each list's calendar column (src/db/calendar.php, Issue #12).
 
@@ -22,19 +24,24 @@ if (!preg_match('/^[0-9a-f]{64}$/', $raw_token)) {
 $pdo = get_db();
 
 // Resolve the token - admin context bypasses RLS (token lookup is credential verification)
-[$team_id, $member_id] = as_admin($pdo, function () use ($pdo, $raw_token) {
+[$team_id, $member_id, $guest_team] = as_admin($pdo, function () use ($pdo, $raw_token) {
     $stmt = $pdo->prepare("SELECT id FROM teams WHERE calendar_token_coordinator = ? AND is_active = TRUE");
     $stmt->execute([$raw_token]);
     $team_id = $stmt->fetchColumn();
-    if ($team_id !== false) return [(int)$team_id, null];
+    if ($team_id !== false) return [(int)$team_id, null, null];
+
+    $stmt = $pdo->prepare("SELECT id FROM teams WHERE calendar_token_guest = ? AND is_active = TRUE");
+    $stmt->execute([$raw_token]);
+    $guest_team = $stmt->fetchColumn();
+    if ($guest_team !== false) return [null, null, (int)$guest_team];
 
     $stmt = $pdo->prepare("SELECT id FROM members WHERE calendar_token = ? AND is_active = TRUE");
     $stmt->execute([$raw_token]);
     $member_id = $stmt->fetchColumn();
-    return [null, $member_id !== false ? (int)$member_id : null];
+    return [null, $member_id !== false ? (int)$member_id : null, null];
 });
 
-if ($team_id === null && $member_id === null) {
+if ($team_id === null && $member_id === null && $guest_team === null) {
     http_response_code(404);
     exit;
 }
@@ -76,6 +83,12 @@ if ($team_id !== null) {
 
     $filename = 'team-' . $team_id . '.ics';
     $ics      = ics_team_calendar($lists, $events, $base_url, 'coordinator', true);
+} elseif ($guest_team !== null) {
+    // Guest feed: only what the team shares with guests, without descriptions or app links
+    require_once ROOT_PATH . '/src/db/guest.php';
+    $feed     = guest_calendar_feed($pdo, $guest_team);
+    $filename = 'gast-team-' . $guest_team . '.ics';
+    $ics      = ics_team_calendar($feed['lists'], $feed['events'], $base_url, 'member', true, true);
 } else {
     // Personal feed: team name in front of each entry once the person is in several teams
     $feed     = member_calendar_feed($pdo, $member_id);

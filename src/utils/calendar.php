@@ -89,12 +89,13 @@ function ics_morning_trigger(?string $time_start): string
  * Team feed (lists + events) as an ICS document. Rows need team_id; with $team_prefix the
  * summary starts with the team name ("U13 - Training"). A list row with 'rsvp' => [yes, total]
  * gets the count appended ("U13 - Training (13/14)", coordinator feed). A row's 'dept_icon'
- * (department symbol) goes in front of everything: "⚽ U13 - Training".
+ * (department symbol) goes in front of everything: "⚽ U13 - Training". $guest: only title, place,
+ * date and time — no description and no link into the app (guest calendar, Issue #15).
  * @param array  $lists     id, team_id, team_name, name, date, location, description, time_start, time_end
  * @param array  $events    id, team_id, team_name, title, description, location, icon, date, is_all_day, time_start, time_end
  * @param string $role_path 'coordinator' or 'member' — links point into this role's pages
  */
-function ics_team_calendar(array $lists, array $events, string $base_url, string $role_path, bool $team_prefix = false): string
+function ics_team_calendar(array $lists, array $events, string $base_url, string $role_path, bool $team_prefix = false, bool $guest = false): string
 {
     $dtstamp = gmdate('Ymd\THis\Z');
     $lead    = fn(array $row) => !empty($row['dept_icon']) ? $row['dept_icon'] . ' ' : '';
@@ -144,8 +145,10 @@ function ics_team_calendar(array $lists, array $events, string $base_url, string
         $out .= foldIcsLine($dtend_line)   . "\r\n";
         $out .= foldIcsLine("SUMMARY:" . escapeIcsField($summary)) . "\r\n";
         if (!empty($list['location'])) $out .= foldIcsLine("LOCATION:" . escapeIcsField($list['location'])) . "\r\n";
-        $out .= foldIcsLine("URL:{$list_url}") . "\r\n";
-        $out .= foldIcsLine("DESCRIPTION:" . implode('\\n', $desc_parts)) . "\r\n";
+        if (!$guest) {
+            $out .= foldIcsLine("URL:{$list_url}") . "\r\n";
+            $out .= foldIcsLine("DESCRIPTION:" . implode('\\n', $desc_parts)) . "\r\n";
+        }
         $out .= "BEGIN:VALARM\r\n{$trigger}\r\nACTION:DISPLAY\r\n" . foldIcsLine("DESCRIPTION:Erinnerung: " . escapeIcsField($summary)) . "\r\nEND:VALARM\r\n";
         $out .= "END:VEVENT\r\n";
     }
@@ -188,7 +191,7 @@ function ics_team_calendar(array $lists, array $events, string $base_url, string
         $out .= foldIcsLine($dtend_line)   . "\r\n";
         $out .= foldIcsLine("SUMMARY:" . escapeIcsField($summary)) . "\r\n";
         if (!empty($ev['location'])) $out .= foldIcsLine("LOCATION:" . escapeIcsField($ev['location'])) . "\r\n";
-        if (!empty($ev['description'])) $out .= foldIcsLine("DESCRIPTION:" . escapeIcsField($ev['description'])) . "\r\n";
+        if (!$guest && !empty($ev['description'])) $out .= foldIcsLine("DESCRIPTION:" . escapeIcsField($ev['description'])) . "\r\n";
         $out .= "BEGIN:VALARM\r\n{$trigger}\r\nACTION:DISPLAY\r\n" . foldIcsLine("DESCRIPTION:Erinnerung: " . escapeIcsField($summary)) . "\r\nEND:VALARM\r\n";
         $out .= "END:VEVENT\r\n";
     }

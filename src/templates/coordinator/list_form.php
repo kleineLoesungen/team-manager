@@ -85,6 +85,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                     <option value="protected" <?= $old('visibility') === 'protected' ? 'selected' : '' ?>>Geschützt — Mitglieder sehen eigene Zeile (nur lesen)</option>
                     <option value="private"   <?= $old('visibility') === 'private'   ? 'selected' : '' ?>>Privat — Nur für Koordinatoren sichtbar</option>
                 </select>
+                <?php render_guest_visible_switch($posted && !empty($_POST['guest_visible'])); ?>
             </div>
 
             <!-- Sichtbarkeit automatisch umstellen -->

@@ -11,7 +11,7 @@ $pdo     = get_db();
 $error   = '';
 
 // Fetch list including show_all_rows, is_hidden, date, description, and optional time columns
-$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, list_type, calendar_column_id';
+$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, list_type, calendar_column_id, guest_visible';
 $stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -19,6 +19,7 @@ if ($list) {
     // pdo_pgsql returns booleans as 't'/'f'; filter_var does not handle these — use explicit list
     $list['show_all_rows'] = in_array($list['show_all_rows'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
     $list['is_hidden']     = in_array($list['is_hidden']     ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
+    $list['guest_visible'] = in_array($list['guest_visible'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
 }
 
 if (!$list) {
@@ -195,6 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_visibility    = $_POST['visibility'] ?? '';
         $new_show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
         $new_is_hidden     = isset($_POST['is_hidden'])     ? 1 : 0;
+        $new_guest_visible = !empty($_POST['guest_visible']);   // Gastbereich (Issue #15)
         $new_date          = trim($_POST['date'] ?? '');
         if ($new_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $new_date)) {
             $new_date = '';
@@ -259,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  AND time_start IS NOT DISTINCT FROM ?::time
                                 THEN auto_reminder_sent_at ELSE NULL END,
                             auto_visibility = ?, auto_visibility_hours = ?,
-                            calendar_column_id = ?,
+                            calendar_column_id = ?, guest_visible = ?,
                             updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
                 );
@@ -277,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $auto_val, $hours_val, $date_val, $ts_val,
                     $auto_val, $hours_val, $date_val, $ts_val,
                     $auto_val, $hours_val,
-                    $new_cal_col,
+                    $new_cal_col, $new_guest_visible ? 'true' : 'false',
                     $list_id, $_SESSION['team_id'],
                 ]);
                 resources_save($pdo, (int)$_SESSION['team_id'], 'list', $list_id, resources_from_post());
@@ -366,6 +368,7 @@ render_coach_page('Listen-Einstellungen', 'contents', function() use ($list, $er
                             Privat — Nur Koordinator sieht und bearbeitet
                         </option>
                     </select>
+                    <?php render_guest_visible_switch(($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== '') ? !empty($_POST['guest_visible']) : $list['guest_visible']); ?>
                 </div>
                 <div class="mb-4">
                     <label for="auto_visibility" class="form-label fw-semibold">Sichtbarkeit automatisch umstellen <span class="text-muted fw-normal">(optional)</span></label>

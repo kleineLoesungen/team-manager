@@ -130,7 +130,7 @@ $tags = $stmt->fetchAll(PDO::FETCH_ASSOC);
 require_once ROOT_PATH . '/src/db/ticker_viewers.php';
 $viewer_counts = ticker_viewers_counts($pdo, (int)$ticker['id']);
 require_once ROOT_PATH . '/src/push/ticker_push.php';
-$push_subscribed = push_ticker_is_subscribed($pdo, (int)$ticker['id'], (int)$_SESSION['user_id']);
+$push_subscribed = push_ticker_is_subscribed($pdo, (int)$ticker['id']);   // dieses Gerät
 $push_key        = push_vapid($pdo)['public'];
 
 require ROOT_PATH . '/src/templates/member/layout.php';

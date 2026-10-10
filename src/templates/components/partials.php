@@ -395,10 +395,11 @@ function render_ticker_viewers(array $ticker, ?array $counts): void {
 }
 
 /**
- * "Ticker abonnieren" — opt-in for push notifications of one running ticker.
- * The form works on its own for opting out; opting in first registers this device for push
- * (layout script: permission prompt, PushManager.subscribe, POST /push/subscribe), then
- * submits. Shows its own success message after the redirect.
+ * "Ticker abonnieren" — opt-in for push notifications of one running ticker on THIS device.
+ * Opting in first registers this device for push (layout script: permission prompt,
+ * PushManager.subscribe, POST /push/subscribe, which sets the device cookie), then submits.
+ * Shows its own success message after the redirect.
+ * @param string $role 'coordinator' | 'member' | 'guest' (public ticker page, Issue #15)
  * @param string $vapid_public applicationServerKey from push_vapid()
  */
 function render_ticker_push_toggle(array $ticker, string $role, bool $subscribed, string $vapid_public): void {
@@ -406,8 +407,14 @@ function render_ticker_push_toggle(array $ticker, string $role, bool $subscribed
     $flash = $_GET['success'] ?? '';
     if ($flash === 'notify_on')  render_flash('success', 'Du bekommst jetzt Benachrichtigungen zu diesem Ticker.');
     if ($flash === 'notify_off') render_flash('success', 'Benachrichtigungen zu diesem Ticker beendet.');
+    if ($flash === 'notify_device') render_flash('error', 'Dieses Gerät ist noch nicht für Push angemeldet. Tipp noch einmal und erlaube Benachrichtigungen.');
+    $action = match ($role) {
+        'coordinator' => '/coordinator/ticker/' . (int)$ticker['id'] . '/notify',
+        'member'      => '/member/ticker/' . (int)$ticker['id'] . '/notify',
+        default       => '/ticker/' . (int)$ticker['id'] . '/notify',   // Gast (Issue #15)
+    };
     ?>
-    <form method="POST" action="/<?= $role === 'coordinator' ? 'coordinator' : 'member' ?>/ticker/<?= (int)$ticker['id'] ?>/notify"
+    <form method="POST" action="<?= $action ?>"
           class="mb-4" data-push-form data-push-key="<?= htmlspecialchars($vapid_public, ENT_QUOTES) ?>"
           data-push-on="<?= $subscribed ? '1' : '0' ?>">
         <?= csrf_field() ?>
@@ -463,6 +470,23 @@ function render_push_device_card(string $vapid_public): void {
 function render_auto_reminder_hint(): void {
     ?>
     <div class="form-text"><i class="bi bi-bell me-1" aria-hidden="true"></i>Mitglieder mit Push werden am Tag der Umstellung daran erinnert, z. B. „Eintragen nur noch bis heute 16:00“.</div>
+    <?php
+}
+
+/**
+ * Switch "Für Gäste sichtbar" (Issue #15): lists, events (coordinators) and resources (admin).
+ * Entries: only title, place, date and time in the guest area, and never while "Privat".
+ * @param string $what 'entry' | 'resource' — only changes the explanation
+ */
+function render_guest_visible_switch(bool $checked, string $what = 'entry'): void {
+    ?>
+    <div class="form-check form-switch d-flex align-items-center gap-2 mt-2">
+        <input class="form-check-input" type="checkbox" role="switch" name="guest_visible" id="guest_visible" value="1" <?= $checked ? 'checked' : '' ?>>
+        <label class="form-check-label mb-0" for="guest_visible">Für Gäste sichtbar</label>
+    </div>
+    <div class="form-text mt-0"><?= $what === 'resource'
+        ? 'Gäste sehen die Belegung ohne Anmeldung — Titel nur bei Einträgen „Für Gäste sichtbar“, private gar nicht.'
+        : 'Im Gastbereich und im Gast-Kalender: nur Titel, Ort, Datum und Zeit. Nicht, solange „Privat“.' ?></div>
     <?php
 }
 

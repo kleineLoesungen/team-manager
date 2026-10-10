@@ -102,6 +102,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         sort_order                  INTEGER NOT NULL DEFAULT 0,
         logo_path                   VARCHAR(500) NULL,
         calendar_token_coordinator  VARCHAR(64)  UNIQUE NULL,
+        calendar_token_guest        VARCHAR(64)  UNIQUE NULL,
         members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,
         created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -158,6 +159,7 @@ function db_init_schema(PDO $pdo, string $s): void {
                                 CHECK (auto_visibility_hours BETWEEN 0 AND 720),
         auto_visibility_done_at TIMESTAMPTZ NULL,
         auto_reminder_sent_at   TIMESTAMPTZ NULL,
+        guest_visible           BOOLEAN NOT NULL DEFAULT FALSE,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -279,8 +281,9 @@ function db_init_schema(PDO $pdo, string $s): void {
     )");
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.push_subscriptions (
         id         SERIAL PRIMARY KEY,
-        user_id    INTEGER      NOT NULL REFERENCES {$s}.users(id) ON DELETE CASCADE,
+        user_id    INTEGER      NULL REFERENCES {$s}.users(id) ON DELETE CASCADE,
         endpoint   TEXT         NOT NULL UNIQUE,
+        device_token CHAR(64)   NULL UNIQUE,
         p256dh     VARCHAR(100) NOT NULL,
         auth       VARCHAR(50)  NOT NULL,
         created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
@@ -288,12 +291,12 @@ function db_init_schema(PDO $pdo, string $s): void {
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON {$s}.push_subscriptions(user_id)");
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_subscriptions (
-        ticker_id  INTEGER     NOT NULL REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
-        user_id    INTEGER     NOT NULL REFERENCES {$s}.users(id)   ON DELETE CASCADE,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        PRIMARY KEY (ticker_id, user_id)
+        ticker_id       INTEGER     NOT NULL REFERENCES {$s}.tickers(id)            ON DELETE CASCADE,
+        subscription_id INTEGER     NOT NULL REFERENCES {$s}.push_subscriptions(id) ON DELETE CASCADE,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (ticker_id, subscription_id)
     )");
-    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_subscriptions_user ON {$s}.ticker_subscriptions(user_id)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_ticker_subscriptions_device ON {$s}.ticker_subscriptions(subscription_id)");
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.ticker_push_state (
         ticker_id     INTEGER PRIMARY KEY REFERENCES {$s}.tickers(id) ON DELETE CASCADE,
         start_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -402,6 +405,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         description TEXT NULL,
         location    VARCHAR(255) NULL,
         icon        VARCHAR(50)  NULL DEFAULT 'bi-calendar-event',
+        guest_visible BOOLEAN NOT NULL DEFAULT FALSE,
         is_hidden   BOOLEAN NOT NULL DEFAULT TRUE,
         date        DATE NOT NULL,
         is_all_day  BOOLEAN NOT NULL DEFAULT TRUE,
@@ -421,6 +425,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         name           VARCHAR(100) NOT NULL,
         department_id  INTEGER NOT NULL REFERENCES {$s}.departments(id),
         is_active      BOOLEAN NOT NULL DEFAULT TRUE,
+        guest_visible  BOOLEAN NOT NULL DEFAULT FALSE,
         calendar_token CHAR(64) NULL UNIQUE,
         created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -813,23 +818,12 @@ function db_init_rls(PDO $pdo, string $s): void {
     } catch (PDOException $e) {
         error_log('db_init_rls: FORCE RLS ticker_subscriptions skipped (non-fatal) — ' . $e->getMessage());
     }
+    // Abos hängen am Gerät (auch Gäste ohne Kontext): Zugriff nur im Admin-Kontext (src/push/ticker_push.php)
     $pdo->exec("CREATE POLICY ticker_subscriptions_all ON {$s}.ticker_subscriptions FOR ALL USING (
         current_setting('app.is_admin', true) = 'true'
-        OR (user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
-            AND EXISTS (
-            SELECT 1 FROM {$s}.tickers
-            WHERE tickers.id = ticker_subscriptions.ticker_id
-              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-        ))
     ) WITH CHECK (
         current_setting('app.is_admin', true) = 'true'
-        OR (user_id = NULLIF(current_setting('app.current_user_id', true), '')::integer
-            AND EXISTS (
-            SELECT 1 FROM {$s}.tickers
-            WHERE tickers.id = ticker_subscriptions.ticker_id
-              AND tickers.team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
-        ))
-    )");
+    )");;
 
     $pdo->exec("ALTER TABLE {$s}.ticker_push_state ENABLE ROW LEVEL SECURITY");
     try {

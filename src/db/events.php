@@ -61,6 +61,8 @@ function event_input(bool $member, bool $allow_series): array {
         'time_end'    => ($time_start !== '' && $time_end !== '') ? $time_end : null,
         'visibility'  => (!$member && ($_POST['visibility'] ?? '') === 'private') ? 'private' : 'protected',
         'is_hidden'   => !$member && ($_POST['is_hidden'] ?? '') === '1',
+        // Gastbereich (Issue #15): nur Koordinatoren; null = bei Mitgliedern unverändert lassen
+        'guest_visible' => $member ? null : !empty($_POST['guest_visible']),
         'date'        => $date,
     ];
     $series = ($allow_series && !$member) ? series_from_post($date, 'der Termin')
@@ -82,8 +84,8 @@ function event_input(bool $member, bool $allow_series): array {
 function event_create(PDO $pdo, int $team_id, int $user_id, array $f, array $dates, array $resource_ids): array {
     $stmt = $pdo->prepare(
         "INSERT INTO events (team_id, title, description, location, icon, date, is_all_day, time_start, time_end,
-                             visibility, is_hidden, created_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
+                             visibility, is_hidden, guest_visible, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id"
     );
     $created = [];
     $pdo->beginTransaction();
@@ -91,7 +93,7 @@ function event_create(PDO $pdo, int $team_id, int $user_id, array $f, array $dat
         $stmt->execute([
             $team_id, $f['title'], $f['description'], $f['location'], $f['icon'], $date,
             $f['is_all_day'] ? 'true' : 'false', $f['time_start'], $f['time_end'],
-            $f['visibility'], $f['is_hidden'] ? 'true' : 'false', $user_id,
+            $f['visibility'], $f['is_hidden'] ? 'true' : 'false', !empty($f['guest_visible']) ? 'true' : 'false', $user_id,
         ]);
         $id        = (int)$stmt->fetchColumn();
         $created[] = $id;
@@ -105,12 +107,14 @@ function event_create(PDO $pdo, int $team_id, int $user_id, array $f, array $dat
 function event_update(PDO $pdo, int $team_id, int $event_id, array $f, array $resource_ids): void {
     $pdo->prepare(
         "UPDATE events SET title = ?, description = ?, location = ?, icon = ?, date = ?, is_all_day = ?,
-                           time_start = ?, time_end = ?, visibility = ?, is_hidden = ?
+                           time_start = ?, time_end = ?, visibility = ?, is_hidden = ?,
+                           guest_visible = COALESCE(?::boolean, guest_visible)
          WHERE id = ? AND team_id = ?"
     )->execute([
         $f['title'], $f['description'], $f['location'], $f['icon'], $f['date'],
         $f['is_all_day'] ? 'true' : 'false', $f['time_start'], $f['time_end'],
-        $f['visibility'], $f['is_hidden'] ? 'true' : 'false', $event_id, $team_id,
+        $f['visibility'], $f['is_hidden'] ? 'true' : 'false',
+        $f['guest_visible'] === null ? null : ($f['guest_visible'] ? 'true' : 'false'), $event_id, $team_id,
     ]);
     resources_save($pdo, $team_id, 'event', $event_id, $resource_ids);
 }

@@ -3,7 +3,7 @@
 // Variables: $teams_with_tickers (array of {team (id, name, department_name), tickers[]}, ordered by
 //            department, then team), $app_title (string). Grouped: Abteilung → Team → aktiv / geschlossen.
 require_once dirname(__DIR__, 2) . '/templates/layout.php';
-render_page(['title' => $app_title ?? 'Live-Ticker', 'role' => 'public'], function() use ($teams_with_tickers, $app_title) {
+render_page(['title' => $app_title ?? 'Live-Ticker', 'role' => 'public', 'active' => 'ticker'], function() use ($teams_with_tickers, $app_title) {
     ?>
     <?php if (empty($teams_with_tickers)): ?>
     <?php render_empty('megaphone', 'Keine Ticker vorhanden', 'Es sind derzeit keine Live-Ticker aktiv.'); ?>

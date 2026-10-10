@@ -1,13 +1,14 @@
 <?php
 // src/templates/public/ticker_detail.php — Public ticker feed (no auth)
-// Variables: $ticker (array), $messages (array), $app_title (string), $team (array)
+// Variables: $ticker (array), $messages (array), $app_title (string), $team (array),
+//            $push_subscribed (bool, this device), $push_key (VAPID public key)
 require_once dirname(__DIR__, 2) . '/templates/layout.php';
 // Vorschau, wenn der Link geteilt wird (WhatsApp & Co.)
 $ticker_meta = [
     'description' => 'Live-Ticker ' . ($team['name'] ?? '') . ($ticker['status'] === 'active' ? ' – jetzt live' : ''),
     'url'         => '/ticker/' . (int)$ticker['id'],
 ];
-render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public', 'meta' => $ticker_meta], function() use ($ticker, $messages, $app_title, $team) {
+render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public', 'active' => 'ticker', 'meta' => $ticker_meta], function() use ($ticker, $messages, $app_title, $team, $push_subscribed, $push_key) {
     ?>
     <div data-ticker-refresh="page">
     <?php render_ticker_viewers($ticker, null); ?>
@@ -24,6 +25,7 @@ render_page(['title' => e($ticker['name'] ?? 'Ticker'), 'role' => 'public', 'met
     <div class="mb-3">
         <?php render_ticker_status($ticker, true); ?>
     </div>
+    <?php render_ticker_push_toggle($ticker, 'guest', $push_subscribed, $push_key); ?>
     <div class="mb-4"><?php render_share_button('Ticker teilen', '/ticker/' . (int)$ticker['id'], $ticker['name'], 'Live-Ticker ' . $team['name'] . ': ' . $ticker['name']); ?></div>
 
     <!-- Message feed (newest first) -->

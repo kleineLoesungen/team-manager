@@ -27,6 +27,14 @@ function resources_active(PDO $pdo, ?int $team_id = null): array {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+/** Resources shown to guests (Issue #15): active and marked "Für Gäste sichtbar", all departments. */
+function resources_for_guests(PDO $pdo): array {
+    return as_admin($pdo, fn() => $pdo->query(
+        "SELECT r.id, r.name FROM resources r JOIN departments d ON d.id = r.department_id
+         WHERE r.is_active = TRUE AND r.guest_visible = TRUE ORDER BY d.name, r.name"
+    )->fetchAll(PDO::FETCH_ASSOC));
+}
+
 /** Resource ids booked by one list or event (own team, RLS). */
 function resources_booked_ids(PDO $pdo, string $kind, int $id): array {
     $col  = $kind === 'event' ? 'event_id' : 'list_id';
@@ -82,14 +90,15 @@ function resources_save(PDO $pdo, int $team_id, string $kind, int $id, array $re
  * SQL for all dated bookings of active resources and teams with their time window (starts_at/ends_at as
  * timestamps) and what a viewer may learn about them. Read in admin context only.
  * Columns: booking_id, resource_id, resource_name, team_id, team_name, kind, item_id, title,
- *          shared (visible to the owning team's members), date, time_start, time_end,
+ *          shared (visible to the owning team's members), guest_visible (marked for guests),
+ *          date, time_start, time_end,
  *          all_day, starts_at, ends_at
  */
 function resources_slots_sql(): string {
     return "
         SELECT b.id AS booking_id, b.resource_id, r.name AS resource_name,
                b.team_id, tm.name AS team_name, 'list' AS kind, l.id AS item_id, l.name AS title,
-               (l.visibility IN ('public', 'protected')) AS shared,
+               (l.visibility IN ('public', 'protected')) AS shared, l.guest_visible,
                l.date, l.time_start, l.time_end, (l.time_start IS NULL) AS all_day,
                l.date + COALESCE(l.time_start, TIME '00:00') AS starts_at,
                CASE WHEN l.time_start IS NULL THEN l.date + INTERVAL '1 day'
@@ -102,7 +111,7 @@ function resources_slots_sql(): string {
         UNION ALL
         SELECT b.id, b.resource_id, r.name,
                b.team_id, tm.name, 'event', e.id, e.title,
-               (e.visibility = 'protected'),
+               (e.visibility = 'protected'), e.guest_visible,
                e.date, e.time_start, e.time_end, (e.is_all_day OR e.time_start IS NULL),
                e.date + CASE WHEN e.is_all_day OR e.time_start IS NULL THEN TIME '00:00' ELSE e.time_start END,
                CASE WHEN e.is_all_day OR e.time_start IS NULL THEN e.date + INTERVAL '1 day'
@@ -122,9 +131,16 @@ function resources_as_admin(PDO $pdo, callable $fn): mixed {
 /**
  * Title as a viewer may see it: own team — what their role sees; other teams — what that
  * team's members see. Everything else is just "Belegt". 'url' only for the viewer's own team.
+ * Guests ($viewer_role 'guest'): the title only for entries marked "Für Gäste sichtbar".
  */
 function resources_present_slot(array $row, int $viewer_team, string $viewer_role): array {
     $shared   = in_array($row['shared'], [true, 1, '1', 't', 'true'], true);
+    if ($viewer_role === 'guest') {   // Gastbereich (Issue #15): Titel nur bei „Für Gäste sichtbar“
+        $row['all_day'] = in_array($row['all_day'], [true, 1, '1', 't', 'true'], true);
+        $row['label']   = in_array($row['guest_visible'], [true, 1, '1', 't', 'true'], true) ? $row['title'] : 'Belegt';
+        $row['url']     = null;
+        return $row;
+    }
     $own      = (int)$row['team_id'] === $viewer_team;
     $readable = $shared || ($own && $viewer_role === 'coordinator');
     $row['all_day'] = in_array($row['all_day'], [true, 1, '1', 't', 'true'], true);
@@ -242,7 +258,7 @@ function resources_conflict_count(PDO $pdo, string $kind, array $ids): int {
  * Each row is presented for the viewer and carries 'overlap' (another booking at that time).
  * @return array<string, list<array>> date => rows, ordered by time
  */
-function resources_usage(PDO $pdo, array $resource_ids, string $from, ?string $to = null, int $limit = 500): array {
+function resources_usage(PDO $pdo, array $resource_ids, string $from, ?string $to = null, int $limit = 500, bool $guest = false): array {
     $resource_ids = array_values(array_filter(array_map('intval', $resource_ids)));
     if (!$resource_ids) return [];
     $rows = resources_as_admin($pdo, function () use ($pdo, $resource_ids, $from, $to, $limit) {
@@ -267,11 +283,13 @@ function resources_usage(PDO $pdo, array $resource_ids, string $from, ?string $t
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     });
     $team = (int)($_SESSION['team_id'] ?? 0);
-    $role = (string)($_SESSION['role'] ?? 'member');
+    $role = $guest ? 'guest' : (string)($_SESSION['role'] ?? 'member');
     $days = [];
     foreach ($rows as $r) {
+        // Gäste: private Belegungen erscheinen gar nicht, Überschneidungen sind ihnen egal
+        if ($guest && !in_array($r['shared'], [true, 1, '1', 't', 'true'], true)) continue;
         $r = resources_present_slot($r, $team, $role);
-        $r['overlap'] = in_array($r['overlap'], [true, 1, '1', 't', 'true'], true);
+        $r['overlap'] = !$guest && in_array($r['overlap'], [true, 1, '1', 't', 'true'], true);
         $days[$r['date']][] = $r;
     }
     return $days;

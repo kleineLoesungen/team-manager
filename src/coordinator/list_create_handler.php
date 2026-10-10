@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name          = trim($_POST['name'] ?? '');
     $visibility    = $_POST['visibility'] ?? 'public';
     $show_all_rows = isset($_POST['show_all_rows']) ? 1 : 0;
+    $guest_visible = !empty($_POST['guest_visible']);   // Gastbereich (Issue #15)
     $list_type     = in_array($_POST['list_type'] ?? 'member', ['member', 'free']) ? $_POST['list_type'] : 'member';
     $selected_cols = array_map('intval', (array)($_POST['global_columns'] ?? []));
     $defaults      = (array)($_POST['defaults'] ?? []);  // [col_id => raw_value]
@@ -135,11 +136,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $resource_ids = resources_from_post();
             $created      = [];
             foreach ($dates as $list_date) {
-                $cols = "team_id, name, visibility, list_type, show_all_rows, is_hidden, auto_visibility, auto_visibility_hours, date, description, location, time_start, time_end";
-                $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+                $cols = "team_id, name, visibility, list_type, show_all_rows, is_hidden, auto_visibility, auto_visibility_hours, guest_visible, date, description, location, time_start, time_end";
+                $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
                 $params = [
                     $_SESSION['team_id'], $name, $visibility, $list_type, $show_all_rows, $is_hidden,
                     $auto !== '' ? $auto : null, $auto !== '' ? (int)$auto_hours : 0,
+                    $guest_visible ? 'true' : 'false',
                     $list_date !== '' ? $list_date : null,
                     $description !== '' ? $description : null,
                     $location !== '' ? $location : null,

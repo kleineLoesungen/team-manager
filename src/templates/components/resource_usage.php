@@ -13,8 +13,8 @@ const RESOURCE_USAGE_MORE      = 2;    // je „Weitere Einträge anzeigen“
 const RESOURCE_USAGE_MAX_WEEKS = 104;  // Obergrenze für ?wochen=
 
 /** Everything the page needs: resources, selected one, usage by day in range, ics link. */
-function resource_usage_page_data(PDO $pdo): array {
-    $resources = resources_active($pdo);
+function resource_usage_page_data(PDO $pdo, bool $guest = false): array {
+    $resources = $guest ? resources_for_guests($pdo) : resources_active($pdo);
     $ids       = array_map('intval', array_column($resources, 'id'));
     $selected  = (int)($_GET['r'] ?? 0);
     $selected  = in_array($selected, $ids, true) ? $selected : null;
@@ -24,7 +24,7 @@ function resource_usage_page_data(PDO $pdo): array {
     $weeks    -= ($weeks - RESOURCE_USAGE_WEEKS) % RESOURCE_USAGE_MORE;   // 4, 6, 8 …
     $to        = $today->modify('+' . ($weeks * 7) . ' days')->format('Y-m-d');
     $shown     = $selected !== null ? [$selected] : $ids;                 // nur Ressourcen der Abteilung
-    $token     = $selected !== null ? resources_calendar_token($pdo, $selected) : null;
+    $token     = ($selected !== null && !$guest) ? resources_calendar_token($pdo, $selected) : null;
 
     return [
         'resources' => $resources,
@@ -32,7 +32,8 @@ function resource_usage_page_data(PDO $pdo): array {
         'today'     => $today->format('Y-m-d'),
         'weeks'     => $weeks,
         'to'        => $to,
-        'days'      => resources_usage($pdo, $shown, $today->format('Y-m-d'), $to),
+        'days'      => resources_usage($pdo, $shown, $today->format('Y-m-d'), $to, 500, $guest),
+        'guest'     => $guest,
         'has_more'  => $weeks < RESOURCE_USAGE_MAX_WEEKS && resources_booked_from($pdo, $shown, $to),
         'ics_url'   => $token ? absolute_url('/ics/resource/' . $token . '.ics') : null,
     ];
@@ -70,10 +71,10 @@ function render_resource_usage(array $page, string $base): void {
         if ((int)$r['id'] === $selected) $name = $r['name'];
     }
     ?>
-    <?php render_page_header('Ressourcen', str_starts_with($base, '/coordinator') ? '/coordinator/contents' : '/member/contents'); ?>
+    <?php render_page_header('Ressourcen', !empty($page['guest']) ? null : (str_starts_with($base, '/coordinator') ? '/coordinator/contents' : '/member/contents')); ?>
 
     <?php if (!$page['resources']): ?>
-        <?php render_empty('box-seam', 'Keine Ressourcen', 'Der Admin hat noch keine Ressourcen angelegt.'); ?>
+        <?php render_empty('box-seam', 'Keine Ressourcen', !empty($page['guest']) ? 'Es sind keine Ressourcen für Gäste freigegeben.' : 'Der Admin hat noch keine Ressourcen angelegt.'); ?>
         <?php return; ?>
     <?php endif; ?>
 
@@ -85,7 +86,9 @@ function render_resource_usage(array $page, string $base): void {
     render_filter_pills($pills);
     ?>
 
-    <p class="text-muted small mb-3">Belegung aller Teams ab heute. Einträge, die das eigene Team nicht sehen darf, erscheinen als „Belegt“.</p>
+    <p class="text-muted small mb-3"><?= !empty($page['guest'])
+        ? 'Belegung ab heute. Einträge, die nicht für Gäste freigegeben sind, erscheinen als „Belegt“.'
+        : 'Belegung aller Teams ab heute. Einträge, die das eigene Team nicht sehen darf, erscheinen als „Belegt“.' ?></p>
 
     <?php
     $tz     = new DateTimeZone('Europe/Berlin');
@@ -157,7 +160,7 @@ function render_resource_usage(array $page, string $base): void {
             </a>
         </div>
     </div>
-    <?php elseif ($selected === null): ?>
+    <?php elseif ($selected === null && empty($page['guest'])): ?>
     <p class="text-muted small mt-4"><i class="bi bi-calendar-plus me-1" aria-hidden="true"></i>Wähle eine Ressource, um ihren Kalender zu abonnieren.</p>
     <?php endif; ?>
     <?php
