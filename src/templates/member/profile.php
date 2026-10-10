@@ -160,6 +160,8 @@ foreach ($attr_groups as $g) {
 
 <?php if ($ics_url) render_member_calendar_card($ics_url, 'profile'); ?>
 
+<?php render_push_device_card(push_vapid(get_db())['public']); ?>
+
 <?php render_install_app(); ?>
 
 <div class="mt-4">

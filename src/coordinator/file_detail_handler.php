@@ -18,14 +18,8 @@ if (!$file) {
 
 // Determine notify button state for file notifications
 $notify_target_role = ($file['visibility'] === 'private') ? 'coordinator' : 'member';
-$chk = $pdo->prepare(
-    "SELECT 1 FROM users u
-     JOIN members p ON p.id = u.member_id
-     WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE AND p.email IS NOT NULL
-     LIMIT 1"
-);
-$chk->execute([$_SESSION['team_id'], $notify_target_role]);
-$has_notify_recipients = (bool)$chk->fetch();
+require_once ROOT_PATH . '/src/push/notify_push.php';   // E-Mail oder Push (Issue #11)
+$has_notify_recipients = notify_has_recipients($pdo, (int)$_SESSION['team_id'], $notify_target_role);
 
 $error   = '';
 $success = '';

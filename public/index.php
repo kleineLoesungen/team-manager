@@ -672,6 +672,14 @@ match (true) {
     $path === '/push/subscribe'
         => require ROOT_PATH . '/src/push/subscribe_handler.php',
 
+    // Push abmelden (dieses Gerät, Profil) — Issue #11
+    $path === '/push/unsubscribe'
+        => require ROOT_PATH . '/src/push/unsubscribe_handler.php',
+
+    // Ziel von Push-Benachrichtigungen: ggf. Teamwechsel, dann Liste/Dokument öffnen
+    $path === '/open'
+        => require ROOT_PATH . '/src/auth/open_handler.php',
+
     // /{coordinator|member}/ticker/{id}/notify — POST: opt-in/out per ticker
     (bool)preg_match('#^/(coordinator|member)/ticker/(\d+)/notify$#', $path, $matches)
         => (function() use ($matches) {

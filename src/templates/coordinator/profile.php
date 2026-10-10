@@ -132,6 +132,8 @@ $ics_url_coordinator = $calendar_token_coordinator ? ($scheme . '://' . $host . 
 </div>
 <?php endif; ?>
 
+<?php render_push_device_card(push_vapid(get_db())['public']); ?>
+
 <?php render_install_app(); ?>
 
 <div class="mt-4">

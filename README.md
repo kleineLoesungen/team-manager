@@ -8,6 +8,7 @@ Weitere Bausteine:
 - **Ressourcen** (Platz, Halle, Bus …) für alle Teams: Belegung durch Listen und Termine, Prüfung auf Überschneidungen vor dem Speichern, Auslastung und ein ICS-Abo je Ressource.
 - **Termine durch Mitglieder:** pro Team freischaltbar.
 - **Live-Ticker** mit öffentlicher Seite und Push-Benachrichtigungen.
+- **Benachrichtigungen** zu Listen und Dokumenten, von Hand durch Koordinatoren: per E-Mail oder per Push.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
 
@@ -473,13 +474,20 @@ Browser-Leiste.
 
 Der Service Worker (`public/sw.js`) ist bewusst minimal: Er macht die App unter Chrome/Android
 per Button installierbar, zeigt ohne Netz eine Hinweisseite (`public/offline.html`) und
-empfängt Push-Benachrichtigungen für Ticker. Seiten und Daten speichert er **nicht**
+empfängt Push-Benachrichtigungen (Ticker und Koordinatoren). Seiten und Daten speichert er **nicht**
 zwischen — Mitgliederdaten landen nie im Cache des Geräts, und nach einem FTP-Deployment
 gibt es keine veralteten Stände. Nach Änderungen an `offline.html` die Cache-Version in
 `sw.js` erhöhen.
 
 Das VAPID-Schlüsselpaar für Push wird beim ersten Gebrauch erzeugt und in `settings`
 (`vapid_keys`) gespeichert.
+
+**Push durch Koordinatoren:** Auf der Benachrichtigungsseite einer Liste oder eines Dokuments
+wählt der Koordinator E-Mail **oder** Push (Titel + Push-Text, höchstens 150 Zeichen). Ein Gerät
+meldet man im Profil an („Push einschalten“) oder über „Ticker abonnieren“; auf dem iPhone geht
+das nur in der installierten App. Zugestellt wird an alle Geräte der Person, auch wenn sie
+gerade in einem anderen ihrer Teams angemeldet ist: Ein Tipp öffnet `/open?team=…&list=…`,
+das bei Bedarf ins Team des Inhalts wechselt. Code: `src/push/notify_push.php`.
 
 Icons werden aus einem Skript erzeugt und sind reproduzierbar:
 

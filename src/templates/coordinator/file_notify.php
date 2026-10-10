@@ -35,6 +35,16 @@
     </div>
 </div>
 
+<!-- Kanal: E-Mail oder Push (Issue #11) -->
+<?php render_notify_channel_tabs('/coordinator/files/' . (int)$file['id'] . '/notify', $channel); ?>
+
+<?php if ($channel === 'push'):
+    $notify_action        = '/coordinator/files/' . (int)$file['id'] . '/notify';
+    $back_url             = '/coordinator/files/' . (int)$file['id'];
+    $push_title_prefilled = mb_substr(preg_replace('/^\[(.+?)\] /u', '$1 - ', $subject_prefilled), 0, NOTIFY_PUSH_TITLE_MAX);   // „U11 - Training“
+    $is_private           = $file['visibility'] === 'private';
+    require ROOT_PATH . '/src/templates/components/push_notify_form.php';
+else: ?>
 <!-- 2+3. Formular + Vorschau -->
 <form method="POST" action="/coordinator/files/<?= (int)$file['id'] ?>/notify">
     <?= csrf_field() ?>
@@ -127,3 +137,4 @@ Link: <?= e($content_link) ?></pre>
     </div>
 
 </form>
+<?php endif; ?>

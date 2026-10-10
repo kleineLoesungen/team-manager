@@ -48,3 +48,31 @@ function team_switch_options(PDO $pdo): array {
     }
     return $rows;
 }
+
+/**
+ * Switch the session to one of team_switch_options(): coordinators keep their account and get
+ * the other team (users.team_id kept in sync for RLS), members take over the account of the
+ * same profile in that team (new session id).
+ * @param array{team_id: int, team_name: string, user_id: int} $option
+ */
+function team_switch_apply(PDO $pdo, array $option): void {
+    $role = $_SESSION['role'] ?? '';
+    set_admin_context($pdo);
+    if ($role === 'coordinator') {
+        $pdo->prepare("UPDATE users SET team_id = ? WHERE id = ?")->execute([$option['team_id'], (int)$_SESSION['user_id']]);
+        $_SESSION['team_id']   = $option['team_id'];
+        $_SESSION['team_name'] = $option['team_name'];
+    } else {
+        $stmt = $pdo->prepare("SELECT confirmed_at FROM users WHERE id = ?");
+        $stmt->execute([$option['user_id']]);
+        $confirmed_at = $stmt->fetchColumn();
+        session_regenerate_id(true);
+        $_SESSION['user_id']      = $option['user_id'];
+        $_SESSION['team_id']      = $option['team_id'];
+        $_SESSION['team_name']    = $option['team_name'];
+        $_SESSION['confirmed_at'] = $confirmed_at ?: null;
+    }
+    $_SESSION['last_activity'] = time();
+    reset_rls_context($pdo);
+    set_team_context($pdo, (int)$_SESSION['team_id'], $role, (int)$_SESSION['user_id']);
+}

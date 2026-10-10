@@ -425,6 +425,56 @@ function render_ticker_push_toggle(array $ticker, string $role, bool $subscribed
 }
 
 /**
+ * Profile card "Push-Benachrichtigungen" (Issue #11): turn push on or off for THIS device ("Push einschalten" / "Push ausschalten").
+ * State lives in the browser (permission + subscription), so the layout script fills in the
+ * status and shows the matching button; without JavaScript only the explanation remains.
+ * @param string $vapid_public applicationServerKey from push_vapid()
+ */
+function render_push_device_card(string $vapid_public): void {
+    ?>
+    <div class="card mt-4" data-push-device data-push-key="<?= htmlspecialchars($vapid_public, ENT_QUOTES) ?>">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-bell"></i>
+            <span class="fw-semibold">Push-Benachrichtigungen</span>
+        </div>
+        <div class="card-body">
+            <?= csrf_field() ?>
+            <p class="text-body-secondary small mb-3">
+                Nachrichten deiner Koordinatoren direkt aufs Handy, statt per E-Mail. Gilt für dieses
+                Gerät; auf dem iPhone nur in der installierten App (App auf dem Startbildschirm).
+            </p>
+            <p class="small mb-3" data-push-status aria-live="polite">Wird geprüft …</p>
+            <button type="button" class="btn btn-outline-primary min-touch" data-push-enable hidden>
+                <i class="bi bi-bell me-2" aria-hidden="true"></i>Push einschalten
+            </button>
+            <button type="button" class="btn btn-outline-secondary min-touch" data-push-disable hidden>
+                <i class="bi bi-bell-slash me-2" aria-hidden="true"></i>Push ausschalten
+            </button>
+            <noscript><p class="small text-muted mb-0">Zum Einschalten braucht es JavaScript.</p></noscript>
+        </div>
+    </div>
+    <?php
+}
+
+/**
+ * Channel switch on notification pages: E-Mail | Push (links, works without JavaScript).
+ * @param string $base    Page path without query, e.g. /coordinator/lists/5/notify
+ * @param string $channel 'email' | 'push'
+ */
+function render_notify_channel_tabs(string $base, string $channel): void {
+    ?>
+    <div class="seg-ctrl">
+        <a href="<?= e($base) ?>" class="<?= $channel === 'email' ? 'on' : '' ?>">
+            <i class="bi bi-envelope me-1" aria-hidden="true"></i>E-Mail
+        </a>
+        <a href="<?= e($base . '?channel=push') ?>" class="<?= $channel === 'push' ? 'on' : '' ?>">
+            <i class="bi bi-bell me-1" aria-hidden="true"></i>Push
+        </a>
+    </div>
+    <?php
+}
+
+/**
  * Recipient picker for notification forms: one switch per person, all on by default.
  * Posts recipients[] = user ids; the handler must intersect them with the allowed recipients.
  * @param array      $recipients   Rows with 'id', 'first_name', 'last_name'

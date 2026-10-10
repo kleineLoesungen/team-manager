@@ -171,68 +171,111 @@ function render_layout_foot(): void {
         tmClearBadge();
         document.addEventListener('visibilitychange', tmClearBadge);
 
+        /* Push auf diesem Gerät: anmelden (Erlaubnis, PushManager.subscribe, POST /push/subscribe)
+           und abmelden. Genutzt von "Ticker abonnieren" und vom Profil (render_push_device_card). */
+        var tmCanPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        var tmB64u = function(buf) {
+            return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        };
+        var tmKeyBytes = function(b64u) {
+            var s = atob(b64u.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - b64u.length % 4) % 4));
+            return Uint8Array.from(s, function(c) { return c.charCodeAt(0); });
+        };
+        var tmPost = function(url, csrf, data) {
+            data._csrf = csrf;
+            return fetch(url, { method: 'POST', credentials: 'same-origin', body: new URLSearchParams(data) })
+                .then(function(r) { if (!r.ok) throw new Error(url + ' ' + r.status); });
+        };
+        var tmRegisterDevice = function(key, csrf) {
+            return navigator.serviceWorker.ready.then(function(reg) {
+                return reg.pushManager.getSubscription().then(function(sub) {
+                    // Mit anderem Server-Schlüssel angelegt? Dann neu abonnieren.
+                    var k = sub && sub.options && sub.options.applicationServerKey;
+                    if (sub && k && tmB64u(k) !== key) return sub.unsubscribe().then(function() { return null; });
+                    return sub;
+                }).then(function(sub) {
+                    return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: tmKeyBytes(key) });
+                });
+            }).then(function(sub) {
+                return tmPost('/push/subscribe', csrf, { subscription: JSON.stringify(sub) });
+            });
+        };
+        var tmEnablePush = function(key, csrf) {
+            if (!tmCanPush) return Promise.reject(new Error('unsupported'));
+            return Notification.requestPermission().then(function(p) {
+                if (p !== 'granted') throw new Error('permission ' + p);
+                return tmRegisterDevice(key, csrf);
+            });
+        };
+        var tmPushError = function(err) {
+            if (!tmCanPush) {
+                return isIos
+                    ? 'Auf dem iPhone gehen Benachrichtigungen nur in der installierten App. Installiere sie (siehe unten) und öffne sie dann.'
+                    : 'Dieser Browser kann keine Benachrichtigungen empfangen.';
+            }
+            return Notification.permission === 'denied'
+                ? 'Benachrichtigungen sind für diese Seite blockiert. Erlaube sie in den Einstellungen deines Browsers und tipp dann noch einmal.'
+                : 'Das hat nicht geklappt. Prüf deine Verbindung und tipp noch einmal.';
+        };
+
         /* "Ticker abonnieren" (render_ticker_push_toggle): erst dieses Gerät für Push
            registrieren, dann das Formular abschicken. Abbestellen braucht kein Gerät. */
         var tmPushForm = document.querySelector('[data-push-form]');
         if (tmPushForm) {
             var tmPushHint = tmPushForm.querySelector('[data-push-hint]');
-            var tmCanPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
             var tmPushKey = tmPushForm.getAttribute('data-push-key');
-            var tmB64u = function(buf) {
-                return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            };
-            var tmKeyBytes = function(b64u) {
-                var s = atob(b64u.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - b64u.length % 4) % 4));
-                return Uint8Array.from(s, function(c) { return c.charCodeAt(0); });
-            };
-            var tmRegisterDevice = function() {
-                return navigator.serviceWorker.ready.then(function(reg) {
-                    return reg.pushManager.getSubscription().then(function(sub) {
-                        // Mit anderem Server-Schlüssel angelegt? Dann neu abonnieren.
-                        var k = sub && sub.options && sub.options.applicationServerKey;
-                        if (sub && k && tmB64u(k) !== tmPushKey) return sub.unsubscribe().then(function() { return null; });
-                        return sub;
-                    }).then(function(sub) {
-                        return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: tmKeyBytes(tmPushKey) });
-                    });
-                }).then(function(sub) {
-                    return fetch('/push/subscribe', {
-                        method: 'POST', credentials: 'same-origin',
-                        body: new URLSearchParams({
-                            _csrf: tmPushForm.querySelector('[name=_csrf]').value,
-                            subscription: JSON.stringify(sub)
-                        })
-                    }).then(function(r) { if (!r.ok) throw new Error('push/subscribe ' + r.status); });
-                });
-            };
-            var tmPushFail = function(text) {
-                tmPushHint.textContent = text;
-                tmPushHint.classList.add('text-danger');
-            };
+            var tmPushCsrf = tmPushForm.querySelector('[name=_csrf]').value;
             tmPushForm.addEventListener('submit', function(e) {
                 if (tmPushForm.querySelector('[name=on]').value !== '1') return;
                 e.preventDefault();
-                if (!tmCanPush) {
-                    tmPushFail(isIos
-                        ? 'Auf dem iPhone gehen Benachrichtigungen nur in der installierten App. Installiere sie im Profil und öffne den Ticker dort.'
-                        : 'Dieser Browser kann keine Benachrichtigungen empfangen.');
-                    return;
-                }
-                Notification.requestPermission().then(function(p) {
-                    if (p !== 'granted') throw new Error('permission ' + p);
-                    return tmRegisterDevice();
-                }).then(function() {
+                tmEnablePush(tmPushKey, tmPushCsrf).then(function() {
                     tmPushForm.submit();
-                }).catch(function() {
-                    tmPushFail(Notification.permission === 'denied'
-                        ? 'Benachrichtigungen sind für diese Seite blockiert. Erlaube sie in den Einstellungen deines Browsers und tipp dann noch einmal.'
-                        : 'Das hat nicht geklappt. Prüf deine Verbindung und tipp noch einmal.');
+                }).catch(function(err) {
+                    tmPushHint.textContent = tmPushError(err);
+                    tmPushHint.classList.add('text-danger');
                 });
             });
             // Schon abonniert und erlaubt: Gerät still auffrischen, Push-Endpunkte können wechseln
             if (tmPushForm.getAttribute('data-push-on') === '1' && tmCanPush && Notification.permission === 'granted') {
-                tmRegisterDevice().catch(function() {});
+                tmRegisterDevice(tmPushKey, tmPushCsrf).catch(function() {});
             }
+        }
+
+        /* Profil: Push-Benachrichtigungen auf diesem Gerät an/aus (render_push_device_card) */
+        var tmDevice = document.querySelector('[data-push-device]');
+        if (tmDevice) {
+            var tmDevKey  = tmDevice.getAttribute('data-push-key');
+            var tmDevCsrf = tmDevice.querySelector('[name=_csrf]').value;
+            var tmDevOn   = tmDevice.querySelector('[data-push-enable]');
+            var tmDevOff  = tmDevice.querySelector('[data-push-disable]');
+            var tmDevText = tmDevice.querySelector('[data-push-status]');
+            var tmDevShow = function(state, text) {
+                tmDevOn.hidden  = state !== 'off';
+                tmDevOff.hidden = state !== 'on';
+                tmDevText.textContent = text;
+                tmDevText.classList.toggle('text-danger', state === 'error');
+            };
+            var tmDevCheck = function() {
+                if (!tmCanPush) { tmDevShow('error', tmPushError()); return; }
+                navigator.serviceWorker.ready.then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+                    if (sub && Notification.permission === 'granted') {
+                        tmDevShow('on', 'Auf diesem Gerät aktiv. Du bekommst Nachrichten deiner Koordinatoren und der Ticker, die du abonniert hast.');
+                        tmRegisterDevice(tmDevKey, tmDevCsrf).catch(function() {});   // still auffrischen
+                    } else {
+                        tmDevShow('off', 'Auf diesem Gerät aus.');
+                    }
+                }).catch(function() { tmDevShow('off', 'Auf diesem Gerät aus.'); });
+            };
+            tmDevOn.addEventListener('click', function() {
+                tmEnablePush(tmDevKey, tmDevCsrf).then(tmDevCheck).catch(function(err) { tmDevShow('error', tmPushError(err)); tmDevOn.hidden = !tmCanPush; });
+            });
+            tmDevOff.addEventListener('click', function() {
+                navigator.serviceWorker.ready.then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+                    if (!sub) return;
+                    return tmPost('/push/unsubscribe', tmDevCsrf, { endpoint: sub.endpoint }).then(function() { return sub.unsubscribe(); });
+                }).then(tmDevCheck).catch(function() { tmDevShow('error', 'Das hat nicht geklappt. Prüf deine Verbindung und tipp noch einmal.'); tmDevOff.hidden = false; });
+            });
+            tmDevCheck();
         }
 
         /* Live-Ticker: Zuschauer melden (render_ticker_viewers, src/db/ticker_viewers.php).

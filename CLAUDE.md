@@ -11,7 +11,7 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - **Stack**: PHP + PostgreSQL — kein Framework-Wechsel; JS-Framework nur wenn unvermeidbar
 - **Sprache**: Vollständig Deutsch in der UI
 - **Mobile-first**: Alle Views primär für Smartphone-Bildschirme gestaltet
-- **E-Mail nur für Benachrichtigungen**: von Hand ausgelöst (Koordinator → Mitglieder zu Liste/Dokument, Admin → Koordinatoren), je eine Mail pro Empfänger; kein Login oder Passwort per Mail
+- **E-Mail nur für Benachrichtigungen**: von Hand ausgelöst (Koordinator → Mitglieder zu Liste/Dokument, Admin → Koordinatoren), je eine Mail pro Empfänger; kein Login oder Passwort per Mail. Koordinatoren können statt E-Mail auch Push wählen (`src/push/notify_push.php`, Ziel `/open` wechselt bei Bedarf das Team)
 - **Einfachheit**: Modernes, schlichtes Design — keine Überladung mit Features
 
 ## Technology Stack

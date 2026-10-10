@@ -22,19 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/member/switch-team?error=1');
     }
 
-    set_admin_context($pdo);
-    $stmt = $pdo->prepare("SELECT confirmed_at FROM users WHERE id = ?");
-    $stmt->execute([$target['user_id']]);
-    $confirmed_at = $stmt->fetchColumn();
-    reset_rls_context($pdo);
-
-    // Anderes Konto übernehmen: neue Sitzungs-ID, dann die Sitzung auf dieses Konto setzen
-    session_regenerate_id(true);
-    $_SESSION['user_id']       = $target['user_id'];
-    $_SESSION['team_id']       = $target['team_id'];
-    $_SESSION['team_name']     = $target['team_name'];
-    $_SESSION['confirmed_at']  = $confirmed_at ?: null;
-    $_SESSION['last_activity'] = time();
+    team_switch_apply($pdo, $target);   // Konto desselben Profils im anderen Team übernehmen
     redirect('/member/contents');
 }
 

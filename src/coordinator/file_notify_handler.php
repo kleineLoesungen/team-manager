@@ -59,6 +59,13 @@ $with_email    = array_values(array_filter($all_recipients,
 $without_email = array_values(array_filter($all_recipients,
     fn($u) =>  empty($u['email']) && empty($u['contact_email'])));
 
+// Kanal: E-Mail (Standard) oder Push (Issue #11, src/push/notify_push.php)
+require_once ROOT_PATH . '/src/push/notify_push.php';
+$channel      = (($_POST['channel'] ?? $_GET['channel'] ?? '') === 'push') ? 'push' : 'email';
+$devices      = push_device_counts($pdo, array_column($all_recipients, 'id'));
+$with_push    = array_values(array_filter($all_recipients, fn($u) =>  isset($devices[(int)$u['id']])));
+$without_push = array_values(array_filter($all_recipients, fn($u) => !isset($devices[(int)$u['id']])));
+
 // Team name for subject prefix
 $team_stmt = $pdo->prepare("SELECT name FROM teams WHERE id = ?");
 $team_stmt->execute([$_SESSION['team_id']]);
@@ -69,7 +76,10 @@ $subject_prefilled = '[' . $team_name . '] ' . $file['name'];
 $error = '';
 $selected_ids = null;   // null = alle ausgewählt (erster Aufruf)
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $channel === 'push') {
+    require_csrf();
+    [$error, $selected_ids] = notify_push_post($pdo, $with_push, (int)$_SESSION['team_id'], 'file', $file_id, '/coordinator/files/' . $file_id);
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
     $subject_raw = trim($_POST['subject'] ?? '');
@@ -160,7 +170,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Benachrichtigung prüfen', 'contents', function() use (
-    $file, $with_email, $without_email, $subject_prefilled, $content_link, $error, $selected_ids
+    $file, $with_email, $without_email, $subject_prefilled, $content_link, $error,
+    $channel, $with_push, $without_push, $selected_ids
 ) {
     if ($error) echo '<div class="alert alert-danger mb-3">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/file_notify.php';
