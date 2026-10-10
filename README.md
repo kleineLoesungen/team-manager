@@ -340,9 +340,9 @@ Es ist reines SQL ohne `psql`-Befehle wie `\set`, damit es auch in pgAdmin (F5) 
 
 Beim Schreiben eines solchen Skripts zu beachten:
 
-- **Schema-Name niemals raten.** In Produktion heißt das Schema `manager`, in Docker/Dev
-  `team_manager` — und auf demselben Server liegen weitere Schemas (`flowy`, `flowy_new2`),
-  die ebenfalls eine `teams`-Tabelle haben. Maßgeblich ist `DB_SCHEMA` aus `config.php`.
+- **Schema-Name niemals raten.** Jede Instanz kann ein anderes Schema nutzen (Standard
+  `team_manager`), und auf demselben Server können weitere Schemas mit einer `teams`-Tabelle
+  liegen. Maßgeblich ist allein `DB_SCHEMA` aus der `config.php` der jeweiligen Instanz.
   Prüfen mit:
   ```sql
   SELECT table_schema FROM information_schema.tables WHERE table_name = 'teams';
