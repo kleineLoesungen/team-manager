@@ -488,6 +488,8 @@ meldet man im Profil an („Push einschalten“) oder über „Ticker abonnieren
 das nur in der installierten App. Zugestellt wird an alle Geräte der Person, auch wenn sie
 gerade in einem anderen ihrer Teams angemeldet ist: Ein Tipp öffnet `/open?team=…&list=…`,
 das bei Bedarf ins Team des Inhalts wechselt. Code: `src/push/notify_push.php`.
+Auf der Startseite (Inhalte) erscheint einmal der Hinweis „Push einschalten“, sobald das Gerät
+Push kann und noch nie gefragt wurde; automatisch einschalten erlauben die Browser nicht.
 
 Icons werden aus einem Skript erzeugt und sind reproduzierbar:
 

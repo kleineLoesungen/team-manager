@@ -457,6 +457,32 @@ function render_push_device_card(string $vapid_public): void {
 }
 
 /**
+ * One-time hint on the start page: "Push einschalten" (Issue #11). Hidden by default; the
+ * layout script shows it only where push works (iPhone: installed app), push is not on for
+ * this device yet, the person was never asked (permission "default") and did not tap
+ * "Später" on this device (localStorage). Turning push on needs a tap — browsers do not
+ * allow asking automatically.
+ */
+function render_push_prompt(string $vapid_public): void {
+    ?>
+    <div data-push-prompt data-push-key="<?= htmlspecialchars($vapid_public, ENT_QUOTES) ?>" hidden>
+    <div class="alert alert-primary d-flex align-items-start gap-2" data-push-prompt-box>
+        <i class="bi bi-bell" aria-hidden="true"></i>
+        <div class="flex-grow-1">
+            <?= csrf_field() ?>
+            <div class="fw-semibold">Nachrichten deiner Koordinatoren aufs Handy</div>
+            <div class="small mb-2" data-push-prompt-text>Schalte Push-Benachrichtigungen für dieses Gerät ein — jederzeit im Profil änderbar.</div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary min-touch" data-push-prompt-on>Push einschalten</button>
+                <button type="button" class="btn btn-outline-secondary min-touch" data-push-prompt-later>Später</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    <?php
+}
+
+/**
  * Channel switch on notification pages: E-Mail | Push (links, works without JavaScript).
  * @param string $base    Page path without query, e.g. /coordinator/lists/5/notify
  * @param string $channel 'email' | 'push'

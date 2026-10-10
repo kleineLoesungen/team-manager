@@ -15,6 +15,8 @@ $base_url = '/member/contents';
 $cal_url  = fn(string $v, int $off) => $base_url . '?view=' . urlencode($v) . '&offset=' . $off;
 ?>
 
+<?php render_push_prompt(push_vapid(get_db())['public']); /* einmaliger Hinweis: Push einschalten */ ?>
+
 <!-- ── View switcher: Übersicht / Monat / Liste ─────────────────────────── -->
 <div class="seg-ctrl">
     <a href="<?= $base_url ?>" class="<?= ($view === 'overview') ? 'on' : '' ?>">

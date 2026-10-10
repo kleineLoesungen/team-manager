@@ -278,6 +278,37 @@ function render_layout_foot(): void {
             tmDevCheck();
         }
 
+        /* Startseite: einmaliger Hinweis "Push einschalten" (render_push_prompt) */
+        var tmPushPrompt = document.querySelector('[data-push-prompt]');
+        if (tmPushPrompt && tmCanPush && Notification.permission === 'default') {
+            var tmPromptKey = 'tm-push-prompt-later';
+            var tmLater = false;
+            try { tmLater = localStorage.getItem(tmPromptKey) === '1'; } catch (e) {}
+            if (!tmLater) {
+                navigator.serviceWorker.ready.then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+                    if (sub) return;
+                    tmPushPrompt.hidden = false;
+                    var csrf = tmPushPrompt.querySelector('[name=_csrf]').value;
+                    var key  = tmPushPrompt.getAttribute('data-push-key');
+                    var text = tmPushPrompt.querySelector('[data-push-prompt-text]');
+                    tmPushPrompt.querySelector('[data-push-prompt-on]').addEventListener('click', function() {
+                        tmEnablePush(key, csrf).then(function() {
+                            tmPushPrompt.querySelector('[data-push-prompt-box]').classList.replace('alert-primary', 'alert-success');
+                            text.textContent = 'Push ist auf diesem Gerät eingeschaltet. Ändern kannst du das im Profil.';
+                            tmPushPrompt.querySelectorAll('button').forEach(function(b) { b.hidden = true; });
+                        }).catch(function(err) {
+                            text.textContent = tmPushError(err);
+                            if (Notification.permission === 'denied') tmPushPrompt.querySelector('[data-push-prompt-on]').hidden = true;
+                        });
+                    });
+                    tmPushPrompt.querySelector('[data-push-prompt-later]').addEventListener('click', function() {
+                        try { localStorage.setItem(tmPromptKey, '1'); } catch (e) {}
+                        tmPushPrompt.hidden = true;
+                    });
+                }).catch(function() {});
+            }
+        }
+
         /* Live-Ticker: Zuschauer melden (render_ticker_viewers, src/db/ticker_viewers.php).
            Der Server erkennt den Browser an der bestehenden Sitzung; gemeldet wird nur,
            solange die Seite sichtbar ist. */
