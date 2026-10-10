@@ -43,7 +43,10 @@ $scheme   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https'
 $base_url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
 
 if ($team_id !== null) {
-    // Coordinator feed: scoped context for the team, all visibilities
+    // Coordinator feed. Zusagen zuerst: as_admin() endet ohne Sitzung im leeren Kontext
+    $rsvp = list_calendar_rsvp_counts($pdo, $team_id);
+
+    // Scoped context for the team, all visibilities
     set_team_context($pdo, $team_id, 'coordinator');
 
     $stmt = $pdo->prepare(
@@ -54,6 +57,12 @@ if ($team_id !== null) {
     );
     $stmt->execute([$team_id]);
     $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Zusagen je Liste mit Kalender-Spalte: „(13/14)“ hinter dem Titel
+    foreach ($lists as &$list) {
+        if (isset($rsvp[(int)$list['id']])) $list['rsvp'] = $rsvp[(int)$list['id']];
+    }
+    unset($list);
 
     $stmt = $pdo->prepare(
         "SELECT e.id, e.team_id, t.name AS team_name, e.title, e.description, e.location, e.icon,
@@ -66,7 +75,7 @@ if ($team_id !== null) {
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $filename = 'team-' . $team_id . '.ics';
-    $ics      = ics_team_calendar($lists, $events, $base_url, 'coordinator');
+    $ics      = ics_team_calendar($lists, $events, $base_url, 'coordinator', true);
 } else {
     // Personal feed: team name in front of each entry once the person is in several teams
     $feed     = member_calendar_feed($pdo, $member_id);

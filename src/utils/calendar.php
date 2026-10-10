@@ -81,7 +81,8 @@ function ics_morning_trigger(?string $time_start): string
 
 /**
  * Team feed (lists + events) as an ICS document. Rows need team_id; with $team_prefix the
- * summary starts with the team name (personal feed of a member in several teams).
+ * summary starts with the team name ("U13 - Training"). A list row with 'rsvp' => [yes, total]
+ * gets the count appended ("U13 - Training (13/14)", coordinator feed).
  * @param array  $lists     id, team_id, team_name, name, date, location, description, time_start, time_end
  * @param array  $events    id, team_id, team_name, title, description, location, icon, date, is_all_day, time_start, time_end
  * @param string $role_path 'coordinator' or 'member' — links point into this role's pages
@@ -89,7 +90,7 @@ function ics_morning_trigger(?string $time_start): string
 function ics_team_calendar(array $lists, array $events, string $base_url, string $role_path, bool $team_prefix = false): string
 {
     $dtstamp = gmdate('Ymd\THis\Z');
-    $prefix  = fn(array $row) => $team_prefix ? $row['team_name'] . ' · ' : '';
+    $prefix  = fn(array $row) => $team_prefix ? $row['team_name'] . ' - ' : '';
 
     $out  = "BEGIN:VCALENDAR\r\n";
     $out .= "VERSION:2.0\r\n";
@@ -100,7 +101,8 @@ function ics_team_calendar(array $lists, array $events, string $base_url, string
     foreach ($lists as $list) {
         $uid      = md5((string)$list['team_id'] . '-' . (string)$list['id']) . '@team-manager.local';
         $list_url = $base_url . '/' . $role_path . '/lists/' . (int)$list['id'];
-        $summary  = $prefix($list) . $list['name'];
+        $summary  = $prefix($list) . $list['name']
+                  . (isset($list['rsvp']) ? ' (' . (int)$list['rsvp'][0] . '/' . (int)$list['rsvp'][1] . ')' : '');
 
         if (!empty($list['time_start'])) {
             $ts       = substr((string)$list['time_start'], 0, 5);

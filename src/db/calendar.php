@@ -92,3 +92,33 @@ function list_calendar_columns(PDO $pdo, int $list_id, int $team_id): array {
         return array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'name', 'id');
     });
 }
+
+/**
+ * Zusagen der Mitgliederlisten eines Teams mit Kalender-Spalte: [list_id => [ja, aktive Mitglieder]].
+ * „Ja“ wie im persönlichen Kalender: eingetragener Wert, sonst Standardwert der Spalte, sonst Nein.
+ * Listen ohne (gültige) Kalender-Spalte fehlen.
+ */
+function list_calendar_rsvp_counts(PDO $pdo, int $team_id): array {
+    return as_admin($pdo, function () use ($pdo, $team_id) {
+        $stmt = $pdo->prepare(
+            "SELECT l.id,
+                    COUNT(u.id) FILTER (WHERE COALESCE(ce.value, lgc.default_value, '0') = '1') AS yes,
+                    COUNT(u.id) AS total
+             FROM lists l
+             JOIN columns c ON c.id = l.calendar_column_id
+                  AND c.is_active = TRUE AND c.data_type = 'boolean' AND c.coach_only = FALSE
+             LEFT JOIN list_global_columns lgc ON lgc.list_id = l.id AND lgc.column_id = c.id
+             JOIN users u ON u.team_id = l.team_id AND u.role = 'member' AND u.is_active = TRUE
+             LEFT JOIN cells ce ON ce.list_id = l.id AND ce.column_id = c.id AND ce.member_id = u.id
+             WHERE l.team_id = ? AND l.list_type = 'member' AND l.date IS NOT NULL
+               AND (c.list_id = l.id OR (c.list_id IS NULL AND lgc.list_id IS NOT NULL))
+             GROUP BY l.id"
+        );
+        $stmt->execute([$team_id]);
+        $counts = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $counts[(int)$r['id']] = [(int)$r['yes'], (int)$r['total']];
+        }
+        return $counts;
+    });
+}

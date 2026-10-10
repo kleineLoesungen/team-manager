@@ -361,6 +361,8 @@ die Mitglieder sehen (keine Spalten „nur Koordinatoren“)
 persönlichen Feed nur bei „Ja“ — eingetragener Wert, sonst der Standardwert der Spalte in
 dieser Liste. Ohne Auswahl (Standard), bei freien Listen und bei Terminen erscheint der
 Eintrag immer. Code: `src/db/calendar.php`.
+Im Koordinator-Feed steht vor jedem Eintrag der Teamname, bei Listen mit Kalender-Spalte
+dahinter die Zusagen: „U13 - Training 23.10.2026 (13/14)“ (Ja / aktive Mitglieder).
 
 Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/contents?view=month`
 bzw. `/member/contents?view=month`, dort wird der persönliche Link beim ersten Aufruf erzeugt).
