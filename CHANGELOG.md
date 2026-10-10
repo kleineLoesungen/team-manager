@@ -6,7 +6,9 @@
 - [Koordinator] Koordinator-Kalender mit Teamnamen und Zusagen, z. B. „U13 - Training (13/14)“
 - [Mitglied] Der bisherige Team-Kalender der Mitglieder entfällt – bitte den persönlichen Link neu abonnieren
 - [Koordinator, Mitglied] Kalender-Abos zeigen Vergangenes nur noch 3 Monate zurück, ältere Einträge in der App
+- [Admin] Abteilungen mit optionalem Symbol, das in den Kalender-Abos der Teams vor jedem Eintrag steht
 - [Admin] Version: Migrationen in Reihenfolge mit Anleitung; Hinweis, wenn der Datenbank eine fehlt
+- [Koordinator, Mitglied] Ticker teilen: Der Link kommt jetzt auch in WhatsApp an
 - [System] Migrationen bleiben dauerhaft im Repository, die Datenbank merkt sich ihren Stand
 - Migration: 20261010_personal_calendar.sql
 
