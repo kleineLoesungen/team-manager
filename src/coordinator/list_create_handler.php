@@ -77,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $raw_hours  = trim($_POST['auto_visibility_hours'] ?? '');
     $auto_hours = $raw_hours === '' ? 0 : filter_var($raw_hours, FILTER_VALIDATE_INT,
         ['options' => ['min_range' => 0, 'max_range' => LIST_AUTO_VISIBILITY_MAX_HOURS]]);
+    $auto_reminder = $auto !== '' && !empty($_POST['auto_reminder']);   // Push 1 Std. vorher (Issue #13)
 
     // Eigene (lokale) Spalten: bis zu LIST_CREATE_LOCAL_COLUMNS Zeilen, leere Namen werden ignoriert
     $local_columns = [];
@@ -135,11 +136,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $resource_ids = resources_from_post();
             $created      = [];
             foreach ($dates as $list_date) {
-                $cols = "team_id, name, visibility, list_type, show_all_rows, is_hidden, auto_visibility, auto_visibility_hours, date, description, location, time_start, time_end";
-                $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
+                $cols = "team_id, name, visibility, list_type, show_all_rows, is_hidden, auto_visibility, auto_visibility_hours, auto_reminder, date, description, location, time_start, time_end";
+                $vals = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?";
                 $params = [
                     $_SESSION['team_id'], $name, $visibility, $list_type, $show_all_rows, $is_hidden,
                     $auto !== '' ? $auto : null, $auto !== '' ? (int)$auto_hours : 0,
+                    $auto_reminder ? 'true' : 'false',
                     $list_date !== '' ? $list_date : null,
                     $description !== '' ? $description : null,
                     $location !== '' ? $location : null,
@@ -204,15 +206,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // Pre-populate default cell values for all active players on this team
+                // Pre-populate default cell values for all active members on this team
                 if (!empty($valid_ids)) {
 
-                    // Fetch all active players
-                    $players_stmt = $pdo->prepare(
+                    // Fetch all active members
+                    $members_stmt = $pdo->prepare(
                         "SELECT id FROM users WHERE team_id = ? AND role = 'member' AND is_active = TRUE"
                     );
-                    $players_stmt->execute([$_SESSION['team_id']]);
-                    $player_ids = $players_stmt->fetchAll(PDO::FETCH_COLUMN);
+                    $members_stmt->execute([$_SESSION['team_id']]);
+                    $member_ids = $members_stmt->fetchAll(PDO::FETCH_COLUMN);
 
                     $cell_stmt = $pdo->prepare(
                         "INSERT INTO cells (list_id, column_id, member_id, value)
@@ -228,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             continue;
                         }
 
-                        foreach ($player_ids as $pid) {
+                        foreach ($member_ids as $pid) {
                             $cell_stmt->execute([$list_id, $col_id, (int)$pid, $value]);
                         }
                     }

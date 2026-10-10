@@ -46,17 +46,17 @@
         <div class="card-body">
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" role="switch"
-                       id="visible_to_player" name="visible_to_player"
-                       <?= $attr['visible_to_player'] ? 'checked' : '' ?>>
-                <label class="form-check-label" for="visible_to_player">
+                       id="visible_to_member" name="visible_to_member"
+                       <?= $attr['visible_to_member'] ? 'checked' : '' ?>>
+                <label class="form-check-label" for="visible_to_member">
                     Für Mitglied sichtbar
                 </label>
             </div>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch"
-                       id="editable_by_player" name="editable_by_player"
-                       <?= $attr['editable_by_player'] ? 'checked' : '' ?>>
-                <label class="form-check-label" for="editable_by_player">
+                       id="editable_by_member" name="editable_by_member"
+                       <?= $attr['editable_by_member'] ? 'checked' : '' ?>>
+                <label class="form-check-label" for="editable_by_member">
                     Von Mitglied editierbar
                 </label>
             </div>

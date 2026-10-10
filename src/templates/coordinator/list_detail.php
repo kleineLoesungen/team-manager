@@ -4,7 +4,7 @@
 // Per D-04: Bootstrap table-responsive for horizontal scroll.
 // Per D-05: empty cells show blank (not placeholder text).
 // Per D-07: replaced per-row "Bearbeiten" navigate-away with inline-edit form (260430-rbt).
-// Variables: $list, $columns, $players, $cells (map [row_id][column_id] => value)
+// Variables: $list, $columns, $members, $cells (map [row_id][column_id] => value)
 //            $is_free_list (bool), $free_rows (array), $confirm_delete (array|null)
 ?>
 <?php
@@ -80,7 +80,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 // Determine if we will render the full table form (description included inside it)
 $show_full_form = $is_free_list
     ? (!empty($free_rows) && !empty($columns))
-    : (!empty($players) && !empty($columns));
+    : (!empty($members) && !empty($columns));
 ?>
 
 <?php if (!$show_full_form): ?>
@@ -362,7 +362,7 @@ $show_full_form = $is_free_list
     </div>
 </details>
 
-<?php if (empty($players)): ?>
+<?php if (empty($members)): ?>
 <?php render_empty('people', 'Keine aktiven Mitglieder', 'Füge Mitglieder zum Team hinzu, um die Liste zu befüllen.'); ?>
 <?php elseif (empty($columns)): ?>
 <div class="alert alert-info">
@@ -382,14 +382,14 @@ $show_full_form = $is_free_list
     </div>
 
     <?php
-        $total_members = count($players);
+        $total_members = count($members);
         $col_totals    = [];
         foreach ($columns as $col) {
             $cid = (int)$col['id'];
             if ($col['data_type'] === 'number') {
                 $sum = 0;
-                foreach ($players as $player) {
-                    $v = $cells[(int)$player['id']][$cid] ?? null;
+                foreach ($members as $member) {
+                    $v = $cells[(int)$member['id']][$cid] ?? null;
                     if ($v !== null && $v !== '' && is_numeric($v)) {
                         $sum += (float)$v;
                     }
@@ -399,8 +399,8 @@ $show_full_form = $is_free_list
                     : number_format($sum, 2, ',', '.');
             } elseif ($col['data_type'] === 'boolean') {
                 $count = 0;
-                foreach ($players as $player) {
-                    if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
+                foreach ($members as $member) {
+                    if (($cells[(int)$member['id']][$cid] ?? null) === '1') {
                         $count++;
                     }
                 }
@@ -414,32 +414,32 @@ $show_full_form = $is_free_list
         foreach ($columns as $col) { $matrix_cols[] = $col['name']; }
     ?>
 
-    <?php render_matrix_table($matrix_cols, function() use ($players, $columns, $cells) { ?>
-        <?php foreach ($players as $player): ?>
+    <?php render_matrix_table($matrix_cols, function() use ($members, $columns, $cells) { ?>
+        <?php foreach ($members as $member): ?>
         <tr>
             <td class="fw-medium">
-                <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                <?= e($member['first_name'] . ' ' . $member['last_name']) ?>
             </td>
             <?php foreach ($columns as $col): ?>
             <td>
                 <?php
-                    $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
+                    $val = $cells[(int)$member['id']][(int)$col['id']] ?? null;
                     if ($col['data_type'] === 'boolean') {
                         $checked = ($val === '1') ? 'checked' : '';
                         echo '<div class="form-check form-switch mb-0">'
                             . '<input class="form-check-input" type="checkbox" role="switch"'
-                            . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' name="cells[' . (int)$member['id'] . '][' . (int)$col['id'] . ']"'
                             . ' value="1" ' . $checked . '>'
                             . '</div>';
                     } elseif ($col['data_type'] === 'number') {
                         $escaped = ($val !== null && $val !== '') ? e($val) : '';
                         echo '<input type="number" class="form-control cell-number"'
-                            . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' name="cells[' . (int)$member['id'] . '][' . (int)$col['id'] . ']"'
                             . ' value="' . $escaped . '">';
                     } else {
                         $escaped = ($val !== null) ? e($val) : '';
                         echo '<input type="text" class="form-control cell-text"'
-                            . ' name="cells[' . (int)$player['id'] . '][' . (int)$col['id'] . ']"'
+                            . ' name="cells[' . (int)$member['id'] . '][' . (int)$col['id'] . ']"'
                             . ' value="' . $escaped . '" maxlength="255">';
                     }
                 ?>
@@ -460,7 +460,7 @@ $show_full_form = $is_free_list
 
 <?php render_action_bar('Änderungen speichern', 'save-all-form'); ?>
 
-<?php endif; // member list: players/columns states ?>
+<?php endif; // member list: members/columns states ?>
 
 <?php endif; // is_free_list ?>
 

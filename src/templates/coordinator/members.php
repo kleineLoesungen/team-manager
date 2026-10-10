@@ -61,13 +61,13 @@ $fmt_attr = function(array $a): string {
 
                 <div class="info-mode mt-1 d-none" data-mode="contact">
                     <?php $has_contact = false; ?>
-                    <?php if (!empty($m['player_email'])): $has_contact = true; ?>
-                    <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($m['player_email']) ?></div>
+                    <?php if (!empty($m['member_email'])): $has_contact = true; ?>
+                    <div class="text-muted small"><i class="bi bi-envelope me-1"></i><?= e($m['member_email']) ?></div>
                     <?php endif; ?>
-                    <?php if (!empty($m['player_phone'])): $has_contact = true; ?>
+                    <?php if (!empty($m['member_phone'])): $has_contact = true; ?>
                     <div class="text-muted small">
                         <i class="bi bi-telephone me-1"></i>
-                        <a href="tel:<?= e($m['player_phone']) ?>"><?= e($m['player_phone']) ?></a>
+                        <a href="tel:<?= e($m['member_phone']) ?>"><?= e($m['member_phone']) ?></a>
                     </div>
                     <?php endif; ?>
                     <?php if (!empty($m['contact_name']) || !empty($m['contact_phone']) || !empty($m['contact_email'])): $has_contact = true; ?>
@@ -87,14 +87,14 @@ $fmt_attr = function(array $a): string {
                 </div>
 
                 <div class="info-mode mt-1 d-none" data-mode="attr-visible">
-                    <?php $attrs = $player_attr_visible[$pid] ?? []; ?>
+                    <?php $attrs = $member_attr_visible[$pid] ?? []; ?>
                     <?php if (!empty($attrs)): ?>
                     <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
                     <?php else: ?><span class="text-muted small">—</span><?php endif; ?>
                 </div>
 
                 <div class="info-mode mt-1 d-none" data-mode="attr-hidden">
-                    <?php $attrs = $player_attr_hidden[$pid] ?? []; ?>
+                    <?php $attrs = $member_attr_hidden[$pid] ?? []; ?>
                     <?php if (!empty($attrs)): ?>
                     <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
                     <?php else: ?><span class="text-muted small">—</span><?php endif; ?>

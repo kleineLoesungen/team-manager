@@ -1,7 +1,7 @@
 <?php
 // src/coordinator/member_create_handler.php — GET+POST /coordinator/members/create
-// Every new member account must be linked to a player record (NOT NULL after migration 024).
-// Two modes: link an existing playerless record, or create a new player inline.
+// Every new member account must be linked to a member record (NOT NULL after migration 024).
+// Two modes: link an existing memberless record, or create a new member inline.
 
 declare(strict_types=1);
 
@@ -28,7 +28,7 @@ $lp_stmt = $pdo->prepare(
      ORDER BY p.first_name ASC, p.last_name ASC"
 );
 $lp_stmt->execute([$team_id]);
-$linkable_players = $lp_stmt->fetchAll();
+$linkable_members = $lp_stmt->fetchAll();
 reset_rls_context($pdo);
 set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($create_mode === 'link') {
         $member_profile_id = (int)($_POST['member_id_link'] ?? 0);
-        $linked_player = null;
+        $linked_member = null;
 
         if ($member_profile_id <= 0) {
             $error = 'Bitte wähle ein Profil aus.';
@@ -49,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "SELECT id, first_name, last_name FROM members WHERE id = ?"
             );
             $p_check->execute([$member_profile_id]);
-            $linked_player = $p_check->fetch();
+            $linked_member = $p_check->fetch();
 
-            if (!$linked_player) {
+            if (!$linked_member) {
                 $error = 'Profil nicht gefunden.';
             } else {
                 $dup = $pdo->prepare("SELECT 1 FROM users WHERE member_id = ? AND team_id = ?");
@@ -64,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_team_context($pdo, $team_id, 'coordinator', (int)$_SESSION['user_id']);
         }
 
-        if (!$error && $linked_player) {
+        if (!$error && $linked_member) {
             try {
-                $username       = generate_unique_username($pdo, $linked_player['first_name'], $linked_player['last_name']);
+                $username       = generate_unique_username($pdo, $linked_member['first_name'], $linked_member['last_name']);
                 $plain_password = generate_random_password();
                 $password_hash  = password_hash($plain_password, PASSWORD_BCRYPT, ['cost' => 12]);
 
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } else {
-        // New player mode
+        // New member mode
         $first_name = trim($_POST['first_name'] ?? '');
         $last_name  = trim($_POST['last_name']  ?? '');
         $email_raw  = trim($_POST['email']      ?? '');
@@ -144,6 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_coach_page('Neues Mitglied anlegen', 'members', function() use ($error, $linkable_players) {
+render_coach_page('Neues Mitglied anlegen', 'members', function() use ($error, $linkable_members) {
     require ROOT_PATH . '/src/templates/coordinator/member_form.php';
 });

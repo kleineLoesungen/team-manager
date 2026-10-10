@@ -10,7 +10,7 @@ declare(strict_types=1);
  *
  * Rules:
  * - Coaches can view any list belonging to their team (public, protected, private)
- * - Players can view public and protected lists; private lists are invisible to players
+ * - Members can view public and protected lists; private lists are invisible to members
  *
  * @param int $list_id  The list to check
  * @return bool
@@ -61,12 +61,12 @@ function can_view_list(int $list_id): bool {
 }
 
 /**
- * Check if the current session user can EDIT a specific player's cells in a list.
+ * Check if the current session user can EDIT a specific member's cells in a list.
  *
  * Rules:
- * - Coaches can edit any player's cells in public, protected, or private lists (CELL-03: full access)
- * - Players can edit only their OWN cells, and only in public lists (CELL-01)
- * - Private lists: players cannot edit; coaches can edit
+ * - Coaches can edit any member's cells in public, protected, or private lists (CELL-03: full access)
+ * - Members can edit only their OWN cells, and only in public lists (CELL-01)
+ * - Private lists: members cannot edit; coaches can edit
  *
  * @param int $list_id    The list containing the cells
  * @param int $member_id  The user_id of the member whose cells are being edited

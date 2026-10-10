@@ -1,5 +1,5 @@
 <?php
-// src/admin/attribute_group_action_handler.php — POST: create, edit, delete a player attribute group
+// src/admin/attribute_group_action_handler.php — POST: create, edit, delete a member attribute group
 // $_REQUEST['action'] and optionally $_REQUEST['group_id'] set by router
 
 declare(strict_types=1);

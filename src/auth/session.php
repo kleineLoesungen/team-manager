@@ -64,7 +64,7 @@ function check_session_timeout(): void {
 }
 
 /**
- * Require a logged-in user (any role: coach or player).
+ * Require a logged-in user (any role: coach or member).
  * Redirects to /login if no valid session.
  */
 function require_auth(): void {
@@ -127,11 +127,6 @@ function require_member(): void {
     set_team_context($pdo, (int)$_SESSION['team_id'], 'member', (int)$_SESSION['user_id']);
 }
 
-/** @deprecated Use require_member() */
-function require_player(): void {
-    require_member();
-}
-
 /**
  * Check if the current request is authenticated as admin.
  */
@@ -140,7 +135,7 @@ function is_admin(): bool {
 }
 
 /**
- * Check if the current request is authenticated as coach or player.
+ * Check if the current request is authenticated as coach or member.
  */
 function is_authenticated(): bool {
     return !empty($_SESSION['user_id']);

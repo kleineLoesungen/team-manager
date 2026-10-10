@@ -1,6 +1,6 @@
 <?php
 // src/coordinator/profile_handler.php — GET+POST /coordinator/profile and /coordinator/confirm-profile
-// Coordinators edit their own contact data via their linked player record.
+// Coordinators edit their own contact data via their linked member record.
 
 declare(strict_types=1);
 
@@ -27,7 +27,7 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([(int)($_SESSION['team_id'] ?? 0), $user_id]);
 $self = $stmt->fetch();
-$player_id                  = (int)$self['member_id'];
+$member_id                  = (int)$self['member_id'];
 $calendar_token_coordinator = $self['calendar_token_coordinator'] ?? null;
 
 $error   = '';
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $last_name,
             $email_raw !== '' ? $email_raw : null,
             $phone !== '' ? $phone : null,
-            $player_id,
+            $member_id,
         ]);
         // Sync display_name session key and confirmed_at if needed
         reset_rls_context($pdo);

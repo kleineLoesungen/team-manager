@@ -1,6 +1,6 @@
 <?php
 // src/coordinator/members_handler.php — GET /coordinator/members
-// Merged view: team member accounts + their linked player records.
+// Merged view: team member accounts + their linked member records.
 
 declare(strict_types=1);
 
@@ -17,7 +17,7 @@ $success = !empty($_GET['success']) ? e($_GET['success']) : '';
 $stmt = $pdo->prepare(
     "SELECT u.id, u.username, u.is_active, u.confirmed_at,
             p.first_name, p.last_name,
-            p.id AS member_profile_id, p.email AS player_email, p.phone AS player_phone,
+            p.id AS member_profile_id, p.email AS member_email, p.phone AS member_phone,
             p.contact_name, p.contact_phone, p.contact_email, p.description,
             c.name AS organization_name
      FROM users u
@@ -30,27 +30,27 @@ $stmt->execute();
 $members = $stmt->fetchAll();
 
 // Fetch attributes for all linked member profiles in one query
-$player_attr_visible = []; // member_profile_id → [[name, value], ...]
-$player_attr_hidden  = [];
-$linked_player_ids   = array_values(array_filter(array_unique(array_column($members, 'member_profile_id'))));
-if (!empty($linked_player_ids)) {
+$member_attr_visible = []; // member_profile_id → [[name, value], ...]
+$member_attr_hidden  = [];
+$linked_member_ids   = array_values(array_filter(array_unique(array_column($members, 'member_profile_id'))));
+if (!empty($linked_member_ids)) {
     set_admin_context($pdo);
-    $ph = implode(',', array_fill(0, count($linked_player_ids), '?'));
+    $ph = implode(',', array_fill(0, count($linked_member_ids), '?'));
     $attr_stmt = $pdo->prepare(
-        "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_player, pav.value
+        "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_member, pav.value
          FROM member_attribute_values pav
          JOIN member_attributes pa ON pa.id = pav.attribute_id
          JOIN member_attribute_groups pag ON pag.id = pa.group_id
          WHERE pav.member_id IN ($ph) AND pav.value != '' AND " . attribute_groups_scope_sql('pag') . "
-         ORDER BY pa.visible_to_player DESC, pa.sort_order ASC, pa.name ASC"
+         ORDER BY pa.visible_to_member DESC, pa.sort_order ASC, pa.name ASC"
     );
-    $attr_stmt->execute([...$linked_player_ids, departments_param([team_department_id($pdo, $team_id)])]);
+    $attr_stmt->execute([...$linked_member_ids, departments_param([team_department_id($pdo, $team_id)])]);
     foreach ($attr_stmt->fetchAll() as $row) {
         $pid = (int)$row['member_id'];
-        if ($row['visible_to_player']) {
-            $player_attr_visible[$pid][] = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
+        if ($row['visible_to_member']) {
+            $member_attr_visible[$pid][] = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
         } else {
-            $player_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
+            $member_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
         }
     }
     reset_rls_context($pdo);
@@ -62,7 +62,7 @@ require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Mitglieder', 'members', function() use (
     $members,
-    $player_attr_visible, $player_attr_hidden,
+    $member_attr_visible, $member_attr_hidden,
     $error, $success
 ) {
     require ROOT_PATH . '/src/templates/coordinator/members.php';

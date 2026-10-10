@@ -3,7 +3,7 @@
 -- Defense-in-depth: application layer ALSO enforces team_id checks.
 --
 -- Two bypass mechanisms:
---   app.current_team_id — set per request for coach/player sessions (team isolation)
+--   app.current_team_id — set per request for coach/member sessions (team isolation)
 --   app.is_admin        — set per request for admin sessions (cross-team access)
 
 SET search_path TO team_manager, public;
@@ -51,7 +51,7 @@ CREATE POLICY team_isolation_users_delete ON users
 
 -- ── Phase 3: Lists, Columns & Cells — Visibility RLS ────────────────────────
 -- Note: app.current_role and app.current_user_id are set by set_team_context() in src/db/connection.php.
--- require_coordinator() passes role='coordinator'; require_player() passes role='member'.
+-- require_coordinator() passes role='coordinator'; require_member() passes role='member'.
 
 ALTER TABLE lists   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE lists   FORCE ROW LEVEL SECURITY;
@@ -60,7 +60,7 @@ ALTER TABLE columns FORCE ROW LEVEL SECURITY;
 ALTER TABLE cells   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cells   FORCE ROW LEVEL SECURITY;
 
--- Lists SELECT: admin sees all; coaches see all lists in their team; players see public + protected lists
+-- Lists SELECT: admin sees all; coaches see all lists in their team; members see public + protected lists
 CREATE POLICY lists_visibility_select ON lists
     FOR SELECT
     USING (
@@ -107,7 +107,7 @@ CREATE POLICY lists_delete ON lists
         )
     );
 
--- Columns SELECT: admin sees all; coaches see all columns in their team; players see columns for public + protected lists
+-- Columns SELECT: admin sees all; coaches see all columns in their team; members see columns for public + protected lists
 CREATE POLICY columns_visibility_select ON columns
     FOR SELECT
     USING (
@@ -117,13 +117,13 @@ CREATE POLICY columns_visibility_select ON columns
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
-            -- Players see global columns (list_id IS NULL) for their team
+            -- Members see global columns (list_id IS NULL) for their team
             list_id IS NULL
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
         )
         OR (
-            -- Players see local columns for public or protected lists in their team
-            -- coach_only columns are excluded from player visibility
+            -- Members see local columns for public or protected lists in their team
+            -- coach_only columns are excluded from member visibility
             list_id IS NOT NULL
             AND coach_only = FALSE
             AND team_id = NULLIF(current_setting('app.current_team_id', true), '')::integer
@@ -177,7 +177,7 @@ CREATE POLICY columns_update ON columns
         )
     );
 
--- List–global-column junction: coaches manage; players read (visibility follows parent list)
+-- List–global-column junction: coaches manage; members read (visibility follows parent list)
 ALTER TABLE list_global_columns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE list_global_columns FORCE ROW LEVEL SECURITY;
 
@@ -245,7 +245,7 @@ CREATE POLICY lgc_update ON list_global_columns
         )
     );
 
--- Cells SELECT: visibility inherited from parent list; players can read cells from public + protected lists
+-- Cells SELECT: visibility inherited from parent list; members can read cells from public + protected lists
 CREATE POLICY cells_visibility_select ON cells
     FOR SELECT
     USING (
@@ -598,7 +598,7 @@ CREATE POLICY ma_select ON team_manager.member_attributes FOR SELECT USING (
     OR current_setting('app.current_role', true) = 'coordinator'
     OR (
         current_setting('app.current_role', true) = 'member'
-        AND visible_to_player = TRUE
+        AND visible_to_member = TRUE
     )
 );
 CREATE POLICY ma_insert ON team_manager.member_attributes FOR INSERT WITH CHECK (
@@ -627,7 +627,7 @@ CREATE POLICY mav_select ON team_manager.member_attribute_values FOR SELECT USIN
         AND EXISTS (
             SELECT 1 FROM team_manager.member_attributes ma
             WHERE ma.id = member_attribute_values.attribute_id
-              AND ma.visible_to_player = TRUE
+              AND ma.visible_to_member = TRUE
         )
     )
 );
@@ -644,7 +644,7 @@ CREATE POLICY mav_insert ON team_manager.member_attribute_values FOR INSERT WITH
         AND EXISTS (
             SELECT 1 FROM team_manager.member_attributes ma
             WHERE ma.id = member_attribute_values.attribute_id
-              AND ma.editable_by_player = TRUE
+              AND ma.editable_by_member = TRUE
         )
     )
 );
@@ -661,7 +661,7 @@ CREATE POLICY mav_update ON team_manager.member_attribute_values FOR UPDATE USIN
         AND EXISTS (
             SELECT 1 FROM team_manager.member_attributes ma
             WHERE ma.id = member_attribute_values.attribute_id
-              AND ma.editable_by_player = TRUE
+              AND ma.editable_by_member = TRUE
         )
     )
 );

@@ -177,6 +177,8 @@ $icons = [
             </div>
             <?php endif; ?>
 
+            <?php // Kurzfristige Änderung per Push (Koordinatoren, Termin in den nächsten Tagen; Issue #13)
+            if ($is_edit && !$is_member && change_push_window($event['date'] ?? null)) render_change_push_switch(); ?>
         </div>
     </div>
 

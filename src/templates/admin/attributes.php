@@ -1,5 +1,5 @@
 <?php
-// src/templates/admin/attributes.php — Admin: Player attribute groups + nested attributes
+// src/templates/admin/attributes.php — Admin: Member attribute groups + nested attributes
 // Variables: $groups (array keyed by group_id, with department_id/department_name), $error (string),
 //            $departments (departments_list()), $department (?int filter)
 ?>
@@ -100,10 +100,10 @@
                     <span class="badge bg-secondary-subtle text-secondary-emphasis">
                         <?= $attr['data_type'] === 'date' ? 'Datum' : 'Text' ?>
                     </span>
-                    <?php if ($attr['visible_to_player']): ?>
+                    <?php if ($attr['visible_to_member']): ?>
                     <span class="badge bg-success-subtle text-success-emphasis">Sichtbar</span>
                     <?php endif; ?>
-                    <?php if ($attr['editable_by_player']): ?>
+                    <?php if ($attr['editable_by_member']): ?>
                     <span class="badge bg-primary-subtle text-primary-emphasis">Editierbar</span>
                     <?php endif; ?>
                     <i class="bi bi-chevron-down text-muted small tm-attr-chevron"></i>
@@ -134,16 +134,16 @@
                             <div class="col-6">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch"
-                                           name="visible_to_player" id="vis_<?= (int)$attr['id'] ?>"
-                                           <?= $attr['visible_to_player'] ? 'checked' : '' ?>>
+                                           name="visible_to_member" id="vis_<?= (int)$attr['id'] ?>"
+                                           <?= $attr['visible_to_member'] ? 'checked' : '' ?>>
                                     <label class="form-check-label" for="vis_<?= (int)$attr['id'] ?>">Sichtbar</label>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch"
-                                           name="editable_by_player" id="edit_<?= (int)$attr['id'] ?>"
-                                           <?= $attr['editable_by_player'] ? 'checked' : '' ?>>
+                                           name="editable_by_member" id="edit_<?= (int)$attr['id'] ?>"
+                                           <?= $attr['editable_by_member'] ? 'checked' : '' ?>>
                                     <label class="form-check-label" for="edit_<?= (int)$attr['id'] ?>">Editierbar</label>
                                 </div>
                             </div>
@@ -194,14 +194,14 @@
                     </div>
                     <div class="col-6">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="visible_to_player"
+                            <input class="form-check-input" type="checkbox" name="visible_to_member"
                                    role="switch" id="visible_new_<?= (int)$group['id'] ?>" checked>
                             <label class="form-check-label" for="visible_new_<?= (int)$group['id'] ?>">Für Mitglied sichtbar</label>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="editable_by_player"
+                            <input class="form-check-input" type="checkbox" name="editable_by_member"
                                    role="switch" id="editable_new_<?= (int)$group['id'] ?>">
                             <label class="form-check-label" for="editable_new_<?= (int)$group['id'] ?>">Von Mitglied editierbar</label>
                         </div>

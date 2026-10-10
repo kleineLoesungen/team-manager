@@ -1,6 +1,6 @@
 <?php
 // src/coach/list_detail_handler.php — GET /coordinator/lists/{id} — list table view (CELL-04)
-// Shows all players as rows, all columns (global + local) as table columns.
+// Shows all members as rows, all columns (global + local) as table columns.
 // Per D-03: global columns first, then local. Per D-05: empty cells show blank.
 
 declare(strict_types=1);
@@ -59,7 +59,7 @@ if ($is_free_list) {
     $col_stmt->execute([$list_id]);
     $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $players = []; // Not used in free list path
+    $members = []; // Not used in free list path
 } else {
     // Member list: existing behaviour
     // System columns (team_id = NULL) require admin context to bypass RLS
@@ -81,15 +81,15 @@ if ($is_free_list) {
     $col_stmt->execute([$list_id, $_SESSION['team_id'], $list_id]);
     $columns = $col_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $player_stmt = $pdo->prepare(
+    $member_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
          JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
          ORDER BY p.first_name, p.last_name"
     );
-    $player_stmt->execute([$_SESSION['team_id']]);
-    $players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $member_stmt->execute([$_SESSION['team_id']]);
+    $members = $member_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Fetch all cell values for this list and build map [row_id][column_id] => value
@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $submitted = $_POST['cells'] ?? [];
 
-            $rows_to_save = $is_free_list ? $free_rows : $players;
+            $rows_to_save = $is_free_list ? $free_rows : $members;
             $row_id_key   = $is_free_list ? 'id' : 'id';
 
             foreach ($rows_to_save as $row) {
@@ -264,6 +264,6 @@ $resource_conflicts = $resource_names ? resources_conflicts($pdo, 'list', $list_
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page(e($list['name']), 'contents', function() use ($list, $columns, $players, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients, $resource_names, $resource_conflicts) {
+render_coach_page(e($list['name']), 'contents', function() use ($list, $columns, $members, $cells, $error, $success, $is_free_list, $free_rows, $confirm_delete, $has_notify_recipients, $resource_names, $resource_conflicts) {
     require ROOT_PATH . '/src/templates/coordinator/list_detail.php';
 });

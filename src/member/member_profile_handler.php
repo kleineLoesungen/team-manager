@@ -1,7 +1,7 @@
 <?php
 // src/member/member_profile_handler.php — GET /member/member-profile
 // Shows the member's own profile record (via users.member_id), attributes filtered
-// by visible_to_player, team membership history, and cross-team stats.
+// by visible_to_member, team membership history, and cross-team stats.
 
 declare(strict_types=1);
 
@@ -16,7 +16,7 @@ $link_stmt->execute([(int)$_SESSION['user_id']]);
 $member_id = $link_stmt->fetchColumn();
 
 // If no profile is linked, render a "not linked" state (not an error)
-$player           = null;
+$member           = null;
 $attr_groups      = [];
 $system_stats     = [];
 $coordinator_stats = [];
@@ -36,7 +36,7 @@ if ($member_id) {
          WHERE p.id = ?"
     );
     $p_stmt->execute([$member_id]);
-    $player = $p_stmt->fetch();
+    $member = $p_stmt->fetch();
 
     // Team accounts: all user accounts linked to this profile
     $hist_stmt = $pdo->prepare(
@@ -49,16 +49,16 @@ if ($member_id) {
     $hist_stmt->execute([$member_id]);
     $history = $hist_stmt->fetchAll();
 
-    // Visible attributes only (WHERE visible_to_player = TRUE)
+    // Visible attributes only (WHERE visible_to_member = TRUE)
     $attr_stmt = $pdo->prepare(
         "SELECT pag.name AS group_name, pag.sort_order AS group_order,
                 pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_order,
-                pa.editable_by_player, pa.data_type,
+                pa.editable_by_member, pa.data_type,
                 COALESCE(pav.value, '') AS value
          FROM member_attribute_groups pag
          JOIN member_attributes pa ON pa.group_id = pag.id
          LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
-         WHERE pa.visible_to_player = TRUE AND " . attribute_groups_scope_sql('pag') . "
+         WHERE pa.visible_to_member = TRUE AND " . attribute_groups_scope_sql('pag') . "
          ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
     );
     $attr_stmt->execute([$member_id, departments_param(departments_of_member($pdo, $member_id))]);
@@ -119,6 +119,6 @@ if ($member_id) {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Mein Verlauf', 'member_profile', function() use ($player, $member_id, $attr_groups, $system_stats, $coordinator_stats, $history) {
+render_member_page('Mein Verlauf', 'member_profile', function() use ($member, $member_id, $attr_groups, $system_stats, $coordinator_stats, $history) {
     require ROOT_PATH . '/src/templates/member/member_profile.php';
 });

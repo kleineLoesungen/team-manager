@@ -12,7 +12,7 @@ $pdo = get_db();
 $departments = departments_list($pdo);
 $department  = department_filter($departments);
 
-// All coordinators with full data — personal info from players (canonical person table)
+// All coordinators with full data — personal info from members (canonical person table)
 $coordinators_stmt = $pdo->query(
     "SELECT u.id, p.first_name, p.last_name, u.username, u.is_active, p.email, p.phone,
             u.confirmed_at, cl.name AS organization_name

@@ -1,5 +1,5 @@
 <?php
-// src/templates/coordinator/player_profile.php
+// src/templates/coordinator/member_profile.php
 declare(strict_types=1);
 
 $active_teams = array_filter(
@@ -171,7 +171,7 @@ $active_teams = array_filter(
             <div class="mb-3">
                 <label class="form-label fw-medium mb-1">
                     <?= e($attr['attr_name']) ?>
-                    <?php if (!$attr['visible_to_player']): ?>
+                    <?php if (!$attr['visible_to_member']): ?>
                     <span class="badge badge-dim ms-1">Nur Koordinator</span>
                     <?php endif; ?>
                 </label>

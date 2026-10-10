@@ -1,7 +1,7 @@
 <?php
 // src/templates/coordinator/member_form.php — New member creation form
-// Variables (via use()): $error (string), $linkable_players (array)
-// Two modes: link existing playerless record, or create new player inline.
+// Variables (via use()): $error (string), $linkable_members (array)
+// Two modes: link existing memberless record, or create new member inline.
 ?>
 <div class="mb-3">
     <a href="/coordinator/members" class="btn btn-sm btn-outline-secondary">
@@ -25,10 +25,10 @@
             </div>
             <div class="form-check">
                 <input type="radio" id="mode_link" name="_mode_radio" value="link" class="form-check-input"
-                       <?= empty($linkable_players) ? 'disabled' : '' ?>>
-                <label for="mode_link" class="form-check-label <?= empty($linkable_players) ? 'text-muted' : 'fw-semibold' ?>">
+                       <?= empty($linkable_members) ? 'disabled' : '' ?>>
+                <label for="mode_link" class="form-check-label <?= empty($linkable_members) ? 'text-muted' : 'fw-semibold' ?>">
                     Vorhandenes Profil verknüpfen
-                    <?php if (empty($linkable_players)): ?>
+                    <?php if (empty($linkable_members)): ?>
                     <span class="small fw-normal">(keine verfügbar)</span>
                     <?php endif; ?>
                 </label>
@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <!-- New player fields -->
+    <!-- New member fields -->
     <div id="section_new" class="col-12 row g-3">
         <div class="col-12">
             <label for="first_name" class="form-label">Vorname <span class="text-danger">*</span></label>
@@ -70,11 +70,11 @@
 
     <!-- Link existing profile fields -->
     <div id="section_link" class="col-12 d-none">
-        <?php if (!empty($linkable_players)): ?>
+        <?php if (!empty($linkable_members)): ?>
         <label for="member_id_link" class="form-label">Profil auswählen</label>
         <select class="form-select form-select-lg" id="member_id_link" name="member_id_link">
             <option value="">— Profil wählen —</option>
-            <?php foreach ($linkable_players as $p): ?>
+            <?php foreach ($linkable_members as $p): ?>
             <option value="<?= (int)$p['id'] ?>"
                     <?= ((int)($_POST['member_id_link'] ?? 0) === (int)$p['id']) ? 'selected' : '' ?>>
                 <?= e($p['first_name'] . ' ' . $p['last_name']) ?>

@@ -1,7 +1,7 @@
 <?php
-// src/player/list_row_edit_handler.php — GET/POST /member/lists/{id}/rows/{player_id}/edit
-// Player edits only their own row in public lists only. (CELL-01, D-15)
-// Server-side ownership check: $_SESSION['user_id'] === $player_id (D-15)
+// src/member/list_row_edit_handler.php — GET/POST /member/lists/{id}/rows/{member_id}/edit
+// Member edits only their own row in public lists only. (CELL-01, D-15)
+// Server-side ownership check: $_SESSION['user_id'] === $member_id (D-15)
 
 declare(strict_types=1);
 
@@ -28,16 +28,16 @@ if ((int)$_SESSION['user_id'] !== $member_id) {
 }
 
 // Fetch member info for display
-$player_stmt = $pdo->prepare(
+$member_stmt = $pdo->prepare(
     "SELECT u.id, p.first_name, p.last_name
      FROM users u
      JOIN members p ON p.id = u.member_id
      WHERE u.id = ? AND u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE"
 );
-$player_stmt->execute([$member_id, $_SESSION['team_id']]);
-$player = $player_stmt->fetch(PDO::FETCH_ASSOC);
+$member_stmt->execute([$member_id, $_SESSION['team_id']]);
+$member = $member_stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$player) {
+if (!$member) {
     http_response_code(404);
     echo '<h1>Mitglied nicht gefunden</h1>';
     exit;
@@ -49,7 +49,7 @@ $list_stmt->execute([$list_id]);
 $list = $list_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$list) {
-    // List not found or not public — player cannot access
+    // List not found or not public — member cannot access
     http_response_code(404);
     echo '<h1>Liste nicht gefunden</h1>';
     exit;
@@ -139,14 +139,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/member/lists/' . $list_id . '?success=1');
 
     } catch (PDOException $e) {
-        error_log('Player row edit error: ' . $e->getMessage());
+        error_log('Member row edit error: ' . $e->getMessage());
         $error = 'Ein Fehler ist aufgetreten. Bitte versuch es später erneut.';
     }
 }
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Zeile bearbeiten', 'contents', function() use ($list, $player, $columns, $existing_cells, $error) {
+render_member_page('Zeile bearbeiten', 'contents', function() use ($list, $member, $columns, $existing_cells, $error) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/member/list_row_form.php';
 });

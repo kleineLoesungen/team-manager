@@ -55,7 +55,7 @@ if (!empty($unlinked_members)) {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Mitgliederprofile', 'players', function() use (
+render_coach_page('Mitgliederprofile', 'members', function() use (
     $profiles, $unlinked_members, $linkable_profiles, $error
 ) {
     require ROOT_PATH . '/src/templates/coordinator/member_profiles.php';

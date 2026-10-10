@@ -1,6 +1,6 @@
 <?php
 // src/member/profile_attributes_handler.php — POST /member/profile/attributes/save
-// Saves editable_by_player attribute values for the member's own player record.
+// Saves editable_by_member attribute values for the member's own member record.
 
 declare(strict_types=1);
 
@@ -21,11 +21,11 @@ $member_profile_id = (int)($link_stmt->fetchColumn() ?: 0);
 
 if ($member_profile_id <= 0) redirect('/member/profile');
 
-// Only save attributes that are visible_to_player AND editable_by_player, in a group the member
+// Only save attributes that are visible_to_member AND editable_by_member, in a group the member
 // sees (general or a department of one of their teams)
 $allowed_stmt = $pdo->prepare(
     "SELECT pa.id FROM member_attributes pa JOIN member_attribute_groups pag ON pag.id = pa.group_id
-     WHERE pa.visible_to_player = TRUE AND pa.editable_by_player = TRUE AND " . attribute_groups_scope_sql('pag')
+     WHERE pa.visible_to_member = TRUE AND pa.editable_by_member = TRUE AND " . attribute_groups_scope_sql('pag')
 );
 $allowed_stmt->execute([departments_param(departments_of_member($pdo, $member_profile_id))]);
 $allowed_ids = array_flip(array_column($allowed_stmt->fetchAll(), 'id'));

@@ -55,6 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-render_admin_page('Mitglied hinzufügen', 'players', function() use ($organizations, $error, $form) {
+render_admin_page('Mitglied hinzufügen', 'members', function() use ($organizations, $error, $form) {
     require ROOT_PATH . '/src/templates/admin/member_form.php';
 });

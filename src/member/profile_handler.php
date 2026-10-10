@@ -1,6 +1,6 @@
 <?php
 // src/member/profile_handler.php — GET+POST /member/profile
-// Full player data edit page (name, email, phone, contact, description, organization).
+// Full member data edit page (name, email, phone, contact, description, organization).
 // After first-login GDPR confirmation, this is the ongoing edit entry point.
 
 declare(strict_types=1);
@@ -15,21 +15,21 @@ $error   = '';
 // Load linked member_id (profile record)
 $link_stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
 $link_stmt->execute([$user_id]);
-$player_id = (int)($link_stmt->fetchColumn() ?: 0);
+$member_id = (int)($link_stmt->fetchColumn() ?: 0);
 
-$player      = null;
+$member      = null;
 $organizations       = [];
 $attr_groups = [];
 
-if ($player_id) {
+if ($member_id) {
     set_admin_context($pdo);
     $p_stmt = $pdo->prepare(
         "SELECT p.*, c.name AS organization_name
          FROM members p LEFT JOIN organizations c ON c.id = p.organization_id
          WHERE p.id = ?"
     );
-    $p_stmt->execute([$player_id]);
-    $player = $p_stmt->fetch();
+    $p_stmt->execute([$member_id]);
+    $member = $p_stmt->fetch();
 
     $organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active = TRUE ORDER BY name")->fetchAll();
 
@@ -37,16 +37,16 @@ if ($player_id) {
     $attr_stmt = $pdo->prepare(
         "SELECT pag.name AS group_name, pag.sort_order AS group_order,
                 pa.id AS attr_id, pa.name AS attr_name, pa.data_type, pa.sort_order AS attr_order,
-                pa.editable_by_player,
+                pa.editable_by_member,
                 COALESCE(pav.value, '') AS value
          FROM member_attribute_groups pag
          JOIN member_attributes pa ON pa.group_id = pag.id
          LEFT JOIN member_attribute_values pav ON pav.attribute_id = pa.id AND pav.member_id = ?
-         WHERE pa.visible_to_player = TRUE AND " . attribute_groups_scope_sql('pag') . "
+         WHERE pa.visible_to_member = TRUE AND " . attribute_groups_scope_sql('pag') . "
          ORDER BY pag.sort_order ASC, pag.name ASC, pa.sort_order ASC, pa.name ASC"
     );
     // allgemeine Gruppen + Gruppen der Abteilungen aller eigenen Teams
-    $attr_stmt->execute([$player_id, departments_param(departments_of_member($pdo, (int)$player_id))]);
+    $attr_stmt->execute([$member_id, departments_param(departments_of_member($pdo, (int)$member_id))]);
     foreach ($attr_stmt->fetchAll() as $row) {
         $g = $row['group_name'];
         if (!isset($attr_groups[$g])) {
@@ -62,7 +62,7 @@ if ($player_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 
-    if ($player_id) {
+    if ($member_id) {
         $first_name   = trim($_POST['first_name']   ?? '');
         $last_name    = trim($_POST['last_name']    ?? '');
         $email_raw    = trim($_POST['email']        ?? '');
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $contact_email !== '' ? $contact_email : null,
                 $description !== '' ? $description : null,
                 $organization_id > 0 ? $organization_id : null,
-                $player_id,
+                $member_id,
             ]);
             reset_rls_context($pdo);
             set_team_context($pdo, (int)$_SESSION['team_id'], 'member', $user_id);
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($error) {
             // Re-populate from submitted values for re-display
-            $player = array_merge($player ?? [], [
+            $member = array_merge($member ?? [], [
                 'first_name'   => $_POST['first_name']   ?? '',
                 'last_name'    => $_POST['last_name']    ?? '',
                 'email'        => $_POST['email']        ?? '',
@@ -126,6 +126,6 @@ $ics_url = member_calendar_url($pdo, (int)$_SESSION['user_id']);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Mein Profil', 'profile', function() use ($player, $player_id, $organizations, $attr_groups, $error, $success, $ics_url) {
+render_member_page('Mein Profil', 'profile', function() use ($member, $member_id, $organizations, $attr_groups, $error, $success, $ics_url) {
     require ROOT_PATH . '/src/templates/member/profile.php';
 });

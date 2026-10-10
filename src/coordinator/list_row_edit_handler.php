@@ -1,6 +1,6 @@
 <?php
-// src/coach/list_row_edit_handler.php — GET/POST /coordinator/lists/{id}/rows/{player_id}/edit
-// Coach edits all cells for a specific player row. (CELL-02)
+// src/coach/list_row_edit_handler.php — GET/POST /coordinator/lists/{id}/rows/{member_id}/edit
+// Coach edits all cells for a specific member row. (CELL-02)
 // Access: coaches can edit in public and protected lists; blocked from private? No — CELL-03 says
 // coaches have full access to private lists. can_edit_cell() returns true for coaches always.
 
@@ -21,16 +21,16 @@ if (!can_edit_cell($list_id, $member_id)) {
 }
 
 // Verify member belongs to this team
-$player_stmt = $pdo->prepare(
+$member_stmt = $pdo->prepare(
     "SELECT u.id, p.first_name, p.last_name
      FROM users u
      JOIN members p ON p.id = u.member_id
      WHERE u.id = ? AND u.team_id = ? AND u.role = 'member'"
 );
-$player_stmt->execute([$member_id, $_SESSION['team_id']]);
-$player = $player_stmt->fetch(PDO::FETCH_ASSOC);
+$member_stmt->execute([$member_id, $_SESSION['team_id']]);
+$member = $member_stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$player) {
+if (!$member) {
     http_response_code(404);
     echo '<h1>Mitglied nicht gefunden</h1>';
     exit;
@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
-render_coach_page('Zeile bearbeiten', 'contents', function() use ($list, $player, $columns, $existing_cells, $error) {
+render_coach_page('Zeile bearbeiten', 'contents', function() use ($list, $member, $columns, $existing_cells, $error) {
     if ($error) echo '<div class="alert alert-danger">' . e($error) . '</div>';
     require ROOT_PATH . '/src/templates/coordinator/list_row_form.php';
 });

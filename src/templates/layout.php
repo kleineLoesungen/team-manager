@@ -5,7 +5,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/components/partials.php';
 
-function render_layout_head(string $title = 'Team Manager'): void {
+/**
+ * @param array $meta Optional link preview for shared pages (WhatsApp, Signal …):
+ *                    'description' and 'url' (path); title and app icon are added
+ */
+function render_layout_head(string $title = 'Team Manager', array $meta = []): void {
     static $brand_color = null;
     if ($brand_color === null) {
         try {
@@ -38,6 +42,19 @@ function render_layout_head(string $title = 'Team Manager'): void {
     <meta name="apple-mobile-web-app-title" content="Team Manager">
     <meta name="theme-color" content="#2f3640">
     <title><?= $full_title ?></title>
+    <?php if ($meta): // Vorschau beim Teilen eines Links (Open Graph) ?>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<?= htmlspecialchars(html_entity_decode($title, ENT_QUOTES), ENT_QUOTES) ?>">
+    <?php if (!empty($meta['description'])): ?>
+    <meta property="og:description" content="<?= htmlspecialchars($meta['description'], ENT_QUOTES) ?>">
+    <meta name="description" content="<?= htmlspecialchars($meta['description'], ENT_QUOTES) ?>">
+    <?php endif; ?>
+    <?php if (!empty($meta['url'])): ?>
+    <meta property="og:url" content="<?= htmlspecialchars(absolute_url($meta['url']), ENT_QUOTES) ?>">
+    <?php endif; ?>
+    <meta property="og:image" content="<?= htmlspecialchars(absolute_url('/icons/icon-512.png'), ENT_QUOTES) ?>">
+    <meta property="og:locale" content="de_DE">
+    <?php endif; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet"
           integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
@@ -441,7 +458,8 @@ function render_layout_foot(): void {
  * render_admin_page() as the canonical layout function.
  *
  * @param array    $opts  Keys: 'title' (string), 'role' (admin|coordinator|member|public),
- *                        'active' (string — active tab key), 'back' (string|null — back URL)
+ *                        'active' (string — active tab key), 'back' (string|null — back URL),
+ *                        'meta' (array — link preview, see render_layout_head())
  * @param callable $body  Outputs the main content HTML
  */
 function render_page(array $opts, callable $body): void {
@@ -450,7 +468,7 @@ function render_page(array $opts, callable $body): void {
     $active = $opts['active'] ?? '';
     $back   = $opts['back']   ?? null;
 
-    render_layout_head($title);
+    render_layout_head($title, $opts['meta'] ?? []);
 
     $tab_maps = [
         'coordinator' => [
@@ -469,7 +487,7 @@ function render_page(array $opts, callable $body): void {
         'admin' => [
             'teams'        => ['href' => '/admin/teams',        'icon' => 'bi-people-fill',  'label' => 'Teams'],
             'coordinators' => ['href' => '/admin/coordinators', 'icon' => 'bi-person-badge', 'label' => 'Koordinatoren'],
-            'players'      => ['href' => '/admin/members',      'icon' => 'bi-person-vcard', 'label' => 'Mitglieder'],
+            'members'      => ['href' => '/admin/members',      'icon' => 'bi-person-vcard', 'label' => 'Mitglieder'],
             'organizations'        => ['href' => '/admin/organizations',        'icon' => 'bi-building',     'label' => 'Organisationen'],
             'settings'     => ['href' => '/admin/settings',     'icon' => 'bi-gear-fill',    'label' => 'Einstellungen'],
         ],

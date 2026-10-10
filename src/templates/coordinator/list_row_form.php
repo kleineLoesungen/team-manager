@@ -1,6 +1,6 @@
 <?php
 // src/templates/coach/list_row_form.php — Row cell edit form for coach
-// Variables: $list (id, name, visibility), $player (id, first_name, last_name),
+// Variables: $list (id, name, visibility), $member (id, first_name, last_name),
 //            $columns (array of column metadata), $existing_cells ([column_id => value])
 ?>
 
@@ -15,12 +15,12 @@
 <div class="card mb-4">
     <div class="card-header">
         <span class="fw-semibold">
-            <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+            <?= e($member['first_name'] . ' ' . $member['last_name']) ?>
         </span>
     </div>
     <div class="card-body">
         <form method="POST" id="row-edit-form"
-              action="/coordinator/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit">
+              action="/coordinator/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$member['id'] ?>/edit">
             <?= csrf_field() ?>
 
             <?php if (empty($columns)): ?>

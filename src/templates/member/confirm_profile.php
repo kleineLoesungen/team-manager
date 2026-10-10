@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/confirm_profile.php
-// Variables (via use()): $player (array|null), $organizations (array), $error (string), $is_first_confirm (bool)
+// Variables (via use()): $member (array|null), $organizations (array), $error (string), $is_first_confirm (bool)
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
 <?php if ($error): render_flash('error', $error); endif; ?>
@@ -16,7 +16,7 @@
 </div>
 <?php endif; ?>
 
-<?php if ($player): ?>
+<?php if ($member): ?>
 <form method="POST" action="/member/confirm-profile" novalidate>
     <?= csrf_field() ?>
 
@@ -29,23 +29,23 @@
                 <div class="col-6">
                     <label for="first_name" class="form-label">Vorname <span class="text-danger">*</span></label>
                     <input type="text" id="first_name" name="first_name" class="form-control"
-                           value="<?= e($player['first_name']) ?>" maxlength="100" required>
+                           value="<?= e($member['first_name']) ?>" maxlength="100" required>
                 </div>
                 <div class="col-6">
                     <label for="last_name" class="form-label">Nachname <span class="text-danger">*</span></label>
                     <input type="text" id="last_name" name="last_name" class="form-control"
-                           value="<?= e($player['last_name']) ?>" maxlength="100" required>
+                           value="<?= e($member['last_name']) ?>" maxlength="100" required>
                 </div>
                 <div class="col-12">
                     <label for="email" class="form-label">E-Mail <span class="text-muted small">(optional)</span></label>
                     <input type="email" id="email" name="email" class="form-control"
-                           value="<?= e($player['email'] ?? '') ?>" maxlength="255"
+                           value="<?= e($member['email'] ?? '') ?>" maxlength="255"
                            placeholder="deine@email.de">
                 </div>
                 <div class="col-12">
                     <label for="phone" class="form-label">Telefon <span class="text-muted small">(optional)</span></label>
                     <input type="text" id="phone" name="phone" class="form-control"
-                           value="<?= e($player['phone'] ?? '') ?>" maxlength="50"
+                           value="<?= e($member['phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
                 <?php if (!empty($organizations)): ?>
@@ -55,7 +55,7 @@
                         <option value="0">— keinen auswählen —</option>
                         <?php foreach ($organizations as $cl): ?>
                         <option value="<?= (int)$cl['id'] ?>"
-                            <?= ((int)($player['organization_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
+                            <?= ((int)($member['organization_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
                             <?= e($cl['name']) ?>
                         </option>
                         <?php endforeach; ?>
@@ -75,19 +75,19 @@
                 <div class="col-12">
                     <label for="contact_name" class="form-label">Kontaktname</label>
                     <input type="text" id="contact_name" name="contact_name" class="form-control"
-                           value="<?= e($player['contact_name'] ?? '') ?>" maxlength="100"
+                           value="<?= e($member['contact_name'] ?? '') ?>" maxlength="100"
                            placeholder="z. B. Elternteil / Partner">
                 </div>
                 <div class="col-12">
                     <label for="contact_phone" class="form-label">Kontakttelefon</label>
                     <input type="text" id="contact_phone" name="contact_phone" class="form-control"
-                           value="<?= e($player['contact_phone'] ?? '') ?>" maxlength="50"
+                           value="<?= e($member['contact_phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
                 <div class="col-12">
                     <label for="contact_email" class="form-label">Kontakt-E-Mail</label>
                     <input type="email" id="contact_email" name="contact_email" class="form-control"
-                           value="<?= e($player['contact_email'] ?? '') ?>" maxlength="254"
+                           value="<?= e($member['contact_email'] ?? '') ?>" maxlength="254"
                            placeholder="eltern@beispiel.de">
                 </div>
             </div>
@@ -102,7 +102,7 @@
             <div class="mb-0">
                 <label for="description" class="form-label">Anmerkungen</label>
                 <textarea id="description" name="description" class="form-control" rows="3"
-                          placeholder="Allergien, Besonderheiten …"><?= e($player['description'] ?? '') ?></textarea>
+                          placeholder="Allergien, Besonderheiten …"><?= e($member['description'] ?? '') ?></textarea>
             </div>
         </div>
     </div>
@@ -133,7 +133,7 @@
     <?php endif; ?>
 </form>
 <?php else: ?>
-<!-- No linked player — just stamp confirmation so member can proceed -->
+<!-- No linked member — just stamp confirmation so member can proceed -->
 <?php
 $_confirm_action = '<form method="POST" action="/member/confirm-profile">'
     . csrf_field()

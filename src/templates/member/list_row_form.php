@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/list_row_form.php — Member row edit form (CELL-01)
-// Variables: $list (id, name), $player (id, first_name, last_name),
+// Variables: $list (id, name), $member (id, first_name, last_name),
 //            $columns, $existing_cells ([column_id => value])
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
@@ -14,13 +14,13 @@
 <div class="card mb-4">
     <div class="card-header">
         <span class="fw-semibold">
-            <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+            <?= e($member['first_name'] . ' ' . $member['last_name']) ?>
         </span>
         <?php render_badge('info', 'Meine Zeile'); ?>
     </div>
     <div class="card-body">
         <form method="POST" id="row-form"
-              action="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit">
+              action="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$member['id'] ?>/edit">
             <?= csrf_field() ?>
 
             <?php if (empty($columns)): ?>

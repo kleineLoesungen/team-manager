@@ -457,6 +457,36 @@ function render_push_device_card(string $vapid_public): void {
 }
 
 /**
+ * Switch "1 Std. vorher per Push erinnern" next to a list's automatic visibility change
+ * (lists.auto_reminder, src/push/auto_push.php). Only takes effect with a rule.
+ */
+function render_auto_reminder_switch(bool $checked): void {
+    ?>
+    <div class="form-check form-switch d-flex align-items-center gap-2 mt-2">
+        <input class="form-check-input" type="checkbox" role="switch" name="auto_reminder" id="auto_reminder" value="1" <?= $checked ? 'checked' : '' ?>>
+        <label class="form-check-label mb-0" for="auto_reminder">1 Std. vorher per Push erinnern</label>
+    </div>
+    <div class="form-text mt-0">Geht an alle Mitglieder mit Push, z. B. „Eintragen nur noch bis heute 16:00“.</div>
+    <?php
+}
+
+/**
+ * Switch "Per Push über die Änderung informieren" on edit forms of lists and events dated in
+ * the next days (src/push/auto_push.php). Sends only if date, time or place really changed.
+ */
+function render_change_push_switch(): void {
+    ?>
+    <div class="mb-4">
+        <div class="form-check form-switch d-flex align-items-center gap-2">
+            <input class="form-check-input" type="checkbox" role="switch" name="change_push" id="change_push" value="1" <?= !empty($_POST['change_push']) ? 'checked' : '' ?>>
+            <label class="form-check-label mb-0" for="change_push">Per Push über die Änderung informieren</label>
+        </div>
+        <div class="form-text mt-0">Nur wenn sich Datum, Uhrzeit oder Ort ändern — z. B. „Neu: Sa 11.10., 18:30 statt 18:00“.</div>
+    </div>
+    <?php
+}
+
+/**
  * One-time hint on the start page: "Push einschalten" (Issue #11). Hidden by default; the
  * layout script shows it only where push works (iPhone: installed app), push is not on for
  * this device yet, the person was never asked (permission "default") and did not tap

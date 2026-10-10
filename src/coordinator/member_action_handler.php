@@ -87,7 +87,7 @@ try {
             redirect($back_url);
 
         case 'delete':
-            // Only deactivated members may be deleted; player record is kept.
+            // Only deactivated members may be deleted; member record is kept.
             if ($member['is_active']) {
                 redirect('/coordinator/members?error=' . urlencode('Nur deaktivierte Mitglieder können gelöscht werden.'));
             }

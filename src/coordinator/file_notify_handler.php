@@ -29,7 +29,7 @@ $content_link = app_url($target_role === 'member'
     : '/coordinator/files/' . $file_id);
 
 // Fetch all recipients in target role (active users in an active team, with or without email)
-// For member recipients also join linked player to get contact_email
+// For member recipients also join linked member to get contact_email
 if ($target_role === 'member') {
     // For members: canonical email is members.email (all users are linked after migration 029)
     $rec_stmt = $pdo->prepare(

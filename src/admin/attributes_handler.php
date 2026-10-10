@@ -1,5 +1,5 @@
 <?php
-// src/admin/attributes_handler.php — GET: list all player attribute groups with nested attributes
+// src/admin/attributes_handler.php — GET: list all member attribute groups with nested attributes
 
 declare(strict_types=1);
 
@@ -16,7 +16,7 @@ $stmt = $pdo->prepare(
     "SELECT pag.id AS group_id, pag.name AS group_name, pag.sort_order AS group_sort,
             pag.department_id, d.name AS department_name,
             pa.id AS attr_id, pa.name AS attr_name, pa.sort_order AS attr_sort,
-            pa.visible_to_player, pa.editable_by_player, pa.data_type
+            pa.visible_to_member, pa.editable_by_member, pa.data_type
      FROM member_attribute_groups pag
      LEFT JOIN departments d ON d.id = pag.department_id
      LEFT JOIN member_attributes pa ON pa.group_id = pag.id
@@ -45,8 +45,8 @@ foreach ($rows as $row) {
             'id'                 => $row['attr_id'],
             'name'               => $row['attr_name'],
             'sort_order'         => $row['attr_sort'],
-            'visible_to_player'  => $row['visible_to_player'],
-            'editable_by_player' => $row['editable_by_player'],
+            'visible_to_member'  => $row['visible_to_member'],
+            'editable_by_member' => $row['editable_by_member'],
             'data_type'          => $row['data_type'] ?? 'text',
         ];
     }

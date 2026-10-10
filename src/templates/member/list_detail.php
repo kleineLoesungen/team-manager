@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/list_detail.php — List table for member
-// Variables: $list (with visibility + show_all_rows), $columns, $players, $cells, $current_user_id
+// Variables: $list (with visibility + show_all_rows), $columns, $members, $cells, $current_user_id
 // edit button only shown for public lists + own row; protected = read-only
 ?>
 <?php
@@ -38,7 +38,7 @@ $_share_text = '[' . ($_SESSION['team_name'] ?? 'Team') . '] '
 
 <?php if (empty($columns)): ?>
 <div class="alert alert-info">Diese Liste hat noch keine Spalten.</div>
-<?php elseif (empty($players)): ?>
+<?php elseif (empty($members)): ?>
 <?php empty($list['is_free'])
     ? render_empty('people', 'Keine Mitglieder', 'Keine Mitglieder im Team.')
     : render_empty('table', 'Noch keine Zeilen', 'Der Koordinator hat in dieser Liste noch keine Zeilen angelegt.'); ?>
@@ -53,14 +53,14 @@ if ($list['show_all_rows']) $_headers[] = empty($list['is_free']) ? 'Mitglied' :
 foreach ($columns as $col) $_headers[] = $col['name'];
 if ($can_edit) $_headers[] = '';
 
-// Pre-compute totals per column over visible $players
+// Pre-compute totals per column over visible $members
 $col_totals = [];
 foreach ($columns as $col) {
     $cid = (int)$col['id'];
     if ($col['data_type'] === 'number') {
         $sum = 0;
-        foreach ($players as $player) {
-            $v = $cells[(int)$player['id']][$cid] ?? null;
+        foreach ($members as $member) {
+            $v = $cells[(int)$member['id']][$cid] ?? null;
             if ($v !== null && $v !== '' && is_numeric($v)) {
                 $sum += (float)$v;
             }
@@ -70,8 +70,8 @@ foreach ($columns as $col) {
             : number_format($sum, 2, ',', '.');
     } elseif ($col['data_type'] === 'boolean') {
         $count = 0;
-        foreach ($players as $player) {
-            if (($cells[(int)$player['id']][$cid] ?? null) === '1') {
+        foreach ($members as $member) {
+            if (($cells[(int)$member['id']][$cid] ?? null) === '1') {
                 $count++;
             }
         }
@@ -84,21 +84,21 @@ foreach ($columns as $col) {
 
 <?php render_matrix_table(
     $_headers,
-    function() use ($players, $columns, $cells, $list, $can_edit, $current_user_id) {
-        foreach ($players as $player):
-            $is_own_row = (int)$player['id'] === $current_user_id;
+    function() use ($members, $columns, $cells, $list, $can_edit, $current_user_id) {
+        foreach ($members as $member):
+            $is_own_row = (int)$member['id'] === $current_user_id;
         ?>
         <tr class="<?= $is_own_row ? 'table-primary' : '' ?>">
             <?php if ($list['show_all_rows']): ?>
             <td class="fw-medium">
-                <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+                <?= e($member['first_name'] . ' ' . $member['last_name']) ?>
                 <?php if ($is_own_row): render_badge('info', 'Ich'); endif; ?>
             </td>
             <?php endif; ?>
             <?php foreach ($columns as $col): ?>
             <td>
                 <?php
-                    $val = $cells[(int)$player['id']][(int)$col['id']] ?? null;
+                    $val = $cells[(int)$member['id']][(int)$col['id']] ?? null;
                     if ($val === null || $val === '') {
                         echo '';
                     } elseif ($col['data_type'] === 'boolean') {
@@ -114,7 +114,7 @@ foreach ($columns as $col) {
             <?php if ($can_edit): ?>
             <td>
                 <?php if ($is_own_row): ?>
-                <a href="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$player['id'] ?>/edit"
+                <a href="/member/lists/<?= (int)$list['id'] ?>/rows/<?= (int)$member['id'] ?>/edit"
                    class="btn btn-sm btn-outline-primary min-touch">
                     Bearbeiten
                 </a>

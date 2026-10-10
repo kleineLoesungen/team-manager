@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Remove any remaining list_global_columns for src (conflict rows)
         $pdo->prepare("DELETE FROM list_global_columns WHERE column_id = ?")->execute([$src_id]);
 
-        // Remap cells: src → target (skip conflicts — same list+player already has target cell)
+        // Remap cells: src → target (skip conflicts — same list+member already has target cell)
         $pdo->prepare(
             "UPDATE cells SET column_id = ?
              WHERE column_id = ?

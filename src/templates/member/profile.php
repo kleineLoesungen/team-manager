@@ -1,11 +1,11 @@
 <?php
 // src/templates/member/profile.php — Full member data edit page
-// Variables (via use()): $player (array|null), $organizations (array), $attr_groups (array), $error (string), $success (bool), $ics_url (string|null)
+// Variables (via use()): $member (array|null), $organizations (array), $attr_groups (array), $error (string), $success (bool), $ics_url (string|null)
 ?>
 <?php if ($error): render_flash('error', $error); endif; ?>
 <?php if ($success): render_flash('success', 'Deine Daten wurden gespeichert.'); endif; ?>
 
-<?php if ($player): ?>
+<?php if ($member): ?>
 <form method="POST" action="/member/profile" novalidate>
     <?= csrf_field() ?>
 
@@ -18,23 +18,23 @@
                 <div class="col-6">
                     <label for="first_name" class="form-label">Vorname <span class="text-danger">*</span></label>
                     <input type="text" id="first_name" name="first_name" class="form-control"
-                           value="<?= e($player['first_name']) ?>" maxlength="100" required>
+                           value="<?= e($member['first_name']) ?>" maxlength="100" required>
                 </div>
                 <div class="col-6">
                     <label for="last_name" class="form-label">Nachname <span class="text-danger">*</span></label>
                     <input type="text" id="last_name" name="last_name" class="form-control"
-                           value="<?= e($player['last_name']) ?>" maxlength="100" required>
+                           value="<?= e($member['last_name']) ?>" maxlength="100" required>
                 </div>
                 <div class="col-12">
                     <label for="email" class="form-label">E-Mail <span class="text-muted small">(optional)</span></label>
                     <input type="email" id="email" name="email" class="form-control"
-                           value="<?= e($player['email'] ?? '') ?>" maxlength="255"
+                           value="<?= e($member['email'] ?? '') ?>" maxlength="255"
                            placeholder="deine@email.de">
                 </div>
                 <div class="col-12">
                     <label for="phone" class="form-label">Telefon <span class="text-muted small">(optional)</span></label>
                     <input type="text" id="phone" name="phone" class="form-control"
-                           value="<?= e($player['phone'] ?? '') ?>" maxlength="50"
+                           value="<?= e($member['phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
                 <?php if (!empty($organizations)): ?>
@@ -44,7 +44,7 @@
                         <option value="0">— keinen auswählen —</option>
                         <?php foreach ($organizations as $cl): ?>
                         <option value="<?= (int)$cl['id'] ?>"
-                            <?= ((int)($player['organization_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
+                            <?= ((int)($member['organization_id'] ?? 0) === (int)$cl['id']) ? 'selected' : '' ?>>
                             <?= e($cl['name']) ?>
                         </option>
                         <?php endforeach; ?>
@@ -64,19 +64,19 @@
                 <div class="col-12">
                     <label for="contact_name" class="form-label">Kontaktname</label>
                     <input type="text" id="contact_name" name="contact_name" class="form-control"
-                           value="<?= e($player['contact_name'] ?? '') ?>" maxlength="100"
+                           value="<?= e($member['contact_name'] ?? '') ?>" maxlength="100"
                            placeholder="z. B. Elternteil / Partner">
                 </div>
                 <div class="col-12">
                     <label for="contact_phone" class="form-label">Kontakttelefon</label>
                     <input type="text" id="contact_phone" name="contact_phone" class="form-control"
-                           value="<?= e($player['contact_phone'] ?? '') ?>" maxlength="50"
+                           value="<?= e($member['contact_phone'] ?? '') ?>" maxlength="50"
                            placeholder="+49 …">
                 </div>
                 <div class="col-12">
                     <label for="contact_email" class="form-label">Kontakt-E-Mail</label>
                     <input type="email" id="contact_email" name="contact_email" class="form-control"
-                           value="<?= e($player['contact_email'] ?? '') ?>" maxlength="254"
+                           value="<?= e($member['contact_email'] ?? '') ?>" maxlength="254"
                            placeholder="eltern@beispiel.de">
                 </div>
             </div>
@@ -90,7 +90,7 @@
         <div class="card-body">
             <label for="description" class="form-label">Anmerkungen</label>
             <textarea id="description" name="description" class="form-control" rows="3"
-                      placeholder="Allergien, Besonderheiten …"><?= e($player['description'] ?? '') ?></textarea>
+                      placeholder="Allergien, Besonderheiten …"><?= e($member['description'] ?? '') ?></textarea>
         </div>
     </div>
 
@@ -101,7 +101,7 @@
 
 <?php $has_editable = false;
 foreach ($attr_groups as $g) {
-    foreach ($g['attrs'] as $a) { if ($a['editable_by_player']) { $has_editable = true; break 2; } }
+    foreach ($g['attrs'] as $a) { if ($a['editable_by_member']) { $has_editable = true; break 2; } }
 }
 ?>
 
@@ -118,7 +118,7 @@ foreach ($attr_groups as $g) {
         <div class="mb-3">
             <label class="form-label fw-medium mb-1"><?= e($attr['attr_name']) ?></label>
             <?php $is_date = ($attr['data_type'] ?? 'text') === 'date'; ?>
-            <?php if ($attr['editable_by_player']): ?>
+            <?php if ($attr['editable_by_member']): ?>
                 <?php if ($is_date): ?>
                 <input type="date" class="form-control"
                        name="values[<?= (int)$attr['attr_id'] ?>]"

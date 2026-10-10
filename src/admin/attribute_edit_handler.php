@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $name       = trim($_POST['name'] ?? '');
     $sort_order = (int)($_POST['sort_order'] ?? 0);
-    $visible    = !empty($_POST['visible_to_player']);
-    $editable   = !empty($_POST['editable_by_player']);
+    $visible    = !empty($_POST['visible_to_member']);
+    $editable   = !empty($_POST['editable_by_member']);
     $data_type  = in_array($_POST['data_type'] ?? '', ['text', 'date']) ? $_POST['data_type'] : 'text';
 
     if (empty($name) || mb_strlen($name) > 100) {
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $pdo->prepare(
             "UPDATE member_attributes
-             SET name=?, data_type=?, visible_to_player=?, editable_by_player=?, sort_order=?
+             SET name=?, data_type=?, visible_to_member=?, editable_by_member=?, sort_order=?
              WHERE id=?"
         )->execute([$name, $data_type, $visible ? 'true' : 'false', $editable ? 'true' : 'false', $sort_order, $attr_id]);
         redirect('/admin/attributes?success=1');
@@ -49,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'name'              => $_POST['name'] ?? '',
         'data_type'         => $data_type,
         'sort_order'        => $sort_order,
-        'visible_to_player' => $visible,
-        'editable_by_player'=> $editable,
+        'visible_to_member' => $visible,
+        'editable_by_member'=> $editable,
     ]);
 }
 

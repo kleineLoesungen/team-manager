@@ -1,5 +1,5 @@
 <?php
-// src/templates/member/member_profile.php — Member-facing player profile
+// src/templates/member/member_profile.php — Member-facing member profile
 declare(strict_types=1);
 ?>
 <?php if (isset($_GET['success'])): render_flash('success', 'Gespeichert.'); endif; ?>
@@ -10,25 +10,25 @@ declare(strict_types=1);
     </a>
 </div>
 
-<?php if ($player === null): ?>
-<!-- Not linked state: member has no linked player record -->
+<?php if ($member === null): ?>
+<!-- Not linked state: member has no linked member record -->
 <?php render_empty('person-badge', 'Kein Profil verknüpft', 'Dein Konto ist noch nicht mit einem Profil verknüpft. Bitte wende dich an deinen Koordinator.'); ?>
 
 <?php else: ?>
 
-<!-- Player header card -->
+<!-- Member header card -->
 <div class="card mb-4">
     <div class="card-body">
         <h2 class="card-title h5 fw-bold mb-1">
-            <?= e($player['first_name'] . ' ' . $player['last_name']) ?>
+            <?= e($member['first_name'] . ' ' . $member['last_name']) ?>
         </h2>
-        <?php if (!empty($player['organization_name'])): ?>
+        <?php if (!empty($member['organization_name'])): ?>
         <div class="text-muted mb-2">
-            <i class="bi bi-building me-1"></i><?= e($player['organization_name']) ?>
+            <i class="bi bi-building me-1"></i><?= e($member['organization_name']) ?>
         </div>
         <?php endif; ?>
-        <?php if (!empty($player['description'])): ?>
-        <p class="text-muted small mt-2 mb-0"><?= nl2br(e($player['description'])) ?></p>
+        <?php if (!empty($member['description'])): ?>
+        <p class="text-muted small mt-2 mb-0"><?= nl2br(e($member['description'])) ?></p>
         <?php endif; ?>
     </div>
 </div>
@@ -72,7 +72,7 @@ declare(strict_types=1);
     <?php endif; ?>
 </div>
 
-<!-- Attribute groups (visible_to_player only) -->
+<!-- Attribute groups (visible_to_member only) -->
 <?php if (!empty($attr_groups)): ?>
 <div class="mb-2">
     <h3 class="h6 fw-semibold">Meine Attribute</h3>

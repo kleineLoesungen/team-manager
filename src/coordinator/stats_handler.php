@@ -42,8 +42,8 @@ $cols_stmt->execute([$team_id]);
 $global_columns = $cols_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // ── Aggregation query (STAT-01 + STAT-02) ────────────────────────────────────
-// Uses CROSS JOIN to ensure every player appears for every global column even with no cell data.
-// COALESCE ensures 0 is shown instead of NULL for players with no entries.
+// Uses CROSS JOIN to ensure every member appears for every global column even with no cell data.
+// COALESCE ensures 0 is shown instead of NULL for members with no entries.
 // Coach sees ALL list types — no visibility filter (per D-02).
 $agg_sql = "
     SELECT
@@ -116,20 +116,20 @@ $agg_stmt = $pdo->prepare($agg_sql);
 $agg_stmt->execute($agg_params);
 $raw_stats = $agg_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Reshape: $player_stats[member_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[column_id => value]]
-$player_stats = [];
-$player_order = [];  // Preserve sort order from query
+// Reshape: $member_stats[member_id] = ['first_name'=>..., 'last_name'=>..., 'cols'=>[column_id => value]]
+$member_stats = [];
+$member_order = [];  // Preserve sort order from query
 foreach ($raw_stats as $row) {
     $pid = (int)$row['member_id'];
-    if (!isset($player_stats[$pid])) {
-        $player_stats[$pid] = [
+    if (!isset($member_stats[$pid])) {
+        $member_stats[$pid] = [
             'first_name' => $row['first_name'],
             'last_name'  => $row['last_name'],
             'cols'       => [],
         ];
-        $player_order[] = $pid;
+        $member_order[] = $pid;
     }
-    $player_stats[$pid]['cols'][(int)$row['column_id']] = $row['aggregated_value'];
+    $member_stats[$pid]['cols'][(int)$row['column_id']] = $row['aggregated_value'];
 }
 
 // ── Ranking with time-window aggregation (STAT-03) ───────────────────────────
@@ -507,7 +507,7 @@ if ($selected_member_id !== null) {
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 
 render_coach_page('Statistik', 'stats', function() use (
-    $global_columns, $player_stats, $player_order,
+    $global_columns, $member_stats, $member_order,
     $available_lists, $filter_list_id, $filter_date_from, $filter_date_to, $filter_include_undated,
     $ranking, $ranking_order, $sort_col_id, $sort_win, $col_filter, $col_totals,
     $all_members, $selected_member_id, $selected_member_name, $total_active_members,

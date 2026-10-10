@@ -1,5 +1,5 @@
 <?php
-// src/coordinator/member_profile_handler.php — GET+POST /coordinator/players/{id}
+// src/coordinator/member_profile_handler.php — GET+POST /coordinator/members/{id}
 
 declare(strict_types=1);
 
@@ -78,7 +78,7 @@ $unlinked_my_members = $ul_stmt->fetchAll();
 $attr_stmt = $pdo->prepare(
     "SELECT pag.name AS group_name, pag.sort_order AS group_order,
             pa.id AS attr_id, pa.name AS attr_name, pa.data_type, pa.sort_order AS attr_order,
-            pa.visible_to_player, pa.editable_by_player,
+            pa.visible_to_member, pa.editable_by_member,
             COALESCE(pav.value, '') AS value
      FROM member_attribute_groups pag
      JOIN member_attributes pa ON pa.group_id = pag.id

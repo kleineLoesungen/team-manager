@@ -1,5 +1,5 @@
 <?php
-// src/templates/admin/players.php — Admin player list
+// src/templates/admin/members.php — Admin member list
 // Variables: $profiles, $inactive_profiles, $organizations, $teams, $linked_users_map,
 //            $unlinked_by_team, $has_unlinked, $search, $filter_organization_id, $filter_team_id
 $fmt_attr = function(array $a): string {
@@ -136,7 +136,7 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
                 </div>
 
                 <div class="info-mode mt-1 d-none" data-mode="attr-visible">
-                    <?php $attrs = $player_attr_visible[$p['id']] ?? []; ?>
+                    <?php $attrs = $member_attr_visible[$p['id']] ?? []; ?>
                     <?php if (!empty($attrs)): ?>
                     <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
                     <?php else: ?>
@@ -145,7 +145,7 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
                 </div>
 
                 <div class="info-mode mt-1 d-none" data-mode="attr-hidden">
-                    <?php $attrs = $player_attr_hidden[$p['id']] ?? []; ?>
+                    <?php $attrs = $member_attr_hidden[$p['id']] ?? []; ?>
                     <?php if (!empty($attrs)): ?>
                     <span class="text-muted small"><?= implode(' · ', array_map($fmt_attr, $attrs)) ?></span>
                     <?php else: ?>
@@ -225,11 +225,11 @@ render_empty('person-vcard', 'Keine Mitglieder gefunden', 'Lege das erste Mitgli
 <?php if (!empty($inactive_profiles)): ?>
 <div class="mt-4">
     <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-            type="button" data-bs-toggle="collapse" data-bs-target="#inactivePlayers" aria-expanded="false">
+            type="button" data-bs-toggle="collapse" data-bs-target="#inactiveMembers" aria-expanded="false">
         <i class="bi bi-chevron-down"></i>
         Inaktiv (<?= count($inactive_profiles) ?>)
     </button>
-    <div class="collapse mt-2" id="inactivePlayers">
+    <div class="collapse mt-2" id="inactiveMembers">
     <div class="list-group opacity-75">
         <?php foreach ($inactive_profiles as $p): ?>
         <?php $linked = $linked_users_map[$p['id']] ?? []; ?>

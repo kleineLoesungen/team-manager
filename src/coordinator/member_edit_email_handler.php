@@ -1,6 +1,6 @@
 <?php
 // src/coordinator/member_edit_email_handler.php — GET+POST /coordinator/members/{id}/edit-email
-// Coordinator-only: set or update a member's email address via their player record.
+// Coordinator-only: set or update a member's email address via their member record.
 
 declare(strict_types=1);
 

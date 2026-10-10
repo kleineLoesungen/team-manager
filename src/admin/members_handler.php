@@ -72,32 +72,32 @@ $organizations = $pdo->query("SELECT id, name FROM organizations WHERE is_active
 $teams = $pdo->query("SELECT id, name, is_active FROM teams ORDER BY is_active DESC, sort_order ASC, name ASC")->fetchAll();
 
 // Load attribute values for all profiles
-$player_attr_visible = [];
-$player_attr_hidden  = [];
+$member_attr_visible = [];
+$member_attr_hidden  = [];
 if (!empty($all_profiles)) {
     $profile_ids  = array_column($all_profiles, 'id');
     $placeholders = implode(',', array_fill(0, count($profile_ids), '?'));
     $attr_stmt = $pdo->prepare(
-        "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_player, pav.value
+        "SELECT pav.member_id, pa.name AS attr_name, pa.data_type, pa.visible_to_member, pav.value
          FROM member_attribute_values pav
          JOIN member_attributes pa ON pa.id = pav.attribute_id
          WHERE pav.member_id IN ({$placeholders}) AND pav.value != ''
-         ORDER BY pa.visible_to_player DESC, pa.sort_order ASC, pa.name ASC"
+         ORDER BY pa.visible_to_member DESC, pa.sort_order ASC, pa.name ASC"
     );
     $attr_stmt->execute($profile_ids);
     foreach ($attr_stmt->fetchAll() as $row) {
         $pid = (int)$row['member_id'];
-        if ($row['visible_to_player']) {
-            $player_attr_visible[$pid][] = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
+        if ($row['visible_to_member']) {
+            $member_attr_visible[$pid][] = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
         } else {
-            $player_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
+            $member_attr_hidden[$pid][]  = ['name' => $row['attr_name'], 'data_type' => $row['data_type'], 'value' => $row['value']];
         }
     }
 }
 
-render_admin_page('Mitglieder', 'players', function() use (
+render_admin_page('Mitglieder', 'members', function() use (
     $profiles, $inactive_profiles, $organizations, $teams, $linked_users_map, $unlinked_by_team, $has_unlinked,
-    $player_attr_visible, $player_attr_hidden,
+    $member_attr_visible, $member_attr_hidden,
     $search, $filter_organization_id, $filter_team_id
 ) {
     require ROOT_PATH . '/src/templates/admin/members.php';

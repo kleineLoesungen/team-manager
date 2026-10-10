@@ -1,6 +1,6 @@
 <?php
 // src/admin/coordinator_create_handler.php — GET+POST: create coordinator (TEAM-02)
-// require_admin() sets admin context (bypasses RLS). Every new user requires a linked player.
+// require_admin() sets admin context (bypasses RLS). Every new user requires a linked member.
 
 declare(strict_types=1);
 
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'E-Mail-Adresse zu lang (max. 255 Zeichen).';
     } else {
         try {
-            // Create player record first (admin context already active via require_admin)
+            // Create member record first (admin context already active via require_admin)
             $p_stmt = $pdo->prepare(
                 "INSERT INTO members (first_name, last_name, email) VALUES (?, ?, ?) RETURNING id"
             );

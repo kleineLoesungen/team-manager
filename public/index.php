@@ -53,6 +53,11 @@ push_check_due_starts();
 require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
 list_auto_visibility_apply(get_db());
 
+// Erinnerung per Push vor der Umstellung (Anmeldeschluss), wie der Tickerstart höchstens einmal
+// pro Minute und nach der Antwort (src/push/auto_push.php, Issue #13).
+require_once ROOT_PATH . '/src/push/auto_push.php';
+list_reminder_check();
+
 // Parse the request path (strip query string, normalize trailing slash)
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path   = rtrim($path, '/') ?: '/';

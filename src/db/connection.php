@@ -157,6 +157,8 @@ function db_init_schema(PDO $pdo, string $s): void {
         auto_visibility_hours   INTEGER NOT NULL DEFAULT 0
                                 CHECK (auto_visibility_hours BETWEEN 0 AND 720),
         auto_visibility_done_at TIMESTAMPTZ NULL,
+        auto_reminder           BOOLEAN NOT NULL DEFAULT FALSE,
+        auto_reminder_sent_at   TIMESTAMPTZ NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -355,8 +357,8 @@ function db_init_schema(PDO $pdo, string $s): void {
         name               VARCHAR(100) NOT NULL,
         data_type          VARCHAR(10)  NOT NULL DEFAULT 'text'
                            CHECK (data_type IN ('text', 'date')),
-        visible_to_player  BOOLEAN NOT NULL DEFAULT TRUE,
-        editable_by_player BOOLEAN NOT NULL DEFAULT FALSE,
+        visible_to_member  BOOLEAN NOT NULL DEFAULT TRUE,
+        editable_by_member BOOLEAN NOT NULL DEFAULT FALSE,
         sort_order         INTEGER NOT NULL DEFAULT 0,
         created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -968,7 +970,7 @@ function db_init_rls(PDO $pdo, string $s): void {
         OR current_setting('app.current_role', true) = 'coordinator'
         OR (
             current_setting('app.current_role', true) = 'member'
-            AND visible_to_player = TRUE
+            AND visible_to_member = TRUE
         )
     )");
     $pdo->exec("CREATE POLICY ma_insert ON {$s}.member_attributes FOR INSERT WITH CHECK (
@@ -1000,7 +1002,7 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND EXISTS (
                 SELECT 1 FROM {$s}.member_attributes ma
                 WHERE ma.id = member_attribute_values.attribute_id
-                  AND ma.visible_to_player = TRUE
+                  AND ma.visible_to_member = TRUE
             )
         )
     )");
@@ -1017,7 +1019,7 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND EXISTS (
                 SELECT 1 FROM {$s}.member_attributes ma
                 WHERE ma.id = member_attribute_values.attribute_id
-                  AND ma.editable_by_player = TRUE
+                  AND ma.editable_by_member = TRUE
             )
         )
     )");
@@ -1034,7 +1036,7 @@ function db_init_rls(PDO $pdo, string $s): void {
             AND EXISTS (
                 SELECT 1 FROM {$s}.member_attributes ma
                 WHERE ma.id = member_attribute_values.attribute_id
-                  AND ma.editable_by_player = TRUE
+                  AND ma.editable_by_member = TRUE
             )
         )
     )");

@@ -48,8 +48,8 @@ function notify_push_validate(string $title, string $body): string {
 
 /**
  * Link for the notification: /open switches to the content's team if needed, then shows the
- * list or file in the role of the signed-in account.
- * @param string $type 'list' | 'file'
+ * list, file or event in the role of the signed-in account.
+ * @param string $type 'list' | 'file' | 'event'
  */
 function notify_push_url(int $team_id, string $type, int $id): string {
     return '/open?' . http_build_query(['team' => $team_id, $type => $id]);
@@ -62,21 +62,26 @@ function notify_push_url(int $team_id, string $type, int $id): string {
 function push_send_to_users(PDO $pdo, array $user_ids, string $title, string $body, string $url): void {
     $user_ids = array_values(array_unique(array_map('intval', $user_ids)));
     if (!$user_ids) return;
-    push_defer(function () use ($pdo, $user_ids, $title, $body, $url) {
-        set_admin_context($pdo);
-        $in   = implode(',', array_fill(0, count($user_ids), '?'));
-        $stmt = $pdo->prepare(
-            "SELECT DISTINCT ps.id, ps.endpoint, ps.p256dh, ps.auth
-             FROM users r
-             JOIN users d ON d.member_id = r.member_id AND d.is_active = TRUE
-             JOIN push_subscriptions ps ON ps.user_id = d.id
-             WHERE r.id IN ($in) AND r.member_id IS NOT NULL"
-        );
-        $stmt->execute($user_ids);
-        $subs = [];
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) $subs[$row['id']] = $row;
-        if (!$subs) return;
+    push_defer(fn() => push_send_now($pdo, $user_ids, $title, $body, $url));
+}
 
+/** Same as push_send_to_users(), right now — for code that already runs after the response. */
+function push_send_now(PDO $pdo, array $user_ids, string $title, string $body, string $url): void {
+    $user_ids = array_values(array_unique(array_map('intval', $user_ids)));
+    if (!$user_ids) return;
+    set_admin_context($pdo);
+    $in   = implode(',', array_fill(0, count($user_ids), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT ps.id, ps.endpoint, ps.p256dh, ps.auth
+         FROM users r
+         JOIN users d ON d.member_id = r.member_id AND d.is_active = TRUE
+         JOIN push_subscriptions ps ON ps.user_id = d.id
+         WHERE r.id IN ($in) AND r.member_id IS NOT NULL"
+    );
+    $stmt->execute($user_ids);
+    $subs = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) $subs[$row['id']] = $row;
+    if ($subs) {
         $payload = json_encode(['title' => $title, 'body' => $body, 'url' => $url],
                                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $gone = [];
@@ -87,7 +92,19 @@ function push_send_to_users(PDO $pdo, array $user_ids, string $title, string $bo
             $in = implode(',', array_fill(0, count($gone), '?'));
             $pdo->prepare("DELETE FROM push_subscriptions WHERE id IN ($in)")->execute($gone);
         }
-        reset_rls_context($pdo);
+    }
+    reset_rls_context($pdo);
+}
+
+/** Active accounts of a role in a team (user ids) — recipients of automatic pushes. */
+function push_team_user_ids(PDO $pdo, int $team_id, string $role): array {
+    return as_admin($pdo, function () use ($pdo, $team_id, $role) {
+        $stmt = $pdo->prepare(
+            "SELECT u.id FROM users u JOIN teams t ON t.id = u.team_id AND t.is_active = TRUE
+             WHERE u.team_id = ? AND u.role = ? AND u.is_active = TRUE"
+        );
+        $stmt->execute([$team_id, $role]);
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     });
 }
 

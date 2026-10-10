@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($error === '') {
         $resource_ids = resources_from_post();
         event_update($pdo, $team_id, $event_id, $input['fields'], $resource_ids);
+        change_push_after_save($pdo, $team_id, 'event', $event_id, $input['fields']['title'],   // src/push/auto_push.php
+                               $input['fields']['visibility'], $event, $input['fields']);
         event_saved_redirect($pdo, 'coordinator', [$event_id], $resource_ids, false);
     }
 }

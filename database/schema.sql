@@ -65,8 +65,8 @@ INSERT INTO team_manager.settings (key, value) VALUES ('default_team_logo', '') 
 -- ── Phase 3: Lists, Columns & Cells ──────────────────────────────────────────
 
 -- Lists — one per team/coach usage; has visibility state
--- show_all_rows: when TRUE players see all rows; when FALSE players see only their own row
--- is_hidden: when TRUE list is collapsed at bottom of overview (coach + player); content still accessible
+-- show_all_rows: when TRUE members see all rows; when FALSE members see only their own row
+-- is_hidden: when TRUE list is collapsed at bottom of overview (coach + member); content still accessible
 CREATE TABLE IF NOT EXISTS team_manager.lists (
     id            SERIAL PRIMARY KEY,
     team_id       INTEGER NOT NULL REFERENCES team_manager.teams(id) ON DELETE CASCADE,
@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS team_manager.lists (
     auto_visibility_hours   INTEGER     NOT NULL DEFAULT 0
                             CHECK (auto_visibility_hours BETWEEN 0 AND 720),
     auto_visibility_done_at TIMESTAMPTZ NULL,
+    auto_reminder           BOOLEAN NOT NULL DEFAULT FALSE,   -- Push-Erinnerung vor der Umstellung
+    auto_reminder_sent_at   TIMESTAMPTZ NULL,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
@@ -318,15 +320,15 @@ CREATE INDEX IF NOT EXISTS idx_ct_team ON team_manager.coordinator_teams(team_id
 CREATE UNIQUE INDEX IF NOT EXISTS idx_ct_active ON team_manager.coordinator_teams(user_id, team_id) WHERE left_at IS NULL;
 
 -- Member-attributes — EAV attribute definitions within groups
--- visible_to_player: member can see this value; editable_by_player: member can edit it
+-- visible_to_member: member can see this value; editable_by_member: member can edit it
 CREATE TABLE IF NOT EXISTS team_manager.member_attributes (
     id                 SERIAL PRIMARY KEY,
     group_id           INTEGER NOT NULL REFERENCES team_manager.member_attribute_groups(id) ON DELETE CASCADE,
     name               VARCHAR(100) NOT NULL,
     data_type          VARCHAR(10)  NOT NULL DEFAULT 'text'
                        CHECK (data_type IN ('text', 'date')),
-    visible_to_player  BOOLEAN NOT NULL DEFAULT TRUE,
-    editable_by_player BOOLEAN NOT NULL DEFAULT FALSE,
+    visible_to_member  BOOLEAN NOT NULL DEFAULT TRUE,
+    editable_by_member BOOLEAN NOT NULL DEFAULT FALSE,
     sort_order         INTEGER NOT NULL DEFAULT 0,
     created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -414,4 +416,4 @@ CREATE INDEX IF NOT EXISTS idx_resource_bookings_event ON team_manager.resource_
 
 -- Stand der Datenbank: dieses Schema enthält alle Migrationen bis einschließlich dieser.
 -- Bei jeder neuen Migration in database/migrations/ hier mitziehen (src/utils/updates.php).
-INSERT INTO team_manager.settings (key, value) VALUES ('db_migration', '20261010_personal_calendar') ON CONFLICT DO NOTHING;
+INSERT INTO team_manager.settings (key, value) VALUES ('db_migration', '20261010_rename_member_columns') ON CONFLICT DO NOTHING;

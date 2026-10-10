@@ -14,9 +14,9 @@
 
     <?php render_matrix_table(
         ['Spalte', 'Gesamt', '0–4 Wo.', '4–8 Wo.', '8–12 Wo.'],
-        function() use ($global_columns, $player_stats) {
+        function() use ($global_columns, $member_stats) {
             foreach ($global_columns as $col):
-                $vals = $player_stats[(int)$col['id']] ?? ['all' => 0, '4w' => 0, '4_8w' => 0, '8_12w' => 0];
+                $vals = $member_stats[(int)$col['id']] ?? ['all' => 0, '4w' => 0, '4_8w' => 0, '8_12w' => 0];
             ?>
                 <tr>
                     <td class="fw-semibold"><?= e($col['name']) ?></td>

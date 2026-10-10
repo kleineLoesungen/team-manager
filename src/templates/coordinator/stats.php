@@ -46,7 +46,7 @@
         Noch keine globalen Spalten definiert. Legen Sie globale Spalten unter
         <a href="/coordinator/columns">Spalten</a> an.
     </div>
-<?php elseif (empty($player_order)): ?>
+<?php elseif (empty($member_order)): ?>
     <div class="alert alert-info">Keine aktiven Mitglieder im Team.</div>
 <?php else: ?>
     <h5 class="mb-3">Mitgliederstatistiken</h5>
@@ -66,8 +66,8 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($player_order as $pid): ?>
-                    <?php $p = $player_stats[$pid]; ?>
+                <?php foreach ($member_order as $pid): ?>
+                    <?php $p = $member_stats[$pid]; ?>
                     <tr>
                         <td class="fw-semibold">
                             <?= e($p['first_name'] . ' ' . $p['last_name']) ?>

@@ -1,5 +1,5 @@
 <?php
-// src/player/stats_handler.php — GET /player/stats — own statistics for player (STAT-01)
+// src/member/stats_handler.php — GET /member/stats — own statistics for member (STAT-01)
 // Per D-04: shows only own row. Per D-05: public and protected lists only (private excluded).
 
 declare(strict_types=1);
@@ -15,7 +15,7 @@ set_admin_context($pdo);
 // ── Global columns + own totals (shared with the overview, src/db/member_stats.php) ──
 require_once ROOT_PATH . '/src/db/member_stats.php';
 $global_columns = member_stats_global_columns($pdo, $team_id);
-$player_stats   = !empty($global_columns) ? member_stats_totals($pdo, $team_id, $member_id) : [];
+$member_stats   = !empty($global_columns) ? member_stats_totals($pdo, $team_id, $member_id) : [];
 
 // ── Per-list breakdown: lists with global columns for this member ─────────────
 // Uses list_global_columns join table to find which lists have global columns attached.
@@ -107,7 +107,7 @@ if (!empty($global_columns)) {
 require ROOT_PATH . '/src/templates/member/layout.php';
 
 render_member_page('Meine Statistik', 'stats', function() use (
-    $global_columns, $player_stats,
+    $global_columns, $member_stats,
     $per_list_rows, $per_list_cells, $per_list_totals, $col_list_counts
 ) {
     require ROOT_PATH . '/src/templates/member/stats.php';

@@ -11,7 +11,7 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - **Stack**: PHP + PostgreSQL — kein Framework-Wechsel; JS-Framework nur wenn unvermeidbar
 - **Sprache**: Vollständig Deutsch in der UI
 - **Mobile-first**: Alle Views primär für Smartphone-Bildschirme gestaltet
-- **E-Mail nur für Benachrichtigungen**: von Hand ausgelöst (Koordinator → Mitglieder zu Liste/Dokument, Admin → Koordinatoren), je eine Mail pro Empfänger; kein Login oder Passwort per Mail. Koordinatoren können statt E-Mail auch Push wählen (`src/push/notify_push.php`, Ziel `/open` wechselt bei Bedarf das Team)
+- **E-Mail nur für Benachrichtigungen**: von Hand ausgelöst (Koordinator → Mitglieder zu Liste/Dokument, Admin → Koordinatoren), je eine Mail pro Empfänger; kein Login oder Passwort per Mail. Koordinatoren können statt E-Mail auch Push wählen (`src/push/notify_push.php`, Ziel `/open` wechselt bei Bedarf das Team); automatische Pushes (Erinnerung vor dem Anmeldeschluss, kurzfristige Änderung) in `src/push/auto_push.php`
 - **Einfachheit**: Modernes, schlichtes Design — keine Überladung mit Features
 
 ## Technology Stack
@@ -160,13 +160,13 @@ Browser → public/index.php (front controller)
 | `members` | Member profiles (the person, across teams), linked from `users.member_id`; `organization_id`; `calendar_token` (personal ICS feed across all teams) |
 | `organizations` | Organizations (e.g. clubs) that members and coordinators belong to — formerly `clubs` |
 | `member_attribute_groups` | Groups for custom member attributes (e.g. "Medizin"); `department_id` NULL = all departments, else only that department (coordinators: own team's; members: all of their teams') |
-| `member_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
+| `member_attributes` | Attribute definitions per group (visible_to_member, editable_by_member) |
 | `member_attribute_values` | Attribute values per member |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |
-| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always) |
+| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always); `auto_reminder` + `auto_reminder_sent_at` (push 1 h before the automatic visibility change) |
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
 | `list_global_columns` | Which global columns appear in each list |
-| `cells` | EAV values — one row per (list, column, player) |
+| `cells` | EAV values — one row per (list, column, member) |
 | `files` | Markdown documents per team |
 | `events` | Team events (title, date, optional time, place, icon, visibility protected/private, `created_by`) |
 | `free_list_rows` | Custom rows for free-type lists |

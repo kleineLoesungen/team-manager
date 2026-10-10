@@ -116,7 +116,7 @@ if ($action === 'reset-password') {
         }
     }
 
-    // Write organization to players (canonical person table). admin context already active via require_admin().
+    // Write organization to members (canonical person table). admin context already active via require_admin().
     $pdo->prepare(
         "UPDATE members SET organization_id = ?
          WHERE id = (SELECT member_id FROM users WHERE id = ? AND role = 'coordinator')"

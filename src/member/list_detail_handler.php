@@ -1,6 +1,6 @@
 <?php
-// src/player/list_detail_handler.php — GET /player/lists/{id} — list table for player
-// public: player edits own row; protected: player sees own row read-only; private: denied.
+// src/member/list_detail_handler.php — GET /member/lists/{id} — list table for member
+// public: member edits own row; protected: member sees own row read-only; private: denied.
 // show_all_rows flag controls whether all rows or only own row is displayed.
 
 declare(strict_types=1);
@@ -55,30 +55,30 @@ $list['is_free'] = ($list['list_type'] ?? 'member') === 'free';
 if ($list['is_free']) {
     $row_stmt = $pdo->prepare("SELECT id, label FROM free_list_rows WHERE list_id = ? ORDER BY position, created_at");
     $row_stmt->execute([$list_id]);
-    $players = array_map(fn($r) => ['id' => $r['id'], 'first_name' => $r['label'], 'last_name' => ''],
+    $members = array_map(fn($r) => ['id' => $r['id'], 'first_name' => $r['label'], 'last_name' => ''],
                          $row_stmt->fetchAll(PDO::FETCH_ASSOC));
     $list['show_all_rows'] = true;
     $current_user_id       = 0;   // keine eigene Zeile
 } elseif ($list['show_all_rows']) {
-    $player_stmt = $pdo->prepare(
+    $member_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
          JOIN members p ON p.id = u.member_id
          WHERE u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE
          ORDER BY p.first_name, p.last_name"
     );
-    $player_stmt->execute([$_SESSION['team_id']]);
+    $member_stmt->execute([$_SESSION['team_id']]);
 } else {
-    $player_stmt = $pdo->prepare(
+    $member_stmt = $pdo->prepare(
         "SELECT u.id, p.first_name, p.last_name
          FROM users u
          JOIN members p ON p.id = u.member_id
          WHERE u.id = ? AND u.team_id = ? AND u.role = 'member' AND u.is_active = TRUE"
     );
-    $player_stmt->execute([$current_user_id, $_SESSION['team_id']]);
+    $member_stmt->execute([$current_user_id, $_SESSION['team_id']]);
 }
 if (!$list['is_free']) {
-    $players = $player_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $members = $member_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Fetch cells — only for visible member rows
@@ -102,7 +102,7 @@ $list['resource_names'] = resources_booked_names($pdo, 'list', $list_id);
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page(e($list['name']), 'contents', function() use ($list, $columns, $players, $cells, $current_user_id, $success) {
+render_member_page(e($list['name']), 'contents', function() use ($list, $columns, $members, $cells, $current_user_id, $success) {
     if ($success) echo '<div class="alert alert-success">' . $success . '</div>';
     require ROOT_PATH . '/src/templates/member/list_detail.php';
 });
