@@ -11,7 +11,7 @@ $pdo     = get_db();
 $error   = '';
 
 // Fetch list including show_all_rows, is_hidden, date, description, and optional time columns
-$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, auto_reminder, list_type, calendar_column_id';
+$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, list_type, calendar_column_id';
 $stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -19,7 +19,6 @@ if ($list) {
     // pdo_pgsql returns booleans as 't'/'f'; filter_var does not handle these — use explicit list
     $list['show_all_rows'] = in_array($list['show_all_rows'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
     $list['is_hidden']     = in_array($list['is_hidden']     ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
-    $list['auto_reminder'] = in_array($list['auto_reminder'] ?? false, [true, 1, '1', 't', 'true', 'yes', 'on'], true);
 }
 
 if (!$list) {
@@ -223,8 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_auto_hours = $raw_auto_hours === '' ? 0 : filter_var($raw_auto_hours, FILTER_VALIDATE_INT,
             ['options' => ['min_range' => 0, 'max_range' => LIST_AUTO_VISIBILITY_MAX_HOURS]]);
 
-        $new_auto_reminder = $new_auto !== '' && !empty($_POST['auto_reminder']);   // Push 1 Std. vorher (Issue #13)
-
         // Kalender-Spalte: nur eine der Ja/Nein-Spalten dieser Liste, sonst „immer“
         $raw_cal_col  = (int)($_POST['calendar_column'] ?? 0);
         $new_cal_col  = isset($calendar_columns[$raw_cal_col]) ? $raw_cal_col : null;
@@ -261,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  AND date IS NOT DISTINCT FROM ?::date
                                  AND time_start IS NOT DISTINCT FROM ?::time
                                 THEN auto_reminder_sent_at ELSE NULL END,
-                            auto_visibility = ?, auto_visibility_hours = ?, auto_reminder = ?,
+                            auto_visibility = ?, auto_visibility_hours = ?,
                             calendar_column_id = ?,
                             updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
@@ -279,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $new_time_end   !== '' ? $new_time_end   : null,
                     $auto_val, $hours_val, $date_val, $ts_val,
                     $auto_val, $hours_val, $date_val, $ts_val,
-                    $auto_val, $hours_val, $new_auto_reminder ? 'true' : 'false',
+                    $auto_val, $hours_val,
                     $new_cal_col,
                     $list_id, $_SESSION['team_id'],
                 ]);
@@ -390,7 +387,7 @@ render_coach_page('Listen-Einstellungen', 'contents', function() use ($list, $er
                         48 Std. vor Beginn“ zum Freischalten. Ohne Uhrzeit zählt 00:00 als Beginn.
                     </div>
                     <?php render_auto_visibility_hint($list); ?>
-                    <?php render_auto_reminder_switch(($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== '') ? !empty($_POST['auto_reminder']) : $list['auto_reminder']); ?>
+                    <?php render_auto_reminder_hint(); ?>
                 </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Anzeige</label>

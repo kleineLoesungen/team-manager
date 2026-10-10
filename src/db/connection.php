@@ -157,7 +157,6 @@ function db_init_schema(PDO $pdo, string $s): void {
         auto_visibility_hours   INTEGER NOT NULL DEFAULT 0
                                 CHECK (auto_visibility_hours BETWEEN 0 AND 720),
         auto_visibility_done_at TIMESTAMPTZ NULL,
-        auto_reminder           BOOLEAN NOT NULL DEFAULT FALSE,
         auto_reminder_sent_at   TIMESTAMPTZ NULL,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()

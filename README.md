@@ -492,10 +492,10 @@ Auf der Startseite (Inhalte) erscheint einmal der Hinweis „Push einschalten“
 Push kann und noch nie gefragt wurde; automatisch einschalten erlauben die Browser nicht.
 
 **Automatische Pushes** (`src/push/auto_push.php`):
-- *Erinnerung vor der automatischen Umstellung* (z. B. Anmeldeschluss): pro Liste einschaltbar
-  („1 Std. vorher per Push erinnern“), geht an alle Mitglieder des Teams mit Push, genau einmal.
-  Ohne Cronjob bei Seitenaufrufen geprüft (höchstens einmal pro Minute); kommt in der Stunde
-  davor niemand vorbei, entfällt sie. Ändern sich Regel, Datum oder Beginn, wird sie wieder fällig.
+- *Erinnerung vor der automatischen Umstellung* (z. B. Anmeldeschluss): immer, für jede Liste
+  mit Umstellung; geht an alle Mitglieder des Teams mit Push, genau einmal. Ohne Cronjob: Der
+  erste Seitenaufruf irgendeiner Person am Tag der Umstellung (ab 0:00, vor dem Zeitpunkt) löst
+  sie aus. Ändern sich Regel, Datum oder Beginn, wird sie wieder fällig.
 - *Kurzfristige Änderung*: Bei Listen und Terminen der nächsten 7 Tage bietet das
   Bearbeiten-Formular „Per Push über die Änderung informieren“. Gesendet wird nur, wenn sich
   Datum, Uhrzeit oder Ort wirklich ändern, z. B. „Neu: Sa 11.10., 18:30 statt 18:00“.

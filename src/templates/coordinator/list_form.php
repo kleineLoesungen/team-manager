@@ -106,7 +106,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                     z. B. „auf Geschützt, 2 Std. vor Beginn“ als Anmeldeschluss. Bei einer Serie gilt das
                     für jeden Termin. Ohne Uhrzeit zählt 00:00 als Beginn.
                 </div>
-                <?php render_auto_reminder_switch($posted && !empty($_POST['auto_reminder'])); ?>
+                <?php render_auto_reminder_hint(); ?>
             </div>
 
             <!-- Zeilen anderer Mitglieder / verstecken -->

@@ -457,16 +457,12 @@ function render_push_device_card(string $vapid_public): void {
 }
 
 /**
- * Switch "1 Std. vorher per Push erinnern" next to a list's automatic visibility change
- * (lists.auto_reminder, src/push/auto_push.php). Only takes effect with a rule.
+ * Hint under a list's automatic visibility change: members get a push reminder on that day
+ * (src/push/auto_push.php) — always, there is no switch.
  */
-function render_auto_reminder_switch(bool $checked): void {
+function render_auto_reminder_hint(): void {
     ?>
-    <div class="form-check form-switch d-flex align-items-center gap-2 mt-2">
-        <input class="form-check-input" type="checkbox" role="switch" name="auto_reminder" id="auto_reminder" value="1" <?= $checked ? 'checked' : '' ?>>
-        <label class="form-check-label mb-0" for="auto_reminder">1 Std. vorher per Push erinnern</label>
-    </div>
-    <div class="form-text mt-0">Geht an alle Mitglieder mit Push, z. B. „Eintragen nur noch bis heute 16:00“.</div>
+    <div class="form-text"><i class="bi bi-bell me-1" aria-hidden="true"></i>Mitglieder mit Push werden am Tag der Umstellung daran erinnert, z. B. „Eintragen nur noch bis heute 16:00“.</div>
     <?php
 }
 

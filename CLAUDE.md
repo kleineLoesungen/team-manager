@@ -163,7 +163,7 @@ Browser → public/index.php (front controller)
 | `member_attributes` | Attribute definitions per group (visible_to_member, editable_by_member) |
 | `member_attribute_values` | Attribute values per member |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |
-| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always); `auto_reminder` + `auto_reminder_sent_at` (push 1 h before the automatic visibility change) |
+| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always); `auto_reminder_sent_at` (push reminder on the day of the automatic visibility change, always) |
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
 | `list_global_columns` | Which global columns appear in each list |
 | `cells` | EAV values — one row per (list, column, member) |

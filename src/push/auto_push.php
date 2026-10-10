@@ -2,11 +2,11 @@
 // src/push/auto_push.php — Automatische Push-Benachrichtigungen (Issue #13)
 //
 // 1. Erinnerung vor der automatischen Statusumstellung einer Liste (typisch: Anmeldeschluss).
-//    Pro Liste einschaltbar (lists.auto_reminder), genau einmal (lists.auto_reminder_sent_at),
-//    LIST_REMINDER_MINUTES vor dem Wechsel, an alle Mitglieder des Teams mit Push — nicht nur an
-//    die ohne Eintrag: bei Standardwerten ist „nichts eingetragen“ nicht erkennbar.
-//    Ohne Cronjob: bei Seitenaufrufen geprüft, höchstens einmal pro Minute (wie der Tickerstart).
-//    Kommt in der Stunde vor dem Wechsel niemand vorbei, entfällt die Erinnerung.
+//    Immer, für jede Liste mit Umstellung; genau einmal (lists.auto_reminder_sent_at), an alle
+//    Mitglieder des Teams mit Push — nicht nur an die ohne Eintrag: bei Standardwerten ist
+//    „nichts eingetragen“ nicht erkennbar. Ohne Cronjob: Der erste Seitenaufruf (irgendeiner
+//    Person) am Tag der Umstellung ab 0:00 und vor dem Zeitpunkt löst sie aus; geprüft höchstens
+//    einmal pro Minute (wie der Tickerstart).
 // 2. Kurzfristige Änderung: Ändert ein Koordinator Datum, Uhrzeit oder Ort einer Liste oder eines
 //    Termins in den nächsten CHANGE_PUSH_DAYS Tagen, kann er beim Speichern „Mitglieder per Push
 //    informieren“ einschalten. Empfänger nach Sichtbarkeit (privat → Koordinatoren).
@@ -16,7 +16,6 @@ declare(strict_types=1);
 require_once ROOT_PATH . '/src/push/notify_push.php';
 require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
 
-const LIST_REMINDER_MINUTES = 60;
 const CHANGE_PUSH_DAYS      = 7;
 
 /**
@@ -37,18 +36,20 @@ function list_reminder_check(): void {
                 "UPDATE lists l SET auto_reminder_sent_at = NOW()
                  FROM teams t
                  WHERE t.id = l.team_id AND t.is_active = TRUE
-                   AND l.auto_reminder = TRUE AND l.auto_reminder_sent_at IS NULL
+                   AND l.auto_reminder_sent_at IS NULL
                    AND l.auto_visibility IS NOT NULL AND l.auto_visibility_done_at IS NULL
                    AND l.auto_visibility <> l.visibility
                    AND l.visibility IN ('public', 'protected') AND l.date IS NOT NULL
-                   AND ((l.date + COALESCE(l.time_start, TIME '00:00')) AT TIME ZONE 'Europe/Berlin')
-                       - make_interval(hours => l.auto_visibility_hours, mins => ?) <= NOW()
-                   AND ((l.date + COALESCE(l.time_start, TIME '00:00')) AT TIME ZONE 'Europe/Berlin')
-                       - make_interval(hours => l.auto_visibility_hours) > NOW()
+                   -- Fenster: Tag der Umstellung ab 0:00 (deutsche Zeit) bis zur Umstellung
+                   AND date_trunc('day', (l.date + COALESCE(l.time_start, TIME '00:00'))
+                                         - make_interval(hours => l.auto_visibility_hours))
+                       AT TIME ZONE 'Europe/Berlin' <= NOW()
+                   AND ((l.date + COALESCE(l.time_start, TIME '00:00'))
+                        - make_interval(hours => l.auto_visibility_hours)) AT TIME ZONE 'Europe/Berlin' > NOW()
                  RETURNING l.id, l.team_id, t.name AS team_name, l.name, l.visibility, l.auto_visibility,
                            l.auto_visibility_hours, l.date, l.time_start"
             );
-            $stmt->execute([LIST_REMINDER_MINUTES]);
+            $stmt->execute();
             $due = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             // 42703 = Spalte fehlt: Migration noch nicht eingespielt — ohne Erinnerungen weiter
