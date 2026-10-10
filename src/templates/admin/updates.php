@@ -23,6 +23,8 @@ $render_entry = function (string $title, array $entry): void {
 
 <?php render_page_header('Version', '/admin/settings'); ?>
 
+<?php render_migration_steps($status['db_pending'], 'Datenbank nicht aktuell — jetzt einspielen', 'danger'); ?>
+
 <div class="list-group mb-4">
     <div class="list-group-item d-flex align-items-center gap-2">
         <span class="flex-grow-1">Installiert</span>
@@ -47,13 +49,13 @@ $render_entry = function (string $title, array $entry): void {
 <?php elseif (!$status['newer']): ?>
     <?php render_empty('check-circle', 'Aktuell', 'Diese Instanz hat die neueste bekannte Version.'); ?>
 <?php else: ?>
-    <?php $migrations = array_merge(...array_map(fn($e) => $e['migrations'], $status['newer'])); ?>
-    <?php if ($migrations): ?>
-    <div class="alert alert-warning">
-        <div class="fw-semibold mb-1"><i class="bi bi-database-exclamation me-1" aria-hidden="true"></i>Vor dem Deployment Migration<?= count($migrations) === 1 ? '' : 'en' ?> einspielen</div>
-        <ul class="mb-0 ps-3 small"><?php foreach ($migrations as $m): ?><li><?= e($m) ?></li><?php endforeach; ?></ul>
-    </div>
-    <?php endif; ?>
+    <?php
+    // Migrationen der neueren Versionen, älteste zuerst (Changelog ist neueste zuerst)
+    $migrations = array_merge(...array_map(fn($e) => $e['migrations'], array_reverse($status['newer'])));
+    sort($migrations, SORT_STRING);
+    render_migration_steps(array_values(array_unique($migrations)),
+        'Vor dem Deployment Migration' . (count($migrations) === 1 ? '' : 'en') . ' einspielen');
+    ?>
     <?php foreach ($status['newer'] as $entry) $render_entry('Version ' . version_label($entry['version']), $entry); ?>
 <?php endif; ?>
 

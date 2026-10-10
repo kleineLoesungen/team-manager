@@ -180,10 +180,26 @@ function render_filter_pills(array $pills, string $base_url = ''): void {
 }
 
 /**
- * Admin start page: "Update verfügbar" when the reference changelog has newer versions
- * (src/utils/updates.php). Renders nothing when up to date, disabled or unknown.
+ * Admin start page: "Datenbank nicht aktuell" when a shipped migration is missing in the database,
+ * and "Update verfügbar" when the reference changelog has newer versions (src/utils/updates.php).
+ * Renders nothing when up to date, disabled or unknown.
  */
 function render_update_notice(array $status): void {
+    if (!empty($status['db_pending'])) {
+        $n = count($status['db_pending']);
+        ?>
+        <div class="alert alert-danger d-flex align-items-start gap-2">
+            <i class="bi bi-database-exclamation" aria-hidden="true"></i>
+            <div class="flex-grow-1">
+                <div class="fw-semibold">Datenbank nicht aktuell</div>
+                <div class="small">
+                    <?= $n === 1 ? 'Eine Migration fehlt' : $n . ' Migrationen fehlen' ?> — bis dahin können Seiten Fehler zeigen.
+                    · <a href="/admin/updates" class="alert-link">Jetzt einspielen</a>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
     if (!$status['newer']) return;
     $latest     = $status['newer'][0]['version'];
     $changes    = array_sum(array_map(fn($e) => count($e['items']), $status['newer']));
@@ -197,6 +213,34 @@ function render_update_notice(array $status): void {
                 <?= $changes ?> Änderung<?= $changes === 1 ? '' : 'en' ?> seit deiner Version <?= e(version_label((string)$status['installed'])) ?><?= $migrations ? ' · <strong>Migration nötig</strong>' : '' ?>
                 · <a href="/admin/updates" class="alert-link">Änderungen ansehen</a>
             </div>
+        </div>
+    </div>
+    <?php
+}
+
+/**
+ * Migrations to apply, in order, with a link to each file and the steps for pgAdmin.
+ * Used before an update (migrations of newer versions) and after one (missing in the database).
+ * @param list<string> $files   File names with or without ".sql", oldest first
+ * @param string       $title   e.g. "Vor dem Deployment einspielen"
+ * @param string       $variant 'warning' (before) | 'danger' (missing now)
+ */
+function render_migration_steps(array $files, string $title, string $variant = 'warning'): void {
+    if (!$files) return;
+    ?>
+    <div class="alert alert-<?= $variant === 'danger' ? 'danger' : 'warning' ?>">
+        <div class="fw-semibold mb-1"><i class="bi bi-database-exclamation me-1" aria-hidden="true"></i><?= e($title) ?></div>
+        <ol class="mb-2 ps-3 small">
+            <?php foreach ($files as $f):
+                $name = preg_replace('/\.sql$/', '', $f) . '.sql';
+                $url  = migration_url($name); ?>
+            <li><?php if ($url): ?><a href="<?= e($url) ?>" class="alert-link" target="_blank" rel="noopener"><?= e($name) ?></a><?php else: ?><?= e($name) ?><?php endif; ?></li>
+            <?php endforeach; ?>
+        </ol>
+        <div class="small">
+            <span class="fw-semibold">So geht’s:</span> Datei öffnen → in pgAdmin das Schema in der Zeile
+            <code>SET LOCAL search_path</code> eintragen → ausführen (F5)<?= count($files) > 1 ? ', eine nach der anderen in dieser Reihenfolge' : '' ?><?= $variant === 'danger' ? ' → diese Seite neu laden.' : ' → danach deployen.' ?>
+            Mehrfaches Ausführen schadet nicht.
         </div>
     </div>
     <?php

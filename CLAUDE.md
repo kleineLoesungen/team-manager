@@ -83,7 +83,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 - `set_team_context()` called at session start — sets `app.current_role`, `app.current_user_id`, `app.current_team_id` for RLS
 - EAV pattern: `columns` table (structure) + `cells` table (values); global columns have `list_id IS NULL`
 - Settings stored in `settings` table as key/value pairs (e.g. `app_title`, `default_team_logo`)
-- Schema changes: update `database/schema.sql`, `database/rls_policies.sql` and `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` together; ship a one-time script in `database/migrations/` (pure SQL for pgAdmin, `SET LOCAL search_path TO SCHEMA_EINTRAGEN`, `to_regclass` guard, idempotent). The user runs it before deploying; delete it in the next commit once they confirm.
+- Schema changes: update `database/schema.sql`, `database/rls_policies.sql` and `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` together; ship a script `database/migrations/JJJJMMTT_thema.sql` (pure SQL for pgAdmin, `SET LOCAL search_path TO SCHEMA_EINTRAGEN`, `SET LOCAL app.is_admin` when it changes data, `to_regclass` guard, idempotent, data changes guarded by `settings.db_migration`, ends by writing its name to `settings.db_migration`). Migrations stay in the repo for good (several instances update from different versions); also bump the `db_migration` line at the end of `schema.sql` and name the file in the CHANGELOG entry. Admin → Version lists migrations of newer versions and those missing in the DB (`src/utils/updates.php`)
 - Cross-team reads (resource usage, a member's teams, other teams' tickers) run briefly in admin context via `as_admin()` (connection.php), which restores the signed-in context; already in admin context it just runs
 - Departments: a team only sees resources of its department (`resources_active()` filters by the team); naming follows the domain — `organizations` (not clubs), contents overview `/…/contents` (single lists stay `/…/lists/{id}`)
 - Events: members write only their own (`events.created_by`) and only if `teams.members_create_events`; enforced in `src/db/events.php` and by RLS on `events` + `resource_bookings`
@@ -131,7 +131,7 @@ src/
 database/
   schema.sql        Idempotent schema (all tables)
   rls_policies.sql  Row-Level Security policies
-  migrations/       One-time scripts, only until applied (see Database)
+  migrations/       Migration scripts, kept for good; order = file name (see Database)
 docker/             Docker Compose setup for local dev
 landing/            Static product landing page (not part of app)
 uploads/            Logo uploads (HTTP-blocked via .htaccess)

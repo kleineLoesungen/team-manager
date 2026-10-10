@@ -129,6 +129,7 @@ $resource_line   = $resource_active
 require_once ROOT_PATH . '/src/utils/updates.php';
 $update       = update_status(get_db());
 $version_line = ($update['installed'] ? version_label($update['installed']) : 'Version unbekannt') . ' · ' . match (true) {
+    (bool)$update['db_pending']    => 'Datenbank-Migration fehlt',
     !$update['enabled']            => 'Prüfung abgeschaltet',
     (bool)$update['newer']         => 'Update auf ' . version_label($update['newer'][0]['version']) . ' verfügbar',
     $update['installed'] === null  => 'CHANGELOG.md fehlt',

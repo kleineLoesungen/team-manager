@@ -11,6 +11,10 @@
 //   ## 2026.10.15
 //   - Ressourcen-Auslastung nach Wochen gruppiert
 //   - Migration: 20261015_beispiel.sql      ← vor dem Deployment einzuspielen
+//
+// Datenbank-Stand: Migrationen bleiben dauerhaft in database/migrations/ (Reihenfolge = Dateiname)
+// und schreiben am Ende ihren Namen in settings 'db_migration'. Fehlt der Datenbank eine
+// mitgelieferte Migration, sieht der Admin das (update_status()['db_pending']).
 
 declare(strict_types=1);
 
@@ -76,6 +80,33 @@ function installed_changelog(int $limit): array {
     return array_slice(changelog_parse((string)file_get_contents($file)), 0, $limit);
 }
 
+/** Name of the last migration applied to this database ('' = none recorded yet). */
+function db_migration_state(PDO $pdo): string {
+    $stmt = $pdo->prepare("SELECT value FROM settings WHERE key = 'db_migration'");
+    $stmt->execute();
+    return (string)$stmt->fetchColumn();
+}
+
+/** Migrations shipped with this code that the database has not got yet, oldest first. */
+function db_pending_migrations(PDO $pdo): array {
+    $state = db_migration_state($pdo);
+    return array_values(array_filter(db_migration_files(), fn($f) => strcmp($f, $state) > 0));
+}
+
+/**
+ * Link to a migration file for the admin: next to the reference changelog (GitHub raw URL →
+ * the file's page on GitHub), so it is the version the update brings.
+ */
+function migration_url(string $file): ?string {
+    $file = preg_replace('/\.sql$/', '', $file) . '.sql';
+    if (!preg_match('/^\d{8}[a-z0-9_]*\.sql$/', $file)) return null;
+    $url = update_check_url();
+    if (preg_match('#^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/CHANGELOG\.md$#', $url, $m)) {
+        return "https://github.com/{$m[1]}/{$m[2]}/blob/{$m[3]}/database/migrations/{$file}";
+    }
+    return $url !== '' ? preg_replace('#/[^/]*$#', '', $url) . '/database/migrations/' . $file : null;
+}
+
 /** Fetch the reference changelog (HTTPS, short timeout); null on any failure. */
 function update_check_fetch(string $url): ?array {
     $body = false; $status = 0;
@@ -103,14 +134,17 @@ function update_check_fetch(string $url): ?array {
 
 /**
  * Update status for the admin. Uses the cached result unless it is older than a day or $force.
+ * db_pending: migrations of the installed code missing in the database (always checked locally).
  * @return array{enabled: bool, installed: ?string, latest: ?string, newer: list<array>,
- *               ok: bool, checked_at: ?int}
+ *               ok: bool, checked_at: ?int, db_pending: list<string>}
  */
 function update_status(PDO $pdo, bool $force = false): array {
-    $installed = app_version();
-    $url       = update_check_url();
+    $installed  = app_version();
+    $url        = update_check_url();
+    $db_pending = db_pending_migrations($pdo);
     if ($url === '') {
-        return ['enabled' => false, 'installed' => $installed, 'latest' => null, 'newer' => [], 'ok' => false, 'checked_at' => null];
+        return ['enabled' => false, 'installed' => $installed, 'latest' => null, 'newer' => [], 'ok' => false,
+                'checked_at' => null, 'db_pending' => $db_pending];
     }
 
     $stmt  = $pdo->prepare("SELECT value FROM settings WHERE key = 'update_check'");
@@ -143,5 +177,6 @@ function update_status(PDO $pdo, bool $force = false): array {
         'newer'      => $newer,
         'ok'         => (bool)($cache['ok'] ?? false),
         'checked_at' => isset($cache['checked_at']) ? (int)$cache['checked_at'] : null,
+        'db_pending' => $db_pending,
     ];
 }

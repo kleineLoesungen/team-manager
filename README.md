@@ -295,22 +295,46 @@ aktuellen Stand; `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` l
 in einer leeren Datenbank an. Alle drei werden bei einer Schema-Änderung im selben Commit
 nachgezogen.
 
-Eine Schema-Änderung kommt als Einmal-Skript nach `database/migrations/JJJJMMTT_thema.sql`.
-Es wird **vor** dem Deployment von Hand gegen jede Umgebung eingespielt und danach im nächsten
-Commit wieder gelöscht. Dauerhaft liegen also keine Migrationsskripte im Repository; der
-Wortlaut eines eingespielten Skripts bleibt über die Git-Historie auffindbar.
+Eine Schema-Änderung kommt als Skript nach `database/migrations/JJJJMMTT_thema.sql`. Es gibt
+mehrere Instanzen, die unterschiedlich weit zurückliegen können — deshalb **bleiben alle
+Migrationen dauerhaft im Repository**, und die Datenbank kennt ihren Stand: Jedes Skript
+schreibt am Ende seinen Namen in `settings` (`db_migration`). Die Reihenfolge ist die
+Reihenfolge der Dateinamen.
 
-Aufbau eines Skripts (Vorlage: ein beliebiges früheres Skript in der Git-Historie):
+### Update einspielen (mit Migrationen)
+
+1. **Admin → Einstellungen → Version** zeigt bei „Update verfügbar“, welche Migrationen die
+   neuen Versionen brauchen — in der richtigen Reihenfolge, mit Link zur Datei auf GitHub.
+2. Jede Datei öffnen, in pgAdmin das Schema in der Zeile `SET LOCAL search_path` eintragen und
+   ausführen (F5), eine nach der anderen.
+3. Danach deployen.
+
+Fehlt der Datenbank nach dem Deployment eine Migration, die der Code mitbringt, zeigt die App
+dem Admin „Datenbank nicht aktuell“ mit derselben Anleitung. Mehrfaches Ausführen eines Skripts
+schadet nicht. Neue Installationen (leere Datenbank oder `schema.sql`) sind automatisch auf dem
+aktuellen Stand.
+
+### Aufbau eines Skripts
+
+Vorlage: das jüngste Skript in `database/migrations/`.
 
 ```sql
 BEGIN;
 SET LOCAL search_path TO SCHEMA_EINTRAGEN;   -- DB_SCHEMA aus der config.php
+SET LOCAL app.is_admin = 'true';             -- nur nötig, wenn Daten geändert werden (RLS)
 DO $$ BEGIN
     IF to_regclass('teams') IS NULL THEN RAISE EXCEPTION 'falsches Schema'; END IF;
 END $$;
 -- idempotente Änderungen: ADD COLUMN IF NOT EXISTS, DROP POLICY IF EXISTS + CREATE POLICY …
+-- Datenänderungen nur beim ersten Lauf:
+--   … AND NOT EXISTS (SELECT 1 FROM settings WHERE key = 'db_migration' AND value >= 'JJJJMMTT_thema')
+INSERT INTO settings (key, value) VALUES ('db_migration', 'JJJJMMTT_thema')
+ON CONFLICT (key) DO UPDATE SET value = GREATEST(settings.value, EXCLUDED.value);
 COMMIT;
 ```
+
+Mit jeder neuen Migration auch die `db_migration`-Zeile am Ende von `database/schema.sql`
+nachziehen und die Datei im Changelog nennen (`- Migration: JJJJMMTT_thema.sql`).
 
 Es ist reines SQL ohne `psql`-Befehle wie `\set`, damit es auch in pgAdmin (F5) läuft.
 
@@ -657,7 +681,7 @@ src/
     calendar.php    Kalender-Hilfsfunktionen (Wochen-/Monatsgrenzen, ICS-Formatierung)
     csrf.php        CSRF-Token-Generierung und -Validierung
     helpers.php     Hilfsfunktionen (redirect, htmle, require_*)
-database/           SQL-Schema und RLS-Richtlinien (Wahrheitsquelle); migrations/ nur vorübergehend
+database/           SQL-Schema und RLS-Richtlinien (Wahrheitsquelle); migrations/ dauerhaft, Reihenfolge = Dateiname
 docs/               UI-Baseline (verbindlich für jede Frontend-Arbeit)
 bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)

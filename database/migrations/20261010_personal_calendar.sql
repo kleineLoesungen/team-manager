@@ -1,7 +1,7 @@
 -- database/migrations/20261010_personal_calendar.sql
--- Team Manager — Einmal-Migration: persönlicher Kalender (Issue #12)
+-- Team Manager — Migration: persönlicher Kalender (Issue #12)
 --
--- VOR dem Deployment einspielen, danach diese Datei löschen (Konvention, siehe README).
+-- VOR dem Deployment einspielen (Reihenfolge und Anleitung: Admin → Einstellungen → Version).
 -- - members.calendar_token: persönlicher Kalender-Link je Person (über alle ihre Teams),
 --   wird beim ersten Aufruf von Inhalte → Kalender erzeugt.
 -- - lists.calendar_column_id: Ja/Nein-Spalte, die über den Eintrag im persönlichen Kalender
@@ -13,17 +13,20 @@
 --
 -- pgAdmin: Schema in der Zeile `SET LOCAL search_path` eintragen, dann das ganze Skript
 -- ausführen (F5). Reines SQL. Bei falschem Schema bricht es ab, bevor es etwas ändert.
--- Rechte: DDL — als Eigentümer-Rolle der App-Tabellen. Mehrfach ausführbar (vor dem Deployment).
+-- Rechte: DDL — als Eigentümer-Rolle der App-Tabellen. Mehrfach ausführbar: Datenänderungen
+-- laufen nur, solange die Datenbank diese Migration noch nicht hat (settings 'db_migration').
 
 BEGIN;
 
 SET LOCAL search_path TO SCHEMA_EINTRAGEN;   -- <<< DB_SCHEMA aus der Produktions-config.php
+SET LOCAL app.is_admin = 'true';             -- Row-Level Security: Daten aller Teams
 
 DO $$
 BEGIN
     IF to_regclass('members') IS NULL OR to_regclass('lists') IS NULL
-       OR to_regclass('columns') IS NULL OR to_regclass('teams') IS NULL THEN
-        RAISE EXCEPTION 'search_path zeigt nicht auf das App-Schema (Tabellen members/lists/columns/teams nicht gefunden)';
+       OR to_regclass('columns') IS NULL OR to_regclass('teams') IS NULL
+       OR to_regclass('settings') IS NULL THEN
+        RAISE EXCEPTION 'search_path zeigt nicht auf das App-Schema (Tabellen members/lists/columns/teams/settings nicht gefunden)';
     END IF;
 END $$;
 
@@ -37,8 +40,7 @@ ALTER TABLE teams
     DROP COLUMN IF EXISTS calendar_token_member;
 
 -- Bestehende Listen: genau eine sichtbare Ja/Nein-Spalte → als Kalender-Spalte setzen.
--- Betrifft nur Listen ohne Kalender-Spalte. Achtung: Erneut ausgeführt, nachdem die App schon
--- läuft, würde es Listen wieder setzen, die ein Koordinator auf „Immer anzeigen“ gestellt hat.
+-- Nur beim ersten Lauf: danach entscheiden die Koordinatoren (auch „Immer anzeigen“).
 WITH candidates AS (
     SELECT l.id AS list_id, c.id AS column_id,
            COUNT(*) OVER (PARTITION BY l.id) AS boolean_columns
@@ -52,6 +54,11 @@ WITH candidates AS (
 UPDATE lists
 SET calendar_column_id = candidates.column_id
 FROM candidates
-WHERE lists.id = candidates.list_id AND candidates.boolean_columns = 1;
+WHERE lists.id = candidates.list_id AND candidates.boolean_columns = 1
+  AND NOT EXISTS (SELECT 1 FROM settings WHERE key = 'db_migration' AND value >= '20261010_personal_calendar');
+
+-- Stand der Datenbank: diese Migration ist eingespielt
+INSERT INTO settings (key, value) VALUES ('db_migration', '20261010_personal_calendar')
+ON CONFLICT (key) DO UPDATE SET value = GREATEST(settings.value, EXCLUDED.value);
 
 COMMIT;

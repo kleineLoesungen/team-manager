@@ -410,3 +410,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_list  ON team_manager.res
 CREATE UNIQUE INDEX IF NOT EXISTS uq_resource_bookings_event ON team_manager.resource_bookings(resource_id, event_id) WHERE event_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_resource_bookings_list  ON team_manager.resource_bookings(list_id);
 CREATE INDEX IF NOT EXISTS idx_resource_bookings_event ON team_manager.resource_bookings(event_id);
+
+-- Stand der Datenbank: dieses Schema enthält alle Migrationen bis einschließlich dieser.
+-- Bei jeder neuen Migration in database/migrations/ hier mitziehen (src/utils/updates.php).
+INSERT INTO team_manager.settings (key, value) VALUES ('db_migration', '20261010_personal_calendar') ON CONFLICT DO NOTHING;

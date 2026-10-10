@@ -50,6 +50,29 @@ function maybe_init_db(PDO $pdo): void {
 
     db_init_schema($pdo, $schema);
     db_init_rls($pdo, $schema);
+
+    // Neue Installation: Schema ist auf dem Stand aller mitgelieferten Migrationen
+    $files = db_migration_files();
+    if ($files) {
+        $pdo->prepare("INSERT INTO {$schema}.settings (key, value) VALUES ('db_migration', ?) ON CONFLICT (key) DO NOTHING")
+            ->execute([end($files)]);
+    }
+}
+
+/**
+ * Migrations shipped with this code, oldest first, as file names without ".sql"
+ * ("20261010_personal_calendar"). Each one ends by storing its name in settings 'db_migration';
+ * the order is the file name order (date first). See src/utils/updates.php.
+ * @return list<string>
+ */
+function db_migration_files(): array {
+    $files = [];
+    foreach (glob(dirname(__DIR__, 2) . '/database/migrations/*.sql') ?: [] as $path) {
+        $name = basename($path, '.sql');
+        if (preg_match('/^\d{8}[a-z0-9_]*$/', $name)) $files[] = $name;
+    }
+    sort($files, SORT_STRING);
+    return $files;
 }
 
 
