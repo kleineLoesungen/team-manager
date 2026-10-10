@@ -115,7 +115,7 @@ src/
     phpmailer/      PHPMailer library (bundled, no Composer)
   db/               PDO connection + schema init, domain queries (dashboard, events, resources,
                     visibility, list auto-visibility, ticker, stats, team switch)
-  ics_token_handler.php     Team ICS feed (/ics/{token}.ics)
+  ics_token_handler.php     ICS feed (/ics/{token}.ics): team coordinator token or a member's personal token
   ics_resource_handler.php  Resource ICS feed (/ics/resource/{token}.ics)
   templates/
     components/     Shared building blocks (partials.php, event_form.php, resource_usage.php)
@@ -154,16 +154,16 @@ Browser → public/index.php (front controller)
 | Table | Purpose |
 |-------|---------|
 | `departments` | Departments (e.g. Fußball, Tennis) grouping teams and resources; members and organizations have none |
-| `teams` | Teams with name, `department_id`, active flag, logo path, ICS tokens, `members_create_events` |
+| `teams` | Teams with name, `department_id`, active flag, logo path, coordinator ICS token, `members_create_events` |
 | `users` | Coordinators and members (role = 'coordinator' or 'member') |
 | `coordinator_teams` | Maps coordinators to one or more teams (with left_at for history) |
-| `members` | Member profiles (the person, across teams), linked from `users.member_id`; `organization_id` |
+| `members` | Member profiles (the person, across teams), linked from `users.member_id`; `organization_id`; `calendar_token` (personal ICS feed across all teams) |
 | `organizations` | Organizations (e.g. clubs) that members and coordinators belong to — formerly `clubs` |
 | `member_attribute_groups` | Groups for custom member attributes (e.g. "Medizin"); `department_id` NULL = all departments, else only that department (coordinators: own team's; members: all of their teams') |
 | `member_attributes` | Attribute definitions per group (visible_to_player, editable_by_player) |
 | `member_attribute_values` | Attribute values per member |
 | `settings` | Global key/value app settings (app_title, default_team_logo) |
-| `lists` | Team lists with visibility, type (member/free), date, description |
+| `lists` | Team lists with visibility, type (member/free), date, description; `calendar_column_id` (Ja/Nein column deciding the personal calendar, NULL = always) |
 | `columns` | EAV column definitions (global: list_id IS NULL; local: list_id IS NOT NULL) |
 | `list_global_columns` | Which global columns appear in each list |
 | `cells` | EAV values — one row per (list, column, player) |

@@ -345,27 +345,34 @@ Beim Schreiben eines solchen Skripts zu beachten:
 Termine lassen sich in Apple Kalender, Google Calendar oder Outlook abonnieren. Der Feed ist
 **nicht öffentlich**, sondern über ein Token in der URL geschützt: `/ics/{token}.ics`.
 
-Pro Team existieren genau **zwei** Tokens, gespeichert auf der Tabelle `teams`:
+Es gibt zwei Arten von Feeds:
 
-| Token | Spalte | Sichtbarkeit |
-|-------|--------|--------------|
-| Koordinator-Feed | `calendar_token_coordinator` | Listen: öffentlich, geschützt und privat · Termine: geschützt und privat |
-| Mitglieder-Feed | `calendar_token_member` | Listen: öffentlich und geschützt · Termine: nur geschützt |
+| Feed | Token | Inhalt |
+|------|-------|--------|
+| Koordinator-Feed | `teams.calendar_token_coordinator` (einer je Team) | Listen: öffentlich, geschützt und privat · Termine: geschützt und privat |
+| Persönlicher Feed | `members.calendar_token` (einer je Person) | Listen: öffentlich und geschützt · Termine: nur geschützt — aus **allen** Teams der Person, mit Teamnamen davor, sobald es mehrere sind |
 
-Die Rolle ergibt sich ausschließlich daraus, **welche Spalte** auf das Token passt — sie kann
-nicht über einen Request-Parameter beeinflusst werden.
+Welcher Feed geliefert wird, ergibt sich ausschließlich daraus, **welche Spalte** auf das
+Token passt — es kann nicht über einen Request-Parameter beeinflusst werden.
+
+**Kalender-Spalte:** Bei einer Mitgliederliste kann der Koordinator eine Ja/Nein-Spalte wählen
+(„Im persönlichen Kalender“, `lists.calendar_column_id`). Die Liste erscheint dann im
+persönlichen Feed nur bei „Ja“ — eingetragener Wert, sonst der Standardwert der Spalte in
+dieser Liste. Ohne Auswahl (Standard), bei freien Listen und bei Terminen erscheint der
+Eintrag immer. Code: `src/db/calendar.php`.
 
 Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/contents?view=month`
-bzw. `/member/contents?view=month`). Koordinatoren können beide Tokens unter „Mein Profil" neu erzeugen,
-falls ein Link öffentlich geworden ist.
+bzw. `/member/contents?view=month`, dort wird der persönliche Link beim ersten Aufruf erzeugt).
+Koordinatoren erneuern den Team-Link unter „Mein Profil“, Mitglieder ihren eigenen Link
+in der Monatsansicht — falls ein Link öffentlich geworden ist.
 
 **Ressourcen** haben je einen eigenen Feed: `/ics/resource/{token}.ics` (Spalte
 `resources.calendar_token`, beim ersten Aufruf der Auslastung erzeugt). Er enthält die
 Belegungen aller Teams als „Team: Titel"; private Einträge erscheinen nur als „Belegt".
 Den Link zeigt die Auslastungsseite, sobald eine Ressource ausgewählt ist.
 
-> **Hinweis:** Die Tokens gelten teamweit, nicht pro Person. Ein erneuertes Token macht das
-> Abo für **alle** Abonnenten dieses Feeds ungültig — alle müssen den Link neu eintragen.
+> **Hinweis:** Der Koordinator-Link gilt teamweit. Ein erneuerter Team-Link macht das Abo für
+> **alle** Koordinatoren dieses Teams ungültig; ein erneuerter persönlicher Link nur das eigene.
 
 ---
 

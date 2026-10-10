@@ -61,6 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    )"
             )->execute([$new_id, $old_id, $new_id]);
             $pdo->prepare("DELETE FROM list_global_columns WHERE column_id = ?")->execute([$old_id]);
+            $pdo->prepare("UPDATE lists SET calendar_column_id = ? WHERE calendar_column_id = ?")
+                ->execute([$new_id, $old_id]);   // Kalender-Spalte folgt
 
             // Remap cells: old team column → new system column (skip conflicts)
             $pdo->prepare(

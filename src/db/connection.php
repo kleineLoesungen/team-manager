@@ -78,7 +78,6 @@ function db_init_schema(PDO $pdo, string $s): void {
         sort_order                  INTEGER NOT NULL DEFAULT 0,
         logo_path                   VARCHAR(500) NULL,
         calendar_token_coordinator  VARCHAR(64)  UNIQUE NULL,
-        calendar_token_member       VARCHAR(64)  UNIQUE NULL,
         members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,
         created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
@@ -158,6 +157,9 @@ function db_init_schema(PDO $pdo, string $s): void {
 
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_columns_team_id ON {$s}.columns(team_id)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_columns_list_id ON {$s}.columns(list_id)");
+    // Persönlicher Kalender: Ja/Nein-Spalte der Liste, die über den Eintrag entscheidet (NULL = immer)
+    $pdo->exec("ALTER TABLE {$s}.lists
+        ADD COLUMN IF NOT EXISTS calendar_column_id INTEGER NULL REFERENCES {$s}.columns(id) ON DELETE SET NULL");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS {$s}.list_global_columns (
         list_id       INTEGER NOT NULL REFERENCES {$s}.lists(id)   ON DELETE CASCADE,
@@ -307,6 +309,7 @@ function db_init_schema(PDO $pdo, string $s): void {
         contact_email VARCHAR(254) NULL,
         is_active     BOOLEAN NOT NULL DEFAULT TRUE,
         confirmed_at  TIMESTAMPTZ NULL,
+        calendar_token CHAR(64) NULL UNIQUE,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_members_organization ON {$s}.members(organization_id)");

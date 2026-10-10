@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS team_manager.teams (
     sort_order                  INTEGER NOT NULL DEFAULT 0,
     logo_path                   VARCHAR(500)         NULL,
     calendar_token_coordinator  VARCHAR(64)  UNIQUE  NULL,
-    calendar_token_member       VARCHAR(64)  UNIQUE  NULL,
     members_create_events       BOOLEAN NOT NULL DEFAULT FALSE,   -- Mitglieder dürfen Termine anlegen
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -117,6 +116,10 @@ CREATE TABLE IF NOT EXISTS team_manager.columns (
 );
 CREATE INDEX IF NOT EXISTS idx_columns_team_id  ON team_manager.columns(team_id);
 CREATE INDEX IF NOT EXISTS idx_columns_list_id  ON team_manager.columns(list_id);
+
+-- Persönlicher Kalender: Ja/Nein-Spalte der Liste, die über den Eintrag entscheidet (NULL = immer)
+ALTER TABLE team_manager.lists
+    ADD COLUMN IF NOT EXISTS calendar_column_id INTEGER NULL REFERENCES team_manager.columns(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_columns_is_system ON team_manager.columns(is_system);
 
 -- List–global-column associations — which global columns appear in each list (D-11)
@@ -294,6 +297,7 @@ CREATE TABLE IF NOT EXISTS team_manager.members (
     contact_email VARCHAR(254) NULL,
     is_active     BOOLEAN NOT NULL DEFAULT TRUE,
     confirmed_at  TIMESTAMPTZ NULL,
+    calendar_token CHAR(64) NULL UNIQUE,   -- persönlicher Kalender über alle Teams (/ics/{token}.ics)
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_members_organization ON team_manager.members(organization_id);

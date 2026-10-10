@@ -79,9 +79,15 @@ if ($view === 'overview') {
 
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-$tstmt = $pdo->prepare("SELECT calendar_token_member FROM teams WHERE id = ?");
-$tstmt->execute([$_SESSION['team_id']]);
-$cal_token = $tstmt->fetchColumn();
+// Persönlicher Kalender über alle Teams der Person (src/db/calendar.php), nur im Kalender-Tab
+$cal_token = null;
+if ($showCalendar) {
+    require_once ROOT_PATH . '/src/db/calendar.php';
+    $mstmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
+    $mstmt->execute([(int)$_SESSION['user_id']]);
+    $member_id = (int)$mstmt->fetchColumn();
+    $cal_token = $member_id > 0 ? member_calendar_token($pdo, $member_id) : null;
+}
 $scheme    = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $ics_url   = $cal_token ? ($scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/ics/' . $cal_token . '.ics') : null;
 

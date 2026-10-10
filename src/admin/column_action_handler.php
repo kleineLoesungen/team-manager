@@ -65,6 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        )"
                 )->execute([$new_col_id, $column_id, $team_id, $new_col_id]);
 
+                // Kalender-Spalte dieser Listen folgt auf die neue Team-Spalte
+                $pdo->prepare(
+                    "UPDATE lists SET calendar_column_id = ? WHERE calendar_column_id = ? AND team_id = ?"
+                )->execute([$new_col_id, $column_id, $team_id]);
+
                 // Delete any remaining lgc rows for old column in this team's lists (conflict duplicates)
                 $pdo->prepare(
                     "DELETE FROM list_global_columns

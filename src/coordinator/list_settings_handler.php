@@ -11,7 +11,7 @@ $pdo     = get_db();
 $error   = '';
 
 // Fetch list including show_all_rows, is_hidden, date, description, and optional time columns
-$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, list_type';
+$time_cols = ', time_start, time_end, auto_visibility, auto_visibility_hours, auto_visibility_done_at, list_type, calendar_column_id';
 $stmt = $pdo->prepare("SELECT id, name, visibility, show_all_rows, is_hidden, date, description, location{$time_cols} FROM lists WHERE id = ? AND team_id = ?");
 $stmt->execute([$list_id, $_SESSION['team_id']]);
 $list = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -68,6 +68,11 @@ $available_columns = $available_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 require ROOT_PATH . '/src/templates/coordinator/layout.php';
 require_once ROOT_PATH . '/src/db/resources.php';
+require_once ROOT_PATH . '/src/db/calendar.php';
+
+// Persönlicher Kalender (Issue #12): wählbare Ja/Nein-Spalten dieser Mitgliederliste
+$calendar_columns = ($list['list_type'] ?? 'member') === 'member'
+    ? list_calendar_columns($pdo, $list_id, (int)$_SESSION['team_id']) : [];
 $resources = resources_active($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -173,6 +178,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "DELETE FROM list_global_columns WHERE list_id = ? AND column_id = ?"
                     );
                     $del_lgc->execute([$list_id, $col_id]);
+                    // War sie die Kalender-Spalte, erscheint die Liste wieder immer
+                    $pdo->prepare("UPDATE lists SET calendar_column_id = NULL WHERE id = ? AND calendar_column_id = ?")
+                        ->execute([$list_id, $col_id]);
                     $pdo->commit();
                     redirect('/coordinator/lists/' . $list_id . '/settings?success=1');
                 } catch (PDOException $e) {
@@ -214,6 +222,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_auto_hours = $raw_auto_hours === '' ? 0 : filter_var($raw_auto_hours, FILTER_VALIDATE_INT,
             ['options' => ['min_range' => 0, 'max_range' => LIST_AUTO_VISIBILITY_MAX_HOURS]]);
 
+        // Kalender-Spalte: nur eine der Ja/Nein-Spalten dieser Liste, sonst „immer“
+        $raw_cal_col  = (int)($_POST['calendar_column'] ?? 0);
+        $new_cal_col  = isset($calendar_columns[$raw_cal_col]) ? $raw_cal_col : null;
+
         if ($new_name === '') {
             $error = 'Name ist erforderlich.';
         } elseif (mb_strlen($new_name) > 100) {
@@ -240,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  AND time_start IS NOT DISTINCT FROM ?::time
                                 THEN auto_visibility_done_at ELSE NULL END,
                             auto_visibility = ?, auto_visibility_hours = ?,
+                            calendar_column_id = ?,
                             updated_at = NOW()
                      WHERE id = ? AND team_id = ?"
                 );
@@ -256,6 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $new_time_end   !== '' ? $new_time_end   : null,
                     $auto_val, $hours_val, $date_val, $ts_val,
                     $auto_val, $hours_val,
+                    $new_cal_col,
                     $list_id, $_SESSION['team_id'],
                 ]);
                 resources_save($pdo, (int)$_SESSION['team_id'], 'list', $list_id, resources_from_post());
@@ -272,7 +286,7 @@ $resource_selected = ($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== '')
     ? resources_from_post() : resources_booked_ids($pdo, 'list', $list_id);
 $resource_conflicts = $resource_selected ? resources_conflicts($pdo, 'list', $list_id) : [];
 
-render_coach_page('Listen-Einstellungen', 'contents', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns, $resources, $resource_selected, $resource_conflicts) {
+render_coach_page('Listen-Einstellungen', 'contents', function() use ($list, $error, $local_columns, $delete_pending_col_id, $global_columns, $unbind_pending_col_id, $available_columns, $resources, $resource_selected, $resource_conflicts, $calendar_columns) {
     ?>
     <div class="mb-3">
         <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-sm btn-outline-secondary">
@@ -376,6 +390,11 @@ render_coach_page('Listen-Einstellungen', 'contents', function() use ($list, $er
                     </div>
                     <div class="form-text mt-0">Versteckte Listen erscheinen eingeklappt am Ende der Übersicht.</div>
                 </div>
+                <?php if (($list['list_type'] ?? 'member') === 'member'):
+                    $cal_selected = ($_SERVER['REQUEST_METHOD'] === 'POST' && $error !== '')
+                        ? (string)($_POST['calendar_column'] ?? '') : (string)($list['calendar_column_id'] ?? '');
+                    render_calendar_column_select($calendar_columns, isset($calendar_columns[(int)$cal_selected]) ? $cal_selected : '');
+                endif; ?>
                 <button type="submit" class="btn btn-primary min-touch">Liste speichern</button>
                 <a href="/coordinator/lists/<?= (int)$list['id'] ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
             </form>

@@ -85,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($col_name === '') continue;
         if (count($local_columns) >= LIST_CREATE_LOCAL_COLUMNS) break;
         $local_columns[] = [
+            'k'          => (int)$k,
             'name'       => mb_substr($col_name, 0, 100),
             'data_type'  => in_array($_POST['local_type'][$k] ?? '', ['boolean', 'number', 'text'], true) ? $_POST['local_type'][$k] : 'boolean',
             'coach_only' => !empty($_POST['local_coach'][$k]) ? 1 : 0,
@@ -94,12 +95,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Serie bis Enddatum: so viele eigenständige Listen wie Termine (danach einzeln bearbeitbar)
     $series = series_from_post($date, 'die Liste');
 
+    // Persönlicher Kalender (Issue #12): '' = immer, 'g:ID' = globale Spalte, 'l:Index' = eigene Spalte
+    $calendar_column = (string)($_POST['calendar_column'] ?? '');
+    $calendar_error  = '';
+    if ($list_type === 'member' && preg_match('/^g:(\d+)$/', $calendar_column, $m)) {
+        $gid = (int)$m[1];
+        $is_bool = (bool)array_filter(array_merge($system_columns, $global_columns),
+            fn($gc) => (int)$gc['id'] === $gid && $gc['data_type'] === 'boolean');
+        if (!$is_bool || !in_array($gid, $selected_cols, true)) {
+            $calendar_error = 'Die Spalte für den persönlichen Kalender muss eine ausgewählte Ja/Nein-Spalte sein.';
+        }
+    } elseif ($list_type === 'member' && preg_match('/^l:(\d+)$/', $calendar_column, $m)) {
+        $lk = (int)$m[1];
+        if (!array_filter($local_columns, fn($lc) => $lc['k'] === $lk && $lc['data_type'] === 'boolean')) {
+            $calendar_error = 'Die Spalte für den persönlichen Kalender muss eine eigene Ja/Nein-Spalte mit Namen sein.';
+        }
+    } else {
+        $calendar_column = '';
+    }
+
     if (empty($name)) {
         $error = 'Name ist erforderlich.';
     } elseif (!in_array($visibility, ['public', 'protected', 'private'])) {
         $error = 'Ungültiger Sichtbarkeits-Status.';
     } elseif ($series['error'] !== '') {
         $error = $series['error'];
+    } elseif ($calendar_error !== '') {
+        $error = $calendar_error;
     } elseif (!in_array($auto, ['', 'public', 'protected', 'private'], true)) {
         $error = 'Ungültige automatische Sichtbarkeit.';
     } elseif ($auto !== '' && $auto_hours === false) {
@@ -133,10 +155,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Eigene Spalten dieser Liste (in jeder Liste einer Serie gleich)
                 $local_stmt = $pdo->prepare(
-                    "INSERT INTO columns (team_id, list_id, name, data_type, coach_only, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
+                    "INSERT INTO columns (team_id, list_id, name, data_type, coach_only, sort_order) VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
                 );
+                $local_ids = [];   // Formular-Index → neue Spalten-Id
                 foreach ($local_columns as $pos => $lc) {
                     $local_stmt->execute([$_SESSION['team_id'], $list_id, $lc['name'], $lc['data_type'], $lc['coach_only'], $pos]);
+                    $local_ids[$lc['k']] = (int)$local_stmt->fetchColumn();
+                }
+
+                // Kalender-Spalte dieser Liste (bei einer Serie die eigene Spalte der jeweiligen Liste)
+                $calendar_column_id = match (true) {
+                    str_starts_with($calendar_column, 'g:') => (int)substr($calendar_column, 2),
+                    str_starts_with($calendar_column, 'l:') => $local_ids[(int)substr($calendar_column, 2)] ?? null,
+                    default                                 => null,
+                };
+                if ($calendar_column_id !== null) {
+                    $pdo->prepare("UPDATE lists SET calendar_column_id = ? WHERE id = ?")->execute([$calendar_column_id, $list_id]);
                 }
 
                 // Link selected global columns (D-11) — validate ownership first

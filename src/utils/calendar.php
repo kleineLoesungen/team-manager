@@ -1,5 +1,5 @@
 <?php
-// src/utils/calendar.php — Calendar view helpers: week/month boundaries + ICS field escaping
+// src/utils/calendar.php — Calendar view helpers: week/month boundaries, ICS formatting and team feed
 
 declare(strict_types=1);
 
@@ -67,4 +67,121 @@ function foldIcsLine(string $line): string
         $line    = substr($line, 75);
     }
     return $result . $line;
+}
+
+/** VALARM trigger: reminder at 08:00 on the day (relative to the start, or to midnight all day). */
+function ics_morning_trigger(?string $time_start): string
+{
+    if ($time_start === null) return 'TRIGGER:PT8H';
+    [$h, $m]    = explode(':', $time_start);
+    $offset_min = 480 - ((int)$h * 60 + (int)$m);
+    return $offset_min < 0 ? 'TRIGGER:-PT' . abs($offset_min) . 'M'
+         : ($offset_min > 0 ? 'TRIGGER:PT' . $offset_min . 'M' : 'TRIGGER:PT0S');
+}
+
+/**
+ * Team feed (lists + events) as an ICS document. Rows need team_id; with $team_prefix the
+ * summary starts with the team name (personal feed of a member in several teams).
+ * @param array  $lists     id, team_id, team_name, name, date, location, description, time_start, time_end
+ * @param array  $events    id, team_id, team_name, title, description, location, icon, date, is_all_day, time_start, time_end
+ * @param string $role_path 'coordinator' or 'member' — links point into this role's pages
+ */
+function ics_team_calendar(array $lists, array $events, string $base_url, string $role_path, bool $team_prefix = false): string
+{
+    $dtstamp = gmdate('Ymd\THis\Z');
+    $prefix  = fn(array $row) => $team_prefix ? $row['team_name'] . ' · ' : '';
+
+    $out  = "BEGIN:VCALENDAR\r\n";
+    $out .= "VERSION:2.0\r\n";
+    $out .= "PRODID:-//Team Manager//NONSGML v1.0//DE\r\n";
+    $out .= "CALSCALE:GREGORIAN\r\n";
+    $out .= "METHOD:PUBLISH\r\n";
+
+    foreach ($lists as $list) {
+        $uid      = md5((string)$list['team_id'] . '-' . (string)$list['id']) . '@team-manager.local';
+        $list_url = $base_url . '/' . $role_path . '/lists/' . (int)$list['id'];
+        $summary  = $prefix($list) . $list['name'];
+
+        if (!empty($list['time_start'])) {
+            $ts       = substr((string)$list['time_start'], 0, 5);
+            $dt_start = str_replace('-', '', $list['date']) . 'T' . str_replace(':', '', $ts) . '00';
+            if (!empty($list['time_end'])) {
+                $te     = substr((string)$list['time_end'], 0, 5);
+                $dt_end = str_replace('-', '', $list['date']) . 'T' . str_replace(':', '', $te) . '00';
+            } else {
+                $end_dt = new DateTime($list['date'] . ' ' . $ts);
+                $end_dt->modify('+1 hour');
+                $dt_end = $end_dt->format('Ymd\THis');
+            }
+            $dtstart_line = "DTSTART:{$dt_start}";
+            $dtend_line   = "DTEND:{$dt_end}";
+            $trigger      = ics_morning_trigger($ts);
+        } else {
+            $dt_date      = str_replace('-', '', $list['date']);
+            $dtstart_line = "DTSTART;VALUE=DATE:{$dt_date}";
+            $dtend_line   = "DTEND;VALUE=DATE:{$dt_date}";
+            $trigger      = ics_morning_trigger(null);
+        }
+
+        $desc_parts = [];
+        if (!empty($list['description'])) $desc_parts[] = escapeIcsField($list['description']);
+        $desc_parts[] = $list_url;
+
+        $out .= "BEGIN:VEVENT\r\n";
+        $out .= "UID:{$uid}\r\n";
+        $out .= "DTSTAMP:{$dtstamp}\r\n";
+        $out .= foldIcsLine($dtstart_line) . "\r\n";
+        $out .= foldIcsLine($dtend_line)   . "\r\n";
+        $out .= foldIcsLine("SUMMARY:" . escapeIcsField($summary)) . "\r\n";
+        if (!empty($list['location'])) $out .= foldIcsLine("LOCATION:" . escapeIcsField($list['location'])) . "\r\n";
+        $out .= foldIcsLine("URL:{$list_url}") . "\r\n";
+        $out .= foldIcsLine("DESCRIPTION:" . implode('\\n', $desc_parts)) . "\r\n";
+        $out .= "BEGIN:VALARM\r\n{$trigger}\r\nACTION:DISPLAY\r\n" . foldIcsLine("DESCRIPTION:Erinnerung: " . escapeIcsField($summary)) . "\r\nEND:VALARM\r\n";
+        $out .= "END:VEVENT\r\n";
+    }
+
+    $icon_emoji = [
+        'bi-calendar-event' => '📅', 'bi-people-fill' => '👥', 'bi-star-fill' => '⭐',
+        'bi-gift-fill' => '🎁', 'bi-chat-dots-fill' => '💬', 'bi-flag-fill' => '🚩',
+        'bi-question-circle-fill' => '❓',
+    ];
+
+    foreach ($events as $ev) {
+        $uid     = md5('event-' . $ev['team_id'] . '-' . $ev['id']) . '@team-manager.local';
+        $summary = ($icon_emoji[$ev['icon'] ?? ''] ?? '📅') . ' ' . $prefix($ev) . $ev['title'];
+        $dt_date = str_replace('-', '', $ev['date']);
+        $all_day = in_array($ev['is_all_day'], [true, 1, '1', 't', 'true'], true);
+
+        if (!$all_day && !empty($ev['time_start'])) {
+            $ts       = substr((string)$ev['time_start'], 0, 5);
+            $dt_start = $dt_date . 'T' . str_replace(':', '', $ts) . '00';
+            if (!empty($ev['time_end'])) {
+                $dt_end = $dt_date . 'T' . str_replace(':', '', substr((string)$ev['time_end'], 0, 5)) . '00';
+            } else {
+                $d = new DateTime($ev['date'] . ' ' . $ts);
+                $d->modify('+1 hour');
+                $dt_end = $d->format('Ymd\THis');
+            }
+            $dtstart_line = "DTSTART;TZID=Europe/Berlin:{$dt_start}";
+            $dtend_line   = "DTEND;TZID=Europe/Berlin:{$dt_end}";
+            $trigger      = ics_morning_trigger($ts);
+        } else {
+            $dtstart_line = "DTSTART;VALUE=DATE:{$dt_date}";
+            $dtend_line   = "DTEND;VALUE=DATE:{$dt_date}";
+            $trigger      = ics_morning_trigger(null);
+        }
+
+        $out .= "BEGIN:VEVENT\r\n";
+        $out .= "UID:{$uid}\r\n";
+        $out .= "DTSTAMP:{$dtstamp}\r\n";
+        $out .= foldIcsLine($dtstart_line) . "\r\n";
+        $out .= foldIcsLine($dtend_line)   . "\r\n";
+        $out .= foldIcsLine("SUMMARY:" . escapeIcsField($summary)) . "\r\n";
+        if (!empty($ev['location'])) $out .= foldIcsLine("LOCATION:" . escapeIcsField($ev['location'])) . "\r\n";
+        if (!empty($ev['description'])) $out .= foldIcsLine("DESCRIPTION:" . escapeIcsField($ev['description'])) . "\r\n";
+        $out .= "BEGIN:VALARM\r\n{$trigger}\r\nACTION:DISPLAY\r\n" . foldIcsLine("DESCRIPTION:Erinnerung: " . escapeIcsField($summary)) . "\r\nEND:VALARM\r\n";
+        $out .= "END:VEVENT\r\n";
+    }
+
+    return $out . "END:VCALENDAR\r\n";
 }

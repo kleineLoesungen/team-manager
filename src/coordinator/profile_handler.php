@@ -18,7 +18,7 @@ $is_first_confirm = $_SESSION['confirmed_at'] === null;
 // missing team row costs the calendar card, not the whole profile.
 $stmt = $pdo->prepare(
     "SELECT u.member_id, u.confirmed_at,
-            t.calendar_token_coordinator, t.calendar_token_member,
+            t.calendar_token_coordinator,
             p.first_name, p.last_name, p.email, p.phone
      FROM users u
      JOIN members p ON p.id = u.member_id
@@ -29,7 +29,6 @@ $stmt->execute([(int)($_SESSION['team_id'] ?? 0), $user_id]);
 $self = $stmt->fetch();
 $player_id                  = (int)$self['member_id'];
 $calendar_token_coordinator = $self['calendar_token_coordinator'] ?? null;
-$calendar_token_member      = $self['calendar_token_member']      ?? null;
 
 $error   = '';
 $success = !empty($_GET['success']);
@@ -88,7 +87,7 @@ require ROOT_PATH . '/src/templates/coordinator/layout.php';
 render_coach_page(
     ($is_confirm_route && $is_first_confirm) ? 'Profil bestätigen' : 'Mein Profil',
     'profile',
-    function() use ($self, $error, $success, $is_confirm_route, $is_first_confirm, $calendar_token_coordinator, $calendar_token_member) {
+    function() use ($self, $error, $success, $is_confirm_route, $is_first_confirm, $calendar_token_coordinator) {
         require ROOT_PATH . '/src/templates/coordinator/profile.php';
     }
 );

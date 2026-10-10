@@ -1,11 +1,10 @@
 <?php
 // src/templates/coordinator/profile.php
-// Variables (via use()): $self (array), $error (string), $success (bool), $is_confirm_route (bool), $is_first_confirm (bool), $calendar_token_coordinator (string|null), $calendar_token_member (string|null)
+// Variables (via use()): $self (array), $error (string), $success (bool), $is_confirm_route (bool), $is_first_confirm (bool), $calendar_token_coordinator (string|null)
 $action = $is_confirm_route ? '/coordinator/confirm-profile' : '/coordinator/profile';
 $scheme     = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host       = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $ics_url_coordinator = $calendar_token_coordinator ? ($scheme . '://' . $host . '/ics/' . $calendar_token_coordinator . '.ics') : null;
-$ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . '/ics/' . $calendar_token_member      . '.ics') : null;
 ?>
 
 <?php if ($is_confirm_route && $is_first_confirm): ?>
@@ -99,8 +98,9 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
         <p class="text-body-secondary small mb-3">
             Dein persönlicher Kalenderfeed für Apple Kalender, Google Calendar oder Outlook.
             Enthält alle sichtbaren Termine — auch private Einträge.
+            Mitglieder haben einen eigenen, persönlichen Kalender unter Inhalte → Kalender.
         </p>
-        <?php if (($_GET['cal_reset'] ?? '') === 'coordinator'): ?>
+        <?php if (!empty($_GET['cal_reset'])): ?>
         <div class="alert alert-success py-2 small mb-3">
             <i class="bi bi-check-circle me-1"></i>Kalender-Link wurde erneuert. Bitte das Abo in deiner App aktualisieren.
         </div>
@@ -119,51 +119,8 @@ $ics_url_member      = $calendar_token_member      ? ($scheme . '://' . $host . 
         </a>
         <form method="POST" action="/coordinator/calendar-reset" class="d-inline">
             <?= csrf_field() ?>
-            <input type="hidden" name="token_type" value="coordinator">
             <button type="submit" class="btn btn-sm btn-outline-danger min-touch"
                     onclick="return confirm('Link wirklich erneuern? Das bisherige Abo hört für alle Koordinatoren dieses Teams auf zu funktionieren.')">
-                <i class="bi bi-arrow-clockwise me-1"></i>Link erneuern
-            </button>
-        </form>
-        <?php else: ?>
-        <p class="text-muted small mb-0">Kein Kalender-Link verfügbar. Bitte Seite neu laden.</p>
-        <?php endif; ?>
-    </div>
-</div>
-
-<div class="card mt-4">
-    <div class="card-header d-flex align-items-center gap-2">
-        <i class="bi bi-calendar2-check"></i>
-        <span class="fw-semibold">Kalender-Abo (Mitglieder)</span>
-    </div>
-    <div class="card-body">
-        <?php if ($ics_url_member): ?>
-        <p class="text-body-secondary small mb-3">
-            Dieser Link ist für deine Mitglieder gedacht — enthält nur öffentliche und
-            geschützte Termine, keine privaten Einträge.
-        </p>
-        <?php if (($_GET['cal_reset'] ?? '') === 'member'): ?>
-        <div class="alert alert-success py-2 small mb-3">
-            <i class="bi bi-check-circle me-1"></i>Kalender-Link wurde erneuert. Bitte das Abo in deiner App aktualisieren.
-        </div>
-        <?php endif; ?>
-        <div class="input-group mb-3">
-            <input type="text" id="ics-url-member-feed" class="form-control form-control-sm font-monospace"
-                   value="<?= e($ics_url_member) ?>" readonly>
-            <button class="btn btn-outline-secondary btn-sm"
-                    onclick="navigator.clipboard.writeText(document.getElementById('ics-url-member-feed').value).then(()=>{this.textContent='✓';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-clipboard\'></i>';},1500)})"
-                    type="button" title="Link kopieren">
-                <i class="bi bi-clipboard"></i>
-            </button>
-        </div>
-        <a href="<?= e(webcal_url($ics_url_member)) ?>" class="btn btn-sm btn-outline-primary min-touch me-2">
-            <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
-        </a>
-        <form method="POST" action="/coordinator/calendar-reset" class="d-inline">
-            <?= csrf_field() ?>
-            <input type="hidden" name="token_type" value="member">
-            <button type="submit" class="btn btn-sm btn-outline-danger min-touch"
-                    onclick="return confirm('Link wirklich erneuern? Das bisherige Abo hört für alle Mitglieder auf zu funktionieren.')">
                 <i class="bi bi-arrow-clockwise me-1"></i>Link erneuern
             </button>
         </form>

@@ -78,28 +78,45 @@ endforeach; ?>
 </div>
 <?php endif; ?>
 
-<!-- Kalender-Abo — bottom of calendar tab -->
+<!-- Persönliches Kalender-Abo (über alle Teams) — bottom of calendar tab -->
 <?php if ($ics_url): ?>
-<div class="card mt-4">
+<div class="card mt-4" id="kalender-abo">
     <div class="card-header d-flex align-items-center gap-2">
         <i class="bi bi-calendar2-check"></i>
         <span class="fw-semibold">Kalender abonnieren</span>
     </div>
     <div class="card-body">
         <p class="text-body-secondary small mb-3">
-            Alle Termine deines Teams in Apple Kalender, Google Calendar oder Outlook.
+            Dein persönlicher Kalender für Apple Kalender, Google Calendar oder Outlook – mit den
+            Terminen aller deiner Teams. Listen, bei denen es von deinem Eintrag abhängt
+            (z. B. „Dabei“), erscheinen nur, wenn du dort „Ja“ hast.
         </p>
+        <?php if (!empty($_GET['cal_reset'])): ?>
+        <div class="alert alert-success py-2 small mb-3">
+            <i class="bi bi-check-circle me-1"></i>Kalender-Link wurde erneuert. Bitte das Abo in deiner App neu einrichten.
+        </div>
+        <?php endif; ?>
         <div class="input-group mb-3">
             <input type="text" id="ics-url-lists" class="form-control font-monospace"
-                   value="<?= e($ics_url) ?>" readonly>
+                   value="<?= e($ics_url) ?>" readonly aria-label="Dein Kalender-Link">
             <button class="btn btn-outline-secondary" type="button" title="Link kopieren"
                     onclick="navigator.clipboard.writeText(document.getElementById('ics-url-lists').value).then(()=>{this.textContent='✓';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-clipboard\'></i>';},1500)})">
                 <i class="bi bi-clipboard"></i>
             </button>
         </div>
-        <a href="<?= e(webcal_url($ics_url)) ?>" class="btn btn-outline-primary min-touch">
-            <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="<?= e(webcal_url($ics_url)) ?>" class="btn btn-outline-primary min-touch">
+                <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
+            </a>
+            <form method="POST" action="/member/calendar-reset">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-outline-danger min-touch"
+                        onclick="return confirm('Link wirklich erneuern? Dein bisheriges Abo hört dann auf zu funktionieren.')">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Link erneuern
+                </button>
+            </form>
+        </div>
+        <p class="form-text mb-0 mt-2">Der Link gehört nur dir. Gib ihn nicht weiter – falls doch, erneuere ihn.</p>
     </div>
 </div>
 <?php endif; ?>

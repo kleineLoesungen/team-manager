@@ -147,6 +147,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
                                name="global_columns[]" value="<?= $col_id ?>"
+                               data-col-type="<?= e($col['data_type']) ?>" data-col-name="<?= e($col['name']) ?>"
                                id="col_<?= $col_id ?>" <?= !$posted || in_array($col_id, array_map('intval', (array)($_POST['global_columns'] ?? [])), true) ? 'checked' : '' ?>>
                         <label class="form-check-label mb-0" for="col_<?= $col_id ?>">
                             <?= e($col['name']) ?>
@@ -192,6 +193,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                     <div class="form-check form-switch d-flex align-items-center gap-2">
                         <input class="form-check-input" type="checkbox" role="switch"
                                name="global_columns[]" value="<?= $col_id ?>"
+                               data-col-type="<?= e($col['data_type']) ?>" data-col-name="<?= e($col['name']) ?>"
                                id="col_<?= $col_id ?>" <?= !$posted || in_array($col_id, array_map('intval', (array)($_POST['global_columns'] ?? [])), true) ? 'checked' : '' ?>>
                         <label class="form-check-label mb-0" for="col_<?= $col_id ?>">
                             <?= e($col['name']) ?>
@@ -262,6 +264,24 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                 </button>
             </div>
 
+            <?php if ($is_member_list):
+                // Ja/Nein-Spalten: globale (g:ID) und eigene Zeilen dieses Formulars (l:Index).
+                // Das Skript unten hält die Auswahl passend zu den gewählten Spalten.
+                $cal_options = [];
+                foreach (array_merge($system_columns ?? [], $global_columns ?? []) as $col) {
+                    $gid = (int)$col['id'];
+                    if ($col['data_type'] === 'boolean' && (!$posted || in_array($gid, array_map('intval', (array)($_POST['global_columns'] ?? [])), true))) {
+                        $cal_options['g:' . $gid] = $col['name'];
+                    }
+                }
+                foreach ((array)($_POST['local_name'] ?? []) as $k => $ln) {
+                    if (trim((string)$ln) !== '' && ($_POST['local_type'][$k] ?? 'boolean') === 'boolean') {
+                        $cal_options['l:' . (int)$k] = trim((string)$ln);
+                    }
+                }
+                render_calendar_column_select($cal_options, $old('calendar_column'));
+            endif; ?>
+
             <button type="submit" class="btn btn-primary min-touch" data-series-submit>Liste anlegen</button>
             <a href="<?= e($return_to) ?>" class="btn btn-outline-secondary ms-2 min-touch">Abbrechen</a>
         </form>
@@ -284,6 +304,34 @@ $is_member_list = ($list_type ?? 'member') === 'member';
         sync();
     });
     sync();
+})();
+
+// Persönlicher Kalender: Auswahl folgt den gewählten Ja/Nein-Spalten (global und eigene)
+(function () {
+    var sel = document.querySelector('[data-calendar-column]');
+    if (!sel) return;
+    var form = sel.form;
+    function add(value, label) {
+        var o = document.createElement('option');
+        o.value = value; o.textContent = 'nur bei „Ja“ in: ' + label;
+        sel.appendChild(o);
+    }
+    function rebuild() {
+        var current = sel.value;
+        while (sel.options.length > 1) sel.remove(1);
+        form.querySelectorAll('input[name="global_columns[]"]').forEach(function (cb) {
+            if (cb.checked && cb.dataset.colType === 'boolean') add('g:' + cb.value, cb.dataset.colName);
+        });
+        form.querySelectorAll('[data-local-col]').forEach(function (row) {
+            var name = row.querySelector('input[type=text]');
+            var type = row.querySelector('select');
+            var k = (name.name.match(/\[(\d+)\]/) || [])[1];
+            if (name.value.trim() !== '' && type.value === 'boolean') add('l:' + k, name.value.trim());
+        });
+        sel.value = Array.prototype.some.call(sel.options, function (o) { return o.value === current; }) ? current : '';
+    }
+    form.addEventListener('change', function (e) { if (e.target !== sel) rebuild(); });
+    form.addEventListener('input', function (e) { if (e.target.matches('[data-local-col] input[type=text]')) rebuild(); });
 })();
 </script>
 

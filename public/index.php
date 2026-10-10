@@ -664,6 +664,10 @@ match (true) {
     $path === '/coordinator/calendar-reset'
         => require ROOT_PATH . '/src/coordinator/calendar_reset_handler.php',
 
+    // Persönlicher Kalender-Link erneuern — Mitglied (Issue #12)
+    $path === '/member/calendar-reset'
+        => require ROOT_PATH . '/src/member/calendar_reset_handler.php',
+
     // ── Push-Benachrichtigungen (angemeldete Mitglieder und Koordinatoren) ──
     $path === '/push/subscribe'
         => require ROOT_PATH . '/src/push/subscribe_handler.php',

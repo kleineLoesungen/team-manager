@@ -777,6 +777,31 @@ function render_place(?string $location, array $resource_names): void {
 }
 
 /**
+ * "Im persönlichen Kalender" of a member list (Issue #12): which Ja/Nein column decides whether
+ * the list shows up in a member's personal calendar. Empty = always.
+ * @param array  $options  [value => column name]; in the create form the list script keeps the
+ *                         options in sync with the chosen columns (data-calendar-column)
+ * @param string $selected Current value ('' = always)
+ */
+function render_calendar_column_select(array $options, string $selected): void {
+    ?>
+    <div class="mb-4">
+        <label for="calendar_column" class="form-label fw-semibold">Im persönlichen Kalender <span class="text-muted fw-normal">(optional)</span></label>
+        <select id="calendar_column" name="calendar_column" class="form-select" data-calendar-column>
+            <option value="">Immer anzeigen</option>
+            <?php foreach ($options as $value => $label): ?>
+            <option value="<?= e((string)$value) ?>" <?= (string)$value === $selected ? 'selected' : '' ?>>nur bei „Ja“ in: <?= e($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <div class="form-text">
+            Mitglieder sehen die Liste in ihrem persönlichen Kalender nur, wenn sie in dieser
+            Ja/Nein-Spalte „Ja“ haben (ohne Eintrag gilt der Standardwert).
+        </div>
+    </div>
+    <?php
+}
+
+/**
  * Series fields for create forms (lists, events): "Wiederholen" + "bis einschließlich", with the
  * number of dates shown live (same calculation as list_series_dates() in PHP; the server checks
  * again when saving). The form's submit button [data-series-submit] then reads "5 Termine anlegen".

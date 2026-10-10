@@ -45,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                )"
         )->execute([$target_id, $src_id, $target_id]);
 
+        // Kalender-Spalte der Listen (persönlicher Kalender) folgt der Zusammenführung
+        $pdo->prepare("UPDATE lists SET calendar_column_id = ? WHERE calendar_column_id = ?")
+            ->execute([$target_id, $src_id]);
+
         // Remove any remaining list_global_columns for src (conflict rows)
         $pdo->prepare("DELETE FROM list_global_columns WHERE column_id = ?")->execute([$src_id]);
 
