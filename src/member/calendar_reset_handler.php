@@ -22,4 +22,6 @@ if ($member_id > 0) {
     member_calendar_token($pdo, $member_id, true);
 }
 
-redirect('/member/contents?view=month&cal_reset=1#kalender-abo');
+redirect(($_POST['return'] ?? '') === 'profile'
+    ? '/member/profile?cal_reset=1#kalender-abo'
+    : '/member/contents?view=month&cal_reset=1#kalender-abo');

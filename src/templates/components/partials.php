@@ -1049,6 +1049,59 @@ function render_icon_picker(string $name, array $icons, string $selected, string
 }
 
 /**
+ * Member's personal calendar subscription (Issue #12): link to copy, "Kalender abonnieren"
+ * (webcal), "Link erneuern". Shown on Inhalte → Monat and in the profile.
+ * @param string $return Where "Link erneuern" leads back to: 'contents' | 'profile'
+ */
+function render_member_calendar_card(string $ics_url, string $return): void {
+    ?>
+<div class="card mt-4" id="kalender-abo">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-calendar2-check"></i>
+        <span class="fw-semibold">Kalender abonnieren</span>
+    </div>
+    <div class="card-body">
+        <p class="text-body-secondary small mb-3">
+            Dein persönlicher Kalender für Apple Kalender, Google Calendar oder Outlook – mit den
+            Terminen aller deiner Teams. Listen, bei denen es von deinem Eintrag abhängt
+            (z. B. „Dabei“), erscheinen nur, wenn du dort „Ja“ hast.
+        </p>
+        <?php if (!empty($_GET['cal_reset'])): ?>
+        <div class="alert alert-success py-2 small mb-3">
+            <i class="bi bi-check-circle me-1"></i>Kalender-Link wurde erneuert. Bitte das Abo in deiner App neu einrichten.
+        </div>
+        <?php endif; ?>
+        <div class="input-group mb-3">
+            <input type="text" id="ics-url-lists" class="form-control font-monospace"
+                   value="<?= e($ics_url) ?>" readonly aria-label="Dein Kalender-Link">
+            <button class="btn btn-outline-secondary" type="button" title="Link kopieren"
+                    onclick="navigator.clipboard.writeText(document.getElementById('ics-url-lists').value).then(()=>{this.textContent='✓';setTimeout(()=>{this.innerHTML='<i class=\'bi bi-clipboard\'></i>';},1500)})">
+                <i class="bi bi-clipboard"></i>
+            </button>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="<?= e(webcal_url($ics_url)) ?>" class="btn btn-outline-primary min-touch">
+                <i class="bi bi-calendar-plus me-1"></i>Kalender abonnieren
+            </a>
+            <form method="POST" action="/member/calendar-reset">
+                <?= csrf_field() ?>
+                <input type="hidden" name="return" value="<?= e($return) ?>">
+                <button type="submit" class="btn btn-outline-danger min-touch"
+                        onclick="return confirm('Link wirklich erneuern? Dein bisheriges Abo hört dann auf zu funktionieren.')">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Link erneuern
+                </button>
+            </form>
+        </div>
+        <p class="form-text mb-0 mt-2">
+            Vergangene Termine reichen 3 Monate zurück – ältere findest du hier in der App.
+            Der Link gehört nur dir. Gib ihn nicht weiter – falls doch, erneuere ihn.
+        </p>
+    </div>
+</div>
+    <?php
+}
+
+/**
  * Share button. Opens the system share sheet where available (phones), otherwise copies the
  * link and confirms with "Link kopiert" (layout script, [data-share-url]).
  * @param string $label Button text, verb + object ("Ticker teilen")

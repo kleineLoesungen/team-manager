@@ -28,6 +28,14 @@ function member_calendar_token(PDO $pdo, int $member_id, bool $renew = false): s
     });
 }
 
+/** Personal calendar URL of the signed-in member (token created on first use); null without profile. */
+function member_calendar_url(PDO $pdo, int $user_id): ?string {
+    $stmt = $pdo->prepare("SELECT member_id FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $member_id = (int)$stmt->fetchColumn();
+    return $member_id > 0 ? absolute_url('/ics/' . member_calendar_token($pdo, $member_id) . '.ics') : null;
+}
+
 /**
  * Lists and events of a member's personal calendar, across all teams the person is an
  * active member of. Runs in admin context: the token was the credential.

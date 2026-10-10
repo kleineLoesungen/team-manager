@@ -1,6 +1,6 @@
 <?php
 // src/templates/member/profile.php — Full member data edit page
-// Variables (via use()): $player (array|null), $organizations (array), $attr_groups (array), $error (string), $success (bool)
+// Variables (via use()): $player (array|null), $organizations (array), $attr_groups (array), $error (string), $success (bool), $ics_url (string|null)
 ?>
 <?php if ($error): render_flash('error', $error); endif; ?>
 <?php if ($success): render_flash('success', 'Deine Daten wurden gespeichert.'); endif; ?>
@@ -157,6 +157,8 @@ foreach ($attr_groups as $g) {
 <?php else: ?>
 <?php render_empty('person-x', 'Kein Mitgliedsprofil', 'Dein Konto ist noch keinem Mitgliedsprofil zugeordnet. Bitte wende dich an deinen Koordinator.'); ?>
 <?php endif; ?>
+
+<?php if ($ics_url) render_member_calendar_card($ics_url, 'profile'); ?>
 
 <?php render_install_app(); ?>
 

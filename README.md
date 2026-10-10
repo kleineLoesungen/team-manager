@@ -391,7 +391,8 @@ Im Koordinator-Feed steht vor jedem Eintrag der Teamname, bei Listen mit Kalende
 dahinter die Zusagen: „U13 - Training 23.10.2026 (13/14)“ (Ja / aktive Mitglieder).
 
 Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/contents?view=month`
-bzw. `/member/contents?view=month`, dort wird der persönliche Link beim ersten Aufruf erzeugt).
+bzw. `/member/contents?view=month` und im Profil der Mitglieder, wo der persönliche Link beim
+ersten Aufruf erzeugt wird).
 Koordinatoren erneuern den Team-Link unter „Mein Profil“, Mitglieder ihren eigenen Link
 in der Monatsansicht — falls ein Link öffentlich geworden ist.
 

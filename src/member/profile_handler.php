@@ -120,8 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $success = !empty($_GET['success']);
 
+// Persönliches Kalender-Abo (auch unter Inhalte → Monat)
+require_once ROOT_PATH . '/src/db/calendar.php';
+$ics_url = member_calendar_url($pdo, (int)$_SESSION['user_id']);
+
 require ROOT_PATH . '/src/templates/member/layout.php';
 
-render_member_page('Mein Profil', 'profile', function() use ($player, $player_id, $organizations, $attr_groups, $error, $success) {
+render_member_page('Mein Profil', 'profile', function() use ($player, $player_id, $organizations, $attr_groups, $error, $success, $ics_url) {
     require ROOT_PATH . '/src/templates/member/profile.php';
 });
