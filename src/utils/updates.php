@@ -9,8 +9,9 @@
 //
 // Format eines Eintrags (CHANGELOG.md):
 //   ## 2026.10.15
-//   - Ressourcen-Auslastung nach Wochen gruppiert
+//   - [Koordinator, Mitglied] Ressourcen-Auslastung nach Wochen gruppiert
 //   - Migration: 20261015_beispiel.sql      ← vor dem Deployment einzuspielen
+// Die Klammer vorne nennt, für wen sich etwas ändert (CHANGELOG_AUDIENCES), als Badges angezeigt.
 //
 // Datenbank-Stand: Migrationen bleiben dauerhaft in database/migrations/ (Reihenfolge = Dateiname)
 // und schreiben am Ende ihren Namen in settings 'db_migration'. Fehlt der Datenbank eine
@@ -47,6 +48,30 @@ function changelog_parse(string $md): array {
         }
     }
     return $entries;
+}
+
+/** Who a changelog item is for: label => icon, in display order. */
+const CHANGELOG_AUDIENCES = [
+    'Admin'       => 'bi-shield-lock',
+    'Koordinator' => 'bi-person-badge',
+    'Mitglied'    => 'bi-person',
+    'System'      => 'bi-gear',
+];
+
+/**
+ * Split a changelog item into its audiences and text: "[Koordinator, Mitglied] Text".
+ * Unknown labels are dropped; items without the prefix have no audience.
+ * @return array{audiences: list<string>, text: string}
+ */
+function changelog_item(string $item): array {
+    if (!preg_match('/^\[([^\]]+)\]\s*(.+)$/u', $item, $m)) {
+        return ['audiences' => [], 'text' => $item];
+    }
+    $named = array_map('trim', explode(',', $m[1]));
+    return [
+        'audiences' => array_values(array_filter(array_keys(CHANGELOG_AUDIENCES), fn($a) => in_array($a, $named, true))),
+        'text'      => $m[2],
+    ];
 }
 
 /** Compare two date versions (2026.10.15 < 2026.10.15.2 < 2026.10.16): <0, 0, >0. */

@@ -9,7 +9,7 @@ $render_entry = function (string $title, array $entry): void {
     render_collection_group($title, function () use ($entry) { ?>
         <div class="list-group mb-3">
             <?php foreach ($entry['items'] as $item): ?>
-            <div class="list-group-item small"><?= e($item) ?></div>
+            <div class="list-group-item small"><?php render_changelog_item($item); ?></div>
             <?php endforeach; ?>
             <?php foreach ($entry['migrations'] as $m): ?>
             <div class="list-group-item small"><?php render_badge('warn', 'Migration', 'bi-database'); ?> <?= e($m) ?></div>

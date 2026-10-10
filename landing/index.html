@@ -189,6 +189,10 @@
     .changelog > li { display: grid; gap: 2px; }
     .changelog time { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
     .changelog ul { margin: 0; padding-left: 18px; list-style: disc; }
+    .changelog .aud {
+      display: inline-block; font-size: 12px; line-height: 1.5; padding: 0 8px; margin-right: 6px;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--surface); white-space: nowrap;
+    }
     .changes .more { display: inline-block; padding: 10px 0; color: var(--muted); font-size: 15px; }
     .changes .more:hover { color: var(--fg); }
 
@@ -381,6 +385,7 @@
   // Letzte 3 Versionen direkt aus CHANGELOG.md auf GitHub (main) — ohne Neu-Hochladen aktuell.
   // Format wie in der App (src/utils/updates.php): „## JJJJ.MM.TT[.n]“, darunter „- Punkt“;
   // „Migration:“-Punkte betreffen nur Betreiber und fehlen hier. Ohne Antwort bleibt nur der Link.
+  // „[Koordinator, Mitglied] Text“: die Klammer nennt, für wen sich etwas ändert (Kennzeichen).
   (async () => {
     const url = 'https://raw.githubusercontent.com/kleineLoesungen/team-manager/main/CHANGELOG.md';
     const list = document.getElementById('changelog');
@@ -407,7 +412,15 @@
         const time = li.appendChild(document.createElement('time'));
         time.dateTime = d.iso; time.textContent = d.date;
         const ul = li.appendChild(document.createElement('ul'));
-        for (const text of d.items) ul.appendChild(document.createElement('li')).textContent = text;
+        for (const raw of d.items) {
+          const li  = ul.appendChild(document.createElement('li'));
+          const m   = raw.match(/^\[([^\]]+)\]\s*(.+)$/);
+          for (const a of m ? m[1].split(',').map(s => s.trim()).filter(Boolean) : []) {
+            const tag = li.appendChild(document.createElement('span'));
+            tag.className = 'aud'; tag.textContent = a;
+          }
+          li.appendChild(document.createTextNode(m ? m[2] : raw));
+        }
       }
       list.hidden = !list.children.length;
     } catch (_) { /* GitHub nicht erreichbar: nur der Link */ }

@@ -219,6 +219,19 @@ function render_update_notice(array $status): void {
 }
 
 /**
+ * One changelog item: audience badges (Admin, Koordinator, Mitglied, System), then the text.
+ * See changelog_item() in src/utils/updates.php.
+ */
+function render_changelog_item(string $item): void {
+    $parsed = changelog_item($item);
+    foreach ($parsed['audiences'] as $a) {
+        render_badge('dim', $a, CHANGELOG_AUDIENCES[$a]);
+        echo ' ';
+    }
+    echo e($parsed['text']);
+}
+
+/**
  * Migrations to apply, in order, with a link to each file and the steps for pgAdmin.
  * Used before an update (migrations of newer versions) and after one (missing in the database).
  * @param list<string> $files   File names with or without ".sql", oldest first
