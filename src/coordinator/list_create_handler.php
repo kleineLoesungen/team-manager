@@ -107,8 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($list_type === 'member' && preg_match('/^l:(\d+)$/', $calendar_column, $m)) {
         $lk = (int)$m[1];
-        if (!array_filter($local_columns, fn($lc) => $lc['k'] === $lk && $lc['data_type'] === 'boolean')) {
-            $calendar_error = 'Die Spalte für den persönlichen Kalender muss eine eigene Ja/Nein-Spalte mit Namen sein.';
+        if (!array_filter($local_columns, fn($lc) => $lc['k'] === $lk && $lc['data_type'] === 'boolean' && !$lc['coach_only'])) {
+            $calendar_error = 'Die Spalte für den persönlichen Kalender muss eine eigene Ja/Nein-Spalte sein, die Mitglieder sehen.';
         }
     } else {
         $calendar_column = '';

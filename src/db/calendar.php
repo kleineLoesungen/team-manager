@@ -6,7 +6,8 @@
 // (Listen öffentlich/geschützt, Termine geschützt). Hat eine Mitgliederliste eine
 // Kalender-Spalte (lists.calendar_column_id, Ja/Nein), erscheint sie nur bei „Ja“ —
 // eingetragener Wert, sonst der Standardwert der Spalte in dieser Liste, sonst „Nein“.
-// Ist die Spalte nicht mehr Teil der Liste (gelöscht, entfernt), erscheint die Liste immer.
+// Nur Spalten, die Mitglieder sehen (nicht „nur Koordinatoren“). Ist die Spalte nicht mehr
+// Teil der Liste (gelöscht, entfernt), erscheint die Liste immer.
 
 declare(strict_types=1);
 
@@ -43,7 +44,7 @@ function member_calendar_feed(PDO $pdo, int $member_id): array {
              FROM a
              JOIN lists l ON l.team_id = a.team_id
              LEFT JOIN columns c ON c.id = l.calendar_column_id
-                  AND c.is_active = TRUE AND c.data_type = 'boolean'
+                  AND c.is_active = TRUE AND c.data_type = 'boolean' AND c.coach_only = FALSE
              LEFT JOIN list_global_columns lgc ON lgc.list_id = l.id AND lgc.column_id = c.id
              LEFT JOIN cells ce ON ce.list_id = l.id AND ce.column_id = c.id AND ce.member_id = a.user_id
              WHERE l.date IS NOT NULL AND l.visibility IN ('public', 'protected')
@@ -75,14 +76,14 @@ function member_calendar_feed(PDO $pdo, int $member_id): array {
 
 /**
  * Boolean columns of a list that can decide about the personal calendar: linked global
- * columns (team + system) and the list's own columns. [id => name]
+ * columns (team + system) and the list's own columns, without coordinator-only ones. [id => name]
  */
 function list_calendar_columns(PDO $pdo, int $list_id, int $team_id): array {
     return as_admin($pdo, function () use ($pdo, $list_id, $team_id) {
         $stmt = $pdo->prepare(
             "SELECT c.id, c.name FROM columns c
              LEFT JOIN list_global_columns lgc ON lgc.list_id = ? AND lgc.column_id = c.id
-             WHERE c.is_active = TRUE AND c.data_type = 'boolean'
+             WHERE c.is_active = TRUE AND c.data_type = 'boolean' AND c.coach_only = FALSE
                AND ((c.list_id = ? AND c.team_id = ?)
                     OR (c.list_id IS NULL AND lgc.list_id IS NOT NULL AND (c.team_id = ? OR c.is_system = TRUE)))
              ORDER BY c.list_id NULLS FIRST, c.is_system DESC, c.sort_order, c.created_at"

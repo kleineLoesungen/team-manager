@@ -355,7 +355,8 @@ Es gibt zwei Arten von Feeds:
 Welcher Feed geliefert wird, ergibt sich ausschließlich daraus, **welche Spalte** auf das
 Token passt — es kann nicht über einen Request-Parameter beeinflusst werden.
 
-**Kalender-Spalte:** Bei einer Mitgliederliste kann der Koordinator eine Ja/Nein-Spalte wählen
+**Kalender-Spalte:** Bei einer Mitgliederliste kann der Koordinator eine Ja/Nein-Spalte wählen,
+die Mitglieder sehen (keine Spalten „nur Koordinatoren“)
 („Im persönlichen Kalender“, `lists.calendar_column_id`). Die Liste erscheint dann im
 persönlichen Feed nur bei „Ja“ — eingetragener Wert, sonst der Standardwert der Spalte in
 dieser Liste. Ohne Auswahl (Standard), bei freien Listen und bei Terminen erscheint der

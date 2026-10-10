@@ -265,7 +265,8 @@ $is_member_list = ($list_type ?? 'member') === 'member';
             </div>
 
             <?php if ($is_member_list):
-                // Ja/Nein-Spalten: globale (g:ID) und eigene Zeilen dieses Formulars (l:Index).
+                // Ja/Nein-Spalten, die Mitglieder sehen: globale (g:ID) und eigene Zeilen dieses
+                // Formulars ohne „nur Koordinatoren“ (l:Index).
                 // Das Skript unten hält die Auswahl passend zu den gewählten Spalten.
                 $cal_options = [];
                 foreach (array_merge($system_columns ?? [], $global_columns ?? []) as $col) {
@@ -275,7 +276,8 @@ $is_member_list = ($list_type ?? 'member') === 'member';
                     }
                 }
                 foreach ((array)($_POST['local_name'] ?? []) as $k => $ln) {
-                    if (trim((string)$ln) !== '' && ($_POST['local_type'][$k] ?? 'boolean') === 'boolean') {
+                    if (trim((string)$ln) !== '' && ($_POST['local_type'][$k] ?? 'boolean') === 'boolean'
+                        && empty($_POST['local_coach'][$k])) {
                         $cal_options['l:' . (int)$k] = trim((string)$ln);
                     }
                 }
@@ -306,7 +308,7 @@ $is_member_list = ($list_type ?? 'member') === 'member';
     sync();
 })();
 
-// Persönlicher Kalender: Auswahl folgt den gewählten Ja/Nein-Spalten (global und eigene)
+// Persönlicher Kalender: Auswahl folgt den gewählten Ja/Nein-Spalten (global und eigene, ohne „nur Koordinatoren“)
 (function () {
     var sel = document.querySelector('[data-calendar-column]');
     if (!sel) return;
@@ -325,8 +327,9 @@ $is_member_list = ($list_type ?? 'member') === 'member';
         form.querySelectorAll('[data-local-col]').forEach(function (row) {
             var name = row.querySelector('input[type=text]');
             var type = row.querySelector('select');
+            var coach = row.querySelector('input[type=checkbox]');
             var k = (name.name.match(/\[(\d+)\]/) || [])[1];
-            if (name.value.trim() !== '' && type.value === 'boolean') add('l:' + k, name.value.trim());
+            if (name.value.trim() !== '' && type.value === 'boolean' && !coach.checked) add('l:' + k, name.value.trim());
         });
         sel.value = Array.prototype.some.call(sel.options, function (o) { return o.value === current; }) ? current : '';
     }
