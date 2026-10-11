@@ -235,6 +235,24 @@ function render_layout_foot(): void {
                 : 'Das hat nicht geklappt. Prüf deine Verbindung und tipp noch einmal.';
         };
 
+        /* „Zuletzt aktiv“ (Issue #16): Ist Push auf diesem Gerät an, meldet es sich höchstens einmal
+           am Tag still beim Server (push_subscriptions.updated_at). Nach 180 Tagen ohne Meldung
+           wird es entfernt (src/push/auto_push.php). */
+        var tmRefreshEl = document.querySelector('[data-push-refresh]');
+        if (tmRefreshEl && tmCanPush && Notification.permission === 'granted') {
+            var tmToday = new Date().toISOString().slice(0, 10);
+            var tmSeen = null;
+            try { tmSeen = localStorage.getItem('tm-push-seen'); } catch (e) {}
+            if (tmSeen !== tmToday) {
+                navigator.serviceWorker.ready.then(function(reg) { return reg.pushManager.getSubscription(); }).then(function(sub) {
+                    if (!sub) return;
+                    return tmRegisterDevice(tmRefreshEl.getAttribute('data-push-key'), tmRefreshEl.getAttribute('data-push-csrf')).then(function() {
+                        try { localStorage.setItem('tm-push-seen', tmToday); } catch (e) {}
+                    });
+                }).catch(function() {});
+            }
+        }
+
         /* "Ticker abonnieren" (render_ticker_push_toggle): erst dieses Gerät für Push
            registrieren, dann das Formular abschicken. Abbestellen braucht kein Gerät. */
         var tmPushForm = document.querySelector('[data-push-form]');
@@ -542,8 +560,16 @@ function render_page(array $opts, callable $body): void {
             error_log('ticker_has_unseen: ' . $e->getMessage());   // nie die Seite dafür scheitern lassen
         }
     }
+    // „Zuletzt aktiv“ der Push-Geräte (Issue #16): Schlüssel und Token für die tägliche Meldung
+    $push_refresh = '';
+    try {
+        $push_refresh = ' data-push-refresh data-push-key="' . htmlspecialchars(push_vapid(get_db())['public'], ENT_QUOTES)
+                      . '" data-push-csrf="' . htmlspecialchars(get_csrf_token(), ENT_QUOTES) . '"';
+    } catch (Throwable $e) {
+        error_log('push refresh: ' . $e->getMessage());   // nie die Seite dafür scheitern lassen
+    }
     ?>
-    <div class="app">
+    <div class="app"<?= $push_refresh ?>>
         <header class="topbar">
             <img src="/logo" alt="" class="topbar-logo" onerror="this.style.display='none'" loading="eager">
             <?php if ($switch_url): ?>

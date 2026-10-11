@@ -15,9 +15,13 @@ require_once ROOT_PATH . '/src/push/ticker_push.php';
 const NOTIFY_PUSH_TITLE_MAX = 60;    // Sperrbildschirm zeigt nur eine Zeile Titel
 const NOTIFY_PUSH_BODY_MAX  = 150;   // ungefähr das, was ohne Aufziehen sichtbar ist
 
+const PUSH_DEVICE_STALE_DAYS  = 30;    // ab da zeigt die Push-Seite „zuletzt aktiv vor …“
+const PUSH_DEVICE_EXPIRE_DAYS = 180;   // danach wird ein Gerät entfernt (src/push/auto_push.php)
+
 /**
- * Number of push devices per user, counted over the whole person (all accounts with the same
- * member_id). [user_id => devices]; users without devices are missing.
+ * Push devices per user, counted over the whole person (all accounts with the same member_id):
+ * [user_id => ['devices' => n, 'last' => most recent "zuletzt aktiv" (Y-m-d H:i:s)]];
+ * users without devices are missing.
  */
 function push_device_counts(PDO $pdo, array $user_ids): array {
     $user_ids = array_values(array_unique(array_map('intval', $user_ids)));
@@ -25,7 +29,7 @@ function push_device_counts(PDO $pdo, array $user_ids): array {
     return as_admin($pdo, function () use ($pdo, $user_ids) {
         $in   = implode(',', array_fill(0, count($user_ids), '?'));
         $stmt = $pdo->prepare(
-            "SELECT r.id, COUNT(DISTINCT ps.id) AS devices
+            "SELECT r.id, COUNT(DISTINCT ps.id) AS devices, MAX(ps.updated_at) AS last
              FROM users r
              JOIN users d ON d.member_id = r.member_id AND d.is_active = TRUE
              JOIN push_subscriptions ps ON ps.user_id = d.id
@@ -33,7 +37,11 @@ function push_device_counts(PDO $pdo, array $user_ids): array {
              GROUP BY r.id"
         );
         $stmt->execute($user_ids);
-        return array_map('intval', array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'devices', 'id'));
+        $out = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $out[(int)$r['id']] = ['devices' => (int)$r['devices'], 'last' => (string)$r['last']];
+        }
+        return $out;
     });
 }
 
@@ -153,4 +161,23 @@ function notify_has_recipients(PDO $pdo, int $team_id, string $role): bool {
         $stmt->execute([$team_id, $role]);
         return (bool)$stmt->fetchColumn();
     });
+}
+
+/**
+ * Push recipients with a hint for devices not used for a while (Issue #16): adds 'note'
+ * "zuletzt aktiv vor 3 Monaten" when the person's most recent device is older than
+ * PUSH_DEVICE_STALE_DAYS. Push may still arrive — the hint suggests e-mail is the safer way.
+ * @param array $with_push Recipient rows (with 'id'); $devices from push_device_counts()
+ */
+function push_recipient_notes(array $with_push, array $devices): array {
+    $now = new DateTimeImmutable('now');
+    foreach ($with_push as &$r) {
+        $last = $devices[(int)$r['id']]['last'] ?? '';
+        if ($last === '') continue;
+        $days = (int)(new DateTimeImmutable($last))->diff($now)->format('%a');
+        if ($days < PUSH_DEVICE_STALE_DAYS) continue;
+        $r['note'] = 'zuletzt aktiv vor ' . ($days < 60 ? $days . ' Tagen' : intdiv($days, 30) . ' Monaten');
+    }
+    unset($r);
+    return $with_push;
 }

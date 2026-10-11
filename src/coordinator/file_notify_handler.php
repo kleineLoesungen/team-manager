@@ -65,6 +65,7 @@ $channel      = (($_POST['channel'] ?? $_GET['channel'] ?? '') === 'push') ? 'pu
 $devices      = push_device_counts($pdo, array_column($all_recipients, 'id'));
 $with_push    = array_values(array_filter($all_recipients, fn($u) =>  isset($devices[(int)$u['id']])));
 $without_push = array_values(array_filter($all_recipients, fn($u) => !isset($devices[(int)$u['id']])));
+$with_push    = push_recipient_notes($with_push, $devices);   // „zuletzt aktiv vor …“ (Issue #16)
 
 // Team name for subject prefix
 $team_stmt = $pdo->prepare("SELECT name FROM teams WHERE id = ?");

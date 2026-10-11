@@ -553,7 +553,7 @@ function render_notify_channel_tabs(string $base, string $channel): void {
 /**
  * Recipient picker for notification forms: one switch per person, all on by default.
  * Posts recipients[] = user ids; the handler must intersect them with the allowed recipients.
- * @param array      $recipients   Rows with 'id', 'first_name', 'last_name'
+ * @param array      $recipients   Rows with 'id', 'first_name', 'last_name', optional 'note' (small hint)
  * @param array|null $selected_ids Ids to show as selected (after a failed POST), null = all
  */
 function render_recipient_picker(array $recipients, ?array $selected_ids): void {
@@ -567,7 +567,8 @@ function render_recipient_picker(array $recipients, ?array $selected_ids): void 
         <div class="list-group list-group-flush" role="group" aria-labelledby="recipients-label">
             <?php foreach ($recipients as $r): $id = (int)$r['id']; ?>
             <label class="list-group-item list-group-item-action d-flex align-items-center gap-3" for="recipient-<?= $id ?>">
-                <span class="flex-grow-1"><?= htmlspecialchars($r['first_name'] . ' ' . $r['last_name'], ENT_QUOTES) ?></span>
+                <span class="flex-grow-1"><?= htmlspecialchars($r['first_name'] . ' ' . $r['last_name'], ENT_QUOTES) ?>
+                    <?php if (!empty($r['note'])): ?><span class="d-block small text-muted"><?= htmlspecialchars($r['note'], ENT_QUOTES) ?></span><?php endif; ?></span>
                 <span class="form-check form-switch mb-0">
                     <input class="form-check-input" type="checkbox" role="switch"
                            id="recipient-<?= $id ?>" name="recipients[]" value="<?= $id ?>"

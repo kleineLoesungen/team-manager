@@ -142,3 +142,24 @@ function change_push_after_save(PDO $pdo, int $team_id, string $type, int $id, s
                        notify_push_url($team_id, $type, $id));
     return count($users);
 }
+
+/**
+ * Remove push devices without a sign of life for PUSH_DEVICE_EXPIRE_DAYS (Issue #16). An open
+ * app refreshes its device at most daily, so this hits devices whose app is gone or never used.
+ * Devices the push service reports as gone are removed right when sending anyway. Checked at
+ * most once a day, after the response.
+ */
+function push_cleanup_stale(): void {
+    $marker = sys_get_temp_dir() . '/tm-push-cleanup-' . md5(ROOT_PATH . DB_SCHEMA);
+    $last = @filemtime($marker);
+    if ($last !== false && $last > time() - 86400) return;
+    @touch($marker);
+
+    push_defer(function () {
+        $pdo = get_db();
+        set_admin_context($pdo);
+        $pdo->prepare("DELETE FROM push_subscriptions WHERE updated_at < NOW() - make_interval(days => ?)")
+            ->execute([PUSH_DEVICE_EXPIRE_DAYS]);
+        reset_rls_context($pdo);
+    });
+}

@@ -46,7 +46,8 @@ const PUSH_DEVICE_COOKIE = 'tm_device';
 
 /**
  * Store the push subscription of the current device (for the signed-in account, or as guest
- * device with user_id NULL) and remember the device in a long-lived cookie.
+ * device with user_id NULL) and remember the device in a long-lived cookie. updated_at is the
+ * device's "zuletzt aktiv": the layout script refreshes it at most once a day (Issue #16).
  */
 function push_save_subscription(PDO $pdo, ?int $user_id, string $endpoint, string $p256dh, string $auth): void {
     // Admin-Kontext: dasselbe Gerät kann vorher einem anderen Nutzer gehört haben
@@ -54,7 +55,9 @@ function push_save_subscription(PDO $pdo, ?int $user_id, string $endpoint, strin
         $stmt = $pdo->prepare(
             "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, device_token) VALUES (?, ?, ?, ?, ?)
              ON CONFLICT (endpoint) DO UPDATE
-                SET user_id = EXCLUDED.user_id, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, updated_at = NOW(),
+                -- ohne Anmeldung (Gast, abgelaufene Sitzung) bleibt das Gerät beim bisherigen Konto
+                SET user_id = COALESCE(EXCLUDED.user_id, push_subscriptions.user_id),
+                    p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, updated_at = NOW(),
                     device_token = COALESCE(push_subscriptions.device_token, EXCLUDED.device_token)
              RETURNING device_token"
         );

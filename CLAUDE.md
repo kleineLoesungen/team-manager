@@ -177,7 +177,7 @@ Browser → public/index.php (front controller)
 | `ticker_members` | Which members have write access to a ticker |
 | `ticker_viewers` | Current viewers: hash of session id + ticker id, last heartbeat (rows live minutes, cleared on close) |
 | `ticker_viewer_peaks` | Highest concurrent viewer count per ticker, kept until the ticker is deleted |
-| `push_subscriptions` | Push-capable devices (endpoint + encryption keys); `user_id` NULL = guest device; `device_token` = cookie `tm_device` identifying the device |
+| `push_subscriptions` | Push-capable devices (endpoint + encryption keys); `user_id` NULL = guest device; `device_token` = cookie `tm_device` identifying the device; `updated_at` = zuletzt aktiv (daily refresh, removed after 180 days) |
 | `ticker_subscriptions` | Opt-in per ticker and DEVICE (`subscription_id`), signed-in or guest: start notice + every new entry |
 | `ticker_push_state` | Marks a ticker's start notice as sent (exactly once) |
 | `ticker_seen` | When a user last opened the ticker overview per team (dot on the Ticker tab, "Neu" badge) |

@@ -57,6 +57,7 @@ list_auto_visibility_apply(get_db());
 // pro Minute und nach der Antwort (src/push/auto_push.php, Issue #13).
 require_once ROOT_PATH . '/src/push/auto_push.php';
 list_reminder_check();
+push_cleanup_stale();   // Geräte ohne Lebenszeichen seit 180 Tagen entfernen (Issue #16)
 
 // Parse the request path (strip query string, normalize trailing slash)
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
