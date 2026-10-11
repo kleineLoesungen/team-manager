@@ -5,6 +5,8 @@
 - [Koordinator] „Für Gäste sichtbar“ bei Listen und Terminen
 - [Admin] „Für Gäste sichtbar“ bei Ressourcen
 - [Koordinator, Mitglied] Ticker-Abos gelten je Gerät
+- [Koordinator] Push-Seite zeigt „zuletzt aktiv vor …“ bei Geräten, die länger nicht genutzt wurden
+- [System] Push-Geräte ohne Nutzung seit 180 Tagen werden automatisch entfernt
 - Migration: 20261011_guests.sql
 
 ## 2026.10.10.3
