@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2026.10.11
+- [Gast] Gastbereich ohne Anmeldung: Ticker mit Abo, freigegebene Termine mit Kalender-Abo, Ressourcen-Belegung
+- [Koordinator] „Für Gäste sichtbar“ bei Listen und Terminen
+- [Admin] „Für Gäste sichtbar“ bei Ressourcen
+- [Koordinator, Mitglied] Ticker-Abos gelten je Gerät
+- Migration: 20261011_guests.sql
+
 ## 2026.10.10.3
 - [Koordinator, Mitglied] Erinnerung per Push am Tag des Anmeldeschlusses (automatische Umstellung)
 - [Koordinator, Mitglied] Kurzfristige Änderungen an Listen und Terminen per Push melden
