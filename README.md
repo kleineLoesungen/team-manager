@@ -223,7 +223,7 @@ define('DB_SCHEMA', 'team_manager');   // Bestandsinstallationen können abweich
 define('DB_USER',   'ihr_db_benutzer');
 define('DB_PASS',   'ihr_db_passwort');
 
-define('SESSION_TIMEOUT', 8 * 60 * 60);
+define('SESSION_TIMEOUT', 8 * 60 * 60);   // Admin: abgemeldet nach 8 Std. ohne Nutzung
 define('APP_ENV', 'production');
 define('BASE_URL', '');
 
@@ -236,6 +236,13 @@ define('MAIL_PORT',     587);
 define('MAIL_USERNAME', 'ihr-smtp-benutzer');
 define('MAIL_PASSWORD', 'ihr-smtp-passwort');
 ```
+
+> **Anmeldung:** Koordinatoren und Mitglieder bleiben angemeldet, solange sie die App mindestens
+> alle 30 Tage nutzen (gleitend, `SESSION_MEMBER_TIMEOUT`); der Admin nach 8 Stunden ohne Nutzung
+> abgemeldet (`SESSION_TIMEOUT`). Sitzungen liegen im eigenen Verzeichnis `sessions/` (per
+> `.htaccess` gesperrt, vom Deployment ausgenommen) — im gemeinsamen Temp-Verzeichnis eines
+> Shared Hostings räumen fremde Programme sonst mit kürzeren Fristen auf. `SESSION_SAVE_PATH`
+> in der `config.php` ändert das Verzeichnis (leer = Standard des Servers).
 
 > **Hinweis zu `DB_SCHEMA`:** `team_manager` ist nur der Standardwert für Neuinstallationen.
 > Eine bestehende Produktionsinstallation kann ein anderes Schema verwenden — maßgeblich ist

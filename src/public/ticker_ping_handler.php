@@ -62,7 +62,7 @@ $team_id = (int)$ticker['team_id'];
 $role = $_SESSION['role'] ?? '';
 $may_see = false;
 if (!empty($_SESSION['user_id']) && in_array($role, ['coordinator', 'member'], true)
-    && (time() - (int)($_SESSION['last_activity'] ?? 0)) <= SESSION_TIMEOUT) {
+    && (time() - (int)($_SESSION['last_activity'] ?? 0)) <= session_timeout()) {
     $may_see = (int)($_SESSION['team_id'] ?? 0) === $team_id;
     if (!$may_see && $role === 'coordinator') {
         $stmt = $pdo->prepare(

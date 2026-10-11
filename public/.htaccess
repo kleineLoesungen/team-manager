@@ -4,10 +4,11 @@
     Deny from all
 </FilesMatch>
 
-# Block direct access to uploads directory
+# Block direct access to uploads and session files
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^uploads/ - [F,L]
+    RewriteRule ^sessions/ - [F,L]
 </IfModule>
 
 # MIME type for the PWA manifest (some Apache configs lack this by default)

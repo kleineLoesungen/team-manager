@@ -89,6 +89,7 @@ mirror --reverse \
     --exclude='docs/' \
     --exclude='.claude/' \
     --exclude='landing/' \
+    --exclude='sessions/' \
     --exclude='^public/' \
     . ${FTP_DIR}
 

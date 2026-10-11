@@ -18,7 +18,9 @@ define('DB_USER',   getenv('DB_USER')   ?: 'postgres');
 define('DB_PASS',   getenv('DB_PASS')   ?: '');
 
 // Session
-define('SESSION_TIMEOUT', 8 * 60 * 60); // 8 hours (per D-05)
+define('SESSION_TIMEOUT', 8 * 60 * 60); // Admin: 8 Stunden ohne Nutzung
+// Optional: define('SESSION_MEMBER_TIMEOUT', 30 * 24 * 60 * 60);  // Koordinatoren/Mitglieder, gleitend (Standard 30 Tage)
+// Optional: define('SESSION_SAVE_PATH', '');  // leer = Sitzungen im Standardverzeichnis des Servers statt in sessions/
 
 // App
 define('APP_ENV', getenv('APP_ENV') ?: 'production');

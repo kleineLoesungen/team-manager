@@ -19,7 +19,7 @@ Eine mobile-first Webanwendung in deutscher Sprache zur Verwaltung von Sportteam
 - **PHP 8.3+** ohne Framework, PDO mit `pdo_pgsql` (native Prepared Statements, `ATTR_EMULATE_PREPARES=false`)
 - **PostgreSQL 14+** mit Row-Level Security
 - **Bootstrap 5.3 + Bootstrap Icons per CDN** — kein Node, kein Build-Schritt, kein Sass
-- Native PHP-Templates, native Sessions (`httponly`, `samesite=Strict`, `use_strict_mode`)
+- Native PHP-Templates, native Sessions (`httponly`, `samesite=Strict`, `use_strict_mode`) in `sessions/`; sliding: coordinators/members 30 days, admin 8h (`src/auth/session.php`)
 - `password_hash()` / `password_verify()`, CSRF-Tokens aus `random_bytes()`
 - Kein JS-Framework: Formulare funktionieren ohne JavaScript (progressive enhancement)
 - Lokale Entwicklung: `docker compose --profile db up` (DB optional, siehe README)

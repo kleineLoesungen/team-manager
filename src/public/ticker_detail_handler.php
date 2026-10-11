@@ -44,7 +44,7 @@ if (!$team) {
 $role = $_SESSION['role'] ?? '';
 if (!empty($_SESSION['user_id']) && empty($_SESSION['pending_team_pick'])
     && in_array($role, ['coordinator', 'member'], true)
-    && (time() - (int)($_SESSION['last_activity'] ?? 0)) <= SESSION_TIMEOUT) {
+    && (time() - (int)($_SESSION['last_activity'] ?? 0)) <= session_timeout()) {
     $own_team = (int)$ticker['team_id'] === (int)($_SESSION['team_id'] ?? 0);
     if (!$own_team && $role === 'coordinator') {
         set_admin_context($pdo);
