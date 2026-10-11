@@ -449,8 +449,10 @@ das Gerät merkt sich die Wahl (localStorage), eine installierte App startet dan
 (`/login?member=1`) hebt das wieder auf.
 
 - **Termine:** Listen und Termine mit „Für Gäste sichtbar“ (`guest_visible`, vom Koordinator
-  gesetzt), nur solange sie nicht privat sind — nur Titel, Ort, Datum und Zeit. Pro Team ein
-  Gast-Kalender-Abo (`teams.calendar_token_guest`, ohne Beschreibung und App-Links).
+  gesetzt), nur solange sie nicht privat sind — nur Titel, Ort, Datum und Zeit. Kalender-Abos
+  (ohne Beschreibung und App-Links): alle Termine (`/ics/guest/all.ics`), je Abteilung
+  (`/ics/guest/department/{id}.ics`) — beide ohne Token, der Inhalt ist öffentlich — und je Team
+  (`teams.calendar_token_guest`).
 - **Ressourcen:** nur Ressourcen „Für Gäste sichtbar“ (Admin). Alle nicht-privaten Belegungen;
   den Titel nur bei Einträgen „Für Gäste sichtbar“, sonst „Belegt“.
 - **Ticker abonnieren:** Abos hängen am Gerät (`ticker_subscriptions.subscription_id`), für Gäste

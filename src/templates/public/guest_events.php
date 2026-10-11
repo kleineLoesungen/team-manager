@@ -1,9 +1,9 @@
 <?php
 // src/templates/public/guest_events.php — Gastbereich: Termine (Issue #15)
 // Variables: $departments, $department (?int), $days ([Y-m-d => rows], guest_upcoming()),
-//            $calendars (guest_calendars())
+//            $calendars (guest_calendars()), $dept_cals (guest_department_calendars()), $all_cal (URL)
 require_once dirname(__DIR__, 2) . '/templates/layout.php';
-render_page(['title' => 'Termine', 'role' => 'public', 'active' => 'events'], function () use ($departments, $department, $days, $calendars) {
+render_page(['title' => 'Termine', 'role' => 'public', 'active' => 'events'], function () use ($departments, $department, $days, $calendars, $dept_cals, $all_cal) {
     $icon_bi = fn(array $r) => $r['kind'] === 'event' ? ($r['icon'] ?: 'bi-calendar-event') : 'bi-calendar-check';
     $time    = function (array $r): string {
         if (in_array($r['is_all_day'], [true, 1, '1', 't', 'true'], true) || !$r['time_start']) return 'ganztägig';
@@ -34,22 +34,32 @@ render_page(['title' => 'Termine', 'role' => 'public', 'active' => 'events'], fu
         </div>
     <?php }); endforeach; endif; ?>
 
-    <?php if ($calendars): ?>
+    <?php if ($calendars || $dept_cals): ?>
     <div class="card mt-4">
         <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-calendar2-check" aria-hidden="true"></i>
             <span class="fw-semibold">Kalender abonnieren</span>
         </div>
         <div class="card-body">
-            <p class="text-body-secondary small mb-3">Die Termine eines Teams in Apple Kalender, Google Calendar oder Outlook — nur Titel, Ort und Zeit.</p>
-            <div class="list-group">
-                <?php foreach ($calendars as $c): ?>
-                <a href="<?= e(webcal_url($c['url'])) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
-                    <span class="flex-grow-1"><?= e($c['team_name']) ?> <span class="text-muted small"><?= e($c['department_name']) ?></span></span>
+            <p class="text-body-secondary small mb-3">Die Termine in Apple Kalender, Google Calendar oder Outlook — nur Titel, Ort und Zeit. Wähle alle, eine Abteilung oder ein Team.</p>
+            <?php
+            $cal_row = function (string $url, string $label, string $hint = '') { ?>
+                <a href="<?= e(webcal_url($url)) ?>" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                    <span class="flex-grow-1"><?= e($label) ?><?php if ($hint !== ''): ?> <span class="text-muted small"><?= e($hint) ?></span><?php endif; ?></span>
                     <i class="bi bi-calendar-plus" aria-hidden="true"></i>
                 </a>
-                <?php endforeach; ?>
+            <?php };
+            ?>
+            <div class="list-group mb-3">
+                <?php if ($department === null) $cal_row($all_cal, 'Alle Termine', 'ganze Organisation'); ?>
+                <?php foreach ($dept_cals as $d) $cal_row($d['url'], ($d['icon'] ? $d['icon'] . ' ' : '') . $d['name'], 'Abteilung'); ?>
             </div>
+            <?php if ($calendars): ?>
+            <p class="small fw-semibold mb-2">Einzelne Teams</p>
+            <div class="list-group">
+                <?php foreach ($calendars as $c) $cal_row($c['url'], $c['team_name'], $c['department_name']); ?>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>

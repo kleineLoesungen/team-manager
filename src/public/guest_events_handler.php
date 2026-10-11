@@ -14,5 +14,7 @@ $departments = guest_departments($pdo);
 $department  = department_filter($departments);
 $days        = guest_upcoming($pdo, $department);
 $calendars   = guest_calendars($pdo, $department);
+$dept_cals   = guest_department_calendars($pdo, $department);
+$all_cal     = absolute_url('/ics/guest/all.ics');
 
 require ROOT_PATH . '/src/templates/public/guest_events.php';

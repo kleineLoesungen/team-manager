@@ -653,6 +653,15 @@ match (true) {
         })(),
 
     // Token-authenticated ICS feed — per-user personal calendar (Option 1: token URL)
+    // /ics/guest/all.ics und /ics/guest/department/{id}.ics — Gast-Kalender ohne Token (Issue #15)
+    $path === '/ics/guest/all.ics'
+        => require ROOT_PATH . '/src/ics_guest_handler.php',
+    (bool)preg_match('#^/ics/guest/department/(\d+)\.ics$#', $path, $matches)
+        => (function() use ($matches) {
+            $_REQUEST['department_id'] = (int)$matches[1];
+            require ROOT_PATH . '/src/ics_guest_handler.php';
+        })(),
+
     // /ics/resource/{token}.ics — Belegung einer Ressource (kein Login)
     (bool)preg_match('#^/ics/resource/([0-9a-f]{64})\.ics$#', $path, $matches)
         => (function() use ($matches) {

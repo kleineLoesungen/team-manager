@@ -86,7 +86,7 @@ if ($team_id !== null) {
 } elseif ($guest_team !== null) {
     // Guest feed: only what the team shares with guests, without descriptions or app links
     require_once ROOT_PATH . '/src/db/guest.php';
-    $feed     = guest_calendar_feed($pdo, $guest_team);
+    $feed     = guest_calendar_feed($pdo, 'team', $guest_team);
     $filename = 'gast-team-' . $guest_team . '.ics';
     $ics      = ics_team_calendar($feed['lists'], $feed['events'], $base_url, 'member', true, true);
 } else {

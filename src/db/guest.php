@@ -3,8 +3,9 @@
 //
 // Gäste sehen Termine und Listen mit Datum, die ein Koordinator „Für Gäste sichtbar“ gemacht hat
 // (lists.guest_visible, events.guest_visible) — nur solange der Eintrag nicht privat ist, und nur
-// Titel, Ort, Datum und Zeit, nie Listen- oder Dokumentinhalte. Pro Team gibt es dazu ein
-// Gast-Kalender-Abo (teams.calendar_token_guest). Ressourcen: src/db/resources.php
+// Titel, Ort, Datum und Zeit, nie Listen- oder Dokumentinhalte. Kalender-Abos: alle Termine
+// (/ics/guest/all.ics), je Abteilung (/ics/guest/department/{id}.ics) und je Team
+// (teams.calendar_token_guest). Die ersten beiden ohne Token — der Inhalt ist ohnehin öffentlich. Ressourcen: src/db/resources.php
 // (resources_for_guests), Ticker: öffentliche Ticker-Seiten. Alles läuft im Admin-Kontext,
 // weil Gäste keinen Team-Kontext haben; die Filter stehen in den Abfragen selbst.
 
@@ -104,20 +105,45 @@ function guest_calendars(PDO $pdo, ?int $department_id): array {
     });
 }
 
-/** Guest feed of one team: lists and events for the ICS export (3 months back on). */
-function guest_calendar_feed(PDO $pdo, int $team_id): array {
-    return as_admin($pdo, function () use ($pdo, $team_id) {
-        $sql  = guest_items_sql();
-        $stmt = $pdo->prepare(
+/**
+ * Guest feed for the ICS export (3 months back on): one team, one department or everything.
+ * @param string $scope 'team' | 'department' | 'all'
+ */
+function guest_calendar_feed(PDO $pdo, string $scope, int $id = 0): array {
+    return as_admin($pdo, function () use ($pdo, $scope, $id) {
+        $sql    = guest_items_sql();
+        $filter = match ($scope) { 'team' => 'team_id = ?', 'department' => 'department_id = ?', default => '? = 0' };
+        $stmt   = $pdo->prepare(
             "WITH g AS ($sql)
-             SELECT * FROM g WHERE team_id = ? AND date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
+             SELECT * FROM g WHERE $filter AND date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
              ORDER BY date, time_start NULLS FIRST"
         );
-        $stmt->execute([$team_id]);
+        $stmt->execute([$scope === 'all' ? 0 : $id]);
         $lists = $events = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
             if ($r['kind'] === 'list') $lists[] = $r; else $events[] = $r;
         }
         return ['lists' => $lists, 'events' => $events];
+    });
+}
+
+/**
+ * Department calendars for the guest page: departments with guest entries (3 months back on).
+ * @return list<array{id: int, name: string, icon: ?string, url: string}>
+ */
+function guest_department_calendars(PDO $pdo, ?int $department_id): array {
+    return as_admin($pdo, function () use ($pdo, $department_id) {
+        $sql  = guest_items_sql();
+        $stmt = $pdo->prepare(
+            "WITH g AS ($sql)
+             SELECT DISTINCT department_id AS id, department_name AS name, dept_icon AS icon FROM g
+             WHERE date >= CURRENT_DATE - INTERVAL '" . ICS_PAST_INTERVAL . "'
+               AND (?::int IS NULL OR department_id = ?::int)
+             ORDER BY name"
+        );
+        $stmt->execute([$department_id, $department_id]);
+        return array_map(fn($d) => ['id' => (int)$d['id'], 'name' => $d['name'], 'icon' => $d['icon'],
+                                    'url' => absolute_url('/ics/guest/department/' . (int)$d['id'] . '.ics')],
+                         $stmt->fetchAll(PDO::FETCH_ASSOC));
     });
 }
