@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2026.10.11.2
+- [Gast] Termine für alle oder je Abteilung als Kalender abonnieren
+
 ## 2026.10.11
 - [Gast] Gastbereich ohne Anmeldung: Ticker mit Abo, freigegebene Termine mit Kalender-Abo, Ressourcen-Belegung
 - [Koordinator] „Für Gäste sichtbar“ bei Listen und Terminen
