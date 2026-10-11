@@ -509,10 +509,8 @@ das bei Bedarf ins Team des Inhalts wechselt. Code: `src/push/notify_push.php`.
 Auf der Startseite (Inhalte) erscheint einmal der Hinweis „Push einschalten“, sobald das Gerät
 Push kann und noch nie gefragt wurde; automatisch einschalten erlauben die Browser nicht.
 
-**Geräte und „zuletzt aktiv“:** Web-Push kennt keinen Broadcast — jedes Gerät hat beim Push-Dienst
-(Apple, Google, Mozilla) eine eigene Adresse und einen eigenen Schlüssel, deshalb speichert die App
-die Geräte (`push_subscriptions`). Ist Push an, meldet sich ein Gerät beim Öffnen der App höchstens
-einmal am Tag (`updated_at` = zuletzt aktiv). Die Push-Seite des Koordinators zeigt ab 30 Tagen
+**Geräte und „zuletzt aktiv“:** Ist Push an, meldet sich ein Gerät beim Öffnen der App höchstens
+einmal am Tag (`push_subscriptions.updated_at` = zuletzt aktiv). Die Push-Seite des Koordinators zeigt ab 30 Tagen
 „zuletzt aktiv vor …“; nach 180 Tagen ohne Meldung wird das Gerät entfernt (einmal am Tag geprüft).
 Meldet der Push-Dienst ein Gerät beim Senden als weg, wird es sofort entfernt.
 
