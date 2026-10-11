@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2026.10.11.3
+- [Koordinator, Mitglied] Angemeldet bleiben: Abmeldung erst nach 30 Tagen ohne Nutzung
+- [System] Sitzungen in eigenem Verzeichnis (einmalige Abmeldung nach dem Update)
+
 ## 2026.10.11.2
 - [Gast] Termine für alle oder je Abteilung als Kalender abonnieren
 
