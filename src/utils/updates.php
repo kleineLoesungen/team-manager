@@ -55,6 +55,7 @@ const CHANGELOG_AUDIENCES = [
     'Admin'       => 'bi-shield-lock',
     'Koordinator' => 'bi-person-badge',
     'Mitglied'    => 'bi-person',
+    'Gast'        => 'bi-person-walking',
     'System'      => 'bi-gear',
 ];
 

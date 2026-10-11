@@ -92,7 +92,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 ### Version / CHANGELOG.md
 - The instance version is the top `## YYYY.MM.DD` heading of `CHANGELOG.md`; every instance compares it with `CHANGELOG.md` on GitHub `main` and shows the admin "Update verfügbar" (`src/utils/updates.php`)
 - The landing page (`landing/index.html`) loads the same file from GitHub and lists the last 3 versions (without `Migration:` items)
-- A new top entry pushed to `main` announces an update to all instances — only add/change CHANGELOG entries after the work is finished and after asking the user; each item starts with its audience `- [Admin, Koordinator, Mitglied, System] Text` (badges in Admin → Version and on the landing page, `CHANGELOG_AUDIENCES` in `src/utils/updates.php`); mention migrations separately as `- Migration: datei.sql` (no audience)
+- A new top entry pushed to `main` announces an update to all instances — only add/change CHANGELOG entries after the work is finished and after asking the user; each item starts with its audience `- [Admin, Koordinator, Mitglied, Gast, System] Text` (badges in Admin → Version and on the landing page, `CHANGELOG_AUDIENCES` in `src/utils/updates.php`); mention migrations separately as `- Migration: datei.sql` (no audience)
 
 ### Deployment
 - `deploy.sh` lftp FTP script for Hetzner Shared Hosting — mirrors repo root + `public/` into `public_html/team-manager/` (no separate apps folder)
