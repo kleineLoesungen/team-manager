@@ -758,5 +758,5 @@ Team Manager steht unter der [MIT-Lizenz](LICENSE) — Copyright (c) 2026 Sebast
 Nutzen, ändern und weitergeben ist frei erlaubt, solange der Lizenzhinweis erhalten bleibt.
 
 Mitgelieferte Fremdbibliotheken behalten ihre eigene Lizenz:
-[PHPMailer](https://github.com/PHPMailer/PHPMailer) (`src/lib/phpmailer/`) steht unter der
-GNU LGPL 2.1.
+[PHPMailer](https://github.com/PHPMailer/PHPMailer) 6.9.3 (`src/lib/phpmailer/`) steht unter der
+GNU LGPL 2.1, der Lizenztext liegt in `src/lib/phpmailer/LICENSE`.
