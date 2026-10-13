@@ -749,3 +749,14 @@ uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
 config.example.php  Vorlage für config.php (App-Konfiguration, liest Umgebungsvariablen)
 deploy.sh           Hetzner FTP-Deployment-Skript (Konfiguration per Umgebungsvariablen)
 ```
+
+---
+
+## Lizenz
+
+Team Manager steht unter der [MIT-Lizenz](LICENSE) — Copyright (c) 2026 Sebastian Willer.
+Nutzen, ändern und weitergeben ist frei erlaubt, solange der Lizenzhinweis erhalten bleibt.
+
+Mitgelieferte Fremdbibliotheken behalten ihre eigene Lizenz:
+[PHPMailer](https://github.com/PHPMailer/PHPMailer) (`src/lib/phpmailer/`) steht unter der
+GNU LGPL 2.1.
