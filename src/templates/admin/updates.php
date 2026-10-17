@@ -35,12 +35,32 @@ $render_entry = function (string $title, array $entry): void {
         <span class="flex-grow-1">Neueste</span>
         <span class="fw-semibold"><?= $status['latest'] ? e(version_label($status['latest'])) : '–' ?></span>
     </div>
+    <?php
+    $cron      = $status['cron'];
+    $cron_when = $cron['last_run'] ? (new DateTimeImmutable('@' . $cron['last_run']))
+        ->setTimezone(new DateTimeZone('Europe/Berlin'))->format('d.m.Y, H:i') : null;
+    ?>
+    <div class="list-group-item d-flex align-items-center gap-2">
+        <span class="flex-grow-1">Cronjob</span>
+        <span class="small <?= ($cron['configured'] && !$cron['stale'] && $cron['ok']) ? 'text-muted' : 'text-danger' ?>">
+            <?= !$cron['configured'] ? 'nicht eingerichtet' : ($cron_when ? 'zuletzt ' . e($cron_when) . (!$cron['ok'] ? ' · mit Fehler' : '') : 'noch nie gelaufen') ?>
+        </span>
+    </div>
     <div class="list-group-item d-flex align-items-center gap-2">
         <span class="flex-grow-1">Zuletzt geprüft</span>
         <span class="small text-muted"><?= $checked ? e($checked) : 'noch nie' ?><?= !$status['ok'] && $checked ? ' · nicht erreichbar' : '' ?></span>
     </div>
     <?php endif; ?>
 </div>
+
+<?php if (!$cron['configured'] || $cron['stale'] || !$cron['ok']): ?>
+<div class="alert alert-warning small">
+    <div class="fw-semibold mb-1"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Cronjob einrichten</div>
+    Stündlich <code>POST <?= e(absolute_url('/cron')) ?></code> aufrufen, mit dem Header
+    <code>X-Cron-Token</code> = <code>CRON_TOKEN</code> aus der <code>config.php</code> (z. B. Cronicle, „HTTP Request“).
+    Er verschickt die Erinnerungen zum Anmeldeschluss und räumt nachts auf.
+</div>
+<?php endif; ?>
 
 <?php if (!$status['enabled']): ?>
     <p class="text-muted small">Die Prüfung auf Updates ist abgeschaltet (<code>UPDATE_CHECK_URL</code> in der config.php ist leer).</p>

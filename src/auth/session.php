@@ -36,9 +36,8 @@ function session_use_own_dir(): void {
         return;
     }
     ini_set('session.save_path', $dir);
-    // Aufräumen übernimmt PHP selbst (in diesem Verzeichnis räumt sonst niemand auf)
-    ini_set('session.gc_probability', '1');
-    ini_set('session.gc_divisor',     '1000');
+    // Aufräumen übernimmt der Cronjob nachts (src/cron.php), nicht zufällige Seitenaufrufe
+    ini_set('session.gc_probability', '0');
 }
 
 /**

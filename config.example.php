@@ -22,6 +22,10 @@ define('SESSION_TIMEOUT', 8 * 60 * 60); // Admin: 8 Stunden ohne Nutzung
 // Optional: define('SESSION_MEMBER_TIMEOUT', 30 * 24 * 60 * 60);  // Koordinatoren/Mitglieder, gleitend (Standard 30 Tage)
 // Optional: define('SESSION_SAVE_PATH', '');  // leer = Sitzungen im Standardverzeichnis des Servers statt in sessions/
 
+// Cronjob: stündlich POST /cron mit Header X-Cron-Token (README, „Cronjob“). Langes Zufallswort,
+// z. B. aus `php -r 'echo bin2hex(random_bytes(32));'`; leer = Endpunkt aus
+define('CRON_TOKEN', getenv('CRON_TOKEN') ?: '');
+
 // App
 define('APP_ENV', getenv('APP_ENV') ?: 'production');
 define('BASE_URL', getenv('BASE_URL') ?: '');

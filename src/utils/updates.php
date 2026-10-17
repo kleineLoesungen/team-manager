@@ -161,6 +161,7 @@ function update_check_fetch(string $url): ?array {
 /**
  * Update status for the admin. Uses the cached result unless it is older than a day or $force.
  * db_pending: migrations of the installed code missing in the database (always checked locally).
+ * cron: cron_status() — the hourly job (src/cron.php).
  * @return array{enabled: bool, installed: ?string, latest: ?string, newer: list<array>,
  *               ok: bool, checked_at: ?int, db_pending: list<string>}
  */
@@ -168,9 +169,10 @@ function update_status(PDO $pdo, bool $force = false): array {
     $installed  = app_version();
     $url        = update_check_url();
     $db_pending = db_pending_migrations($pdo);
+    $cron       = cron_status($pdo);
     if ($url === '') {
         return ['enabled' => false, 'installed' => $installed, 'latest' => null, 'newer' => [], 'ok' => false,
-                'checked_at' => null, 'db_pending' => $db_pending];
+                'checked_at' => null, 'db_pending' => $db_pending, 'cron' => $cron];
     }
 
     $stmt  = $pdo->prepare("SELECT value FROM settings WHERE key = 'update_check'");
@@ -204,5 +206,38 @@ function update_status(PDO $pdo, bool $force = false): array {
         'ok'         => (bool)($cache['ok'] ?? false),
         'checked_at' => isset($cache['checked_at']) ? (int)$cache['checked_at'] : null,
         'db_pending' => $db_pending,
+        'cron'       => $cron,
+    ];
+}
+
+// ── Cronjob (src/cron.php) ──────────────────────────────────────────────────────────
+const CRON_STALE_HOURS = 2;   // Admin-Hinweis, wenn der letzte Lauf länger her ist
+
+/** Last runs of the cron job (settings 'cron_state'). */
+function cron_state(PDO $pdo): array {
+    return as_admin($pdo, function () use ($pdo) {
+        $stmt = $pdo->prepare("SELECT value FROM settings WHERE key = 'cron_state'");
+        $stmt->execute();
+        $state = json_decode((string)$stmt->fetchColumn(), true);
+        return is_array($state) ? $state : [];
+    });
+}
+
+function cron_state_save(PDO $pdo, array $state): void {
+    as_admin($pdo, fn() => $pdo->prepare(
+        "INSERT INTO settings (key, value) VALUES ('cron_state', ?)
+         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+    )->execute([json_encode($state)]));
+}
+
+/** Cron status for the admin: configured?, last run (timestamp), ok?, stale? */
+function cron_status(PDO $pdo): array {
+    $state = cron_state($pdo);
+    $last  = isset($state['last_run']) ? (int)$state['last_run'] : null;
+    return [
+        'configured' => defined('CRON_TOKEN') && (string)CRON_TOKEN !== '',
+        'last_run'   => $last,
+        'ok'         => (bool)($state['last_ok'] ?? false),
+        'stale'      => $last === null || time() - $last > CRON_STALE_HOURS * 3600,
     ];
 }

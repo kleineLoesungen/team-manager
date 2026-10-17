@@ -41,23 +41,22 @@ require_once ROOT_PATH . '/src/utils/csrf.php';
 require_once ROOT_PATH . '/src/utils/helpers.php';
 
 // Start secure session on every request
-start_secure_session();
+// Der Cronjob braucht keine Sitzung (sonst entstünde stündlich eine leere Sitzungsdatei)
+if ((parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/') !== '/cron') {
+    start_secure_session();
+}
 
-// Startmeldungen der Live-Ticker per Push. Kein Cronjob nötig: höchstens einmal pro Minute
-// geprüft und erst nach dem Senden der Antwort ausgeführt (src/push/ticker_push.php).
+// Push (Ticker, Geräte, VAPID) — überall gebraucht, auch im Layout
 require_once ROOT_PATH . '/src/push/ticker_push.php';
-push_check_due_starts();
 
 // Zeitgesteuerte Sichtbarkeit von Listen: fällige Umstellungen vor jedem Seitenaufruf anwenden,
 // damit niemand nach der Frist noch den alten Stand sieht (src/db/list_auto_visibility.php).
 require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
 list_auto_visibility_apply(get_db());
 
-// Erinnerung per Push vor der Umstellung (Anmeldeschluss), wie der Tickerstart höchstens einmal
-// pro Minute und nach der Antwort (src/push/auto_push.php, Issue #13).
+// Zeitgesteuerte Aufgaben (Erinnerungen, Aufräumen, Update-Prüfung) laufen im Cronjob:
+// POST /cron, stündlich von außen aufgerufen (src/cron.php). Hier nur die Push-Funktionen.
 require_once ROOT_PATH . '/src/push/auto_push.php';
-list_reminder_check();
-push_cleanup_stale();   // Geräte ohne Lebenszeichen seit 180 Tagen entfernen (Issue #16)
 
 // Parse the request path (strip query string, normalize trailing slash)
 $path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
@@ -686,6 +685,10 @@ match (true) {
     // ── Push-Benachrichtigungen (angemeldet oder als Gast; Gerät per Cookie tm_device) ──
     $path === '/push/subscribe'
         => require ROOT_PATH . '/src/push/subscribe_handler.php',
+
+    // Zeitgesteuerte Aufgaben, stündlich von außen (Cronicle), Header X-Cron-Token
+    $path === '/cron'
+        => require ROOT_PATH . '/src/cron.php',
 
     // Push abmelden (dieses Gerät, Profil) — Issue #11
     $path === '/push/unsubscribe'

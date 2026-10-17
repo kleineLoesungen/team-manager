@@ -467,6 +467,29 @@ das Gerät merkt sich die Wahl (localStorage), eine installierte App startet dan
 
 Gäste sehen nie Personen, Listen- oder Dokumentinhalte. Code: `src/db/guest.php`, `src/public/`.
 
+## Cronjob
+
+Zeitgesteuerte Aufgaben laufen in **einem** Endpunkt, den ein Cron-Dienst (z. B. Cronicle)
+**stündlich** aufruft:
+
+```
+POST https://<instanz>/cron
+X-Cron-Token: <CRON_TOKEN aus der config.php>
+```
+
+- **Stündlich:** Erinnerungen an den Anmeldeschluss (am Tag ab 8 Uhr bzw. am Vortag ab 18 Uhr).
+- **Nachts** (erster Lauf ab 3 Uhr, einmal pro Tag): Push-Geräte ohne Lebenszeichen seit 180 Tagen
+  entfernen, Update-Prüfung gegen GitHub, abgelaufene Sitzungen und Ticker-Zuschauer aufräumen.
+
+Fällt ein Lauf aus, holt der nächste nach. Ohne `CRON_TOKEN` ist der Endpunkt aus (404); ein
+falsches Token ergibt 403. Die Antwort ist JSON (`{"ok":true,"reminders":1,…}`), damit der
+Cron-Dienst Fehler meldet. Unter Admin → Einstellungen → Version steht, wann er zuletzt lief;
+ist das länger als 2 Stunden her, erscheint ein Hinweis. Token erzeugen:
+`php -r 'echo bin2hex(random_bytes(32));'`. Code: `src/cron.php`.
+
+Nicht im Cronjob: die automatische Statusumstellung von Listen (gilt bei jedem Seitenaufruf,
+damit eine Frist sofort greift) und die Ticker-Startmeldung (kommt mit dem ersten Eintrag).
+
 ## Version und Updates
 
 Die Version einer Instanz ist die oberste Überschrift in `CHANGELOG.md` (Datum, z. B.
@@ -520,14 +543,15 @@ Push kann und noch nie gefragt wurde; automatisch einschalten erlauben die Brows
 
 **Geräte und „zuletzt aktiv“:** Ist Push an, meldet sich ein Gerät beim Öffnen der App höchstens
 einmal am Tag (`push_subscriptions.updated_at` = zuletzt aktiv). Die Push-Seite des Koordinators zeigt ab 30 Tagen
-„zuletzt aktiv vor …“; nach 180 Tagen ohne Meldung wird das Gerät entfernt (einmal am Tag geprüft).
+„zuletzt aktiv vor …“; nach 180 Tagen ohne Meldung wird das Gerät entfernt (Cronjob, nachts).
 Meldet der Push-Dienst ein Gerät beim Senden als weg, wird es sofort entfernt.
 
 **Automatische Pushes** (`src/push/auto_push.php`):
 - *Erinnerung vor der automatischen Umstellung* (z. B. Anmeldeschluss): immer, für jede Liste
-  mit Umstellung; geht an alle Mitglieder des Teams mit Push, genau einmal. Ohne Cronjob: Der
-  erste Seitenaufruf irgendeiner Person am Tag der Umstellung (ab 0:00, vor dem Zeitpunkt) löst
-  sie aus. Ändern sich Regel, Datum oder Beginn, wird sie wieder fällig.
+  mit Umstellung; geht an alle Mitglieder des Teams mit Push, genau einmal — am Tag der Umstellung
+  ab 8 Uhr, liegt sie davor, am Vortag ab 18 Uhr (Cronjob). Ändern sich Regel, Datum oder Beginn,
+  wird sie wieder fällig.
+- *Ticker:* Die Startmeldung kommt mit dem ersten Eintrag, danach jeder weitere Eintrag.
 - *Kurzfristige Änderung*: Bei Listen und Terminen der nächsten 7 Tage bietet das
   Bearbeiten-Formular „Per Push über die Änderung informieren“. Gesendet wird nur, wenn sich
   Datum, Uhrzeit oder Ort wirklich ändern, z. B. „Neu: Sa 11.10., 18:30 statt 18:00“.

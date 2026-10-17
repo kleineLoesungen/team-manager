@@ -5,17 +5,13 @@
 // Mitglieder und Koordinatoren ebenso wie für Gäste ohne Konto (Issue #15). Das Gerät erkennt der
 // Server am Cookie tm_device (push_subscriptions.device_token), gesetzt bei /push/subscribe.
 // Abonnenten bekommen
-//   - die Startmeldung zur Startzeit (event_date + start_time, deutsche Ortszeit). Ohne Cronjob:
-//     geprüft bei Seitenaufrufen, höchstens einmal pro Minute (push_check_due_starts). Kommt
-//     niemand vorbei oder hat der Ticker keine Startzeit, löst der erste Eintrag sie aus.
-//   - jeden neuen Eintrag, außer dem eigenen.
+//   - die Startmeldung mit dem ersten Eintrag („… ist live“),
+//   - jeden weiteren Eintrag, außer dem eigenen.
 // Verschickt wird nach dem Senden der HTTP-Antwort (push_defer), damit Posten nicht wartet.
 
 declare(strict_types=1);
 
 require_once ROOT_PATH . '/src/lib/webpush.php';
-
-const PUSH_START_GRACE_HOURS = 3;   // ältere Startzeiten lösen keine Startmeldung mehr aus
 
 /**
  * VAPID key pair of this installation. Generated on first use and stored in settings as
@@ -185,40 +181,4 @@ function push_ticker_entry(PDO $pdo, int $message_id, int $author_id): void {
     } else {
         push_ticker_send($pdo, $ticker_id, $ticker['name'], $text, $author_id, 900);
     }
-}
-
-/**
- * Poor man's scheduler: send start notices whose start time has passed. Called on requests
- * (see public/index.php) and throttled to once a minute via a timestamp file, so it costs
- * nothing on most requests and needs no cron job.
- */
-function push_check_due_starts(): void {
-    $marker = sys_get_temp_dir() . '/tm-push-' . md5(ROOT_PATH . DB_SCHEMA);
-    $last = @filemtime($marker);
-    if ($last !== false && $last > time() - 60) return;
-    @touch($marker);
-
-    push_defer(function () {
-        $pdo = get_db();
-        set_admin_context($pdo);
-        $stmt = $pdo->prepare(
-            "SELECT t.id, t.name, t.description
-             FROM tickers t
-             JOIN teams tm ON tm.id = t.team_id AND tm.is_active = TRUE
-             WHERE t.status = 'active'
-               AND t.event_date IS NOT NULL AND t.start_time IS NOT NULL
-               AND (t.event_date + t.start_time) AT TIME ZONE 'Europe/Berlin' <= NOW()
-               AND (t.event_date + t.start_time) AT TIME ZONE 'Europe/Berlin' > NOW() - make_interval(hours => ?)
-               AND NOT EXISTS (SELECT 1 FROM ticker_push_state s WHERE s.ticker_id = t.id)
-               AND EXISTS (SELECT 1 FROM ticker_subscriptions ts WHERE ts.ticker_id = t.id)"
-        );
-        $stmt->execute([PUSH_START_GRACE_HOURS]);
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $t) {
-            if (push_claim_start($pdo, (int)$t['id'])) {
-                $body = trim((string)$t['description']) !== '' ? mb_strimwidth(trim($t['description']), 0, 120, '…') : 'Der Live-Ticker hat begonnen.';
-                push_ticker_send($pdo, (int)$t['id'], $t['name'] . ' ist live', $body, null, 3600);
-            }
-        }
-        reset_rls_context($pdo);
-    });
 }

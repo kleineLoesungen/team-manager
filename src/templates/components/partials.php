@@ -185,6 +185,18 @@ function render_filter_pills(array $pills, string $base_url = ''): void {
  * Renders nothing when up to date, disabled or unknown.
  */
 function render_update_notice(array $status): void {
+    $cron = $status['cron'] ?? null;
+    if ($cron && (!$cron['configured'] || $cron['stale'] || !$cron['ok'])) {
+        ?>
+        <div class="alert alert-warning d-flex align-items-start gap-2">
+            <i class="bi bi-clock-history" aria-hidden="true"></i>
+            <div class="flex-grow-1">
+                <div class="fw-semibold"><?= !$cron['configured'] ? 'Cronjob nicht eingerichtet' : ($cron['last_run'] === null ? 'Cronjob noch nie gelaufen' : 'Cronjob läuft nicht') ?></div>
+                <div class="small">Ohne ihn kommen keine Erinnerungen zum Anmeldeschluss. · <a href="/admin/updates" class="alert-link">Details</a></div>
+            </div>
+        </div>
+        <?php
+    }
     if (!empty($status['db_pending'])) {
         $n = count($status['db_pending']);
         ?>

@@ -4,9 +4,9 @@
 // 1. Erinnerung vor der automatischen Statusumstellung einer Liste (typisch: Anmeldeschluss).
 //    Immer, für jede Liste mit Umstellung; genau einmal (lists.auto_reminder_sent_at), an alle
 //    Mitglieder des Teams mit Push — nicht nur an die ohne Eintrag: bei Standardwerten ist
-//    „nichts eingetragen“ nicht erkennbar. Ohne Cronjob: Der erste Seitenaufruf (irgendeiner
-//    Person) am Tag der Umstellung ab 0:00 und vor dem Zeitpunkt löst sie aus; geprüft höchstens
-//    einmal pro Minute (wie der Tickerstart).
+//    „nichts eingetragen“ nicht erkennbar. Zeitpunkt: am Tag der Umstellung ab LIST_REMINDER_HOUR
+//    (8 Uhr); liegt die Umstellung davor, am Vortag ab LIST_REMINDER_EVENING_HOUR (18 Uhr).
+//    Verschickt vom Cronjob (src/cron.php), der stündlich läuft.
 // 2. Kurzfristige Änderung: Ändert ein Koordinator Datum, Uhrzeit oder Ort einer Liste oder eines
 //    Termins in den nächsten CHANGE_PUSH_DAYS Tagen, kann er beim Speichern „Mitglieder per Push
 //    informieren“ einschalten. Empfänger nach Sichtbarkeit (privat → Koordinatoren).
@@ -18,54 +18,47 @@ require_once ROOT_PATH . '/src/db/list_auto_visibility.php';
 
 const CHANGE_PUSH_DAYS      = 7;
 
+const LIST_REMINDER_HOUR         = 8;    // am Tag der Umstellung ab 8 Uhr …
+const LIST_REMINDER_EVENING_HOUR = 18;   // … oder, wenn sie vor 8 Uhr liegt, am Vortag ab 18 Uhr
+
 /**
- * Poor man's scheduler for reminders: claims due ones atomically (each list once, even with
- * parallel requests) and sends them after the response. Throttled to once a minute.
+ * Send due deadline reminders (cron, hourly). Claims each list atomically, so parallel runs
+ * cannot send twice. Returns how many lists were reminded.
  */
-function list_reminder_check(): void {
-    $marker = sys_get_temp_dir() . '/tm-reminder-' . md5(ROOT_PATH . DB_SCHEMA);
-    $last = @filemtime($marker);
-    if ($last !== false && $last > time() - 60) return;
-    @touch($marker);
+function list_reminders_send(PDO $pdo): int {
+    set_admin_context($pdo);
+    // Umstellung (deutsche Ortszeit, ohne Zeitzone) und daraus der Erinnerungszeitpunkt
+    $due = "((l.date + COALESCE(l.time_start, TIME '00:00')) - make_interval(hours => l.auto_visibility_hours))";
+    $at  = "(CASE WHEN $due::time >= make_time(?, 0, 0)
+                  THEN $due::date + make_time(?, 0, 0)
+                  ELSE $due::date - 1 + make_time(?, 0, 0) END)";
+    $stmt = $pdo->prepare(
+        "UPDATE lists l SET auto_reminder_sent_at = NOW()
+         FROM teams t
+         WHERE t.id = l.team_id AND t.is_active = TRUE
+           AND l.auto_reminder_sent_at IS NULL
+           AND l.auto_visibility IS NOT NULL AND l.auto_visibility_done_at IS NULL
+           AND l.auto_visibility <> l.visibility
+           AND l.visibility IN ('public', 'protected') AND l.date IS NOT NULL
+           AND $at AT TIME ZONE 'Europe/Berlin' <= NOW()
+           AND $due AT TIME ZONE 'Europe/Berlin' > NOW()
+         RETURNING l.id, l.team_id, t.name AS team_name, l.name, l.visibility, l.auto_visibility,
+                   l.auto_visibility_hours, l.date, l.time_start"
+    );
+    $stmt->execute([LIST_REMINDER_HOUR, LIST_REMINDER_HOUR, LIST_REMINDER_EVENING_HOUR]);
+    $due_lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    reset_rls_context($pdo);
 
-    push_defer(function () {
-        $pdo = get_db();
-        set_admin_context($pdo);
-        try {
-            $stmt = $pdo->prepare(
-                "UPDATE lists l SET auto_reminder_sent_at = NOW()
-                 FROM teams t
-                 WHERE t.id = l.team_id AND t.is_active = TRUE
-                   AND l.auto_reminder_sent_at IS NULL
-                   AND l.auto_visibility IS NOT NULL AND l.auto_visibility_done_at IS NULL
-                   AND l.auto_visibility <> l.visibility
-                   AND l.visibility IN ('public', 'protected') AND l.date IS NOT NULL
-                   -- Fenster: Tag der Umstellung ab 0:00 (deutsche Zeit) bis zur Umstellung
-                   AND date_trunc('day', (l.date + COALESCE(l.time_start, TIME '00:00'))
-                                         - make_interval(hours => l.auto_visibility_hours))
-                       AT TIME ZONE 'Europe/Berlin' <= NOW()
-                   AND ((l.date + COALESCE(l.time_start, TIME '00:00'))
-                        - make_interval(hours => l.auto_visibility_hours)) AT TIME ZONE 'Europe/Berlin' > NOW()
-                 RETURNING l.id, l.team_id, t.name AS team_name, l.name, l.visibility, l.auto_visibility,
-                           l.auto_visibility_hours, l.date, l.time_start"
-            );
-            $stmt->execute();
-            $due = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            // 42703 = Spalte fehlt: Migration noch nicht eingespielt — ohne Erinnerungen weiter
-            if ($e->getCode() !== '42703') error_log('list_reminder_check: ' . $e->getMessage());
-            $due = [];
-        }
-        reset_rls_context($pdo);
-
-        foreach ($due as $list) {
-            $text = list_reminder_text($list);
-            if ($text === null) continue;
-            push_send_now($pdo, push_team_user_ids($pdo, (int)$list['team_id'], 'member'),
-                          $list['team_name'] . ' - ' . $list['name'], $text,
-                          notify_push_url((int)$list['team_id'], 'list', (int)$list['id']));
-        }
-    });
+    $sent = 0;
+    foreach ($due_lists as $list) {
+        $text = list_reminder_text($list);
+        if ($text === null) continue;
+        push_send_now($pdo, push_team_user_ids($pdo, (int)$list['team_id'], 'member'),
+                      $list['team_name'] . ' - ' . $list['name'], $text,
+                      notify_push_url((int)$list['team_id'], 'list', (int)$list['id']));
+        $sent++;
+    }
+    return $sent;
 }
 
 /** Reminder text by what the change means for members, or null if it means nothing to them. */
@@ -144,22 +137,15 @@ function change_push_after_save(PDO $pdo, int $team_id, string $type, int $id, s
 }
 
 /**
- * Remove push devices without a sign of life for PUSH_DEVICE_EXPIRE_DAYS (Issue #16). An open
- * app refreshes its device at most daily, so this hits devices whose app is gone or never used.
- * Devices the push service reports as gone are removed right when sending anyway. Checked at
- * most once a day, after the response.
+ * Remove push devices without a sign of life for PUSH_DEVICE_EXPIRE_DAYS (Issue #16; cron,
+ * nightly). An open app refreshes its device at most daily, so this hits devices whose app is
+ * gone or never used. Devices the push service reports as gone are removed right when sending.
+ * Returns how many were removed.
  */
-function push_cleanup_stale(): void {
-    $marker = sys_get_temp_dir() . '/tm-push-cleanup-' . md5(ROOT_PATH . DB_SCHEMA);
-    $last = @filemtime($marker);
-    if ($last !== false && $last > time() - 86400) return;
-    @touch($marker);
-
-    push_defer(function () {
-        $pdo = get_db();
-        set_admin_context($pdo);
-        $pdo->prepare("DELETE FROM push_subscriptions WHERE updated_at < NOW() - make_interval(days => ?)")
-            ->execute([PUSH_DEVICE_EXPIRE_DAYS]);
-        reset_rls_context($pdo);
-    });
+function push_devices_cleanup(PDO $pdo): int {
+    set_admin_context($pdo);
+    $stmt = $pdo->prepare("DELETE FROM push_subscriptions WHERE updated_at < NOW() - make_interval(days => ?)");
+    $stmt->execute([PUSH_DEVICE_EXPIRE_DAYS]);
+    reset_rls_context($pdo);
+    return $stmt->rowCount();
 }
