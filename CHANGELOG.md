@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2026.10.17
+- [Koordinator, Mitglied] Erinnerung zum Anmeldeschluss pünktlich um 8 Uhr (bzw. am Vorabend um 18 Uhr)
+- [Koordinator, Mitglied] Ticker-Startmeldung kommt mit dem ersten Eintrag
+- [Admin] Cronjob-Status unter Einstellungen → Version
+- [System] Zeitgesteuerte Aufgaben über einen stündlichen Cronjob (POST /cron, CRON_TOKEN)
+- [System] Einstellungen aus .env statt config.php – vor dem Update .env.production anlegen (README, Deployment)
+
 ## 2026.10.11.3
 - [Koordinator, Mitglied] Angemeldet bleiben: Abmeldung erst nach 30 Tagen ohne Nutzung
 - [System] Sitzungen in eigenem Verzeichnis (einmalige Abmeldung nach dem Update)
