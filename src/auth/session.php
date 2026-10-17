@@ -6,9 +6,9 @@ require_once dirname(__DIR__) . '/utils/helpers.php';
 require_once dirname(__DIR__) . '/db/connection.php';
 
 // Sitzungsdauer (Issue #17), gleitend: jede Nutzung verlängert Sitzung und Cookie.
-// SESSION_TIMEOUT (config.php, 8 Std.) gilt weiter für den Admin; Koordinatoren und Mitglieder
+// SESSION_TIMEOUT (Standard 8 Std.) gilt weiter für den Admin; Koordinatoren und Mitglieder
 // bleiben angemeldet, solange sie die App mindestens alle 30 Tage nutzen. Beides lässt sich in
-// der config.php der Instanz überschreiben (SESSION_MEMBER_TIMEOUT, SESSION_SAVE_PATH).
+// den Einstellungen der Instanz (.env.production) überschreiben (SESSION_MEMBER_TIMEOUT, SESSION_SAVE_PATH).
 if (!defined('SESSION_MEMBER_TIMEOUT')) define('SESSION_MEMBER_TIMEOUT', 30 * 24 * 60 * 60);
 // Eigenes Verzeichnis: Im gemeinsamen Temp-Verzeichnis des Hosters räumen fremde Programme mit
 // eigenen, oft viel kürzeren Fristen auf — dabei verschwanden auch unsere Sitzungen.

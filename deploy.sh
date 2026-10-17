@@ -8,6 +8,7 @@ set -euo pipefail
 #   FTP_USER   ftp username
 #   FTP_PASS   ftp password (optional — prompted without echo when unset)
 #   FTP_DIR    remote target directory (default: public_html/team-manager)
+#   DEPLOY_ENV_FILE  local file uploaded as the server's .env (default: .env.production)
 #
 # Set them either by exporting, or by creating a .env.deploy file next to this
 # script (gitignored, and excluded from the upload below):
@@ -16,6 +17,10 @@ set -euo pipefail
 #   FTP_USER=your-user
 #   FTP_DIR=public_html/team-manager
 #   # FTP_PASS=...   # optional; omit to be prompted instead
+#
+# The app's settings (database, admin, mail, cron token …) live in .env.production
+# (gitignored, template: .env.production.example). It is uploaded as .env on every
+# deploy, so changes there arrive too; config.php reads it on the server.
 #
 # Requires lftp: brew install lftp (macOS) or apt install lftp (Linux)
 
@@ -33,6 +38,7 @@ FTP_USER="${FTP_USER:-}"
 FTP_PASS="${FTP_PASS:-}"
 FTP_DIR="${FTP_DIR:-public_html/team-manager}"
 FTP_DIR="${FTP_DIR%/}/"
+DEPLOY_ENV_FILE="${DEPLOY_ENV_FILE:-.env.production}"
 
 if [[ -z "$FTP_HOST" || -z "$FTP_USER" ]]; then
     echo "FTP_HOST and FTP_USER must be set (environment or .env.deploy)." >&2
@@ -45,6 +51,29 @@ if [[ -z "$FTP_HOST" || -z "$FTP_USER" ]]; then
     echo "See the comments at the top of this script for a .env.deploy template." >&2
     exit 1
 fi
+
+# --- The server's .env (from .env.production) -------------------------------
+# config.php has no credentials of its own any more: without this file the site would not
+# reach its database. Checked before anything is uploaded.
+fehler() { echo "Error: $*" >&2; exit 1; }
+cd "$SCRIPT_DIR"
+[[ -f "$DEPLOY_ENV_FILE" ]] || fehler "$DEPLOY_ENV_FILE missing — copy .env.production.example to $DEPLOY_ENV_FILE and fill it in (README, Deployment)."
+env_value() {   # value of KEY in the env file, without quotes and trailing comment
+    local line; line="$(grep -m1 "^$1=" "$DEPLOY_ENV_FILE" || true)"; line="${line#*=}"
+    case "$line" in \"*) line="${line#\"}"; line="${line%%\"*}" ;; \'*) line="${line#\'}"; line="${line%%\'*}" ;; *) line="${line%% #*}" ;; esac
+    printf '%s' "${line%"${line##*[![:space:]]}"}"
+}
+for key in DB_HOST DB_NAME DB_SCHEMA DB_USER ADMIN_PASSWORD_HASH; do
+    [[ -n "$(env_value "$key")" ]] || fehler "$DEPLOY_ENV_FILE: $key is empty."
+done
+[[ -z "$(env_value ADMIN_PASSWORD)" ]] \
+    || fehler "$DEPLOY_ENV_FILE: ADMIN_PASSWORD would sit on the server in plain text — set ADMIN_PASSWORD_HASH instead (php -r 'echo password_hash(\"…\", PASSWORD_DEFAULT), PHP_EOL;') and leave ADMIN_PASSWORD empty."
+# An unquoted " #" starts a comment and cuts the value short without any error on the server.
+if grep -nE '^[A-Za-z_][A-Za-z0-9_]*=[^"'\''].* #' "$DEPLOY_ENV_FILE" | grep -v '^[0-9]*:#' >/dev/null; then
+    echo "Note: $DEPLOY_ENV_FILE has values with an unquoted ' #' — everything after it is a comment:" >&2
+    grep -nE '^[A-Za-z_][A-Za-z0-9_]*=[^"'\''].* #' "$DEPLOY_ENV_FILE" | sed 's/=.*/=…/; s/^/    /' >&2
+fi
+[[ -n "$(env_value CRON_TOKEN)" ]] || echo "Note: CRON_TOKEN is empty — no deadline reminders without the hourly cron job (README, Cronjob)." >&2
 
 if [[ -z "$FTP_PASS" ]]; then
     read -rsp "FTP password for ${FTP_USER}@${FTP_HOST}: " FTP_PASS
@@ -74,6 +103,8 @@ echo "==> Deploying to ${FTP_HOST}:${FTP_DIR} ..."
 # never appear in the process table.
 lftp <<FTPEOF
 open -u "$FTP_USER,$FTP_PASS" "$FTP_HOST"
+# The app's settings first, so the new config.php finds them
+put "$DEPLOY_ENV_FILE" -o "${FTP_DIR}.env"
 # Upload src/ and database/ into the webroot
 mirror --reverse \
     --exclude-glob='.DS_Store' \
@@ -81,8 +112,6 @@ mirror --reverse \
     --exclude='docker/' \
     --exclude='docker-compose.yml' \
     --exclude-glob='.env*' \
-    --exclude='config.php' \
-    --exclude='config.example.php' \
     --exclude='deploy.sh' \
     --exclude='README.md' \
     --exclude='CLAUDE.md' \
@@ -103,5 +132,5 @@ FTPEOF
 echo ""
 echo "==> Done."
 echo ""
-echo "First deploy only: create ${FTP_DIR}config.php with your DB credentials."
-echo "DB tables are created automatically on the first HTTP request."
+echo "Settings came from ${DEPLOY_ENV_FILE} (uploaded as .env)."
+echo "First deploy only: the database tables are created on the first HTTP request."

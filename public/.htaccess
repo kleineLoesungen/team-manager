@@ -1,5 +1,5 @@
-# Protect credentials and SQL files from direct HTTP access
-<FilesMatch "(^config\.php$|\.sql$)">
+# Protect settings (.env from deploy.sh), config and SQL files from direct HTTP access
+<FilesMatch "(^config\.php$|\.sql$|^\.env)">
     Order deny,allow
     Deny from all
 </FilesMatch>

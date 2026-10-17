@@ -96,7 +96,7 @@ Die folgenden Punkte sind die Kurzfassung, nicht der vollständige Vertrag.
 
 ### Deployment
 - `deploy.sh` lftp FTP script for Hetzner Shared Hosting — mirrors repo root + `public/` into `public_html/team-manager/` (no separate apps folder)
-- `config.php` never overwritten by deploy (contains production secrets)
+- `config.php` is in the repo and holds no secrets: it reads env vars, on the webspace from `.env` — `deploy.sh` uploads the local `.env.production` (gitignored, template `.env.production.example`) as `.env` on every deploy and checks required values first; `.htaccess` blocks `.env`. New settings: add to `config.php` (getenv) and `.env.production.example`
 - `CHANGELOG.md` is deployed (the instance reads its own version from it)
 - `uploads/` directory holds team logos; `.htaccess` blocks direct HTTP access to files
 
@@ -136,7 +136,7 @@ database/
 docker/             Docker Compose setup for local dev
 landing/            Static product landing page (not part of app)
 uploads/            Logo uploads (HTTP-blocked via .htaccess)
-config.php          App configuration (reads env vars)
+config.php          App configuration (reads env vars / .env; no secrets)
 deploy.sh           Hetzner FTP deploy script
 ```
 
@@ -184,5 +184,5 @@ Browser → public/index.php (front controller)
 | `resources` | Bookable resources (pitch, hall, bus) of one department, managed by the admin; ics token per resource; `guest_visible` |
 | `resource_bookings` | Which list or event uses a resource (time comes from the list/event; overlaps only warn) |
 
-Admin credentials live in `config.php` / environment variables — not in the DB.
+Admin credentials live in environment variables (`.env.production`) — not in the DB.
 The VAPID key pair for push is generated on first use and stored in `settings` (`vapid_keys`).

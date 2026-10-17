@@ -92,12 +92,8 @@ erDiagram
 
 ### Starten
 
-Einmalig die Konfiguration aus der Vorlage anlegen (`config.php` ist nicht im Repo; die Werte
-kommen über `.env.docker`):
-
-```bash
-cp config.example.php config.php
-```
+Die Einstellungen kommen aus `.env.docker` (über `env_file` an den Container); `config.php`
+liest sie, eine eigene Kopie ist nicht nötig.
 
 ```bash
 docker compose --profile db up --build
@@ -199,7 +195,8 @@ Der mitgelieferte DB-Container führt beim ersten Start (leeres Volume) in diese
     └── team-manager/           ← Subdomain-Webroot (alle Quelldateien liegen hier)
         ├── index.php           (aus public/)
         ├── .htaccess           (aus public/)
-        ├── config.php          ← Zugangsdaten (einmalig anlegen, nie überschreiben)
+        ├── config.php          (aus dem Repo, liest .env — enthält keine Zugangsdaten)
+        ├── .env                ← Einstellungen: deploy.sh lädt .env.production hierher hoch
         ├── src/
         ├── database/
         └── uploads/
@@ -209,44 +206,35 @@ Der mitgelieferte DB-Container führt beim ersten Start (leeres Volume) in diese
 
 **1. Subdomain anlegen** (Hetzner Konsole) mit Webroot `public_html/team-manager/`.
 
-**2. config.php anlegen** — per FTP nach `public_html/team-manager/config.php` hochladen und Zugangsdaten eintragen:
+**2. Einstellungen anlegen** — lokal `.env.production` aus der Vorlage erstellen und ausfüllen
+(Datenbank, Admin-Passwort als Hash, `BASE_URL`, E-Mail, `CRON_TOKEN`). Die Datei steht in
+`.gitignore` und landet nie im Repo; `deploy.sh` lädt sie bei jedem Deployment als `.env` auf den
+Server (per `.htaccess` gesperrt), `config.php` liest sie dort.
 
-```php
-<?php
-define('ADMIN_USERNAME',     'admin');
-define('ADMIN_PASSWORD_HASH', password_hash('IhrPasswort', PASSWORD_BCRYPT, ['cost' => 12]));
-
-define('DB_HOST',   'localhost');
-define('DB_PORT',   '5432');
-define('DB_NAME',   'ihre_datenbank');
-define('DB_SCHEMA', 'team_manager');   // Bestandsinstallationen können abweichen — siehe Hinweis unten
-define('DB_USER',   'ihr_db_benutzer');
-define('DB_PASS',   'ihr_db_passwort');
-
-define('SESSION_TIMEOUT', 8 * 60 * 60);   // Admin: abgemeldet nach 8 Std. ohne Nutzung
-define('APP_ENV', 'production');
-define('BASE_URL', '');
-
-define('MAIL_DRIVER',       'smtp');          // 'mail' oder 'smtp'
-define('MAIL_FROM_ADDRESS', 'team@ihre-domain.de');
-define('MAIL_FROM_NAME',    'Team Manager');
-// Nur bei MAIL_DRIVER=smtp:
-define('MAIL_HOST',     'mail.ihre-domain.de');
-define('MAIL_PORT',     587);
-define('MAIL_USERNAME', 'ihr-smtp-benutzer');
-define('MAIL_PASSWORD', 'ihr-smtp-passwort');
+```bash
+cp .env.production.example .env.production
+php -r 'echo password_hash("IhrPasswort", PASSWORD_DEFAULT), PHP_EOL;'   # → ADMIN_PASSWORD_HASH
+php -r 'echo bin2hex(random_bytes(32)), PHP_EOL;'                        # → CRON_TOKEN
 ```
+
+Werte mit Leerzeichen oder `#` in Anführungszeichen setzen (`MAIL_PASSWORD="ab #12"`), sonst
+beginnt bei ` #` ein Kommentar. `deploy.sh` prüft die Pflichtwerte, bricht ohne Datei ab und
+verweigert ein Admin-Passwort im Klartext (`ADMIN_PASSWORD`).
+
+> **Umstieg von der früheren `config.php` mit `define(…)`:** deren Werte einmal in
+> `.env.production` übernehmen — vor allem `DB_SCHEMA` genau so, wie es dort steht. Das nächste
+> Deployment ersetzt die alte `config.php` durch die aus dem Repo.
 
 > **Anmeldung:** Koordinatoren und Mitglieder bleiben angemeldet, solange sie die App mindestens
 > alle 30 Tage nutzen (gleitend, `SESSION_MEMBER_TIMEOUT`); der Admin nach 8 Stunden ohne Nutzung
 > abgemeldet (`SESSION_TIMEOUT`). Sitzungen liegen im eigenen Verzeichnis `sessions/` (per
 > `.htaccess` gesperrt, vom Deployment ausgenommen) — im gemeinsamen Temp-Verzeichnis eines
 > Shared Hostings räumen fremde Programme sonst mit kürzeren Fristen auf. `SESSION_SAVE_PATH`
-> in der `config.php` ändert das Verzeichnis (leer = Standard des Servers).
+> in `.env.production` ändert das Verzeichnis (leer = Standard des Servers).
 
 > **Hinweis zu `DB_SCHEMA`:** `team_manager` ist nur der Standardwert für Neuinstallationen.
 > Eine bestehende Produktionsinstallation kann ein anderes Schema verwenden — maßgeblich ist
-> allein der Wert in der dortigen `config.php`. Vor jeder Schema-Änderung prüfen, welche
+> allein `DB_SCHEMA` in deren `.env.production`. Vor jeder Schema-Änderung prüfen, welche
 > Schemas überhaupt existieren:
 > ```sql
 > SELECT table_schema FROM information_schema.tables WHERE table_name = 'teams';
@@ -283,7 +271,8 @@ angelegt (nur bei einer leeren Datenbank).
 ./deploy.sh
 ```
 
-`config.php` wird nie überschrieben.
+`.env.production` geht bei jedem Deployment als `.env` mit hoch — geänderte Einstellungen kommen
+so beim nächsten Deployment an.
 
 > **Wichtig:** Schema-Änderungen werden **nicht** automatisch angewendet. Die App führt zur
 > Laufzeit keine Migrationen aus. Bringt eine Code-Version neue Spalten oder Richtlinien mit,
@@ -329,7 +318,7 @@ Vorlage: das jüngste Skript in `database/migrations/`.
 
 ```sql
 BEGIN;
-SET LOCAL search_path TO SCHEMA_EINTRAGEN;   -- DB_SCHEMA aus der config.php
+SET LOCAL search_path TO SCHEMA_EINTRAGEN;   -- DB_SCHEMA aus der .env.production
 SET LOCAL app.is_admin = 'true';             -- nur nötig, wenn Daten geändert werden (RLS)
 DO $$ BEGIN
     IF to_regclass('teams') IS NULL THEN RAISE EXCEPTION 'falsches Schema'; END IF;
@@ -351,7 +340,7 @@ Beim Schreiben eines solchen Skripts zu beachten:
 
 - **Schema-Name niemals raten.** Jede Instanz kann ein anderes Schema nutzen (Standard
   `team_manager`), und auf demselben Server können weitere Schemas mit einer `teams`-Tabelle
-  liegen. Maßgeblich ist allein `DB_SCHEMA` aus der `config.php` der jeweiligen Instanz.
+  liegen. Maßgeblich ist allein `DB_SCHEMA` aus der `.env.production` der jeweiligen Instanz.
   Prüfen mit:
   ```sql
   SELECT table_schema FROM information_schema.tables WHERE table_name = 'teams';
@@ -474,7 +463,7 @@ Zeitgesteuerte Aufgaben laufen in **einem** Endpunkt, den ein Cron-Dienst (z. B.
 
 ```
 POST https://<instanz>/cron
-X-Cron-Token: <CRON_TOKEN aus der config.php>
+X-Cron-Token: <CRON_TOKEN aus der .env.production>
 ```
 
 - **Stündlich:** Erinnerungen an den Anmeldeschluss (am Tag ab 8 Uhr bzw. am Vortag ab 18 Uhr).
@@ -512,7 +501,7 @@ Format eines Eintrags — Zeilen, die nicht so aussehen, werden ignoriert:
 `main` sehen alle Instanzen das Update — deshalb erst eintragen, wenn die Version wirklich
 zum Einspielen bereit ist. Commits ohne neuen Eintrag lösen keinen Hinweis aus.
 
-Andere Referenz oder abschalten: `UPDATE_CHECK_URL` in `config.php` (leer = aus).
+Andere Referenz oder abschalten: `UPDATE_CHECK_URL` in `.env.production` (leer = aus).
 
 ---
 
@@ -770,7 +759,8 @@ bin/                CLI-Hilfsskripte (z. B. PWA-Icon-Generierung)
 docker/             Docker-Konfiguration (nginx, php, postgres)
 landing/            Statische Produkt-Landingpage (nicht Teil der App; zeigt die letzten 3 Versionen aus CHANGELOG.md auf GitHub)
 uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
-config.example.php  Vorlage für config.php (App-Konfiguration, liest Umgebungsvariablen)
+config.php          App-Konfiguration: liest Umgebungsvariablen bzw. die .env (keine Zugangsdaten)
+.env.production.example  Vorlage für die Einstellungen der Produktion (Webspace und Docker)
 deploy.sh           Hetzner FTP-Deployment-Skript (Konfiguration per Umgebungsvariablen)
 ```
 

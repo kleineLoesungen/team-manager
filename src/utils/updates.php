@@ -23,7 +23,7 @@ const UPDATE_CHECK_DEFAULT_URL = 'https://raw.githubusercontent.com/kleineLoesun
 const UPDATE_CHECK_TTL         = 86400;   // Sekunden zwischen zwei Abrufen
 const UPDATE_CHECK_TIMEOUT     = 3;       // Sekunden — der Admin-Login soll nie hängen
 
-/** URL of the reference changelog; empty = check disabled (config.php: UPDATE_CHECK_URL). */
+/** URL of the reference changelog; empty = check disabled (setting UPDATE_CHECK_URL). */
 function update_check_url(): string {
     return defined('UPDATE_CHECK_URL') ? (string)UPDATE_CHECK_URL : UPDATE_CHECK_DEFAULT_URL;
 }

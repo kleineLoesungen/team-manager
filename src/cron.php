@@ -1,7 +1,7 @@
 <?php
 // src/cron.php — POST /cron — zeitgesteuerte Aufgaben, stündlich von außen aufgerufen (z. B. Cronicle)
 //
-// Geschützt durch CRON_TOKEN aus der config.php der Instanz, übergeben im Header X-Cron-Token
+// Geschützt durch CRON_TOKEN aus den Einstellungen der Instanz (.env.production), Header X-Cron-Token
 // (nicht in der URL, damit es in keinem Zugriffsprotokoll steht). Ohne CRON_TOKEN ist der
 // Endpunkt aus (404). Antwortet mit JSON, damit der Cron-Dienst Erfolg und Fehler sieht.
 //

@@ -57,13 +57,13 @@ $render_entry = function (string $title, array $entry): void {
 <div class="alert alert-warning small">
     <div class="fw-semibold mb-1"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Cronjob einrichten</div>
     Stündlich <code>POST <?= e(absolute_url('/cron')) ?></code> aufrufen, mit dem Header
-    <code>X-Cron-Token</code> = <code>CRON_TOKEN</code> aus der <code>config.php</code> (z. B. Cronicle, „HTTP Request“).
+    <code>X-Cron-Token</code> = <code>CRON_TOKEN</code> aus den Einstellungen (<code>.env.production</code>) (z. B. Cronicle, „HTTP Request“).
     Er verschickt die Erinnerungen zum Anmeldeschluss und räumt nachts auf.
 </div>
 <?php endif; ?>
 
 <?php if (!$status['enabled']): ?>
-    <p class="text-muted small">Die Prüfung auf Updates ist abgeschaltet (<code>UPDATE_CHECK_URL</code> in der config.php ist leer).</p>
+    <p class="text-muted small">Die Prüfung auf Updates ist abgeschaltet (<code>UPDATE_CHECK_URL</code> in den Einstellungen ist leer).</p>
 <?php elseif ($status['installed'] === null): ?>
     <?php render_flash('error', 'Die installierte Version ist unbekannt: CHANGELOG.md fehlt auf dem Server oder hat keinen Eintrag. Lade die Datei beim nächsten Deployment mit hoch.'); ?>
 <?php elseif (!$status['newer']): ?>
