@@ -213,17 +213,20 @@ Server (per `.htaccess` gesperrt), `config.php` liest sie dort.
 
 ```bash
 cp .env.production.example .env.production
-php -r 'echo password_hash("IhrPasswort", PASSWORD_DEFAULT), PHP_EOL;'   # → ADMIN_PASSWORD_HASH
+php -r 'echo password_hash("IhrPasswort", PASSWORD_BCRYPT, ["cost" => 12]), PHP_EOL;'   # → ADMIN_PASSWORD_HASH
 php -r 'echo bin2hex(random_bytes(32)), PHP_EOL;'                        # → CRON_TOKEN
 ```
 
 Werte mit Leerzeichen oder `#` in Anführungszeichen setzen (`MAIL_PASSWORD="ab #12"`), sonst
-beginnt bei ` #` ein Kommentar. `deploy.sh` prüft die Pflichtwerte, bricht ohne Datei ab und
+beginnt bei ` #` ein Kommentar. Den Passwort-Hash in **einfache** Anführungszeichen
+(`ADMIN_PASSWORD_HASH='$2y$12$…'`), damit Docker die `$` nicht als Variablen liest. `deploy.sh` prüft die Pflichtwerte, bricht ohne Datei ab und
 verweigert ein Admin-Passwort im Klartext (`ADMIN_PASSWORD`).
 
 > **Umstieg von der früheren `config.php` mit `define(…)`:** deren Werte einmal in
-> `.env.production` übernehmen — vor allem `DB_SCHEMA` genau so, wie es dort steht. Das nächste
-> Deployment ersetzt die alte `config.php` durch die aus dem Repo.
+> `.env.production` übernehmen — vor allem `DB_SCHEMA` genau so, wie es dort steht. Stand dort
+> `password_hash(…)`, den Hash einmal mit dem Befehl oben erzeugen und eintragen (bisher wurde er
+> bei jedem Seitenaufruf neu berechnet). Das nächste Deployment ersetzt die alte `config.php`
+> durch die aus dem Repo.
 
 > **Anmeldung:** Koordinatoren und Mitglieder bleiben angemeldet, solange sie die App mindestens
 > alle 30 Tage nutzen (gleitend, `SESSION_MEMBER_TIMEOUT`); der Admin nach 8 Stunden ohne Nutzung

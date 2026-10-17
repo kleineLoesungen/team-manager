@@ -67,7 +67,7 @@ for key in DB_HOST DB_NAME DB_SCHEMA DB_USER ADMIN_PASSWORD_HASH; do
     [[ -n "$(env_value "$key")" ]] || fehler "$DEPLOY_ENV_FILE: $key is empty."
 done
 [[ -z "$(env_value ADMIN_PASSWORD)" ]] \
-    || fehler "$DEPLOY_ENV_FILE: ADMIN_PASSWORD would sit on the server in plain text — set ADMIN_PASSWORD_HASH instead (php -r 'echo password_hash(\"…\", PASSWORD_DEFAULT), PHP_EOL;') and leave ADMIN_PASSWORD empty."
+    || fehler "$DEPLOY_ENV_FILE: ADMIN_PASSWORD would sit on the server in plain text — set ADMIN_PASSWORD_HASH instead (php -r 'echo password_hash(\"…\", PASSWORD_BCRYPT, [\"cost\" => 12]), PHP_EOL;', in single quotes) and leave ADMIN_PASSWORD empty."
 # An unquoted " #" starts a comment and cuts the value short without any error on the server.
 if grep -nE '^[A-Za-z_][A-Za-z0-9_]*=[^"'\''].* #' "$DEPLOY_ENV_FILE" | grep -v '^[0-9]*:#' >/dev/null; then
     echo "Note: $DEPLOY_ENV_FILE has values with an unquoted ' #' — everything after it is a comment:" >&2
