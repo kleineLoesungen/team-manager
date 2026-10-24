@@ -1,0 +1,59 @@
+# Einmal pro Woche: Claude prüft Neuerungen und schreibt EIN Vorschlags-Issue.
+# Das Issue bekommt das Label "vorschlag" (nicht "claude") – es wird also nichts automatisch umgesetzt.
+# Umsetzen: im Issue kommentieren, z. B. "@claude setze Punkt 2 und 4 um".
+#
+# Hinweis: GitHub pausiert Zeitpläne in public Repos nach 60 Tagen ohne Aktivität.
+# Manuell starten geht jederzeit unter Actions -> Wochen-Vorschläge -> Run workflow.
+
+name: Wochen-Vorschläge
+
+on:
+  schedule:
+    - cron: "17 5 * * 1"   # Montag 05:17 UTC = 07:17 (Sommerzeit) / 06:17 (Winterzeit)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+jobs:
+  vorschlaege:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Label sicherstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh label create vorschlag --color 0E8A16 --description "Wöchentlicher Vorschlag von Claude" 2>/dev/null || true
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+
+            Du erstellst den wöchentlichen Verbesserungsvorschlag für dieses Projekt.
+
+            1. Lies CLAUDE.md, SPEC.md und verschaffe dir einen Überblick über den Code.
+               Abhängigkeiten ohne Paketmanager: PHP 8.3, PostgreSQL, Bootstrap und Bootstrap Icons
+               per CDN (Versionen in src/templates/layout.php), PHPMailer (VERSION in
+               src/lib/phpmailer/PHPMailer.php), Actions in .github/workflows/.
+            2. Prüfe mit der Websuche:
+               - neue Versionen und Sicherheitsmeldungen der genutzten Abhängigkeiten
+               - relevante Neuerungen der genutzten Frameworks und Sprachversionen
+            3. Prüfe den Code selbst auf lohnende Verbesserungen (Fehlerquellen,
+               Performance, Bedienbarkeit, fehlende Tests).
+            4. Hole offene Vorschläge mit `gh issue list --label vorschlag --state open`
+               und wiederhole nichts, was dort schon steht.
+            5. Nur wenn es Lohnendes gibt: Erstelle mit `gh issue create --label vorschlag`
+               GENAU EIN Issue mit dem Titel "Vorschläge KW <Kalenderwoche>".
+               Inhalt: höchstens 5 nummerierte Punkte, nach Nutzen sortiert, je Punkt:
+               Was, Warum (mit Quelle bei Neuerungen), Aufwand (S/M/L), Risiko.
+               Schließe mit: "Umsetzen: Kommentar `@claude setze Punkt X um`".
+               Gibt es nichts Lohnendes, erstelle kein Issue.
+            Ändere keinen Code.
+          claude_args: >-
+            --allowedTools "Read,Glob,Grep,WebSearch,WebFetch,Bash(gh issue list:*),Bash(gh issue create:*)"

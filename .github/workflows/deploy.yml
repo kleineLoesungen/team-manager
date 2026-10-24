@@ -1,0 +1,101 @@
+# Deployment per FTPS auf das Hetzner Webhosting (ohne SSH).
+#   PR (aus diesem Repo)  -> Environment "staging"     (z. B. staging.<domain>, eigenes Schema)
+#   Merge nach main       -> Environment "production"  (erst nach allen Reviews möglich)
+#
+# Je Environment unter Settings -> Environments anlegen:
+#   Variables: FTP_SERVER, FTP_USERNAME,
+#              FTP_SERVER_DIR (z. B. /public_html/team-manager-staging/ – mit / am Ende),
+#              APP_URL (z. B. https://staging.<domain>)
+#   Secrets:   FTP_PASSWORD,
+#              DOT_ENV = komplette .env dieser Instanz (Vorlage: .env.production.example),
+#              mit DB-Zugang, DB_SCHEMA, ADMIN_PASSWORD_HASH, BASE_URL, CRON_TOKEN, MIGRATE_TOKEN …
+#
+# Ablauf: Paket bauen (Repo-Inhalt, public/ in den Webroot gelegt wie bei deploy.sh), .env aus
+# DOT_ENV schreiben, nur geänderte Dateien hochladen (Statusdatei .ftp-deploy-sync-state.json auf
+# dem Server, per .htaccess gesperrt), dann APP_URL/migrate aufrufen (Header X-Migrate-Token,
+# Wert aus DOT_ENV) — das spielt fehlende database/migrations/*.sql ein (src/migrate.php).
+# Ohne FTP_SERVER im Environment wird nichts deployt (Hinweis im Log).
+# Tipp: Je Environment einen eigenen FTP-Zugang, der nur auf sein Verzeichnis darf.
+# "production" nur für den Branch main freigeben -> PR-Branches kommen nie an Prod-Zugänge.
+
+name: Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.event_name == 'push' && 'production' || 'staging' }}
+      url: ${{ vars.APP_URL }}   # zeigt im PR den Button "View deployment"
+    concurrency:
+      group: deploy-${{ github.event_name == 'push' && 'production' || 'staging' }}
+      cancel-in-progress: false
+    env:
+      CONFIGURED: ${{ vars.FTP_SERVER != '' }}
+    steps:
+      - name: Konfiguration prüfen
+        if: env.CONFIGURED != 'true'
+        run: echo "::notice::Environment ohne FTP_SERVER – kein Deployment (SETUP.md, Abschnitt Environments)."
+
+      - uses: actions/checkout@v4
+        if: env.CONFIGURED == 'true'
+
+      - name: Paket bauen
+        if: env.CONFIGURED == 'true'
+        env:
+          DOT_ENV: ${{ secrets.DOT_ENV }}
+        run: |
+          [ -n "$DOT_ENV" ] || { echo "::error::Secret DOT_ENV fehlt (komplette .env der Instanz)."; exit 1; }
+          mkdir build
+          git archive HEAD | tar -x -C build
+          cd build
+          # public/ ist der Webroot: sein Inhalt liegt neben src/ (wie bei deploy.sh)
+          cp -R public/. .
+          rm -rf public .github docker docs landing .claude tests scripts
+          rm -f docker-compose.yml deploy.sh README.md CLAUDE.md SPEC.md SETUP.md \
+                .gitignore .env.example .env.docker .env.production.example
+          printf '%s\n' "$DOT_ENV" > .env
+          chmod 600 .env
+
+      - name: Upload per FTPS
+        if: env.CONFIGURED == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ vars.FTP_SERVER }}
+          username: ${{ vars.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ vars.FTP_SERVER_DIR }}
+          local-dir: ./build/
+          protocol: ftps
+          # Daten auf dem Server: nie hochladen, nie löschen
+          exclude: |
+            **/.git*
+            **/.git*/**
+            uploads/**
+            sessions/**
+
+      - name: DB-Migrationen ausführen
+        if: env.CONFIGURED == 'true'
+        env:
+          DOT_ENV: ${{ secrets.DOT_ENV }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          TOKEN="$(printf '%s\n' "$DOT_ENV" | sed -n 's/^MIGRATE_TOKEN=//p' | head -1 | sed "s/^[\"']//; s/[\"']\$//")"
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::MIGRATE_TOKEN fehlt in DOT_ENV – Migrationen nicht eingespielt (Admin → Version zeigt fehlende)."
+            exit 0
+          fi
+          echo "::add-mask::$TOKEN"
+          curl -sS --fail-with-body --retry 2 -X POST \
+            -H "X-Migrate-Token: $TOKEN" \
+            "${APP_URL%/}/migrate"

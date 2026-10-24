@@ -129,6 +129,30 @@ mirror --reverse \
 bye
 FTPEOF
 
+# --- Database migrations ------------------------------------------------------
+# POST /migrate applies missing database/migrations/*.sql (src/migrate.php). The token goes in a
+# header read from a private temp file — never on the command line, where `ps` would show it.
+MIGRATE_TOKEN_VALUE="$(env_value MIGRATE_TOKEN)"
+BASE_URL_VALUE="$(env_value BASE_URL)"
+if [[ -n "$MIGRATE_TOKEN_VALUE" && -n "$BASE_URL_VALUE" ]]; then
+    echo ""
+    echo "==> Applying database migrations ..."
+    HEADER_FILE="$(mktemp)"
+    chmod 600 "$HEADER_FILE"
+    printf 'X-Migrate-Token: %s\n' "$MIGRATE_TOKEN_VALUE" > "$HEADER_FILE"
+    URL="${BASE_URL_VALUE%/}"; [[ "$URL" == http* ]] || URL="https://$URL"
+    if ! curl -sS --fail-with-body --retry 2 -X POST -H @"$HEADER_FILE" "$URL/migrate"; then
+        rm -f "$HEADER_FILE"
+        echo "" >&2
+        fehler "Migration failed — the new code is online, the database is not up to date. See the answer above and Admin → Einstellungen → Version."
+    fi
+    rm -f "$HEADER_FILE"
+    echo ""
+else
+    echo ""
+    echo "Note: MIGRATE_TOKEN or BASE_URL empty — migrations were not applied (Admin → Einstellungen → Version shows missing ones)." >&2
+fi
+
 echo ""
 echo "==> Done."
 echo ""

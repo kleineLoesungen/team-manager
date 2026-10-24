@@ -1,0 +1,46 @@
+# Claude setzt Issues um.
+# Startet, wenn:
+#  - ein Issue das Label "claude" bekommt (nur Owner/Collaborators können Labels setzen = Freigabe)
+#  - der Repo-Owner "@claude" kommentiert – im Issue (Antwort auf Rückfragen, Vorschläge umsetzen)
+#    oder im PR (Review-Befunde beheben)
+# Kommentare von Fremden starten nichts, Claude liest sie beim nächsten Lauf aber mit.
+
+name: Claude
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issues' && github.event.label.name == 'claude') ||
+      (github.event_name == 'issue_comment' &&
+       github.event.comment.user.login == github.repository_owner &&
+       contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: claude-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          label_trigger: claude
+          # PHP-Syntaxprüfung erlauben (Lint, siehe CLAUDE.md „Code“)
+          claude_args: >-
+            --allowedTools "Bash(php -l:*),Bash(find:*)"
+          # Keine Deploy-Secrets in diesem Job! Claude erstellt nur Branches/PRs, du mergst.

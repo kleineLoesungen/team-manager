@@ -1,5 +1,5 @@
-# Protect settings (.env from deploy.sh), config and SQL files from direct HTTP access
-<FilesMatch "(^config\.php$|\.sql$|^\.env)">
+# Protect settings (.env), config, SQL files and the FTP deploy state from direct HTTP access
+<FilesMatch "(^config\.php$|\.sql$|^\.env|^\.ftp-deploy-sync-state\.json$)">
     Order deny,allow
     Deny from all
 </FilesMatch>

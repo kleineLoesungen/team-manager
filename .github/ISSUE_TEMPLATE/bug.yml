@@ -1,0 +1,27 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet
+labels: []
+body:
+  - type: textarea
+    id: was
+    attributes:
+      label: Was ist passiert?
+    validations:
+      required: true
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Was hast du erwartet?
+    validations:
+      required: true
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachstellen
+      placeholder: |
+        1. …
+        2. …
+  - type: input
+    id: umgebung
+    attributes:
+      label: Gerät / Browser
