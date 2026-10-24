@@ -41,8 +41,8 @@ require_once ROOT_PATH . '/src/utils/csrf.php';
 require_once ROOT_PATH . '/src/utils/helpers.php';
 
 // Start secure session on every request
-// Der Cronjob braucht keine Sitzung (sonst entstünde stündlich eine leere Sitzungsdatei)
-if ((parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/') !== '/cron') {
+// Cronjob und Migrationen brauchen keine Sitzung (sonst entstünde je Aufruf eine leere Sitzungsdatei)
+if (!in_array(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', ['/cron', '/migrate'], true)) {
     start_secure_session();
 }
 
@@ -689,6 +689,10 @@ match (true) {
     // Zeitgesteuerte Aufgaben, stündlich von außen (Cronicle), Header X-Cron-Token
     $path === '/cron'
         => require ROOT_PATH . '/src/cron.php',
+
+    // Fehlende Migrationen einspielen, nach jedem Deployment (Header X-Migrate-Token)
+    $path === '/migrate'
+        => require ROOT_PATH . '/src/migrate.php',
 
     // Push abmelden (dieses Gerät, Profil) — Issue #11
     $path === '/push/unsubscribe'

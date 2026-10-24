@@ -41,6 +41,11 @@ if (getenv('SESSION_SAVE_PATH') !== false) {
 
 // Cronjob: stündlich POST /cron mit Header X-Cron-Token (README, „Cronjob“). Leer = Endpunkt aus.
 define('CRON_TOKEN', getenv('CRON_TOKEN') ?: '');
+// Migrationen: POST /migrate mit Header X-Migrate-Token nach jedem Deployment. Leer = Endpunkt aus.
+define('MIGRATE_TOKEN', getenv('MIGRATE_TOKEN') ?: '');
+// Zugang für Migrationen (Eigentümer der Tabellen); leer = DB_USER/DB_PASS der App
+define('MIGRATE_DB_USER', getenv('MIGRATE_DB_USER') ?: '');
+define('MIGRATE_DB_PASS', getenv('MIGRATE_DB_PASS') ?: '');
 
 // App
 define('APP_ENV',  getenv('APP_ENV')  ?: 'production');

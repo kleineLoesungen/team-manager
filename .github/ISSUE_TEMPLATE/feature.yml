@@ -1,0 +1,25 @@
+name: Feature-Wunsch
+description: Neue Funktion oder Verbesserung vorschlagen
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deinen Vorschlag! Umgesetzt wird nach Freigabe durch den Maintainer.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Was möchtest du erreichen?
+      description: Beschreibe das Problem oder den Nutzen, nicht nur die Lösung.
+    validations:
+      required: true
+  - type: textarea
+    id: loesung
+    attributes:
+      label: Wie könnte es aussehen?
+  - type: textarea
+    id: kriterien
+    attributes:
+      label: Wann ist es fertig?
+      description: Woran erkennt man, dass es funktioniert?
+      placeholder: "- [ ] …"

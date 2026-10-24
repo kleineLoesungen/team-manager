@@ -2,14 +2,10 @@
 
 Mobile-first Webanwendung zur Verwaltung von Sportteams. Koordinatoren legen Listen mit frei definierbaren Spalten an, Mitglieder tragen ihre eigenen Daten ein, und eine Statistikseite fasst die Kennzahlen pro Mitglied zusammen.
 
-Weitere Bausteine:
-
-- **Inhalte** (Listen, Dokumente, Termine) in den Ansichten Übersicht, Monat und Liste, mit Token-geschütztem ICS-Abo für Gerätekalender. Listen und Termine lassen sich als Serie bis zu einem Enddatum anlegen.
-- **Ressourcen** (Platz, Halle, Bus …) für alle Teams: Belegung durch Listen und Termine, Prüfung auf Überschneidungen vor dem Speichern, Auslastung und ein ICS-Abo je Ressource.
-- **Termine durch Mitglieder:** pro Team freischaltbar.
-- **Live-Ticker** mit öffentlicher Seite und Push-Benachrichtigungen.
-- **Gastbereich** ohne Anmeldung: Ticker (mit Abo), freigegebene Termine mit Kalender-Abo und Ressourcen-Belegung.
-- **Benachrichtigungen** zu Listen und Dokumenten, von Hand durch Koordinatoren: per E-Mail oder per Push.
+Dazu Termine und Serien, Ressourcen (Plätze, Hallen, Busse) mit Auslastung, Kalender-Abos,
+Live-Ticker, Benachrichtigungen per E-Mail oder Push und ein Gastbereich ohne Anmeldung.
+**Was die App genau tut, steht in [SPEC.md](SPEC.md).** Diese README beschreibt Einrichtung,
+Betrieb und Mitarbeit.
 
 **Stack:** PHP 8.3 · PostgreSQL 15 · Bootstrap 5 · kein Framework
 
@@ -275,21 +271,23 @@ angelegt (nur bei einer leeren Datenbank).
 ```
 
 `.env.production` geht bei jedem Deployment als `.env` mit hoch — geänderte Einstellungen kommen
-so beim nächsten Deployment an.
+so beim nächsten Deployment an. Danach ruft `deploy.sh` `POST /migrate` auf und spielt fehlende
+Migrationen ein ([Datenbank-Änderungen](#datenbank-änderungen)).
 
-> **Wichtig:** Schema-Änderungen werden **nicht** automatisch angewendet. Die App führt zur
-> Laufzeit keine Migrationen aus. Bringt eine Code-Version neue Spalten oder Richtlinien mit,
-> müssen diese **vor** dem Deployment von Hand gegen die Produktionsdatenbank eingespielt
-> werden — sonst greifen die neuen Handler auf Spalten zu, die es noch nicht gibt.
-> Details unter [Datenbank-Änderungen](#datenbank-änderungen).
+Für dieses Repository deployt GitHub Actions automatisch (PR → Staging, `main` → Production,
+siehe [SETUP.md](SETUP.md)); `deploy.sh` bleibt für weitere Instanzen und als Notweg.
 
 ---
 
 ## Datenbank-Änderungen
 
-Die App führt zur Laufzeit **keine** Migrationen aus. Beim ersten Seitenaufruf gegen eine
-leere Datenbank wird das Schema aus `db_init_schema()` angelegt — das ist alles. Bestehende
-Datenbanken werden nie automatisch verändert.
+Beim ersten Seitenaufruf gegen eine leere Datenbank legt die App das Schema aus
+`db_init_schema()` an. Bestehende Datenbanken ändert nur `POST /migrate` (`src/migrate.php`),
+das jedes Deployment danach aufruft (GitHub Actions und `deploy.sh`): Header `X-Migrate-Token`
+= `MIGRATE_TOKEN` aus der `.env`. Es spielt fehlende Migrationen in Dateinamen-Reihenfolge ein,
+ersetzt `SCHEMA_EINTRAGEN` durch `DB_SCHEMA` und bricht bei der ersten fehlerhaften ab (HTTP 500,
+der Deploy wird rot). Dafür braucht es Eigentümer-Rechte am Schema: `MIGRATE_DB_USER` /
+`MIGRATE_DB_PASS`, sonst der App-Benutzer.
 
 `database/schema.sql` und `database/rls_policies.sql` sind die Wahrheitsquelle für den
 aktuellen Stand; `db_init_schema()`/`db_init_rls()` in `src/db/connection.php` legen dasselbe
@@ -304,16 +302,15 @@ Reihenfolge der Dateinamen.
 
 ### Update einspielen (mit Migrationen)
 
-1. **Admin → Einstellungen → Version** zeigt bei „Update verfügbar“, welche Migrationen die
-   neuen Versionen brauchen — in der richtigen Reihenfolge, mit Link zur Datei auf GitHub.
-2. Jede Datei öffnen, in pgAdmin das Schema in der Zeile `SET LOCAL search_path` eintragen und
-   ausführen (F5), eine nach der anderen.
-3. Danach deployen.
+Normalerweise nichts zu tun: Das Deployment spielt die Migrationen ein. Ohne `MIGRATE_TOKEN`
+(oder wenn `/migrate` scheitert) geht es von Hand: **Admin → Einstellungen → Version** zeigt die
+fehlenden Migrationen in Reihenfolge, mit Link zur Datei; jede in pgAdmin öffnen, das Schema in
+der Zeile `SET LOCAL search_path` eintragen und ausführen (F5). Mehrfaches Ausführen schadet
+nicht. Neue Installationen (leere Datenbank oder `schema.sql`) sind automatisch aktuell.
 
-Fehlt der Datenbank nach dem Deployment eine Migration, die der Code mitbringt, zeigt die App
-dem Admin „Datenbank nicht aktuell“ mit derselben Anleitung. Mehrfaches Ausführen eines Skripts
-schadet nicht. Neue Installationen (leere Datenbank oder `schema.sql`) sind automatisch auf dem
-aktuellen Stand.
+**Abwärtskompatibel bleiben:** Zwischen Upload und Migration läuft kurz neuer Code auf altem
+Schema. Spalten deshalb erst hinzufügen und in einer späteren Migration entfernen; Code, der
+eine neue Spalte liest, muss ihr kurzes Fehlen aushalten.
 
 ### Aufbau eines Skripts
 
@@ -356,108 +353,22 @@ Beim Schreiben eines solchen Skripts zu beachten:
   ein einleitendes `SET LOCAL app.is_admin = true;` — sonst betreffen `UPDATE`/`DELETE`
   kommentarlos 0 Zeilen. Reine Struktur-Änderungen (Spalten, Richtlinien) brauchen das nicht.
 - **Rechte:** `ALTER`/`DROP` benötigen den Tabelleneigentümer; der App-Datenbankbenutzer
-  hat diese Rechte nicht.
+  hat diese Rechte möglichst nicht (`MIGRATE_DB_USER` für `/migrate`).
 - **Transaktion:** GUI-Clients wie pgAdmin oder DBeaver fassen ein Skript oft in eine
   Transaktion ohne Auto-Commit. Das Skript läuft dann scheinbar durch, ohne dass etwas
   persistiert wird. Entweder `psql` verwenden oder das Skript mit `COMMIT;` abschließen.
-- **Reihenfolge:** Erst einspielen, dann deployen. Umgekehrt greifen die neuen Handler auf
-  Spalten zu, die noch nicht existieren — das Ergebnis sind HTTP 500 auf den betroffenen Seiten.
+- **Ausgerollte Migrationen nie mehr ändern** — Korrekturen kommen als neue Datei.
 
 ---
 
-## Kalender-Abo (ICS)
+## Kalender-Abos, Ressourcen, Gastbereich
 
-Termine lassen sich in Apple Kalender, Google Calendar oder Outlook abonnieren. Der Feed ist
-**nicht öffentlich**, sondern über ein Token in der URL geschützt: `/ics/{token}.ics`.
-
-Es gibt zwei Arten von Feeds:
-
-| Feed | Token | Inhalt |
-|------|-------|--------|
-| Koordinator-Feed | `teams.calendar_token_coordinator` (einer je Team) | Listen: öffentlich, geschützt und privat · Termine: geschützt und privat |
-| Persönlicher Feed | `members.calendar_token` (einer je Person) | Listen: öffentlich und geschützt · Termine: nur geschützt — aus **allen** Teams der Person, mit Teamnamen davor, sobald es mehrere sind |
-
-Welcher Feed geliefert wird, ergibt sich ausschließlich daraus, **welche Spalte** auf das
-Token passt — es kann nicht über einen Request-Parameter beeinflusst werden.
-
-**Kalender-Spalte:** Bei einer Mitgliederliste kann der Koordinator eine Ja/Nein-Spalte wählen,
-die Mitglieder sehen (keine Spalten „nur Koordinatoren“)
-(„Im persönlichen Kalender“, `lists.calendar_column_id`). Die Liste erscheint dann im
-persönlichen Feed nur bei „Ja“ — eingetragener Wert, sonst der Standardwert der Spalte in
-dieser Liste. Ohne Auswahl (Standard), bei freien Listen und bei Terminen erscheint der
-Eintrag immer. Code: `src/db/calendar.php`.
-Alle Feeds (auch Ressourcen) reichen 3 Monate in die Vergangenheit (`ICS_PAST_INTERVAL` in
-`src/utils/calendar.php`); ältere Einträge gibt es nur in der App.
-Im Koordinator-Feed steht vor jedem Eintrag der Teamname, bei Listen mit Kalender-Spalte
-dahinter die Zusagen: „U13 - Training 23.10.2026 (13/14)“ (Ja / aktive Mitglieder).
-
-Den Link findet man jeweils unten in der Monatsansicht (`/coordinator/contents?view=month`
-bzw. `/member/contents?view=month` und im Profil der Mitglieder, wo der persönliche Link beim
-ersten Aufruf erzeugt wird).
-Koordinatoren erneuern den Team-Link unter „Mein Profil“, Mitglieder ihren eigenen Link
-in der Monatsansicht — falls ein Link öffentlich geworden ist.
-
-**Ressourcen** haben je einen eigenen Feed: `/ics/resource/{token}.ics` (Spalte
-`resources.calendar_token`, beim ersten Aufruf der Auslastung erzeugt). Er enthält die
-Belegungen aller Teams als „Team: Titel"; private Einträge erscheinen nur als „Belegt".
-Den Link zeigt die Auslastungsseite, sobald eine Ressource ausgewählt ist.
-
-> **Hinweis:** Der Koordinator-Link gilt teamweit. Ein erneuerter Team-Link macht das Abo für
-> **alle** Koordinatoren dieses Teams ungültig; ein erneuerter persönlicher Link nur das eigene.
-
----
-
-## Ressourcen und Termine
-
-**Abteilungen** legt der Admin unter Einstellungen → Abteilungen an. Jedes Team und jede
-Ressource gehört zu genau einer; die Admin-Listen für Teams, Koordinatoren und Ressourcen lassen
-sich danach filtern. Mitglieder sehen in der Koordinatorenübersicht nur Teams ihrer Abteilung,
-der öffentliche Ticker gruppiert nach Abteilung und Team. Optional trägt eine Abteilung ein
-Symbol (Emoji aus `DEPARTMENT_ICONS`), das in den Kalender-Abos der Teams vor jedem Eintrag
-steht, z. B. „⚽ U13 - Training“. Code: `src/db/departments.php`.
-
-**Attributgruppen** der Mitgliederprofile können einer Abteilung gehören (z. B. „Fußball“ mit
-der Position, „Tennis“ mit dem Schlagarm); ohne Abteilung gelten sie für alle (z. B. „Medizin“).
-Koordinatoren sehen und bearbeiten allgemeine Gruppen und die ihrer Abteilung. Mitglieder sehen
-allgemeine Gruppen und die aller Abteilungen, in denen sie in einem Team sind.
-
-**Ressourcen** legt der Admin unter Einstellungen → Ressourcen an (Name und Abteilung); deaktivierte
-Ressourcen sind nicht mehr auswählbar, ihre Belegungen bleiben gespeichert. Koordinatoren
-wählen Ressourcen beim Anlegen einer Liste (auch für eine ganze Serie), in den
-Listen-Einstellungen und bei Terminen. Die Belegungszeit ergibt sich aus dem Eintrag:
-ohne Uhrzeit der ganze Tag, ohne Ende eine Stunde, Listen ohne Datum belegen nichts.
-Überschneidungen werden schon im Formular angezeigt (`/…/resources/check`), sind aber erlaubt.
-Die Auslastung (`/coordinator/resources`, `/member/resources`) zeigt die Ressourcen der eigenen
-Abteilung mit den Belegungen aller Teams; Einträge, die das eigene Team nicht sehen darf, heißen dort „Belegt".
-Code: `src/db/resources.php`.
-
-**Termine durch Mitglieder:** Koordinatoren schalten das unter Profil → Einstellungen →
-Termine frei (`teams.members_create_events`, Standard aus). Mitglieder legen dann einzelne
-Termine an (ohne Serie, immer für das ganze Team sichtbar) und bearbeiten oder löschen nur
-ihre eigenen (`events.created_by`). Koordinatoren sehen, wer einen Termin angelegt hat, und
-können alle ändern. Die Regeln stehen doppelt: in `src/db/events.php` und als RLS auf
-`events` und `resource_bookings`.
-
----
-
-## Gastbereich (ohne Anmeldung)
-
-Gäste haben kein Konto. „Als Gast weiter“ auf der Anmeldeseite führt in den Gastbereich mit den
-Reitern **Ticker** (`/ticker`), **Termine** (`/guest/events`) und **Ressourcen** (`/guest/resources`);
-das Gerät merkt sich die Wahl (localStorage), eine installierte App startet dann dort. „Anmelden“
-(`/login?member=1`) hebt das wieder auf.
-
-- **Termine:** Listen und Termine mit „Für Gäste sichtbar“ (`guest_visible`, vom Koordinator
-  gesetzt), nur solange sie nicht privat sind — nur Titel, Ort, Datum und Zeit. Kalender-Abos
-  (ohne Beschreibung und App-Links): alle Termine (`/ics/guest/all.ics`), je Abteilung
-  (`/ics/guest/department/{id}.ics`) — beide ohne Token, der Inhalt ist öffentlich — und je Team
-  (`teams.calendar_token_guest`).
-- **Ressourcen:** nur Ressourcen „Für Gäste sichtbar“ (Admin). Alle nicht-privaten Belegungen;
-  den Titel nur bei Einträgen „Für Gäste sichtbar“, sonst „Belegt“.
-- **Ticker abonnieren:** Abos hängen am Gerät (`ticker_subscriptions.subscription_id`), für Gäste
-  wie für Angemeldete. Erkannt wird das Gerät am Cookie `tm_device`, gesetzt bei `/push/subscribe`.
-
-Gäste sehen nie Personen, Listen- oder Dokumentinhalte. Code: `src/db/guest.php`, `src/public/`.
+Verhalten: [SPEC.md](SPEC.md) (F6, F7, F10). Technisch: Feeds unter `/ics/{token}.ics`
+(`src/ics_token_handler.php`, Koordinator-, persönlicher und Gast-Team-Feed), `/ics/resource/{token}.ics`
+und `/ics/guest/…` (ohne Token); Rückblick 3 Monate (`ICS_PAST_INTERVAL` in `src/utils/calendar.php`).
+Code: `src/db/calendar.php`, `src/db/resources.php`, `src/db/guest.php`, `src/db/departments.php`.
+Termine durch Mitglieder: Regeln doppelt in `src/db/events.php` und als RLS auf `events` und
+`resource_bookings`.
 
 ## Cronjob
 
@@ -524,32 +435,11 @@ gibt es keine veralteten Stände. Nach Änderungen an `offline.html` die Cache-V
 Das VAPID-Schlüsselpaar für Push wird beim ersten Gebrauch erzeugt und in `settings`
 (`vapid_keys`) gespeichert.
 
-**Push durch Koordinatoren:** Auf der Benachrichtigungsseite einer Liste oder eines Dokuments
-wählt der Koordinator E-Mail **oder** Push (Titel + Push-Text, höchstens 150 Zeichen). Ein Gerät
-meldet man im Profil an („Push einschalten“) oder über „Ticker abonnieren“; auf dem iPhone geht
-das nur in der installierten App. Zugestellt wird an alle Geräte der Person, auch wenn sie
-gerade in einem anderen ihrer Teams angemeldet ist: Ein Tipp öffnet `/open?team=…&list=…`,
-das bei Bedarf ins Team des Inhalts wechselt. Code: `src/push/notify_push.php`.
-Auf der Startseite (Inhalte) erscheint einmal der Hinweis „Push einschalten“, sobald das Gerät
-Push kann und noch nie gefragt wurde; automatisch einschalten erlauben die Browser nicht.
-
-**Geräte und „zuletzt aktiv“:** Ist Push an, meldet sich ein Gerät beim Öffnen der App höchstens
-einmal am Tag (`push_subscriptions.updated_at` = zuletzt aktiv). Die Push-Seite des Koordinators zeigt ab 30 Tagen
-„zuletzt aktiv vor …“; nach 180 Tagen ohne Meldung wird das Gerät entfernt (Cronjob, nachts).
-Meldet der Push-Dienst ein Gerät beim Senden als weg, wird es sofort entfernt.
-
-**Automatische Pushes** (`src/push/auto_push.php`):
-- *Erinnerung vor der automatischen Umstellung* (z. B. Anmeldeschluss): immer, für jede Liste
-  mit Umstellung; geht an alle Mitglieder des Teams mit Push, genau einmal — am Tag der Umstellung
-  ab 8 Uhr, liegt sie davor, am Vortag ab 18 Uhr (Cronjob). Ändern sich Regel, Datum oder Beginn,
-  wird sie wieder fällig.
-- *Ticker:* Die Startmeldung kommt mit dem ersten Eintrag, danach jeder weitere Eintrag.
-- *Kurzfristige Änderung*: Bei Listen und Terminen der nächsten 7 Tage bietet das
-  Bearbeiten-Formular „Per Push über die Änderung informieren“. Gesendet wird nur, wenn sich
-  Datum, Uhrzeit oder Ort wirklich ändern, z. B. „Neu: Sa 11.10., 18:30 statt 18:00“.
-
-Geteilte Links auf öffentliche Ticker zeigen eine Vorschau mit Titel und App-Symbol
-(Open-Graph-Angaben, `render_layout_head()`).
+**Push:** Verhalten in [SPEC.md](SPEC.md) (F8, F9). Code: `src/push/` — `ticker_push.php` (Geräte,
+Ticker), `notify_push.php` (Koordinatoren, `/open`), `auto_push.php` (Erinnerung, kurzfristige
+Änderung). Geräte erkennt die App am Cookie `tm_device`; ein Gerät mit Push meldet sich beim Öffnen
+der App höchstens einmal am Tag (`push_subscriptions.updated_at`), nach 180 Tagen ohne Meldung
+entfernt es der Cronjob. Geteilte Ticker-Links tragen Open-Graph-Angaben (`render_layout_head()`).
 
 Icons werden aus einem Skript erzeugt und sind reproduzierbar:
 
@@ -643,8 +533,9 @@ git pull
 docker compose --profile db --env-file .env.production up -d --build
 ```
 
-Das Postgres-Volume (`pgdata`) bleibt erhalten. Schema-Änderungen werden **nicht** automatisch
-angewendet — nötige Schema-Anpassungen vorher von Hand einspielen (siehe Datenbank-Änderungen).
+Das Postgres-Volume (`pgdata`) bleibt erhalten. Danach fehlende Migrationen einspielen
+(siehe Datenbank-Änderungen), z. B. mit `MIGRATE_TOKEN` in `.env.production`:
+`curl -X POST -H "X-Migrate-Token: …" https://<instanz>/migrate`.
 
 ### 6. Logs
 
@@ -739,9 +630,11 @@ src/
   auth/             Login, Logout, Session, Umleitung bei falscher Rolle
   coordinator/      Koordinator-Handler (Inhalte, Termine, Spalten, Mitglieder, Statistik, Dateien, Ticker, Ressourcen, Logo)
   member/           Mitglieder-Handler (Inhalte, Termine, Statistik, Dateien, Ticker, Ressourcen, Profil)
-  public/           Öffentliche Ticker-Seiten (ohne Anmeldung)
+  public/           Gastbereich ohne Anmeldung (Ticker, Termine, Ressourcen)
   ics_token_handler.php     Token-geschützter ICS-Feed je Team (/ics/{token}.ics)
   ics_resource_handler.php  ICS-Feed je Ressource (/ics/resource/{token}.ics)
+  cron.php          POST /cron — stündliche Aufgaben (Cronjob)
+  migrate.php       POST /migrate — fehlende Migrationen nach dem Deployment
   db/               PDO-Verbindung + Schema-Initialisierung, fachliche Abfragen (Übersicht,
                     Termine, Ressourcen, Sichtbarkeit, Ticker, Statistik)
   templates/
@@ -765,7 +658,27 @@ uploads/            Logo-Uploads (per .htaccess kein HTTP-Zugriff)
 config.php          App-Konfiguration: liest Umgebungsvariablen bzw. die .env (keine Zugangsdaten)
 .env.production.example  Vorlage für die Einstellungen der Produktion (Webspace und Docker)
 deploy.sh           Hetzner FTP-Deployment-Skript (Konfiguration per Umgebungsvariablen)
+.github/            Workflows (Claude, Reviews, Vorschläge, Deploy) und Issue-Formulare (SETUP.md)
+scripts/            setup-repo.sh — richtet Secret, Labels, Environments und Ruleset ein
+SPEC.md             Spezifikation: was die App tut (Quelle der Wahrheit)
+SETUP.md            Issue-getriebene Entwicklung mit Claude: Ablauf und Einrichtung
 ```
+
+---
+
+## Mitarbeit
+
+Features und Fehler kommen als **GitHub-Issue** (Formulare „Feature-Wunsch“ / „Fehler melden“).
+Umgesetzt wird nur, was der Owner freigibt: Label `claude` oder ein Kommentar `@claude` vom Owner.
+Claude legt dann einen Branch `claude/…` und einen PR an; drei Review-Agenten (Architektur,
+Sicherheit, Dokumentation) prüfen ihn, der PR läuft auf Staging, nach dem Merge auf Production.
+Ablauf, Rückfragen und Einrichtung: [SETUP.md](SETUP.md); Regeln für Claude: [CLAUDE.md](CLAUDE.md).
+
+- `main` ist geschützt: jede Änderung als PR, auch lokale Arbeit (`git switch -c claude/…`, PR auf GitHub).
+- **Changelog:** Ein PR mit sichtbarer Änderung schlägt den Eintrag in der Beschreibung vor;
+  übernommen wird er erst auf `@claude Changelog übernehmen` (ein Eintrag kündigt allen Instanzen
+  ein Update an, siehe [Version und Updates](#version-und-updates)).
+- Prüfen vor dem PR: `php -l` auf geänderte PHP-Dateien, lokal mit `docker compose --profile db up`.
 
 ---
 
