@@ -111,7 +111,8 @@
             <div class="row g-2 mb-3">
                 <div class="col-6">
                     <input type="time" name="timestamp" class="form-control"
-                           value="<?= date('H:i') ?>" required>
+                           value="<?= date('H:i') ?>" required data-live-time
+                           aria-label="Uhrzeit (läuft mit, bis du sie änderst)">
                 </div>
                 <div class="col-6">
                     <select name="tag_id" class="form-select">

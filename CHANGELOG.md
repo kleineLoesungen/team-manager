@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2026.11.15
+- [Koordinator, Mitglied] Ticker: Die Uhrzeit eines neuen Eintrags läuft mit, auch wenn die Seite lange offen war
+
 ## 2026.10.17
 - [Koordinator, Mitglied] Erinnerung zum Anmeldeschluss pünktlich um 8 Uhr (bzw. am Vorabend um 18 Uhr)
 - [Koordinator, Mitglied] Ticker-Startmeldung kommt mit dem ersten Eintrag

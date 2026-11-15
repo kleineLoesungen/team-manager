@@ -125,6 +125,27 @@ function render_layout_foot(): void {
             }
         });
 
+        /* Mitlaufende Uhrzeit (Ticker, Issue #19): input[type=time][data-live-time] zeigt immer die
+           aktuelle Uhrzeit, bis man sie von Hand ändert — auch wenn die Seite lange offen war.
+           Beim Absenden wird sie noch einmal gesetzt. Ohne JS bleibt die Zeit des Seitenaufrufs. */
+        var tmNow = function () {
+            var d = new Date();
+            return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+        };
+        var tmLiveTimes = function () {
+            document.querySelectorAll('input[type=time][data-live-time]').forEach(function (el) {
+                if (!el.dataset.manual) el.value = tmNow();
+            });
+        };
+        document.addEventListener('input', function (e) {
+            if (e.target.matches && e.target.matches('input[type=time][data-live-time]')) e.target.dataset.manual = '1';
+        });
+        document.addEventListener('submit', tmLiveTimes, true);
+        document.addEventListener('focusin', tmLiveTimes);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) tmLiveTimes(); });
+        window.addEventListener('pageshow', tmLiveTimes);
+        setInterval(tmLiveTimes, 15000);
+
         /* Service Worker (public/sw.js): Installierbarkeit + Offline-Hinweis, kein Daten-Cache */
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
